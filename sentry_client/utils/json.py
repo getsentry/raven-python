@@ -6,13 +6,12 @@ sentry.utils.json
 :license: BSD, see LICENSE for more details.
 """
 
-from django.core.serializers.json import DjangoJSONEncoder
-from django.utils import simplejson
 
 import datetime
+import simplejson
 import uuid
 
-class BetterJSONEncoder(DjangoJSONEncoder):
+class BetterJSONEncoder(simplejson.JSONDecoder):
     def default(self, obj):
         if isinstance(obj, uuid.UUID):
             return obj.hex
