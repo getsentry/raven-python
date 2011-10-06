@@ -1,6 +1,6 @@
 """
-sentry_client.models
-~~~~~~~~~~~~~~~~~~~~
+sentry_client.contrib.django.models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Acts as an implicit hook for Django installs.
 
@@ -44,6 +44,7 @@ def configure_settings():
     # Some sane overrides to better mix with Django
     values = {}
     for k in (k for k in dir(django_settings) if k.startswith('SENTRY_')):
+        print k, values
         values[k.split('SENTRY_', 1)[1]] = getattr(django_settings, k)
 
     if 'KEY' not in values:
@@ -59,7 +60,9 @@ def configure_settings():
             raise ValueError("Sentry setting 'REMOTE_URL' must be of type list.")
 
     if 'INCLUDE_PATHS' not in values:
-        values['INCLUDE_PATHS'] = values.get('INCLUDE_PATHS', set()) + get_installed_apps()
+        values['INCLUDE_PATHS'] = get_installed_apps()
+    else:
+        values['INCLUDE_PATHS'] = set(values['INCLUDE_PATHS']) + get_installed_apps()
 
     settings.configure(**values)
 

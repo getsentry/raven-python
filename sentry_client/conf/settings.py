@@ -6,11 +6,11 @@ sentry_client.conf.settings
 :license: BSD, see LICENSE for more details.
 """
 
-from sentry.conf.defaults import *
+from sentry_client.conf.defaults import *
 
 def configure(**kwargs):
     for k, v in kwargs.iteritems():
         if k.upper() != k:
             warnings.warn('Invalid setting, \'%s\' which is not defined by Sentry' % k)
         else:
-            locals[k] = v
+            globals()[k] = v

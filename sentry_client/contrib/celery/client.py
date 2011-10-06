@@ -1,5 +1,5 @@
-from sentry.client.base import SentryClient
-from sentry.client.celery import tasks
+from sentry_client.base import SentryClient
+from sentry_client.contrib.celery import tasks
 
 class CelerySentryClient(SentryClient):
     def send(self, **kwargs):

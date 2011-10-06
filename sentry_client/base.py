@@ -1,5 +1,5 @@
 """
-sentry.client.base
+sentry_client.base
 ~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -17,7 +17,7 @@ import traceback
 import urllib2
 import uuid
 
-import sentry
+import sentry_client
 from sentry_client.conf import settings
 from sentry_client.utils import json, construct_checksum, varmap, \
                                 get_versions, get_signature, get_auth_header
@@ -25,6 +25,12 @@ from sentry_client.utils.encoding import transform, force_unicode, shorten
 from sentry_client.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames
 
 logger = logging.getLogger('sentry.errors.client')
+
+def contains(iterator, value):
+    for k in iterator:
+        if value.startswith(k):
+            return True
+    return False
 
 class SentryClient(object):
     def process(self, **kwargs):
@@ -55,12 +61,6 @@ class SentryClient(object):
         if not kwargs.get('view') and kwargs['data']['__sentry__'].get('frames'):
             # This should be cached
             modules = settings.INCLUDE_PATHS
-
-            def contains(iterator, value):
-                for k in iterator:
-                    if value.startswith(k):
-                        return True
-                return False
 
             # We iterate through each frame looking for an app in INSTALLED_APPS
             # When one is found, we mark it as last "best guess" (best_guess) and then
@@ -138,7 +138,7 @@ class SentryClient(object):
                 timestamp = time.time()
                 signature = get_signature(message, timestamp)
                 headers = {
-                    'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, sentry.VERSION)),
+                    'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, sentry_client.VERSION)),
                     'Content-Type': 'application/octet-stream',
                 }
 

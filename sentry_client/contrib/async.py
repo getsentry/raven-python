@@ -1,20 +1,18 @@
 """
-sentry.client.async
-~~~~~~~~~~~~~~~~~~~
+sentry_client.contrib.async
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
 from Queue import Queue
-from sentry.client.base import SentryClient
+from sentry_client.base import SentryClient
 from threading import Thread, Lock
 import atexit
-from sentry.client.models import get_client
 import os
-import time
 
-SENTRY_WAIT_SECONDS = 10 
+SENTRY_WAIT_SECONDS = 10
 
 class AsyncSentryClient(SentryClient):
     """This client uses a single background thread to dispatch errors."""
@@ -27,6 +25,18 @@ class AsyncSentryClient(SentryClient):
         self._thread = None
         self.start()
 
+    def main_thread_terminated(self):
+        size = self.queue.qsize()
+        if size:
+            print "Sentry attempts to send %s error messages" % size
+            print "Waiting up to %s seconds" % SENTRY_WAIT_SECONDS
+            if os.name == 'nt':
+                print "Press Ctrl-Break to quit"
+            else:
+                print "Press Ctrl-C to quit"
+            self.stop(timeout = SENTRY_WAIT_SECONDS)
+
+
     def start(self):
         self._lock.acquire()
         try:
@@ -36,7 +46,7 @@ class AsyncSentryClient(SentryClient):
                 self._thread.start()
         finally:
             self._lock.release()
-            atexit.register(main_thread_terminated)
+            atexit.register(self.main_thread_terminated)
 
     def stop(self, timeout=None):
         """Stops the task thread. Synchronous!"""
@@ -61,16 +71,3 @@ class AsyncSentryClient(SentryClient):
 
     def send(self, **kwargs):
         self.queue.put_nowait(kwargs)
-
-def main_thread_terminated():
-    client = get_client()
-    if isinstance(client, AsyncSentryClient):
-        size = client.queue.qsize()
-        if size:
-            print "Sentry attempts to send %s error messages" % size
-            print "Waiting up to %s seconds" % SENTRY_WAIT_SECONDS
-            if os.name == 'nt':
-                print "Press Ctrl-Break to quit"
-            else:
-                print "Press Ctrl-C to quit"
-            client.stop(timeout = SENTRY_WAIT_SECONDS)

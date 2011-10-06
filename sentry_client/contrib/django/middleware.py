@@ -1,6 +1,6 @@
 """
-sentry.client.middleware
-~~~~~~~~~~~~~~~~~~~~~~~~
+sentry_client.contrib.django.middleware
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -9,7 +9,7 @@ sentry.client.middleware
 from __future__ import absolute_import
 
 from django.middleware.common import _is_ignorable_404
-from sentry.client.models import get_client
+from sentry_client.contrib.django.models import get_client
 import threading
 import logging
 
