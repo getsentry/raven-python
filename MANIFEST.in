@@ -1,5 +1,2 @@
-include setup.py README.rst MANIFEST.in LICENSE distribute_setup.py
-recursive-include sentry/templates *
-recursive-include sentry/static *
-recursive-include sentry/plugins/*/templates *
+include setup.py README.rst MANIFEST.in LICENSE
 global-exclude *~

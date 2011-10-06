@@ -13,7 +13,6 @@ tests_require = [
     'Django>=1.2,<1.4',
 
     'nose',
-    'django-nose',
 ]
 
 install_requires = [
@@ -35,7 +34,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require={'test': tests_require},
-    test_suite='runtests.runtests',
+    test_suite='nose.collector',
     include_package_data=True,
     classifiers=[
         'Intended Audience :: Developers',
