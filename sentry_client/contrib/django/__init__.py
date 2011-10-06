@@ -85,3 +85,12 @@ class DjangoClient(SentryClient):
                     del exc_info
                 except Exception, e:
                     logger.exception(e)
+
+    def create_from_record(self, record, **kwargs):
+        """
+        Creates an error log for a ``logging`` module ``record`` instance.
+        """
+        if not kwargs.get('request'):
+            kwargs['request'] = record.__dict__.get('request')
+
+        return super(DjangoClient, self).create_from_record(record, **kwargs)

@@ -162,7 +162,7 @@ class SentryClient(object):
         """
         Creates an error log for a ``logging`` module ``record`` instance.
         """
-        for k in ('url', 'view', 'request', 'data'):
+        for k in ('url', 'view', 'data'):
             if not kwargs.get(k):
                 kwargs[k] = record.__dict__.get(k)
 
