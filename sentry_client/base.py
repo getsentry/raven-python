@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 import base64
 import datetime
-import functools
 import logging
 import sys
 import time
@@ -18,35 +17,18 @@ import traceback
 import urllib2
 import uuid
 
-from django.http import HttpRequest
-from django.template import TemplateSyntaxError
-from django.template.loader import LoaderOrigin
-
 import sentry
 from sentry_client.conf import settings
-from sentry_client.utils import json, construct_checksum, transform, get_installed_apps, force_unicode, \
-                                get_versions, shorten, get_signature, get_auth_header, varmap
-from sentry_client.stacktrace import get_stack_info, iter_stack_frames, iter_traceback_frames
+from sentry_client.utils import json, construct_checksum, varmap, \
+                                get_versions, get_signature, get_auth_header
+from sentry_client.utils.encoding import transform, force_unicode, shorten
+from sentry_client.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames
 
-logger = logging.getLogger('sentry.errors')
-
-def fail_silently(default=None):
-    def wrapped(func):
-        @functools.wraps(func)
-        def _wrapped(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception, e:
-                logger.exception(e)
-                return default
-        return _wrapped
-    return wrapped
+logger = logging.getLogger('sentry.errors.client')
 
 class SentryClient(object):
     def process(self, **kwargs):
         "Processes the message before passing it on to the server"
-        from sentry.utils import get_filters
-
         if kwargs.get('data'):
             # Ensure we're not changing the original data which was passed
             # to Sentry
@@ -56,38 +38,6 @@ class SentryClient(object):
 
         if '__sentry__' not in kwargs['data']:
             kwargs['data']['__sentry__'] = {}
-
-        request = kwargs.pop('request', None)
-        if isinstance(request, HttpRequest):
-            if not request.POST and request.raw_post_data:
-                post_data = request.raw_post_data
-            else:
-                post_data = request.POST
-
-            kwargs['data'].update(dict(
-                META=request.META,
-                POST=post_data,
-                GET=request.GET,
-                COOKIES=request.COOKIES,
-            ))
-
-            if hasattr(request, 'user'):
-                if request.user.is_authenticated():
-                    user_info = {
-                        'is_authenticated': True,
-                        'id': request.user.pk,
-                        'username': request.user.username,
-                        'email': request.user.email,
-                    }
-                else:
-                    user_info = {
-                        'is_authenticated': False,
-                    }
-
-                kwargs['data']['__sentry__']['user'] = user_info
-
-            if not kwargs.get('url'):
-                kwargs['url'] = request.build_absolute_uri()
 
         kwargs.setdefault('level', logging.ERROR)
         kwargs.setdefault('server_name', settings.NAME)
@@ -104,9 +54,7 @@ class SentryClient(object):
         # if we've passed frames, lets try to fetch the culprit
         if not kwargs.get('view') and kwargs['data']['__sentry__'].get('frames'):
             # This should be cached
-            modules = get_installed_apps()
-            if settings.INCLUDE_PATHS:
-                modules = set(list(modules) + settings.INCLUDE_PATHS)
+            modules = settings.INCLUDE_PATHS
 
             def contains(iterator, value):
                 for k in iterator:
@@ -160,9 +108,6 @@ class SentryClient(object):
         else:
             checksum = kwargs['checksum']
 
-        for filter_ in get_filters():
-            kwargs = filter_(None).process(kwargs) or kwargs
-
         # create ID client-side so that it can be passed to application
         message_id = uuid.uuid4().hex
         kwargs['message_id'] = message_id
@@ -174,13 +119,6 @@ class SentryClient(object):
             kwargs['timestamp'] = datetime.datetime.now()
 
         self.send(**kwargs)
-
-        if request:
-            # attach the sentry object to the request
-            request.sentry = {
-                'id': '%s$%s' % (message_id, checksum),
-                'thrashed': False,
-            }
 
         return (message_id, checksum)
 
@@ -304,14 +242,6 @@ class SentryClient(object):
             data['__sentry__'] = {}
             data['__sentry__']['frames'] = frames
             data['__sentry__']['exception'] = [exc_module, exc_value.args]
-
-            # As of r16833 (Django) all exceptions may contain a ``django_template_source`` attribute (rather than the
-            # legacy ``TemplateSyntaxError.source`` check) which describes template information.
-            if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and \
-                isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], LoaderOrigin))):
-                origin, (start, end) = getattr(exc_value, 'django_template_source', exc_value.source)
-                data['__sentry__']['template'] = (origin.reload(), start, end, origin.name)
-                kwargs['view'] = origin.loadname
 
             tb_message = '\n'.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
 

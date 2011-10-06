@@ -1,6 +1,6 @@
 """
-sentry.utils.stacks
-~~~~~~~~~~~~~~~~~~~
+sentry_client.utils.stacks
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -9,10 +9,8 @@ sentry.utils.stacks
 import inspect
 import re
 
-from django.utils.html import escape
-
-from sentry.conf import settings
-from sentry.utils import get_installed_apps, transform
+from sentry_client.conf import settings
+from sentry_client.utils.encoding import transform
 
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
     """
@@ -83,9 +81,7 @@ def get_culprit(frames):
                 return True
         return False
 
-    modules = get_installed_apps()
-    if settings.INCLUDE_PATHS:
-        modules = set(list(modules) + settings.INCLUDE_PATHS)
+    modules = settings.INCLUDE_PATHS
 
     best_guess = None
     for frame in frames:
@@ -142,44 +138,3 @@ def get_stack_info(frames):
                 'pre_context_lineno': pre_context_lineno + 1,
             })
     return results
-
-def get_template_info(template_info, exc_value=None):
-    template_source, start, end, name = template_info
-    context_lines = 10
-    line = 0
-    upto = 0
-    source_lines = []
-    before = during = after = ""
-    for num, next in enumerate(linebreak_iter(template_source)):
-        if start >= upto and end <= next:
-            line = num
-            before = escape(template_source[upto:start])
-            during = escape(template_source[start:end])
-            after = escape(template_source[end:next])
-        source_lines.append((num, escape(template_source[upto:next])))
-        upto = next
-    total = len(source_lines)
-
-    top = max(1, line - context_lines)
-    bottom = min(total, line + 1 + context_lines)
-
-    return {
-        'message': exc_value and exc_value.args[0] or None,
-        'source_lines': source_lines[top:bottom],
-        'before': before,
-        'during': during,
-        'after': after,
-        'top': top,
-        'bottom': bottom,
-        'total': total,
-        'line': line,
-        'name': name,
-    }
-
-def linebreak_iter(template_source):
-    yield 0
-    p = template_source.find('\n')
-    while p >= 0:
-        yield p+1
-        p = template_source.find('\n', p+1)
-    yield len(template_source) + 1

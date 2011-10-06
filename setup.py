@@ -37,13 +37,7 @@ setup(
     extras_require={'test': tests_require},
     test_suite='runtests.runtests',
     include_package_data=True,
-    entry_points = {
-        'console_scripts': [
-            'sentry = sentry.scripts.runner:main',
-        ],
-    },
     classifiers=[
-        'Framework :: Django',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
