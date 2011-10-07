@@ -3,16 +3,13 @@
 from __future__ import absolute_import
 
 import logging
-from pprint import pformat
 
 from django.conf import settings as django_settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
-from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.test import TestCase
-from django.utils.encoding import smart_unicode
 
 from sentry_client.conf import settings
 from sentry_client.conf import defaults
