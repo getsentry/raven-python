@@ -36,5 +36,6 @@ class FlaskTest(TestCase):
         self.assertEquals(event['class_name'], 'ValueError')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'hello world')
+        self.assertEquals(event['url'], 'http://localhost/an-error/?foo=bar')
         self.assertEquals(event['view'], 'tests.contrib.flask.tests.an_error')
 
