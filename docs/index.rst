@@ -3,11 +3,6 @@ Raven
 
 Raven is a standalone (and the official) Python client for Sentry (django-sentry).
 
-It currently contains drop-in support for the following projects:
-
-- Django
-- Flask
-
 .. toctree::
    :maxdepth: 2
 
