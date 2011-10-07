@@ -19,8 +19,9 @@ from sentry_client.contrib.django.models import get_client
 settings.CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 class TempStoreClient(DjangoClient):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.events = []
+        super(TempStoreClient, self).__init__(*args, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)
@@ -163,22 +164,27 @@ class DjangoClientTest(TestCase):
             self.assertEquals(event['view'], 'tests.contrib.django.middleware.process_view')
 
     def test_exclude_modules_view(self):
-        with Settings(SENTRY_EXCLUDE_PATHS=['tests.views.decorated_raise_exc']):
-            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
+        exclude_paths = self.sentry_client.exclude_paths
+        self.sentry_client.exclude_paths = ['tests.views.decorated_raise_exc']
+        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
 
-            self.assertEquals(len(self.sentry_client.events), 1)
-            event = self.sentry_client.events.pop(0)
+        self.assertEquals(len(self.sentry_client.events), 1)
+        event = self.sentry_client.events.pop(0)
 
-            self.assertEquals(event['view'], 'tests.contrib.django.views.raise_exc')
+        self.assertEquals(event['view'], 'tests.contrib.django.views.raise_exc')
+        self.sentry_client.exclude_paths = exclude_paths
 
     def test_include_modules(self):
-        with Settings(SENTRY_INCLUDE_PATHS=['django.shortcuts.get_object_or_404']):
-            self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
+        include_paths = self.sentry_client.include_paths
+        self.sentry_client.include_paths = ['django.shortcuts.get_object_or_404']
 
-            self.assertEquals(len(self.sentry_client.events), 1)
-            event = self.sentry_client.events.pop(0)
+        self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
 
-            self.assertEquals(event['view'], 'django.shortcuts.get_object_or_404')
+        self.assertEquals(len(self.sentry_client.events), 1)
+        event = self.sentry_client.events.pop(0)
+
+        self.assertEquals(event['view'], 'django.shortcuts.get_object_or_404')
+        self.sentry_client.include_paths = include_paths
 
     def test_template_name_as_view(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
@@ -220,19 +226,23 @@ class DjangoClientTest(TestCase):
 
     def test_versions(self):
         import sentry_client
-        with Settings(SENTRY_INCLUDE_PATHS=['sentry_client', 'tests']):
-            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+        include_paths = self.sentry_client.include_paths
+        self.sentry_client.include_paths = ['sentry_client', 'tests']
 
-            self.assertEquals(len(self.sentry_client.events), 1)
-            event = self.sentry_client.events.pop(0)
+        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-            self.assertTrue('versions' in event['data']['__sentry__'])
-            self.assertTrue('sentry_client' in event['data']['__sentry__']['versions'])
-            self.assertEquals(event['data']['__sentry__']['versions']['sentry_client'], sentry_client.VERSION)
-            self.assertTrue('module' in event['data']['__sentry__'])
-            self.assertEquals(event['data']['__sentry__']['module'], 'tests')
-            self.assertTrue('version' in event['data']['__sentry__'])
-            self.assertEquals(event['data']['__sentry__']['version'], '1.0')
+        self.assertEquals(len(self.sentry_client.events), 1)
+        event = self.sentry_client.events.pop(0)
+
+        self.assertTrue('versions' in event['data']['__sentry__'])
+        self.assertTrue('sentry_client' in event['data']['__sentry__']['versions'])
+        self.assertEquals(event['data']['__sentry__']['versions']['sentry_client'], sentry_client.VERSION)
+        self.assertTrue('module' in event['data']['__sentry__'])
+        self.assertEquals(event['data']['__sentry__']['module'], 'tests')
+        self.assertTrue('version' in event['data']['__sentry__'])
+        self.assertEquals(event['data']['__sentry__']['version'], '1.0')
+
+        self.sentry_client.include_paths = include_paths
 
     def test_404_middleware(self):
         with Settings(MIDDLEWARE_CLASSES=['sentry_client.contrib.django.middleware.Sentry404CatchMiddleware']):

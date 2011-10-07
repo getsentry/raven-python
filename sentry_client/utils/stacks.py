@@ -9,7 +9,6 @@ sentry_client.utils.stacks
 import inspect
 import re
 
-from sentry_client.conf import settings
 from sentry_client.utils.encoding import transform
 
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
@@ -70,32 +69,26 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
 
     return lower_bound, pre_context, context_line, post_context
 
-def get_culprit(frames):
+def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # We iterate through each frame looking for a deterministic culprit
     # When one is found, we mark it as last "best guess" (best_guess) and then
-    # check it against SENTRY_EXCLUDE_PATHS. If it isnt listed, then we
+    # check it against ``exclude_paths``. If it isnt listed, then we
     # use this option. If nothing is found, we use the "best guess".
-    def contains(iterator, value):
-        for k in iterator:
-            if value.startswith(k):
-                return True
-        return False
-
-    modules = settings.INCLUDE_PATHS
-
     best_guess = None
+    culprit = None
     for frame in frames:
         try:
-            culprit = '.'.join([frame.f_globals['__name__'], frame.f_code.co_name])
-        except:
+            culprit = '.'.join([frame['module'], frame['function']])
+        except KeyError:
             continue
-        if contains(modules, culprit):
-            if not (contains(settings.EXCLUDE_PATHS, culprit) and best_guess):
+        if any((culprit.startswith(k) for k in include_paths)):
+            if not (best_guess and any((culprit.startswith(k) for k in exclude_paths))):
                 best_guess = culprit
         elif best_guess:
             break
 
-    return best_guess
+    # Return either the best guess or the last frames call
+    return best_guess or culprit
 
 def iter_traceback_frames(tb):
     while tb:

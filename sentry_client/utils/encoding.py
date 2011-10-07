@@ -125,13 +125,13 @@ def to_unicode(value):
             value = '(Error decoding value)'
     return value
 
-def shorten(var):
+def shorten(var, list_length=50, string_length=200):
     var = transform(var)
-    if isinstance(var, basestring) and len(var) > settings.MAX_LENGTH_STRING:
-        var = var[:settings.MAX_LENGTH_STRING] + '...'
-    elif isinstance(var, (list, tuple, set, frozenset)) and len(var) > settings.MAX_LENGTH_LIST:
+    if isinstance(var, basestring) and len(var) > string_length:
+        var = var[:string_length] + '...'
+    elif isinstance(var, (list, tuple, set, frozenset)) and len(var) > list_length:
         # TODO: we should write a real API for storing some metadata with vars when
         # we get around to doing ref storage
         # TODO: when we finish the above, we should also implement this for dicts
-        var = list(var)[:settings.MAX_LENGTH_LIST] + ['...', '(%d more elements)' % (len(var) - settings.MAX_LENGTH_LIST,)]
+        var = list(var)[:list_length] + ['...', '(%d more elements)' % (len(var) - list_length,)]
     return var

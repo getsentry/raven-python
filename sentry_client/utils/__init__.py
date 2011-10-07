@@ -103,8 +103,8 @@ def get_versions(module_list=None):
         versions[module_name] = version
     return versions
 
-def get_signature(message, timestamp):
-    return hmac.new(settings.KEY, '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
+def get_signature(key, message, timestamp):
+    return hmac.new(key, '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
 
 def get_auth_header(signature, timestamp, client):
     return 'Sentry sentry_signature=%s, sentry_timestamp=%s, sentry_client=%s' % (

@@ -5,8 +5,9 @@ from sentry_client.handlers.logging import SentryHandler
 from sentry_client.conf import settings
 
 class TempStoreClient(Client):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.events = []
+        super(TempStoreClient, self).__init__(*args, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)

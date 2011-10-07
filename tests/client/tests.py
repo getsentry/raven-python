@@ -4,8 +4,9 @@ from unittest2 import TestCase
 from sentry_client.base import Client
 
 class TempStoreClient(Client):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.events = []
+        super(TempStoreClient, self).__init__(*args, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)

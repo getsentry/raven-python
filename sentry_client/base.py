@@ -22,17 +22,23 @@ from sentry_client.conf import settings
 from sentry_client.utils import json, construct_checksum, varmap, \
                                 get_versions, get_signature, get_auth_header
 from sentry_client.utils.encoding import transform, force_unicode, shorten
-from sentry_client.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames
+from sentry_client.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames, \
+                                       get_culprit
 
 logger = logging.getLogger('sentry.errors.client')
 
-def contains(iterator, value):
-    for k in iterator:
-        if value.startswith(k):
-            return True
-    return False
-
 class Client(object):
+    def __init__(self, *args, **kwargs):
+        self.include_paths = kwargs.get('include_paths', settings.INCLUDE_PATHS)
+        self.exclude_paths = kwargs.get('exclude_paths', settings.EXCLUDE_PATHS)
+        self.remote_timeout = kwargs.get('remote_timeout', settings.REMOTE_TIMEOUT)
+        self.remote_urls = kwargs.get('remote_urls', settings.REMOTE_URL)
+        self.name = kwargs.get('name', settings.NAME)
+        self.auto_log_stacks = kwargs.get('auto_log_stacks', settings.AUTO_LOG_STACKS)
+        self.key = kwargs.get('key', settings.KEY)
+        self.string_max_length = kwargs.get('string_max_length', settings.MAX_LENGTH_STRING)
+        self.list_max_length = kwargs.get('list_max_length', settings.MAX_LENGTH_LIST)
+
     def process(self, **kwargs):
         "Processes the message before passing it on to the server"
         if kwargs.get('data'):
@@ -46,18 +52,16 @@ class Client(object):
             kwargs['data']['__sentry__'] = {}
 
         kwargs.setdefault('level', logging.ERROR)
-        kwargs.setdefault('server_name', settings.NAME)
+        kwargs.setdefault('server_name', self.name)
 
-        modules = settings.INCLUDE_PATHS
-
-        versions = get_versions(modules)
+        versions = get_versions(self.include_paths)
         kwargs['data']['__sentry__']['versions'] = versions
 
         # Shorten lists/strings
         for k, v in kwargs['data'].iteritems():
             if k == '__sentry__':
                 continue
-            kwargs['data'][k] = shorten(v)
+            kwargs['data'][k] = shorten(v, string_length=self.string_max_length, list_length=self.list_max_length)
 
         # if we've passed frames, lets try to fetch the culprit
         if not kwargs.get('view') and kwargs['data']['__sentry__'].get('frames'):
@@ -65,20 +69,7 @@ class Client(object):
             # When one is found, we mark it as last "best guess" (best_guess) and then
             # check it against SENTRY_EXCLUDE_PATHS. If it isnt listed, then we
             # use this option. If nothing is found, we use the "best guess".
-            best_guess = None
-            view = None
-            for frame in kwargs['data']['__sentry__']['frames']:
-                try:
-                    view = '.'.join([frame['module'], frame['function']])
-                except:
-                    continue
-                if contains(modules, view):
-                    if not (contains(settings.EXCLUDE_PATHS, view) and best_guess):
-                        best_guess = view
-                elif best_guess:
-                    break
-            if best_guess:
-                view = best_guess
+            view = get_culprit(kwargs['data']['__sentry__']['frames'], self.include_paths, self.exclude_paths)
 
             if view:
                 kwargs['view'] = view
@@ -124,18 +115,18 @@ class Client(object):
     def send_remote(self, url, data, headers={}):
         req = urllib2.Request(url, headers=headers)
         try:
-            response = urllib2.urlopen(req, data, settings.REMOTE_TIMEOUT).read()
+            response = urllib2.urlopen(req, data, self.remote_timeout).read()
         except:
             response = urllib2.urlopen(req, data).read()
         return response
 
     def send(self, **kwargs):
         "Sends the message to the server."
-        if settings.REMOTE_URL:
+        if self.remote_urls:
             message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
-            for url in settings.REMOTE_URL:
+            for url in self.remote_urls:
                 timestamp = time.time()
-                signature = get_signature(message, timestamp)
+                signature = get_signature(self.key, message, timestamp)
                 headers = {
                     'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, sentry_client.VERSION)),
                     'Content-Type': 'application/octet-stream',
@@ -169,7 +160,7 @@ class Client(object):
             'logger': record.name,
             'level': record.levelno,
             'message': force_unicode(record.msg),
-            'server_name': settings.NAME,
+            'server_name': self.name,
         })
 
         # construct the checksum with the unparsed message
@@ -185,7 +176,7 @@ class Client(object):
 
         data = kwargs.pop('data', {}) or {}
         data['__sentry__'] = {}
-        if getattr(record, 'stack', settings.AUTO_LOG_STACKS):
+        if getattr(record, 'stack', self.auto_log_stacks):
             stack = []
             found = None
             for frame in iter_stack_frames():

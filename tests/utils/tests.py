@@ -75,26 +75,31 @@ class GetVersionsTest(TestCase):
         self.assertEquals(versions.get('sentry_client'), sentry_client.VERSION)
 
 class ShortenTest(TestCase):
+    def test_shorten_string(self):
+        result = shorten('hello world!', string_length=5)
+        self.assertEquals(len(result), 8)
+        self.assertEquals(result, 'hello...')
+
     def test_shorten_lists(self):
-        result = shorten(range(500))
+        result = shorten(range(500), list_length=50)
         self.assertEquals(len(result), 52)
         self.assertEquals(result[-2], '...')
         self.assertEquals(result[-1], '(450 more elements)')
 
     def test_shorten_sets(self):
-        result = shorten(set(range(500)))
+        result = shorten(set(range(500)), list_length=50)
         self.assertEquals(len(result), 52)
         self.assertEquals(result[-2], '...')
         self.assertEquals(result[-1], '(450 more elements)')
 
     def test_shorten_frozenset(self):
-        result = shorten(frozenset(range(500)))
+        result = shorten(frozenset(range(500)), list_length=50)
         self.assertEquals(len(result), 52)
         self.assertEquals(result[-2], '...')
         self.assertEquals(result[-1], '(450 more elements)')
 
     def test_shorten_tuple(self):
-        result = shorten(tuple(range(500)))
+        result = shorten(tuple(range(500)), list_length=50)
         self.assertEquals(len(result), 52)
         self.assertEquals(result[-2], '...')
         self.assertEquals(result[-1], '(450 more elements)')
