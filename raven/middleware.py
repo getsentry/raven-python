@@ -20,7 +20,8 @@ class Sentry(object):
 
     def __call__(self, environ, start_response):
         try:
-            return self.application(environ, start_response)
+            for event in self.application(environ, start_response):
+                yield event
         except Exception:
             exc_info = sys.exc_info()
             self.handle_exception(exc_info, environ)

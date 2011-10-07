@@ -9,6 +9,7 @@ raven.contrib.flask
 from __future__ import absolute_import
 
 from flask import request
+from flask.signals import got_request_exception
 from raven.base import Client
 
 class Sentry(object):
@@ -16,32 +17,33 @@ class Sentry(object):
         self.app = app
         self.client = client
         self.client_cls = client_cls
+
         if app:
             self.init_app(app)
 
+    def handle_exception(self, client):
+        def _handle_exception(sender, **kwargs):
+            client.create_from_exception(
+                url=request.url,
+                data={
+                    'META': request.environ,
+                    'GET': request.args,
+                    'POST': request.form,
+                    'app': sender.name,
+                },
+            )
+        return _handle_exception
+
     def init_app(self, app):
-        self.app = app
-        app.error_handler_spec[None][500] = self.handle_exception
         if not self.client:
-            self.client = self.client_cls(
+            client = self.client_cls(
                 include_paths=app.config.get('SENTRY_INCLUDE_PATHS'),
                 exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
                 remote_urls=app.config.get('SENTRY_REMOTE_URLS'),
                 name=app.config.get('SENTRY_NAME'),
                 key=app.config.get('SENTRY_KEY'),
             )
+        else:
+            client = self.client
 
-    def handle_exception(self, error):
-        if not self.client:
-            return
-
-        event_id = self.client.create_from_exception(
-            url=request.url,
-            data={
-                'META': request.environ,
-                'GET': request.args,
-                'POST': request.form,
-            },
-        )
-        # TODO: this should be handled by the parent application
-        return 'An unknown error occurred', 500
+        got_request_exception.connect(self.handle_exception(client), sender=app, weak=False)
