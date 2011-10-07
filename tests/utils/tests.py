@@ -3,7 +3,7 @@
 import logging
 from unittest2 import TestCase
 
-from sentry_client.utils.encoding import transform, shorten
+from raven.utils.encoding import transform, shorten
 
 logger = logging.getLogger('sentry.tests')
 
@@ -67,12 +67,12 @@ class TransformTest(TestCase):
 
 class GetVersionsTest(TestCase):
     def test_get_versions(self):
-        import sentry_client
-        from sentry_client.utils import get_versions
-        versions = get_versions(['sentry_client'])
-        self.assertEquals(versions.get('sentry_client'), sentry_client.VERSION)
-        versions = get_versions(['sentry_client.contrib.django'])
-        self.assertEquals(versions.get('sentry_client'), sentry_client.VERSION)
+        import raven
+        from raven.utils import get_versions
+        versions = get_versions(['raven'])
+        self.assertEquals(versions.get('raven'), raven.VERSION)
+        versions = get_versions(['raven.contrib.django'])
+        self.assertEquals(versions.get('raven'), raven.VERSION)
 
 class ShortenTest(TestCase):
     def test_shorten_string(self):

@@ -10,14 +10,14 @@ import logging
 
 from django.test import TestCase
 from sentry.models import GroupedMessage, Message
-from sentry_client.base import Client
+from raven.base import Client
 
 class ServerTest(TestCase):
     def setUp(self):
-        self.sentry_client = Client()
+        self.raven = Client()
 
     def test_text(self):
-        message_id, checksum = self.sentry_client.create_from_text('hello')
+        message_id, checksum = self.raven.create_from_text('hello')
 
         self.assertEquals(GroupedMessage.objects.count(), 1)
         self.assertEquals(Message.objects.count(), 1)
@@ -39,7 +39,7 @@ class ServerTest(TestCase):
         except: pass
         else: self.fail('Whatttt?')
 
-        message_id, checksum = self.sentry_client.create_from_exception()
+        message_id, checksum = self.raven.create_from_exception()
 
         self.assertEquals(GroupedMessage.objects.count(), 1)
         self.assertEquals(Message.objects.count(), 1)

@@ -1,8 +1,8 @@
 import logging
 from unittest2 import TestCase
-from sentry_client.base import Client
-from sentry_client.handlers.logging import SentryHandler
-from sentry_client.conf import settings
+from raven.base import Client
+from raven.handlers.logging import SentryHandler
+from raven.conf import settings
 
 class TempStoreClient(Client):
     def __init__(self, *args, **kwargs):

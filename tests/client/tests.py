@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest2 import TestCase
-from sentry_client.base import Client
+from raven.base import Client
 
 class TempStoreClient(Client):
     def __init__(self, *args, **kwargs):

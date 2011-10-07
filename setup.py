@@ -14,6 +14,7 @@ tests_require = [
     'django-celery',
     'celery',
 
+    'Flask>=0.8',
     'django-sentry',
     'django-nose',
     'nose',

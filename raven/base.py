@@ -29,15 +29,15 @@ logger = logging.getLogger('sentry.errors.client')
 
 class Client(object):
     def __init__(self, *args, **kwargs):
-        self.include_paths = kwargs.get('include_paths', settings.INCLUDE_PATHS)
-        self.exclude_paths = kwargs.get('exclude_paths', settings.EXCLUDE_PATHS)
-        self.remote_timeout = kwargs.get('remote_timeout', settings.REMOTE_TIMEOUT)
-        self.remote_urls = kwargs.get('remote_urls', settings.REMOTE_URL)
-        self.name = kwargs.get('name', settings.NAME)
-        self.auto_log_stacks = kwargs.get('auto_log_stacks', settings.AUTO_LOG_STACKS)
-        self.key = kwargs.get('key', settings.KEY)
-        self.string_max_length = kwargs.get('string_max_length', settings.MAX_LENGTH_STRING)
-        self.list_max_length = kwargs.get('list_max_length', settings.MAX_LENGTH_LIST)
+        self.include_paths = kwargs.get('include_paths') or settings.INCLUDE_PATHS
+        self.exclude_paths = kwargs.get('exclude_paths') or settings.EXCLUDE_PATHS
+        self.remote_timeout = kwargs.get('remote_timeout') or settings.REMOTE_TIMEOUT
+        self.remote_urls = kwargs.get('remote_urls') or settings.REMOTE_URL
+        self.name = kwargs.get('name') or settings.NAME
+        self.auto_log_stacks = kwargs.get('auto_log_stacks') or settings.AUTO_LOG_STACKS
+        self.key = kwargs.get('key') or settings.KEY
+        self.string_max_length = kwargs.get('string_max_length') or settings.MAX_LENGTH_STRING
+        self.list_max_length = kwargs.get('list_max_length') or settings.MAX_LENGTH_LIST
 
     def process(self, **kwargs):
         "Processes the message before passing it on to the server"
