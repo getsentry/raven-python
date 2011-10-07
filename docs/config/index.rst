@@ -9,11 +9,11 @@ This document describes configuration options available to Sentry.
 .. toctree::
    :maxdepth: 2
 
-   config/celery
-   config/django
-   config/flask
-   config/logging
-   config/logbook
+   celery
+   django
+   flask
+   logging
+   logbook
 
 
 Client Settings
