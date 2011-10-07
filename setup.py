@@ -29,11 +29,11 @@ if sys.version_info[:2] < (2, 5):
     install_requires.append('uuid')
 
 setup(
-    name='sentry-client',
+    name='raven',
     version='1.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
-    url='http://github.com/dcramer/sentry-client',
+    url='http://github.com/dcramer/raven',
     description = 'Exception Logging to a Database in Django',
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,

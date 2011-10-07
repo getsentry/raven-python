@@ -1,3 +1,3 @@
 1.0
 
-* Initial version of sentry-client (extracted from django-sentry 1.12.1).
+* Initial version of Raven (extracted from django-sentry 1.12.1).

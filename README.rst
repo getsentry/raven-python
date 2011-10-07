@@ -1,9 +1,12 @@
-sentry-client
-=============
+Raven
+=====
 
-This is a standalone Python client for django-sentry.
+This is a standalone (and the official) Python client for django-sentry.
 
-**Code is not yet tested and a work in progress**
+It currently contains drop-in support for the following projects:
+
+- Django
+- Flask
 
 
 About Sentry
