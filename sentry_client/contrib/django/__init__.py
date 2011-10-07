@@ -29,6 +29,9 @@ class DjangoClient(SentryClient):
             else:
                 post_data = request.POST
 
+            if 'data' not in kwargs:
+                kwargs['data'] = {}
+
             kwargs['data'].update(dict(
                 META=request.META,
                 POST=post_data,
@@ -76,6 +79,9 @@ class DjangoClient(SentryClient):
             exc_info = sys.exc_info()
 
         data = kwargs.pop('data', {}) or {}
+
+        if '__sentry__' not in data:
+            data['__sentry__'] = {}
 
         try:
             exc_type, exc_value, exc_traceback = exc_info

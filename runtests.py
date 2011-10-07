@@ -4,7 +4,9 @@ import sys
 from os.path import dirname, abspath, join
 from optparse import OptionParser
 
-sys.path.insert(0, dirname(abspath(__file__)))
+where_am_i = dirname(abspath(__file__))
+
+sys.path.insert(0, where_am_i)
 
 logging.getLogger('sentry').addHandler(logging.StreamHandler())
 
@@ -45,6 +47,7 @@ if not settings.configured:
         BROKER_VHOST="/",
         CELERY_ALWAYS_EAGER=True,
         TEMPLATE_DEBUG=True,
+        TEMPLATE_DIRS=[join(where_am_i, 'tests', 'contrib', 'django', 'templates')],
     )
     import djcelery
     djcelery.setup_loader()

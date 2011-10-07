@@ -33,7 +33,7 @@ class SentryResponseErrorIdMiddleware(object):
     def process_response(self, request, response):
         if not getattr(request, 'sentry', None):
             return response
-        response['X-Sentry-ID'] = request.sentry['id']
+        response['X-Sentry-ID'] = '$'.join(request.sentry['id'])
         return response
 
 class SentryLogMiddleware(object):

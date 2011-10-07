@@ -16,10 +16,10 @@ def decorated_raise_exc(request):
     return raise_exc(request)
 
 def template_exc(request):
-    return render_to_response('sentry-tests/error.html')
+    return render_to_response('error.html')
 
 def logging_request_exc(request):
-    logger = logging.getLogger('sentry.test')
+    logger = logging.getLogger(__name__)
     try:
         raise Exception(request.GET.get('message', 'view exception'))
     except Exception, e:

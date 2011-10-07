@@ -48,7 +48,9 @@ class SentryClient(object):
         kwargs.setdefault('level', logging.ERROR)
         kwargs.setdefault('server_name', settings.NAME)
 
-        versions = get_versions()
+        modules = settings.INCLUDE_PATHS
+
+        versions = get_versions(modules)
         kwargs['data']['__sentry__']['versions'] = versions
 
         # Shorten lists/strings
@@ -59,9 +61,6 @@ class SentryClient(object):
 
         # if we've passed frames, lets try to fetch the culprit
         if not kwargs.get('view') and kwargs['data']['__sentry__'].get('frames'):
-            # This should be cached
-            modules = settings.INCLUDE_PATHS
-
             # We iterate through each frame looking for an app in INSTALLED_APPS
             # When one is found, we mark it as last "best guess" (best_guess) and then
             # check it against SENTRY_EXCLUDE_PATHS. If it isnt listed, then we
@@ -104,7 +103,7 @@ class SentryClient(object):
                 })
 
         if 'checksum' not in kwargs:
-            checksum = construct_checksum(**kwargs)
+            kwargs['checksum'] = checksum = construct_checksum(**kwargs)
         else:
             checksum = kwargs['checksum']
 
