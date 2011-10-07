@@ -8,6 +8,7 @@ Raven is a standalone (and the official) Python client for Sentry (django-sentry
 
    install/index
    config/index
+   usage
    contributing/index
 
 About Sentry
