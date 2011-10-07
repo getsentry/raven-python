@@ -258,15 +258,15 @@ class DjangoClientTest(TestCase):
             self.assertEquals('$'.join([event['message_id'], event['checksum']]), headers['X-Sentry-ID'])
 
     # def test_get_client(self):
-    #     from sentry.client.log import LoggingSentryClient
+    #     from sentry.client.log import LoggingClient
 
-    #     self.assertEquals(get_client().__class__, SentryClient)
+    #     self.assertEquals(get_client().__class__, Client)
     #     self.assertEquals(get_client(), get_client())
 
-    #     settings.CLIENT = 'sentry.client.log.LoggingSentryClient'
+    #     settings.CLIENT = 'sentry.client.log.LoggingClient'
 
-    #     self.assertEquals(get_client().__class__, LoggingSentryClient)
+    #     self.assertEquals(get_client().__class__, LoggingClient)
     #     self.assertEquals(get_client(), get_client())
 
-    #     settings.CLIENT = 'sentry.client.base.SentryClient'
+    #     settings.CLIENT = 'sentry.client.base.Client'
 

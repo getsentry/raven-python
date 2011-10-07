@@ -8,8 +8,8 @@ sentry_client.contrib.celery.tasks
 
 from celery.decorators import task
 from sentry_client.conf import settings
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 
 @task(routing_key=getattr(settings, 'CELERY_ROUTING_KEY', None))
 def send(data):
-    return SentryClient().send(**data)
+    return Client().send(**data)

@@ -1,7 +1,7 @@
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 from sentry_client.contrib.celery import tasks
 
-class CelerySentryClient(SentryClient):
+class CeleryClient(Client):
     def send(self, **kwargs):
         "Errors through celery"
         tasks.send.delay(kwargs)

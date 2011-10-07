@@ -15,11 +15,11 @@ from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
 
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 
 logger = logging.getLogger('sentry.errors.client')
 
-class DjangoClient(SentryClient):
+class DjangoClient(Client):
     def process(self, **kwargs):
         request = kwargs.pop('request', None)
         is_http_request = isinstance(request, HttpRequest)

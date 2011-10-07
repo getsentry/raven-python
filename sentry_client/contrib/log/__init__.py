@@ -6,17 +6,17 @@ sentry.client.log
 :license: BSD, see LICENSE for more details.
 """
 
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 
 import logging
 import sys
 
-class LoggingSentryClient(SentryClient):
+class LoggingClient(Client):
     logger_name = 'sentry'
     default_level = logging.ERROR
 
     def __init__(self, *args, **kwargs):
-        super(LoggingSentryClient, self).__init__(*args, **kwargs)
+        super(LoggingClient, self).__init__(*args, **kwargs)
         self.logger = logging.getLogger(self.logger_name)
 
     def send(self, **kwargs):

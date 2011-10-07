@@ -7,14 +7,14 @@ sentry_client.contrib.async
 """
 
 from Queue import Queue
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 from threading import Thread, Lock
 import atexit
 import os
 
 SENTRY_WAIT_SECONDS = 10
 
-class AsyncSentryClient(SentryClient):
+class AsyncClient(Client):
     """This client uses a single background thread to dispatch errors."""
     _terminator = object()
 
@@ -67,7 +67,7 @@ class AsyncSentryClient(SentryClient):
             self.send_sync(**record)
 
     def send_sync(self, **kwargs):
-        super(AsyncSentryClient, self).send(**kwargs)
+        super(AsyncClient, self).send(**kwargs)
 
     def send(self, **kwargs):
         self.queue.put_nowait(kwargs)

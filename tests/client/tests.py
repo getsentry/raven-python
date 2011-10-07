@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from unittest2 import TestCase
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 
-class TempStoreClient(SentryClient):
+class TempStoreClient(Client):
     def __init__(self):
         self.events = []
 

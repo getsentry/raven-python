@@ -32,7 +32,7 @@ def contains(iterator, value):
             return True
     return False
 
-class SentryClient(object):
+class Client(object):
     def process(self, **kwargs):
         "Processes the message before passing it on to the server"
         if kwargs.get('data'):
@@ -259,7 +259,7 @@ class SentryClient(object):
                 except Exception, e:
                     logger.exception(e)
 
-class DummyClient(SentryClient):
+class DummyClient(Client):
     "Sends messages into an empty void"
     def send(self, **kwargs):
         return None

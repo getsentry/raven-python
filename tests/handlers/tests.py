@@ -1,10 +1,10 @@
 import logging
 from unittest2 import TestCase
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 from sentry_client.handlers.logging import SentryHandler
 from sentry_client.conf import settings
 
-class TempStoreClient(SentryClient):
+class TempStoreClient(Client):
     def __init__(self):
         self.events = []
 

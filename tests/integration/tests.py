@@ -10,11 +10,11 @@ import logging
 
 from django.test import TestCase
 from sentry.models import GroupedMessage, Message
-from sentry_client.base import SentryClient
+from sentry_client.base import Client
 
 class ServerTest(TestCase):
     def setUp(self):
-        self.sentry_client = SentryClient()
+        self.sentry_client = Client()
 
     def test_text(self):
         message_id, checksum = self.sentry_client.create_from_text('hello')
