@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import logging
 from unittest2 import TestCase
 
@@ -6,11 +8,29 @@ from sentry_client.utils.encoding import transform, shorten
 logger = logging.getLogger('sentry.tests')
 
 class TransformTest(TestCase):
+    def test_incorrect_unicode(self):
+        x = 'רונית מגן'
+
+        result = transform(x)
+        self.assertEquals(result, 'רונית מגן')
+
+    def test_correct_unicode(self):
+        x = 'רונית מגן'.decode('utf-8')
+
+        result = transform(x)
+        self.assertEquals(result, x)
+
     def test_bad_string(self):
         x = 'The following character causes problems: \xd4'
 
         result = transform(x)
-        self.assertEquals(result, '(Error decoding value)')
+        self.assertEquals(result, '<type \'str\'>')
+
+    # def test_bad_string(self):
+    #     x = 'The following character causes problems: \xd4'
+
+    #     result = transform(x)
+    #     self.assertEquals(result, '(Error decoding value)')
 
     # def test_model_instance(self):
     #     instance = DuplicateKeyModel(foo='foo')
@@ -38,7 +58,6 @@ class TransformTest(TestCase):
         self.assertEquals(len(keys), 1)
         self.assertEquals(keys[0], 'foo')
         self.assertTrue(isinstance(keys[0], str))
-
 
     def test_uuid(self):
         import uuid

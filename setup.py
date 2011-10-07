@@ -14,6 +14,7 @@ tests_require = [
     'django-celery',
     'celery',
 
+    'django-nose',
     'nose',
     'unittest2',
 ]
@@ -37,7 +38,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require={'test': tests_require},
-    test_suite='nose.collector',
+    test_suite='runtests.runtests',
     include_package_data=True,
     classifiers=[
         'Intended Audience :: Developers',
