@@ -29,7 +29,7 @@ A recommended pattern in logging is to simply reference the modules name for eac
     import logging
     logger = logging.getLogger(__name__)
 
-You can also use the ``exc_info`` and ``extra=dict(url=foo)`` arguments on your ``log`` methods. This will store the appropriate information and allow django-sentry to render it based on that information::
+You can also use the ``exc_info`` and ``extra=dict(url=foo)`` arguments on your ``log`` methods. This will store the appropriate information and allow Sentry to render it based on that information::
 
     logger.error('There was some crazy error', exc_info=True, extra={'url': request.build_absolute_uri()})
 
