@@ -14,6 +14,7 @@ tests_require = [
     'django-celery',
     'celery',
 
+    'django-sentry',
     'django-nose',
     'nose',
     'unittest2',
