@@ -1,5 +1,5 @@
 """
-sentry_client.utils.json
+raven.utils.json
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.

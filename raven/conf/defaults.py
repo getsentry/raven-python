@@ -1,5 +1,5 @@
 """
-sentry_client.conf.defaults
+raven.conf.defaults
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Represents the default values for all Sentry settings.
@@ -25,7 +25,7 @@ REMOTE_URL = None
 
 REMOTE_TIMEOUT = 5
 
-CLIENT = 'sentry_client.contrib.django.DjangoClient'
+CLIENT = 'raven.contrib.django.DjangoClient'
 
 NAME = socket.gethostname()
 

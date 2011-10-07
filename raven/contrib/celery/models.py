@@ -1,5 +1,5 @@
 """
-sentry_client.contrib.celery.models
+raven.contrib.celery.models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.

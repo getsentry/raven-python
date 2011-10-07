@@ -1,5 +1,5 @@
 """
-sentry_client.conf
+raven.conf
 ~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.

@@ -1,5 +1,5 @@
 """
-sentry_client.contrib.django.middleware
+raven.contrib.django.middleware
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -9,7 +9,7 @@ sentry_client.contrib.django.middleware
 from __future__ import absolute_import
 
 from django.middleware.common import _is_ignorable_404
-from sentry_client.contrib.django.models import get_client
+from raven.contrib.django.models import get_client
 import threading
 import logging
 

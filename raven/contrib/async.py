@@ -1,5 +1,5 @@
 """
-sentry_client.contrib.async
+raven.contrib.async
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -7,7 +7,7 @@ sentry_client.contrib.async
 """
 
 from Queue import Queue
-from sentry_client.base import Client
+from raven.base import Client
 from threading import Thread, Lock
 import atexit
 import os

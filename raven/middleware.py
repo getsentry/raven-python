@@ -1,5 +1,5 @@
 """
-sentry_client.middleware
+raven.middleware
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -7,11 +7,11 @@ sentry_client.middleware
 """
 
 import sys
-from sentry_client.utils.wsgi import get_current_url
+from raven.utils.wsgi import get_current_url
 
 class Sentry(object):
     """
-    >>> from sentry_client.base import Client
+    >>> from raven.base import Client
     >>> application = Sentry(application, Client())
     """
     def __init__(self, application, client):

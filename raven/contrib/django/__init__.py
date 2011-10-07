@@ -1,5 +1,5 @@
 """
-sentry_client.contrib.django
+raven.contrib.django
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -15,7 +15,7 @@ from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
 
-from sentry_client.base import Client
+from raven.base import Client
 
 logger = logging.getLogger('sentry.errors.client')
 

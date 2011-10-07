@@ -1,5 +1,5 @@
 """
-sentry_client.utils.stacks
+raven.utils.stacks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -9,7 +9,7 @@ sentry_client.utils.stacks
 import inspect
 import re
 
-from sentry_client.utils.encoding import transform
+from raven.utils.encoding import transform
 
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
     """

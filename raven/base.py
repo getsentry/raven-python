@@ -1,5 +1,5 @@
 """
-sentry_client.base
+raven.base
 ~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -17,12 +17,12 @@ import traceback
 import urllib2
 import uuid
 
-import sentry_client
-from sentry_client.conf import settings
-from sentry_client.utils import json, construct_checksum, varmap, \
+import raven
+from raven.conf import settings
+from raven.utils import json, construct_checksum, varmap, \
                                 get_versions, get_signature, get_auth_header
-from sentry_client.utils.encoding import transform, force_unicode, shorten
-from sentry_client.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames, \
+from raven.utils.encoding import transform, force_unicode, shorten
+from raven.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames, \
                                        get_culprit
 
 logger = logging.getLogger('sentry.errors.client')
@@ -128,7 +128,7 @@ class Client(object):
                 timestamp = time.time()
                 signature = get_signature(self.key, message, timestamp)
                 headers = {
-                    'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, sentry_client.VERSION)),
+                    'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, raven.VERSION)),
                     'Content-Type': 'application/octet-stream',
                 }
 

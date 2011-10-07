@@ -1,5 +1,5 @@
 """
-sentry_client.contrib.django.models
+raven.contrib.django.models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Acts as an implicit hook for Django installs.
@@ -18,7 +18,7 @@ from django.core.signals import got_request_exception
 from django.conf import settings as django_settings
 from django.utils.hashcompat import md5_constructor
 
-from sentry_client.conf import settings
+from raven.conf import settings
 
 logger = logging.getLogger('sentry.errors.client')
 

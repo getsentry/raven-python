@@ -1,5 +1,5 @@
 """
-sentry_client.utils.encoding
+raven.utils.encoding
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -9,7 +9,7 @@ sentry_client.utils.encoding
 import uuid
 from types import ClassType, TypeType
 
-from sentry_client.conf import settings
+from raven.conf import settings
 
 def force_unicode(s, encoding='utf-8', errors='strict'):
     """

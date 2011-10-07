@@ -6,7 +6,7 @@ sentry.client.log
 :license: BSD, see LICENSE for more details.
 """
 
-from sentry_client.base import Client
+from raven.base import Client
 
 import logging
 import sys

@@ -1,5 +1,5 @@
 """
-sentry_client.utils
+raven.utils
 ~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
@@ -15,8 +15,8 @@ except ImportError:
     pkg_resources = None
 import sys
 
-import sentry_client
-from sentry_client.conf import settings
+import raven
+from raven.conf import settings
 
 def construct_checksum(level=logging.ERROR, class_name='', traceback='', message='', **kwargs):
     checksum = hashlib.md5(str(level))
@@ -107,8 +107,8 @@ def get_signature(key, message, timestamp):
     return hmac.new(key, '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
 
 def get_auth_header(signature, timestamp, client):
-    return 'Sentry sentry_signature=%s, sentry_timestamp=%s, sentry_client=%s' % (
+    return 'Sentry sentry_signature=%s, sentry_timestamp=%s, raven=%s' % (
         signature,
         timestamp,
-        sentry_client.VERSION,
+        raven.VERSION,
     )
