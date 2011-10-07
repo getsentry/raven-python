@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Sentry'
+project = u'Raven'
 copyright = u'2010, David Cramer'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -166,7 +166,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Sentrydoc'
+htmlhelp_basename = 'Ravendoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -180,7 +180,7 @@ htmlhelp_basename = 'Sentrydoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Sentry.tex', u'Sentry Documentation',
+  ('index', 'Raven.tex', u'Raven Documentation',
    u'David Cramer', 'manual'),
 ]
 
@@ -213,6 +213,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'sentry', u'Sentry Documentation',
+    ('index', 'raven', u'Raven Documentation',
      [u'David Cramer'], 1)
 ]
