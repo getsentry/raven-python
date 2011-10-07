@@ -24,6 +24,7 @@ class Sentry(object):
     def handle_exception(self, client):
         def _handle_exception(sender, **kwargs):
             client.create_from_exception(
+                exc_info=kwargs.get('exc_info'),
                 url=request.url,
                 data={
                     'META': request.environ,
