@@ -1,0 +1,147 @@
+Configuring Django
+==================
+
+Setup
+-----
+
+Using the Django integration is as simple as adding Raven to your installed apps::
+
+    INSTALLED_APPS = (
+        'raven.contrib.django',
+    )
+
+Additional settings for the client are configured using ``SENTRY_<setting name>``::
+
+    SENTRY_KEY = 'my secret key'
+    SENTRY_REMOTE_URLS = ['http://sentry.local/store/']
+
+Integration with ``logging``
+----------------------------
+
+Django 1.3
+~~~~~~~~~~
+
+::
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'root': {
+            'level': 'WARNING',
+            'handlers': ['sentry'],
+        },
+        'formatters': {
+            'verbose': {
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            },
+        },
+        'handlers': {
+            'sentry': {
+                'level': 'DEBUG',
+                'class': 'sentry.client.handlers.SentryHandler',
+                'formatter': 'verbose'
+            },
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose'
+            }
+        },
+        'loggers': {
+            'sentry.errors': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+        },
+    }
+
+
+Older Versions
+~~~~~~~~~~~~~~
+
+::
+
+    import logging
+    from sentry.client.handlers import SentryHandler
+
+    logger = logging.getLogger()
+    # ensure we havent already registered the handler
+    if SentryHandler not in map(type, logger.handlers):
+        logger.addHandler(SentryHandler())
+
+        # Add StreamHandler to sentry's default so you can catch missed exceptions
+        logger = logging.getLogger('sentry.errors')
+        logger.propagate = False
+        logger.addHandler(logging.StreamHandler())
+
+Usage
+~~~~~
+
+Logging usage works the same way as it does outside of Django, with the addition of an optional ``request`` key in the extra data::
+
+    logger.error('There was some crazy error', exc_info=True, extra={
+        # Optionally pass a request and we'll grab any information we can
+        'request': request,
+    })
+
+
+404 Logging
+-----------
+
+In certain conditions you may wish to log 404 events to the Sentry server. To do this, you simply need to enable a Django middleware::
+
+    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+      ...,
+      'raven.contrib.django.middleware.Sentry404CatchMiddleware',
+    )
+
+Message References
+------------------
+
+Sentry supports sending a message ID to your clients so that they can be tracked easily by your development team. There are two ways to access this information, the first is via the ``X-Sentry-ID`` HTTP response header. Adding this is as simple as appending a middleware to your stack::
+
+    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+      # We recommend putting this as high in the chain as possible
+      'raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
+      ...,
+    )
+
+Another alternative method is rendering it within a template. By default, Sentry will attach request.sentry when it catches a Django exception. In our example, we will use this information to modify the default 500.html which is rendered, and show the user a case reference ID. The first step in doing this is creating a custom ``handler500`` in your ``urls.py`` file::
+
+    from django.conf.urls.defaults import *
+
+    from django.views.defaults import page_not_found, server_error
+
+    def handler500(request):
+        """
+        500 error handler which includes ``request`` in the context.
+
+        Templates: `500.html`
+        Context: None
+        """
+        from django.template import Context, loader
+        from django.http import HttpResponseServerError
+
+        t = loader.get_template('500.html') # You need to create a 500.html template.
+        return HttpResponseServerError(t.render(Context({
+            'request': request,
+        })))
+
+Once we've successfully added the request context variable, adding the Sentry reference ID to our 500.html is simple::
+
+    <p>You've encountered an error, oh noes!</p>
+    {% if request.sentry.id %}
+        <p>If you need assistance, you may reference this error as <strong>{{ request.sentry.id }}</strong>.</p>
+    {% endif %}
+
+Additional Settings
+-------------------
+
+SENTRY_CLIENT
+~~~~~~~~~~~~~~
+
+In some situations you may wish for a slightly different behavior to how Sentry communicates with your server. For
+this, Raven allows you to specify a custom client::
+
+    SENTRY_CLIENT = 'raven.contrib.django.DjangoClient'

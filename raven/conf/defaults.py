@@ -25,6 +25,7 @@ REMOTE_URL = None
 
 REMOTE_TIMEOUT = 5
 
+# TODO: this is specific to Django
 CLIENT = 'raven.contrib.django.DjangoClient'
 
 NAME = socket.gethostname()
@@ -54,6 +55,3 @@ MAX_LENGTH_STRING = 200
 
 # Automatically log frame stacks from all ``logging`` messages.
 AUTO_LOG_STACKS = False
-
-# Only store a portion of all messages per unique group.
-SAMPLE_DATA = True

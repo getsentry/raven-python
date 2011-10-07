@@ -1,13 +1,12 @@
 Raven
 =====
 
-This is a standalone (and the official) Python client for django-sentry.
+Raven is a standalone (and the official) Python client for django-sentry.
 
 It currently contains drop-in support for the following projects:
 
 - Django
 - Flask
-
 
 About Sentry
 ------------

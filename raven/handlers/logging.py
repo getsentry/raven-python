@@ -13,7 +13,7 @@ import sys
 import traceback
 
 class SentryHandler(logging.Handler):
-    def __init__(self, client):
+    def __init__(self, client=None):
         self.client = client
         super(SentryHandler, self).__init__()
 
