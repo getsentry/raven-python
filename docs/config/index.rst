@@ -23,7 +23,7 @@ Settings are specified as part of the intialization of the client. For example::
 
     from raven import Client
 
-    client = Client(remote_urls=['http://sentry.local/store/'])
+    client = Client(servers=['http://sentry.local/store/'])
 
 name
 ~~~~

@@ -9,7 +9,7 @@ Sentry supports the ability to directly tie into the ``logging`` module. To use 
     from raven import Client
     from raven.handlers.logging import SentryHandler
 
-    client = Client(remote_urls=['http://sentry.local/store/'], key='MY SECRET KEY')
+    client = Client(servers=['http://sentry.local/store/'], key='MY SECRET KEY')
     logger = logging.getLogger()
 
     # ensure we havent already registered the handler

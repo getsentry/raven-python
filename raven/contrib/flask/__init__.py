@@ -40,7 +40,7 @@ class Sentry(object):
             client = self.client_cls(
                 include_paths=app.config.get('SENTRY_INCLUDE_PATHS'),
                 exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
-                remote_urls=app.config.get('SENTRY_REMOTE_URLS'),
+                servers=app.config.get('SENTRY_SERVERS'),
                 name=app.config.get('SENTRY_NAME'),
                 key=app.config.get('SENTRY_KEY'),
             )

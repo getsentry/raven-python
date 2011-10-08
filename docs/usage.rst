@@ -7,7 +7,7 @@ TODO :)
 
     from raven import Client
 
-    client = Client(remote_urls=['http://sentry.local/store/'])
+    client = Client(servers=['http://sentry.local/store/'])
 
     try:
         ...

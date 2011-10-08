@@ -21,7 +21,7 @@ DEBUG = False
 KEY = socket.gethostname() + '1304u13oafjadf0913j4'
 
 # This should be the full URL to sentries store view
-REMOTE_URL = None
+SERVERS = None
 
 REMOTE_TIMEOUT = 5
 

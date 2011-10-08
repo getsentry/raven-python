@@ -55,7 +55,7 @@ def configure_settings():
     if 'REMOTE_URL' in values:
         v = values['REMOTE_URL']
         if isinstance(v, basestring):
-            values['REMOTE_URL'] = [v]
+            values['REMOTES'] = [v]
         elif not isinstance(v, (list, tuple)):
             raise ValueError("Sentry setting 'REMOTE_URL' must be of type list.")
 

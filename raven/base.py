@@ -32,7 +32,7 @@ class Client(object):
         self.include_paths = kwargs.get('include_paths') or settings.INCLUDE_PATHS
         self.exclude_paths = kwargs.get('exclude_paths') or settings.EXCLUDE_PATHS
         self.remote_timeout = kwargs.get('remote_timeout') or settings.REMOTE_TIMEOUT
-        self.remote_urls = kwargs.get('remote_urls') or settings.REMOTE_URL
+        self.servers = kwargs.get('servers') or settings.SERVERS
         self.name = kwargs.get('name') or settings.NAME
         self.auto_log_stacks = kwargs.get('auto_log_stacks') or settings.AUTO_LOG_STACKS
         self.key = kwargs.get('key') or settings.KEY
@@ -122,9 +122,9 @@ class Client(object):
 
     def send(self, **kwargs):
         "Sends the message to the server."
-        if self.remote_urls:
+        if self.servers:
             message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
-            for url in self.remote_urls:
+            for url in self.servers:
                 timestamp = time.time()
                 signature = get_signature(self.key, message, timestamp)
                 headers = {
