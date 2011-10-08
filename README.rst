@@ -8,6 +8,9 @@ It currently contains drop-in support for the following projects:
 - Django
 - Flask
 
+Don't use a framework? No problem! Raven is easy to use in any Python application,
+even if it's not on the web.
+
 About Sentry
 ------------
 
