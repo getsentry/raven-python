@@ -2,7 +2,7 @@
 Install
 =======
 
-If you haven't already, start by downloading Sentry. The easiest way is with *pip*::
+If you haven't already, start by downloading Raven. The easiest way is with **pip**::
 
 	pip install raven --upgrade
 
@@ -15,6 +15,6 @@ Requirements
 ------------
 
 If you installed using pip or setuptools you shouldn't need to worry about requirements. Otherwise
-you will need to install the following packages in your Sentry server environment:
+you will need to install the following packages in your environment:
 
  - ``simplejson``
