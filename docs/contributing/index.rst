@@ -17,7 +17,7 @@ any base dependancies.
 
 ::
 
-    virtualenv ~/.virtualenvs/sentry
+    virtualenv ~/.virtualenvs/raven
     source ~/.virtualenvs/raven/bin/activate
     python setup.py develop
 
