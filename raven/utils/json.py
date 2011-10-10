@@ -10,7 +10,7 @@ import datetime
 import simplejson
 import uuid
 
-class BetterJSONEncoder(simplejson.JSONDecoder):
+class BetterJSONEncoder(simplejson.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, uuid.UUID):
             return obj.hex

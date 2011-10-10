@@ -38,7 +38,7 @@ Django 1.3
         'handlers': {
             'sentry': {
                 'level': 'DEBUG',
-                'class': 'sentry.client.handlers.SentryHandler',
+                'class': 'raven.contrib.django.logging.SentryHandler',
                 'formatter': 'verbose'
             },
             'console': {
@@ -171,7 +171,7 @@ To work around this, you can either disable your error handling middleware, or a
 
 Or, alternatively, you can just enable Sentry responses::
 
-    from sentry.client.models import sentry_exception_handler
+    from raven.contrib.django.models import sentry_exception_handler
     class MyMiddleware(object):
         def process_exception(self, request, exception):
             # Make sure the exception signal is fired for Sentry

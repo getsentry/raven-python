@@ -8,7 +8,6 @@ Represents the default values for all Sentry settings.
 :license: BSD, see LICENSE for more details.
 """
 
-import logging
 import os
 import os.path
 import socket
@@ -23,7 +22,7 @@ KEY = socket.gethostname() + '1304u13oafjadf0913j4'
 # This should be the full URL to sentries store view
 SERVERS = None
 
-REMOTE_TIMEOUT = 5
+TIMEOUT = 5
 
 # TODO: this is specific to Django
 CLIENT = 'raven.contrib.django.DjangoClient'

@@ -31,7 +31,7 @@ class Client(object):
     def __init__(self, *args, **kwargs):
         self.include_paths = kwargs.get('include_paths') or settings.INCLUDE_PATHS
         self.exclude_paths = kwargs.get('exclude_paths') or settings.EXCLUDE_PATHS
-        self.remote_timeout = kwargs.get('remote_timeout') or settings.REMOTE_TIMEOUT
+        self.timeout = kwargs.get('timeout') or settings.TIMEOUT
         self.servers = kwargs.get('servers') or settings.SERVERS
         self.name = kwargs.get('name') or settings.NAME
         self.auto_log_stacks = kwargs.get('auto_log_stacks') or settings.AUTO_LOG_STACKS
@@ -115,7 +115,7 @@ class Client(object):
     def send_remote(self, url, data, headers={}):
         req = urllib2.Request(url, headers=headers)
         try:
-            response = urllib2.urlopen(req, data, self.remote_timeout).read()
+            response = urllib2.urlopen(req, data, self.timeout).read()
         except:
             response = urllib2.urlopen(req, data).read()
         return response

@@ -11,16 +11,14 @@ from __future__ import absolute_import
 import logging
 import sys
 
-from django.http import HttpRequest
-from django.template import TemplateSyntaxError
-from django.template.loader import LoaderOrigin
-
 from raven.base import Client
 
-logger = logging.getLogger('sentry.errors.client')
-
 class DjangoClient(Client):
+    logger = logging.getLogger('sentry.errors.client')
+
     def process(self, **kwargs):
+        from django.http import HttpRequest
+
         request = kwargs.pop('request', None)
         is_http_request = isinstance(request, HttpRequest)
         if is_http_request:
@@ -56,8 +54,6 @@ class DjangoClient(Client):
 
             if not kwargs.get('url'):
                 kwargs['url'] = request.build_absolute_uri()
-        else:
-            kwargs['request'] = request
 
         message_id, checksum = super(DjangoClient, self).process(**kwargs)
 
@@ -74,6 +70,9 @@ class DjangoClient(Client):
         """
         Creates an error log from an exception.
         """
+        from django.template import TemplateSyntaxError
+        from django.template.loader import LoaderOrigin
+
         new_exc = bool(exc_info)
         if not exc_info or exc_info is True:
             exc_info = sys.exc_info()
@@ -100,7 +99,7 @@ class DjangoClient(Client):
                 try:
                     del exc_info
                 except Exception, e:
-                    logger.exception(e)
+                    self.logger.exception(e)
 
     def create_from_record(self, record, **kwargs):
         """

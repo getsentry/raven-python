@@ -54,3 +54,8 @@ auto_log_stacks
 ~~~~~~~~~~~~~~~
 
 Should Raven automatically log frame stacks (including locals) for ``create_from_record`` (``logging``) calls as it would for exceptions. Defaults to ``False``.
+
+timeout
+~~~~~~~
+
+If supported, the timeout value for sending messages to remote.

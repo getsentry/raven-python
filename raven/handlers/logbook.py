@@ -1,6 +1,6 @@
 """
-sentry.client.handlers.logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+raven.handlers.logbook
+~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -20,7 +20,7 @@ class SentryHandler(logbook.Handler):
         self.format(record)
 
         # Avoid typical config issues by overriding loggers behavior
-        if record.name == 'sentry.errors':
+        if record.name.startswith('sentry.errors'):
             print >> sys.stderr, "Recursive log message sent to SentryHandler"
             print >> sys.stderr, record.message
             return

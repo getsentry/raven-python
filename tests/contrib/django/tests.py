@@ -16,6 +16,7 @@ from raven.conf import defaults
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
 
+django_settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 settings.CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 class TempStoreClient(DjangoClient):
