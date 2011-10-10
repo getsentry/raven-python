@@ -14,7 +14,7 @@ from raven.base import Client
 
 class ServerTest(TestCase):
     def setUp(self):
-        self.raven = Client()
+        self.raven = Client(include_paths=['tests'])
 
     def test_text(self):
         message_id, checksum = self.raven.create_from_text('hello')

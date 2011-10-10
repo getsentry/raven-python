@@ -28,48 +28,78 @@ from raven.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback
 logger = logging.getLogger('sentry.errors.client')
 
 class Client(object):
-    def __init__(self, *args, **kwargs):
-        self.include_paths = kwargs.get('include_paths') or defaults.INCLUDE_PATHS
-        self.exclude_paths = kwargs.get('exclude_paths') or defaults.EXCLUDE_PATHS
-        self.timeout = kwargs.get('timeout') or defaults.TIMEOUT
-        self.servers = kwargs.get('servers') or defaults.SERVERS
-        self.name = kwargs.get('name') or defaults.NAME
-        self.auto_log_stacks = kwargs.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS
-        self.key = kwargs.get('key') or defaults.KEY
-        self.string_max_length = kwargs.get('string_max_length') or defaults.MAX_LENGTH_STRING
-        self.list_max_length = kwargs.get('list_max_length') or defaults.MAX_LENGTH_LIST
+    """
+    The base Raven client, which handles both local direct communication with Sentry (through
+    the GroupedMessage API), as well as communicating over the HTTP API to multiple servers.
+
+    >>> from raven import Client
+    >>>
+    >>> client = Client(servers=['http://sentry.local/store/'])
+    """
+
+    def __init__(self, include_paths=None, exclude_paths=None, timeout=None, servers=None,
+                 name=None, auto_log_stacks=None, key=None, string_max_length=None,
+                 list_max_length=None, **kwargs):
+        self.include_paths = include_paths or set(defaults.INCLUDE_PATHS)
+        self.exclude_paths = exclude_paths or set(defaults.EXCLUDE_PATHS)
+        self.timeout = timeout or int(defaults.TIMEOUT)
+        self.servers = servers or defaults.SERVERS
+        self.name = name or unicode(defaults.NAME)
+        self.auto_log_stacks = auto_log_stacks or bool(defaults.AUTO_LOG_STACKS)
+        self.key = key or defaults.KEY
+        self.string_max_length = string_max_length or int(defaults.MAX_LENGTH_STRING)
+        self.list_max_length = list_max_length or int(defaults.MAX_LENGTH_LIST)
 
     def process(self, **kwargs):
         "Processes the message before passing it on to the server"
+
         if kwargs.get('data'):
             # Ensure we're not changing the original data which was passed
             # to Sentry
-            kwargs['data'] = kwargs['data'].copy()
+            data = kwargs.get('data').copy()
         else:
-            kwargs['data'] = {}
+            data = {}
 
-        if '__sentry__' not in kwargs['data']:
-            kwargs['data']['__sentry__'] = {}
+        if '__sentry__' not in data:
+            data['__sentry__'] = {}
+
+        if kwargs.pop('stack', self.auto_log_stacks) and not data['__sentry__'].get('frames'):
+            stack = []
+            found = None
+            for frame in iter_stack_frames():
+                # There are initial frames from Sentry that need skipped
+                name = frame.f_globals.get('__name__')
+                if found is None:
+                    if name == 'logging':
+                        found = False
+                    continue
+                elif not found:
+                    if name != 'logging':
+                        found = True
+                    else:
+                        continue
+                stack.append(frame)
+            data['__sentry__']['frames'] = varmap(shorten, get_stack_info(stack))
 
         kwargs.setdefault('level', logging.ERROR)
         kwargs.setdefault('server_name', self.name)
 
         versions = get_versions(self.include_paths)
-        kwargs['data']['__sentry__']['versions'] = versions
+        data['__sentry__']['versions'] = versions
 
         # Shorten lists/strings
-        for k, v in kwargs['data'].iteritems():
+        for k, v in data.iteritems():
             if k == '__sentry__':
                 continue
-            kwargs['data'][k] = shorten(v, string_length=self.string_max_length, list_length=self.list_max_length)
+            data[k] = shorten(v, string_length=self.string_max_length, list_length=self.list_max_length)
 
         # if we've passed frames, lets try to fetch the culprit
-        if not kwargs.get('view') and kwargs['data']['__sentry__'].get('frames'):
+        if not kwargs.get('view') and data['__sentry__'].get('frames'):
             # We iterate through each frame looking for an app in INSTALLED_APPS
             # When one is found, we mark it as last "best guess" (best_guess) and then
             # check it against SENTRY_EXCLUDE_PATHS. If it isnt listed, then we
             # use this option. If nothing is found, we use the "best guess".
-            view = get_culprit(kwargs['data']['__sentry__']['frames'], self.include_paths, self.exclude_paths)
+            view = get_culprit(data['__sentry__']['frames'], self.include_paths, self.exclude_paths)
 
             if view:
                 kwargs['view'] = view
@@ -88,7 +118,7 @@ class Client(object):
 
             # store our "best guess" for application version
             if version:
-                kwargs['data']['__sentry__'].update({
+                data['__sentry__'].update({
                     'version': version,
                     'module': module,
                 })
@@ -103,7 +133,7 @@ class Client(object):
         kwargs['message_id'] = message_id
 
         # Make sure all data is coerced
-        kwargs['data'] = transform(kwargs['data'])
+        kwargs['data'] = transform(data)
 
         if 'timestamp' not in kwargs:
             kwargs['timestamp'] = datetime.datetime.now()
@@ -161,6 +191,7 @@ class Client(object):
             'level': record.levelno,
             'message': force_unicode(record.msg),
             'server_name': self.name,
+            'stack': getattr(record, 'stack', self.auto_log_stacks),
         })
 
         # construct the checksum with the unparsed message
@@ -174,29 +205,8 @@ class Client(object):
         if record.exc_info and all(record.exc_info):
             return self.create_from_exception(record.exc_info, **kwargs)
 
-        data = kwargs.pop('data', {}) or {}
-        data['__sentry__'] = {}
-        if getattr(record, 'stack', self.auto_log_stacks):
-            stack = []
-            found = None
-            for frame in iter_stack_frames():
-                # There are initial frames from Sentry that need skipped
-                name = frame.f_globals.get('__name__')
-                if found is None:
-                    if name == 'logging':
-                        found = False
-                    continue
-                elif not found:
-                    if name != 'logging':
-                        found = True
-                    else:
-                        continue
-                stack.append(frame)
-            data['__sentry__']['frames'] = varmap(shorten, get_stack_info(stack))
-
         return self.process(
             traceback=record.exc_text,
-            data=data,
             **kwargs
         )
 
