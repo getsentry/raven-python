@@ -34,7 +34,12 @@ class Client(object):
 
     >>> from raven import Client
     >>>
-    >>> client = Client(servers=['http://sentry.local/store/'])
+    >>> client = Client(servers=['http://sentry.local/store/'], include_paths=['my.package'])
+    >>> try:
+    >>>     1/0
+    >>> except ZeroDivisionError:
+    >>>     ident = client.get_ident(client.create_from_exception())
+    >>>     print "Exception caught; reference is %%s" %% ident
     """
 
     def __init__(self, include_paths=None, exclude_paths=None, timeout=None, servers=None,
@@ -50,8 +55,26 @@ class Client(object):
         self.string_max_length = string_max_length or int(defaults.MAX_LENGTH_STRING)
         self.list_max_length = list_max_length or int(defaults.MAX_LENGTH_LIST)
 
+    def get_ident(self, result):
+        """
+        Returns a searchable string representing a message.
+
+        >>> result = client.process(**kwargs)
+        >>> ident = client.get_ident(result)
+        """
+        return '$'.join(result)
+
     def process(self, **kwargs):
-        "Processes the message before passing it on to the server"
+        """
+        Processes the message before passing it on to the server.
+
+        This includes:
+
+        - extracting stack frames (for non exceptions)
+        - identifying module versions
+        - coercing data
+        - generating message identifiers
+        """
 
         if kwargs.get('data'):
             # Ensure we're not changing the original data which was passed
@@ -143,6 +166,9 @@ class Client(object):
         return (message_id, checksum)
 
     def send_remote(self, url, data, headers={}):
+        """
+        Sends a request to a remote webserver using HTTP POST.
+        """
         req = urllib2.Request(url, headers=headers)
         try:
             response = urllib2.urlopen(req, data, self.timeout).read()
@@ -151,7 +177,13 @@ class Client(object):
         return response
 
     def send(self, **kwargs):
-        "Sends the message to the server."
+        """
+        Sends the message to the server.
+
+        If ``servers`` was passed into the constructor, this will serialize the data and pipe it to
+        each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
+        directly.
+        """
         if self.servers:
             message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
             for url in self.servers:
@@ -180,7 +212,16 @@ class Client(object):
 
     def create_from_record(self, record, **kwargs):
         """
-        Creates an error log for a ``logging`` module ``record`` instance.
+        Creates an event for a ``logging`` module ``record`` instance.
+
+        If the record contains an attribute, ``stack``, that evaluates to True,
+        it will pass this information on to process in order to grab the stack
+        frames.
+
+        >>> class ExampleHandler(logging.Handler):
+        >>>     def emit(self, record):
+        >>>         self.format(record)
+        >>>         client.create_from_record(record)
         """
         for k in ('url', 'view', 'data'):
             if not kwargs.get(k):
@@ -212,7 +253,9 @@ class Client(object):
 
     def create_from_text(self, message, **kwargs):
         """
-        Creates an error log for from ``message``.
+        Creates an event for from ``message``.
+
+        >>> client.create_from_text('My event just happened!')
         """
         return self.process(
             message=message,
@@ -221,7 +264,13 @@ class Client(object):
 
     def create_from_exception(self, exc_info=None, **kwargs):
         """
-        Creates an error log from an exception.
+        Creates an event from an exception.
+
+        >>> try:
+        >>>     exc_info = sys.exc_info()
+        >>>     client.create_from_exception(exc_info)
+        >>> finally:
+        >>>     del exc_info
         """
         new_exc = bool(exc_info)
         if not exc_info or exc_info is True:
