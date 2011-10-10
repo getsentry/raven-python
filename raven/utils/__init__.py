@@ -16,7 +16,6 @@ except ImportError:
 import sys
 
 import raven
-from raven.conf import settings
 
 def construct_checksum(level=logging.ERROR, class_name='', traceback='', message='', **kwargs):
     checksum = hashlib.md5(str(level))

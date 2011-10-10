@@ -1,6 +1,6 @@
 """
 raven.conf.defaults
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Represents the default values for all Sentry settings.
 

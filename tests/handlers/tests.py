@@ -2,7 +2,6 @@ import logging
 from unittest2 import TestCase
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
-from raven.conf import settings
 
 class TempStoreClient(Client):
     def __init__(self, *args, **kwargs):
@@ -15,10 +14,9 @@ class TempStoreClient(Client):
 class LoggingHandlerTest(TestCase):
     def setUp(self):
         self.logger = logging.getLogger(__name__)
-        settings.configure(INCLUDE_PATHS=['tests'])
 
     def test_logger(self):
-        client = TempStoreClient()
+        client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client)
 
         logger = self.logger

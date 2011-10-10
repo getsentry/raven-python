@@ -9,8 +9,6 @@ raven.utils.encoding
 import uuid
 from types import ClassType, TypeType
 
-from raven.conf import settings
-
 def force_unicode(s, encoding='utf-8', errors='strict'):
     """
     Similar to smart_unicode, except that lazy instances are resolved to

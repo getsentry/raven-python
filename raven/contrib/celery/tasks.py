@@ -7,9 +7,8 @@ raven.contrib.celery.tasks
 """
 
 from celery.decorators import task
-from raven.conf import settings
 from raven.base import Client
 
-@task(routing_key=getattr(settings, 'CELERY_ROUTING_KEY', None))
+@task(routing_key='sentry')
 def send(data):
     return Client().send(**data)

@@ -4,20 +4,17 @@ from __future__ import absolute_import
 
 import logging
 
-from django.conf import settings as django_settings
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 
-from raven.conf import settings
-from raven.conf import defaults
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
 
-django_settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
-settings.CLIENT = 'tests.contrib.django.tests.TempStoreClient'
+settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 class TempStoreClient(DjangoClient):
     def __init__(self, *args, **kwargs):
@@ -43,22 +40,15 @@ class Settings(object):
 
     def __enter__(self):
         for k, v in self.overrides.iteritems():
-            self._orig[k] = getattr(django_settings, k, self.NotDefined)
-            setattr(django_settings, k, v)
-            if k.startswith('SENTRY_'):
-                setattr(settings, k.split('SENTRY_', 1)[1], v)
+            self._orig[k] = getattr(settings, k, self.NotDefined)
+            setattr(settings, k, v)
 
     def __exit__(self, exc_type, exc_value, traceback):
         for k, v in self._orig.iteritems():
             if v is self.NotDefined:
-                delattr(django_settings, k)
-                if k.startswith('SENTRY_'):
-                    k = k.split('SENTRY_', 1)[1]
-                    setattr(settings, k, getattr(defaults, k, None))
+                delattr(settings, k)
             else:
-                setattr(django_settings, k, v)
-                if k.startswith('SENTRY_'):
-                    setattr(settings, k.split('SENTRY_', 1)[1], v)
+                setattr(settings, k, v)
 
 class DjangoClientTest(TestCase):
     ## Fixture setup/teardown
@@ -137,8 +127,8 @@ class DjangoClientTest(TestCase):
 
     # XXX: Django doesn't handle response middleware exceptions (yet)
     # def test_response_middlware_exception(self):
-    #     orig = list(django_settings.MIDDLEWARE_CLASSES)
-    #     django_settings.MIDDLEWARE_CLASSES = orig + ['tests.middleware.BrokenResponseMiddleware',]
+    #     orig = list(settings.MIDDLEWARE_CLASSES)
+    #     settings.MIDDLEWARE_CLASSES = orig + ['tests.middleware.BrokenResponseMiddleware',]
     #
     #     self.assertRaises(ImportError, self.client.get, reverse('sentry'))
     #     self.assertEquals(Message.objects.count(), 1)
@@ -150,7 +140,7 @@ class DjangoClientTest(TestCase):
     #     self.assertEquals(last.message, 'response')
     #     self.assertEquals(last.view, 'tests.middleware.process_response')
     #
-    #     django_settings.MIDDLEWARE_CLASSES = orig
+    #     settings.MIDDLEWARE_CLASSES = orig
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):

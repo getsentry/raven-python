@@ -18,7 +18,7 @@ import urllib2
 import uuid
 
 import raven
-from raven.conf import settings
+from raven.conf import defaults
 from raven.utils import json, construct_checksum, varmap, \
                                 get_versions, get_signature, get_auth_header
 from raven.utils.encoding import transform, force_unicode, shorten
@@ -29,15 +29,15 @@ logger = logging.getLogger('sentry.errors.client')
 
 class Client(object):
     def __init__(self, *args, **kwargs):
-        self.include_paths = kwargs.get('include_paths') or settings.INCLUDE_PATHS
-        self.exclude_paths = kwargs.get('exclude_paths') or settings.EXCLUDE_PATHS
-        self.timeout = kwargs.get('timeout') or settings.TIMEOUT
-        self.servers = kwargs.get('servers') or settings.SERVERS
-        self.name = kwargs.get('name') or settings.NAME
-        self.auto_log_stacks = kwargs.get('auto_log_stacks') or settings.AUTO_LOG_STACKS
-        self.key = kwargs.get('key') or settings.KEY
-        self.string_max_length = kwargs.get('string_max_length') or settings.MAX_LENGTH_STRING
-        self.list_max_length = kwargs.get('list_max_length') or settings.MAX_LENGTH_LIST
+        self.include_paths = kwargs.get('include_paths') or defaults.INCLUDE_PATHS
+        self.exclude_paths = kwargs.get('exclude_paths') or defaults.EXCLUDE_PATHS
+        self.timeout = kwargs.get('timeout') or defaults.TIMEOUT
+        self.servers = kwargs.get('servers') or defaults.SERVERS
+        self.name = kwargs.get('name') or defaults.NAME
+        self.auto_log_stacks = kwargs.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS
+        self.key = kwargs.get('key') or defaults.KEY
+        self.string_max_length = kwargs.get('string_max_length') or defaults.MAX_LENGTH_STRING
+        self.list_max_length = kwargs.get('list_max_length') or defaults.MAX_LENGTH_LIST
 
     def process(self, **kwargs):
         "Processes the message before passing it on to the server"
