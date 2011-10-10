@@ -14,6 +14,7 @@ This document describes configuration options available to Sentry.
    flask
    logging
    logbook
+   wsgi
 
 
 Client Settings
