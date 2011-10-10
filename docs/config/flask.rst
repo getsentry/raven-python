@@ -11,7 +11,11 @@ The first thing you'll need to do is to initialize Raven under your application:
 
 .. note:: You may alternatively rely on Raven's ``init_app`` hook as well.
 
+Settings
+--------
+
 Additional settings for the client are configured using ``SENTRY_<setting name>`` in your application's configuration::
 
-    SENTRY_KEY = 'my secret key'
-    SENTRY_SERVERS = ['http://sentry.local/store/']
+    class MyConfig(object):
+        SENTRY_KEY = 'my secret key'
+        SENTRY_SERVERS = ['http://sentry.local/store/']
