@@ -63,7 +63,7 @@ Older Versions
 ::
 
     import logging
-    from sentry.client.handlers import SentryHandler
+    from raven.contrib.django.logging import SentryHandler
 
     logger = logging.getLogger()
     # ensure we havent already registered the handler
