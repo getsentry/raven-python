@@ -55,16 +55,16 @@ class DjangoClient(Client):
             if not kwargs.get('url'):
                 kwargs['url'] = request.build_absolute_uri()
 
-        message_id, checksum = super(DjangoClient, self).process(**kwargs)
+        result = super(DjangoClient, self).process(**kwargs)
 
         if is_http_request:
             # attach the sentry object to the request
             request.sentry = {
-                'id': '%s$%s' % (message_id, checksum),
+                'id': self.get_ident(result),
                 'thrashed': False,
             }
 
-        return message_id, checksum
+        return result
 
     def create_from_exception(self, exc_info=None, **kwargs):
         """
