@@ -31,7 +31,7 @@ if sys.version_info[:2] < (2, 5):
 
 setup(
     name='raven',
-    version='1.0',
+    version='0.1',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',
