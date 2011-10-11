@@ -1,3 +1,8 @@
-1.0
+0.2
+
+* auto_log_stacks now works with create_from_text
+* added Client.get_ident
+
+0.1
 
 * Initial version of Raven (extracted from django-sentry 1.12.1).
