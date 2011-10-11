@@ -11,6 +11,8 @@ import re
 
 from raven.utils.encoding import transform
 
+_coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
+
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
     """
     Returns context_lines before and after lineno from file.
@@ -54,7 +56,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     for line in source[:2]:
         # File coding may be specified. Match pattern from PEP-263
         # (http://www.python.org/dev/peps/pep-0263/)
-        match = re.search(r'coding[:=]\s*([-\w.]+)', line)
+        match = _coding_re.search(line)
         if match:
             encoding = match.group(1)
             break
