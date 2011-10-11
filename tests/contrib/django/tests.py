@@ -11,6 +11,7 @@ from django.core.signals import got_request_exception
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 
+from raven.base import Client
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
 
@@ -258,16 +259,10 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
             self.assertEquals('$'.join([event['message_id'], event['checksum']]), headers['X-Sentry-ID'])
 
-    # def test_get_client(self):
-    #     from sentry.client.log import LoggingClient
+    def test_get_client(self):
+        self.assertEquals(get_client(), get_client())
+        self.assertEquals(get_client('raven.base.Client').__class__, Client)
+        self.assertEquals(get_client(), self.raven)
 
-    #     self.assertEquals(get_client().__class__, Client)
-    #     self.assertEquals(get_client(), get_client())
-
-    #     settings.CLIENT = 'sentry.client.log.LoggingClient'
-
-    #     self.assertEquals(get_client().__class__, LoggingClient)
-    #     self.assertEquals(get_client(), get_client())
-
-    #     settings.CLIENT = 'sentry.client.base.Client'
-
+        self.assertEquals(get_client('%s.%s' % (self.raven.__class__.__module__, self.raven.__class__.__name__)), self.raven)
+        self.assertEquals(get_client(), self.raven)

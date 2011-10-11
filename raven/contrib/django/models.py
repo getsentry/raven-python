@@ -31,14 +31,16 @@ def get_installed_apps():
     return out
 
 _client = (None, None)
-def get_client():
+def get_client(client=None):
     global _client
 
-    client = getattr(django_settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
+    tmp_client = client is not None
+    if not tmp_client:
+        client = getattr(django_settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
 
     if _client[0] != client:
         module, class_name = client.rsplit('.', 1)
-        _client = (client, getattr(__import__(module, {}, {}, class_name), class_name)(
+        instance = getattr(__import__(module, {}, {}, class_name), class_name)(
             include_paths=getattr(django_settings, 'SENTRY_INCLUDE_PATHS', set()) | get_installed_apps(),
             exclude_paths=getattr(django_settings, 'SENTRY_EXCLUDE_PATHS', None),
             timeout=getattr(django_settings, 'SENTRY_TIMEOUT', None),
@@ -48,8 +50,12 @@ def get_client():
             key=getattr(django_settings, 'SENTRY_KEY', md5_constructor(django_settings.SECRET_KEY).hexdigest()),
             string_max_length=getattr(django_settings, 'MAX_LENGTH_STRING', None),
             list_max_length=getattr(django_settings, 'MAX_LENGTH_LIST', None),
-        ))
+        )
+        if not tmp_client:
+            _client = (client, instance)
+        return instance
     return _client[1]
+
 client = get_client()
 
 def get_transaction_wrapper(client):
