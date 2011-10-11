@@ -15,7 +15,7 @@ import traceback
 class SentryHandler(logging.Handler):
     def __init__(self, client=None):
         self.client = client
-        super(SentryHandler, self).__init__()
+        logging.Handler.__init__(self)
 
     def emit(self, record):
         # from sentry.client.middleware import SentryLogMiddleware
