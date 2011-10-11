@@ -2,6 +2,7 @@
 
 * Removed the ``thrashed`` key in ``request.sentry`` for the Django integration.
 * Changed the logging handler to correctly inherit old-style classes (GH-1).
+* Added a ``client`` argument to ``raven.contrib.django.models.get_client()``.
 
 0.2
 
