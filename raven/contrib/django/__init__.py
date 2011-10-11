@@ -61,7 +61,6 @@ class DjangoClient(Client):
             # attach the sentry object to the request
             request.sentry = {
                 'id': self.get_ident(result),
-                'thrashed': False,
             }
 
         return result
