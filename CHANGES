@@ -1,3 +1,8 @@
+0.3
+
+* Removed the ``thrashed`` key in ``request.sentry`` for the Django integration.
+* Changed the logging handler to correctly inherit old-style classes (GH-1).
+
 0.2
 
 * auto_log_stacks now works with create_from_text
