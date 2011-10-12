@@ -5,9 +5,9 @@ from raven.contrib.flask import Sentry
 from unittest2 import TestCase
 
 class TempStoreClient(Client):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, servers=None, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(*args, **kwargs)
+        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)

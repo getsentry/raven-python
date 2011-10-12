@@ -1,3 +1,7 @@
+0.5
+
+* Require ``servers`` on base Client.
+
 0.4
 
 * Fixed an infinite loop in iter_tb.

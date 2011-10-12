@@ -10,11 +10,11 @@ import logging
 
 from django.test import TestCase
 from sentry.models import GroupedMessage, Message
-from raven.base import Client
+from raven.contrib.django import DjangoClient
 
 class ServerTest(TestCase):
     def setUp(self):
-        self.raven = Client(include_paths=['tests'])
+        self.raven = DjangoClient(include_paths=['tests'])
 
     def test_text(self):
         message_id, checksum = self.raven.create_from_text('hello')

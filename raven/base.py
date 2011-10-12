@@ -42,13 +42,13 @@ class Client(object):
     >>>     print "Exception caught; reference is %%s" %% ident
     """
 
-    def __init__(self, include_paths=None, exclude_paths=None, timeout=None, servers=None,
+    def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, **kwargs):
+        self.servers = servers
         self.include_paths = include_paths or set(defaults.INCLUDE_PATHS)
         self.exclude_paths = exclude_paths or set(defaults.EXCLUDE_PATHS)
         self.timeout = timeout or int(defaults.TIMEOUT)
-        self.servers = servers or defaults.SERVERS
         self.name = name or unicode(defaults.NAME)
         self.auto_log_stacks = auto_log_stacks or bool(defaults.AUTO_LOG_STACKS)
         self.key = key or defaults.KEY
@@ -184,31 +184,26 @@ class Client(object):
         each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
         directly.
         """
-        if self.servers:
-            message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
-            for url in self.servers:
-                timestamp = time.time()
-                signature = get_signature(self.key, message, timestamp)
-                headers = {
-                    'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, raven.VERSION)),
-                    'Content-Type': 'application/octet-stream',
-                }
+        message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
+        for url in self.servers:
+            timestamp = time.time()
+            signature = get_signature(self.key, message, timestamp)
+            headers = {
+                'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, raven.VERSION)),
+                'Content-Type': 'application/octet-stream',
+            }
 
-                try:
-                    return self.send_remote(url=url, data=message, headers=headers)
-                except urllib2.HTTPError, e:
-                    body = e.read()
-                    logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
-                                 exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-                    logger.log(kwargs.pop('level', None) or logging.ERROR, kwargs.pop('message', None))
-                except urllib2.URLError, e:
-                    logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
-                                 exc_info=True, extra={'data': {'remote_url': url}})
-                    logger.log(kwargs.pop('level', None) or logging.ERROR, kwargs.pop('message', None))
-        else:
-            from sentry.models import GroupedMessage
-
-            return GroupedMessage.objects.from_kwargs(**kwargs)
+            try:
+                return self.send_remote(url=url, data=message, headers=headers)
+            except urllib2.HTTPError, e:
+                body = e.read()
+                logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
+                             exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
+                logger.log(kwargs.pop('level', None) or logging.ERROR, kwargs.pop('message', None))
+            except urllib2.URLError, e:
+                logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
+                             exc_info=True, extra={'data': {'remote_url': url}})
+                logger.log(kwargs.pop('level', None) or logging.ERROR, kwargs.pop('message', None))
 
     def create_from_record(self, record, **kwargs):
         """

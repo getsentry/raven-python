@@ -4,9 +4,9 @@ from raven.base import Client
 from raven.handlers.logging import SentryHandler
 
 class TempStoreClient(Client):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, servers=None, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(*args, **kwargs)
+        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)

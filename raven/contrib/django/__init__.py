@@ -13,8 +13,13 @@ import sys
 
 from raven.base import Client
 
+logger = logging.getLogger('sentry.errors.client.django')
+
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client')
+
+    def __init__(self, servers=None, **kwargs):
+        super(DjangoClient, self).__init__(servers=servers, **kwargs)
 
     def process(self, **kwargs):
         from django.http import HttpRequest
@@ -64,6 +69,22 @@ class DjangoClient(Client):
             }
 
         return result
+
+    def send(self, **kwargs):
+        """
+        Sends the message to the server.
+
+        If ``servers`` was passed into the constructor, this will serialize the data and pipe it to
+        each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
+        directly.
+        """
+        if self.servers:
+            return super(DjangoClient, self).send(**kwargs)
+        else:
+            from sentry.models import GroupedMessage
+
+            return GroupedMessage.objects.from_kwargs(**kwargs)
+
 
     def create_from_exception(self, exc_info=None, **kwargs):
         """
