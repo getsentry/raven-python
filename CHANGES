@@ -1,3 +1,7 @@
+0.4
+
+* Fixed an infinite loop in iter_tb.
+
 0.3
 
 * Removed the ``thrashed`` key in ``request.sentry`` for the Django integration.
