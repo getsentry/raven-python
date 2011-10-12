@@ -13,6 +13,7 @@ from flask.signals import got_request_exception
 from raven.base import Client
 
 class Sentry(object):
+
     def __init__(self, app=None, client=None, client_cls=Client):
         self.app = app
         self.client = client
@@ -37,6 +38,8 @@ class Sentry(object):
 
     def init_app(self, app):
         if not self.client:
+            if not app.config.get('SENTRY_SERVERS'):
+                raise TypeError('The SENTRY_SERVERS config variable is required.')
             client = self.client_cls(
                 include_paths=app.config.get('SENTRY_INCLUDE_PATHS'),
                 exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
