@@ -17,7 +17,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), os.pardir))
 # Allow local testing of Sentry even if DEBUG is enabled
 DEBUG = False
 
-KEY = socket.gethostname() + '1304u13oafjadf0913j4'
+KEY = None
 
 # This should be the full URL to sentries store view
 SERVERS = None
