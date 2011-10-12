@@ -40,8 +40,10 @@ class Sentry(object):
         if not self.client:
             if not app.config.get('SENTRY_SERVERS'):
                 raise TypeError('The SENTRY_SERVERS config variable is required.')
+            if not app.config.get('SENTRY_KEY'):
+                raise TypeError('The SENTRY_KEY config variable is required.')
             client = self.client_cls(
-                include_paths=app.config.get('SENTRY_INCLUDE_PATHS'),
+                include_paths=set(app.config.get('SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
                 exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
                 servers=app.config.get('SENTRY_SERVERS'),
                 name=app.config.get('SENTRY_NAME'),
