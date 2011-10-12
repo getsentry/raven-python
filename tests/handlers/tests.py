@@ -30,6 +30,7 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(event['logger'], __name__)
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'This is a test error')
+        self.assertFalse('frames' in event['data']['__sentry__'])
 
         logger.warning('This is a test warning')
         self.assertEquals(len(client.events), 1)
@@ -37,11 +38,13 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(event['logger'], __name__)
         self.assertEquals(event['level'], logging.WARNING)
         self.assertEquals(event['message'], 'This is a test warning')
+        self.assertFalse('frames' in event['data']['__sentry__'])
 
         logger.info('This is a test info with a url', extra=dict(url='http://example.com'))
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
         self.assertEquals(event['url'], 'http://example.com')
+        self.assertFalse('frames' in event['data']['__sentry__'])
 
         try:
             raise ValueError('This is a test ValueError')
