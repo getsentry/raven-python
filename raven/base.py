@@ -45,6 +45,10 @@ class Client(object):
     def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, **kwargs):
+        # servers may be set to a NoneType (for Django)
+        if servers and not key:
+            raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
+
         self.servers = servers
         self.include_paths = include_paths or set(defaults.INCLUDE_PATHS)
         self.exclude_paths = exclude_paths or set(defaults.EXCLUDE_PATHS)
