@@ -104,5 +104,6 @@ def sentry_exception_handler(request=None, **kwargs):
 
     return actually_do_stuff(request, **kwargs)
 
-got_request_exception.connect(sentry_exception_handler)
+if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
+    got_request_exception.connect(sentry_exception_handler)
 
