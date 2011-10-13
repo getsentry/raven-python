@@ -44,9 +44,9 @@ class Client(object):
 
     def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
-                 list_max_length=None, **kwargs):
+                 list_max_length=None, public_key=None, secret_key=None, **kwargs):
         # servers may be set to a NoneType (for Django)
-        if servers and not key:
+        if servers and not (key or (secret_key and public_key)):
             raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
 
         self.servers = servers
@@ -58,6 +58,8 @@ class Client(object):
         self.key = key or defaults.KEY
         self.string_max_length = string_max_length or int(defaults.MAX_LENGTH_STRING)
         self.list_max_length = list_max_length or int(defaults.MAX_LENGTH_LIST)
+        self.public_key = public_key
+        self.secret_key = secret_key
 
     def get_ident(self, result):
         """
@@ -191,9 +193,9 @@ class Client(object):
         message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
         for url in self.servers:
             timestamp = time.time()
-            signature = get_signature(self.key, message, timestamp)
+            signature = get_signature(message, timestamp, self.secret_key or self.key)
             headers = {
-                'Authorization': get_auth_header(signature, timestamp, '%s/%s' % (self.__class__.__name__, raven.VERSION)),
+                'X-Sentry-Auth': get_auth_header(signature, timestamp, 'raven/%s' % (raven.VERSION,), self.public_key),
                 'Content-Type': 'application/octet-stream',
             }
 

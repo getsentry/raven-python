@@ -17,8 +17,6 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), os.pardir))
 # Allow local testing of Sentry even if DEBUG is enabled
 DEBUG = False
 
-KEY = None
-
 # This should be the full URL to sentries store view
 SERVERS = None
 
@@ -28,6 +26,14 @@ TIMEOUT = 5
 CLIENT = 'raven.contrib.django.DjangoClient'
 
 NAME = socket.gethostname()
+
+# Superuser key -- will be used if set, otherwise defers to
+# SECRET_KEY and PUBLIC_KEY
+KEY = None
+
+# Credentials to authenticate with the Sentry server
+SECRET_KEY = None
+PUBLIC_KEY = None
 
 # We allow setting the site name either by explicitly setting it with the
 # SENTRY_SITE setting, or using the django.contrib.sites framework for
