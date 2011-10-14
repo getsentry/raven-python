@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import logging
 import sys
-from os.path import dirname, abspath, join
+from os.path import dirname, abspath, join, splitext
+from os import listdir
 from optparse import OptionParser
 
 where_am_i = dirname(abspath(__file__))
@@ -10,6 +11,15 @@ sys.path.insert(0, where_am_i)
 
 logging.getLogger('sentry').addHandler(logging.StreamHandler())
 
+# adding eggs to path 
+files = listdir(where_am_i)
+
+for file in files:
+     name, extension = splitext(file)
+     if extension == ".egg":
+        sys.path.insert(0, file)
+
+
 from django.conf import settings
 
 if not settings.configured:
@@ -17,7 +27,7 @@ if not settings.configured:
         DATABASE_ENGINE='sqlite3',
         DATABASES={
             'default': {
-                'ENGINE': 'sqlite3',
+                'ENGINE': 'django.db.backends.sqlite3',
                 'TEST_NAME': 'sentry_tests.db',
             },
         },

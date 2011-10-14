@@ -85,7 +85,6 @@ class DjangoClient(Client):
 
             return GroupedMessage.objects.from_kwargs(**kwargs)
 
-
     def create_from_exception(self, exc_info=None, **kwargs):
         """
         Creates an error log from an exception.

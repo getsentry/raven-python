@@ -1,6 +1,8 @@
 0.5
 
 * Require ``servers`` on base Client.
+* Added support for the ``site`` option in Client.
+* Moved raven.contrib.django.logging to raven.contrib.django.handlers.
 
 0.4
 
