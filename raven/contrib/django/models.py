@@ -50,6 +50,7 @@ def get_client(client=None):
             key=getattr(django_settings, 'SENTRY_KEY', md5_constructor(django_settings.SECRET_KEY).hexdigest()),
             string_max_length=getattr(django_settings, 'MAX_LENGTH_STRING', None),
             list_max_length=getattr(django_settings, 'MAX_LENGTH_LIST', None),
+            site=getattr(django_settings, 'SENTRY_SITE', None),
         )
         if not tmp_client:
             _client = (client, instance)
