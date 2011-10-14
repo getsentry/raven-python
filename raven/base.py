@@ -44,7 +44,7 @@ class Client(object):
 
     def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
-                 list_max_length=None, **kwargs):
+                 list_max_length=None, site=None, **kwargs):
         # servers may be set to a NoneType (for Django)
         if servers and not key:
             raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
@@ -58,6 +58,7 @@ class Client(object):
         self.key = key or defaults.KEY
         self.string_max_length = string_max_length or int(defaults.MAX_LENGTH_STRING)
         self.list_max_length = list_max_length or int(defaults.MAX_LENGTH_LIST)
+        self.site = site or unicode(defaults.SITE)
 
     def get_ident(self, result):
         """
@@ -110,6 +111,7 @@ class Client(object):
 
         kwargs.setdefault('level', logging.ERROR)
         kwargs.setdefault('server_name', self.name)
+        kwargs.setdefault('site', self.site)
 
         versions = get_versions(self.include_paths)
         data['__sentry__']['versions'] = versions
