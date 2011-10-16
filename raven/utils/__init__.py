@@ -8,34 +8,11 @@ raven.utils
 
 import hashlib
 import hmac
-import logging
 try:
     import pkg_resources
 except ImportError:
     pkg_resources = None
 import sys
-
-import raven
-
-def construct_checksum(level=logging.ERROR, class_name='', traceback='', message='', **kwargs):
-    checksum = hashlib.md5(str(level))
-    checksum.update(class_name or '')
-
-    if 'data' in kwargs and kwargs['data'] and '__sentry__' in kwargs['data'] and 'frames' in kwargs['data']['__sentry__']:
-        frames = kwargs['data']['__sentry__']['frames']
-        for frame in frames:
-            checksum.update(frame['module'])
-            checksum.update(frame['function'])
-
-    elif traceback:
-        traceback = '\n'.join(traceback.split('\n')[:-3])
-
-    elif message:
-        if isinstance(message, unicode):
-            message = message.encode('utf-8', 'replace')
-        checksum.update(message)
-
-    return checksum.hexdigest()
 
 def varmap(func, var, context=None):
     if context is None:

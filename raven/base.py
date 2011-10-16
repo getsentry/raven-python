@@ -18,10 +18,8 @@ import urllib2
 import uuid
 
 import raven
-from raven import processors
 from raven.conf import defaults
-from raven.utils import json, construct_checksum, varmap, \
-                                get_versions, get_signature, get_auth_header
+from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
 from raven.utils.encoding import transform, force_unicode, shorten
 from raven.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames, \
                                        get_culprit
@@ -53,7 +51,8 @@ class Client(object):
 
     def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
-                 list_max_length=None, site=None, public_key=None, secret_key=None, **kwargs):
+                 list_max_length=None, site=None, public_key=None, secret_key=None,
+                 processors=None, **kwargs):
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
             raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
@@ -71,8 +70,13 @@ class Client(object):
         self.public_key = public_key
         self.secret_key = secret_key
 
+        self.processors = processors or defaults.PROCESSORS
         self.logger = logging.getLogger(__name__)
         self.module_cache = ModuleProxyCache()
+
+    def get_processors(self):
+        for processor in self.processors:
+            yield self.module_cache[processor](self)
 
     def get_ident(self, result):
         """
@@ -84,7 +88,7 @@ class Client(object):
         return '$'.join(result)
 
     def capture(self, event_type, data=None, date=None, time_spent=None, event_id=None,
-                extra=None, culprit=None, level=None, **kwargs):
+                extra=None, culprit=None, level=None, stack=False, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -144,18 +148,30 @@ class Client(object):
             # Assume it's a builtin
             event_type = 'sentry.events.%s' % event_type
 
-        handler = self.module_cache[event_type]()
+        handler = self.module_cache[event_type](self)
 
         result = handler.capture(**kwargs)
 
         if not culprit:
-            culprit = result.pop('culprit')
+            culprit = result.pop('culprit', None)
 
         for k, v in result.iteritems():
             if k not in data:
                 data[k] = v
             else:
                 data[k].update(v)
+
+        if stack and 'sentry.interfaces.Stacktrace' not in data:
+            frames = varmap(shorten, get_stack_info(iter_stack_frames()))
+
+            data.update({
+                'sentry.interfaces.Stacktrace': {
+                    'frames': frames
+                },
+            })
+
+        if 'sentry.interfaces.Stacktrace' in data and not culprit:
+            culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
 
         data['modules'] = versions = get_versions(self.include_paths)
         data['server_name'] = self.name
@@ -187,17 +203,14 @@ class Client(object):
             if version:
                 data['version'] = (module, version)
 
-        if 'checksum' not in data:
-            data['checksum'] = checksum = construct_checksum(**kwargs)
-        else:
-            checksum = data['checksum']
+        data['checksum'] = checksum = handler.get_hash(data)
 
         # create ID client-side so that it can be passed to application
         event_id = uuid.uuid4().hex
         data['event_id'] = event_id
 
         # Run the data through processors
-        for processor in processors.all():
+        for processor in self.get_processors():
             data.update(self.module_cache[processor].process(data))
 
         # Make sure all data is coerced
@@ -205,6 +218,8 @@ class Client(object):
 
         if 'timestamp' not in kwargs:
             kwargs['timestamp'] = datetime.datetime.now()
+
+        data['label'] = handler.to_string(data)
 
         self.send(data=data, date=date, time_spent=time_spent, event_id=event_id)
 
@@ -279,7 +294,7 @@ class Client(object):
         })
 
         # construct the checksum with the unparsed message
-        kwargs['checksum'] = construct_checksum(**kwargs)
+        # kwargs['checksum'] = construct_checksum(**kwargs)
 
         # save the message with included formatting
         kwargs['message'] = record.getMessage()
