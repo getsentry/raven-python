@@ -32,7 +32,7 @@ class DjangoClient(Client):
             else:
                 post_data = request.POST
 
-            if 'data' not in kwargs:
+            if kwargs.get('data'):
                 kwargs['data'] = {}
 
             kwargs['data'].update(dict(
