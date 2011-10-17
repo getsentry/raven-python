@@ -88,7 +88,7 @@ class Client(object):
         return '$'.join(result)
 
     def capture(self, event_type, data=None, date=None, time_spent=None, event_id=None,
-                extra=None, culprit=None, level=None, stack=False, **kwargs):
+                extra=None, culprit=None, level=None, stack=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -141,8 +141,8 @@ class Client(object):
             extra = {}
         if date is None:
             date = datetime.datetime.now()
-        if level is None:
-            level = logging.ERROR
+        if stack is None:
+            stack = self.auto_log_stacks
 
         if '.' not in event_type:
             # Assume it's a builtin
@@ -173,6 +173,8 @@ class Client(object):
         if 'sentry.interfaces.Stacktrace' in data and not culprit:
             culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
 
+        if not data['level']:
+            data['level'] = level or logging.ERROR
         data['modules'] = versions = get_versions(self.include_paths)
         data['server_name'] = self.name
         data['site'] = self.site
@@ -219,7 +221,7 @@ class Client(object):
         if 'timestamp' not in kwargs:
             kwargs['timestamp'] = datetime.datetime.now()
 
-        data['label'] = handler.to_string(data)
+        data['message'] = handler.to_string(data)
 
         self.send(data=data, date=date, time_spent=time_spent, event_id=event_id)
 
@@ -281,33 +283,25 @@ class Client(object):
         >>>         self.format(record)
         >>>         client.create_from_record(record)
         """
-        for k in ('url', 'view', 'data'):
-            if not kwargs.get(k):
-                kwargs[k] = record.__dict__.get(k)
-
-        kwargs.update({
-            'logger': record.name,
-            'level': record.levelno,
-            'message': force_unicode(record.msg),
-            'server_name': self.name,
-            'stack': getattr(record, 'stack', self.auto_log_stacks),
-        })
-
-        # construct the checksum with the unparsed message
-        # kwargs['checksum'] = construct_checksum(**kwargs)
-
-        # save the message with included formatting
-        kwargs['message'] = record.getMessage()
+        data = kwargs.pop('data') or {}
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info and all(record.exc_info):
-            return self.create_from_exception(record.exc_info, **kwargs)
+            handler = self.module_cache['sentry.events.Exception'](self)
 
-        return self.process(
-            traceback=record.exc_text,
-            **kwargs
-        )
+            data.update(handler.capture(exc_info=record.exc_info))
+
+        for k in ('url', 'view'):
+            data[k] = record.__dict__.get(k)
+
+        if getattr(record, 'data', None):
+            extra = record.data
+        else:
+            extra = kwargs.pop('extra')
+
+        return self.capture('Message', message=record.msg, params=self.args, level=record.levelno,
+                            stack=getattr(record, 'stack', None), data=data, extra=extra, **kwargs)
 
     def create_from_text(self, message, **kwargs):
         """
@@ -330,42 +324,7 @@ class Client(object):
         >>> finally:
         >>>     del exc_info
         """
-        new_exc = bool(exc_info)
-        if not exc_info or exc_info is True:
-            exc_info = sys.exc_info()
-
-        data = kwargs.pop('data', {}) or {}
-
-        try:
-            exc_type, exc_value, exc_traceback = exc_info
-
-            frames = varmap(shorten, get_stack_info(iter_traceback_frames(exc_traceback)))
-
-            if hasattr(exc_type, '__class__'):
-                exc_module = exc_type.__class__.__module__
-            else:
-                exc_module = None
-
-            data['__sentry__'] = {}
-            data['__sentry__']['frames'] = frames
-            data['__sentry__']['exception'] = [exc_module, exc_value.args]
-
-            tb_message = '\n'.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-
-            kwargs.setdefault('message', transform(force_unicode(exc_value)))
-
-            return self.process(
-                class_name=exc_type.__name__,
-                traceback=tb_message,
-                data=data,
-                **kwargs
-            )
-        finally:
-            if new_exc:
-                try:
-                    del exc_info
-                except Exception, e:
-                    logger.exception(e)
+        return self.capture('Exception', exc_info=exc_info, **kwargs)
 
 class DummyClient(Client):
     "Sends messages into an empty void"
