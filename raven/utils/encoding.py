@@ -119,7 +119,7 @@ def to_unicode(value):
         value = unicode(force_unicode(value))
     except (UnicodeEncodeError, UnicodeDecodeError):
         value = '(Error decoding value)'
-    except Exception: # in some cases we get a different exception
+    except Exception:  # in some cases we get a different exception
         try:
             value = str(repr(type(value)))
         except Exception:
