@@ -30,7 +30,10 @@ def get_installed_apps():
         out.add(app)
     return out
 
+
 _client = (None, None)
+
+
 def get_client(client=None):
     global _client
 
@@ -57,7 +60,9 @@ def get_client(client=None):
         return instance
     return _client[1]
 
+
 client = get_client()
+
 
 def get_transaction_wrapper(client):
     if client.servers:
@@ -76,6 +81,7 @@ def get_transaction_wrapper(client):
         from django.db import transaction
 
     return transaction
+
 
 def sentry_exception_handler(request=None, **kwargs):
     transaction = get_transaction_wrapper(get_client())
@@ -107,4 +113,3 @@ def sentry_exception_handler(request=None, **kwargs):
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
     got_request_exception.connect(sentry_exception_handler)
-

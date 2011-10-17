@@ -15,6 +15,7 @@ from raven.base import Client
 
 logger = logging.getLogger('sentry.errors.client.django')
 
+
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client')
 

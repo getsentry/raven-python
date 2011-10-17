@@ -12,6 +12,7 @@ import logging
 import sys
 import traceback
 
+
 class SentryHandler(logging.Handler):
     def emit(self, record):
         from raven.contrib.django.middleware import SentryLogMiddleware
@@ -36,4 +37,3 @@ class SentryHandler(logging.Handler):
             print >> sys.stderr, record.msg
             print >> sys.stderr, traceback.format_exc()
             return
-

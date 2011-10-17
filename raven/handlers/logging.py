@@ -12,6 +12,7 @@ import logging
 import sys
 import traceback
 
+
 class SentryHandler(logging.Handler):
     def __init__(self, client=None):
         self.client = client
@@ -39,4 +40,3 @@ class SentryHandler(logging.Handler):
             print >> sys.stderr, record.msg
             print >> sys.stderr, traceback.format_exc()
             return
-

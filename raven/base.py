@@ -27,6 +27,7 @@ from raven.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback
 
 logger = logging.getLogger('sentry.errors.client')
 
+
 class Client(object):
     """
     The base Raven client, which handles both local direct communication with Sentry (through
@@ -309,6 +310,7 @@ class Client(object):
                     del exc_info
                 except Exception, e:
                     logger.exception(e)
+
 
 class DummyClient(Client):
     "Sends messages into an empty void"

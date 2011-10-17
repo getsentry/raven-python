@@ -12,6 +12,7 @@ from flask import request
 from flask.signals import got_request_exception
 from raven.base import Client
 
+
 class Sentry(object):
 
     def __init__(self, app=None, client=None, client_cls=Client):

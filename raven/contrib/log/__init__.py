@@ -11,6 +11,7 @@ from raven.base import Client
 import logging
 import sys
 
+
 class LoggingClient(Client):
     logger_name = 'sentry'
     default_level = logging.ERROR

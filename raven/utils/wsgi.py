@@ -7,6 +7,7 @@ This module implements WSGI related helpers adapted from ``werkzeug.wsgi``
 
 import urllib
 
+
 # `get_host` comes from `werkzeug.wsgi`
 def get_host(environ):
     """Return the real host for the given WSGI environment.  This takes care
@@ -23,6 +24,7 @@ def get_host(environ):
        in (('https', '443'), ('http', '80')):
         result += ':' + environ['SERVER_PORT']
     return result
+
 
 # `get_current_url` comes from `werkzeug.wsgi`
 def get_current_url(environ, root_only=False, strip_querystring=False,
