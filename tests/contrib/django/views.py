@@ -5,6 +5,9 @@ from django.shortcuts import get_object_or_404, render_to_response
 
 import logging
 
+def no_error(request):
+    return HttpResponse('')
+
 def fake_login(request):
     return HttpResponse('')
 
