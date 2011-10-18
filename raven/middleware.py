@@ -9,6 +9,7 @@ raven.middleware
 import sys
 from raven.utils.wsgi import get_current_url
 
+
 class Sentry(object):
     """
     >>> from raven.base import Client

@@ -17,6 +17,7 @@ import sys
 
 import raven
 
+
 def construct_checksum(level=logging.ERROR, class_name='', traceback='', message='', **kwargs):
     checksum = hashlib.md5(str(level))
     checksum.update(class_name or '')
@@ -37,6 +38,7 @@ def construct_checksum(level=logging.ERROR, class_name='', traceback='', message
 
     return checksum.hexdigest()
 
+
 def varmap(func, var, context=None):
     if context is None:
         context = {}
@@ -53,9 +55,12 @@ def varmap(func, var, context=None):
     del context[objid]
     return ret
 
+
 # We store a cache of module_name->version string to avoid
 # continuous imports and lookups of modules
 _VERSION_CACHE = {}
+
+
 def get_versions(module_list=None):
     if not module_list:
         return {}
@@ -102,8 +107,10 @@ def get_versions(module_list=None):
         versions[module_name] = version
     return versions
 
+
 def get_signature(key, message, timestamp):
     return hmac.new(key, '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
+
 
 def get_auth_header(signature, timestamp, client):
     return 'Sentry sentry_signature=%s, sentry_timestamp=%s, raven=%s' % (

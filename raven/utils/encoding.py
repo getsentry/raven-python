@@ -9,6 +9,7 @@ raven.utils.encoding
 import uuid
 from types import ClassType, TypeType
 
+
 def force_unicode(s, encoding='utf-8', errors='strict'):
     """
     Similar to smart_unicode, except that lazy instances are resolved to
@@ -58,6 +59,7 @@ def _has_sentry_metadata(value):
         return callable(value.__getattribute__("__sentry__"))
     except:
         return False
+
 
 def transform(value, stack=[], context=None):
     # TODO: make this extendable
@@ -111,17 +113,19 @@ def transform(value, stack=[], context=None):
     del context[objid]
     return ret
 
+
 def to_unicode(value):
     try:
         value = unicode(force_unicode(value))
     except (UnicodeEncodeError, UnicodeDecodeError):
         value = '(Error decoding value)'
-    except Exception: # in some cases we get a different exception
+    except Exception:  # in some cases we get a different exception
         try:
             value = str(repr(type(value)))
         except Exception:
             value = '(Error decoding value)'
     return value
+
 
 def shorten(var, list_length=50, string_length=200):
     var = transform(var)

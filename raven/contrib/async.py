@@ -14,6 +14,7 @@ import os
 
 SENTRY_WAIT_SECONDS = 10
 
+
 class AsyncClient(Client):
     """This client uses a single background thread to dispatch errors."""
     _terminator = object()
@@ -34,8 +35,7 @@ class AsyncClient(Client):
                 print "Press Ctrl-Break to quit"
             else:
                 print "Press Ctrl-C to quit"
-            self.stop(timeout = SENTRY_WAIT_SECONDS)
-
+            self.stop(timeout=SENTRY_WAIT_SECONDS)
 
     def start(self):
         self._lock.acquire()

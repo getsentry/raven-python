@@ -11,6 +11,7 @@ from __future__ import absolute_import
 import logbook
 import sys
 
+
 class SentryHandler(logbook.Handler):
     def __init__(self, client):
         self.client = client
@@ -34,4 +35,3 @@ class SentryHandler(logbook.Handler):
         if record.exc_info:
             return self.client.create_from_exception(record.exc_info, **kwargs)
         return self.client.create_from_text(**kwargs)
-

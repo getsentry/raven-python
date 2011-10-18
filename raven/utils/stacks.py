@@ -13,6 +13,7 @@ from raven.utils.encoding import transform
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
 
+
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
     """
     Returns context_lines before and after lineno from file.
@@ -71,6 +72,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
 
     return lower_bound, pre_context, context_line, post_context
 
+
 def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # We iterate through each frame looking for a deterministic culprit
     # When one is found, we mark it as last "best guess" (best_guess) and then
@@ -92,6 +94,7 @@ def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # Return either the best guess or the last frames call
     return best_guess or culprit
 
+
 def iter_traceback_frames(tb):
     while tb:
         # support for __traceback_hide__ which is used by a few libraries
@@ -100,9 +103,11 @@ def iter_traceback_frames(tb):
             yield tb.tb_frame
         tb = tb.tb_next
 
+
 def iter_stack_frames():
     for frame_crud in inspect.stack()[1:]:
         yield frame_crud[0]
+
 
 def get_stack_info(frames):
     results = []
