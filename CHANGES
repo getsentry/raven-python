@@ -1,3 +1,7 @@
+0.6
+
+* Added a Django-specific WSGI middleware.
+
 0.5.1
 
 * Two minor fixes for the Django client:

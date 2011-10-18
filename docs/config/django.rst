@@ -135,6 +135,15 @@ Once we've successfully added the request context variable, adding the Sentry re
         <p>If you need assistance, you may reference this error as <strong>{{ request.sentry.id }}</strong>.</p>
     {% endif %}
 
+WSGI Middleware
+---------------
+
+If you are using a WSGi interface to serve your app, you can also apply a middleware which will ensure that you
+catch errors even at the fundamental level of your Django application::
+
+    from raven.contrib.django.middleware.wsgi import Sentry
+    application = Sentry(django.core.handlers.wsgi.WSGIHandler())
+
 Additional Settings
 -------------------
 

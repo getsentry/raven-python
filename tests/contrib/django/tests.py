@@ -14,7 +14,7 @@ from django.test import TestCase
 from raven.base import Client
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
-from raven.middleware import Sentry
+from raven.contrib.django.middleware.wsgi import Sentry
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 
@@ -154,7 +154,7 @@ class DjangoClientTest(TestCase):
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True):
             client = TestClient(REMOTE_ADDR='127.0.0.1')
-            client.handler = MockSentryMiddleware(MockClientHandler(), self.raven)
+            client.handler = MockSentryMiddleware(MockClientHandler())
 
             self.assertRaises(Exception, client.get, reverse('sentry-raise-exc'))
 
