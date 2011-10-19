@@ -24,8 +24,8 @@ def construct_checksum(level=logging.ERROR, class_name='', traceback='', message
     if 'data' in kwargs and kwargs['data'] and '__sentry__' in kwargs['data'] and 'frames' in kwargs['data']['__sentry__']:
         frames = kwargs['data']['__sentry__']['frames']
         for frame in frames:
-            checksum.update(frame['module'] or '')
-            checksum.update(frame['function'] or '')
+            checksum.update(frame['module'] or '<no module>')
+            checksum.update(frame['function'] or '<no function>')
 
     elif traceback:
         traceback = '\n'.join(traceback.split('\n')[:-3])
