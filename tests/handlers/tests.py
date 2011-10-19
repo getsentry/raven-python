@@ -77,3 +77,14 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(event['message'], 'This is a test of no stacks')
         self.assertTrue('__sentry__' in event['data'])
         self.assertFalse('frames' in event['data']['__sentry__'])
+
+    def test_init(self):
+        client = TempStoreClient(include_paths=['tests'])
+        handler = SentryHandler(client)
+        assert handler.client == client
+
+        handler = SentryHandler(client=client)
+        assert handler.client == client
+
+        handler = SentryHandler(['http://sentry.local/store/'], 'KEY')
+        assert handler.client

@@ -12,6 +12,7 @@ This document describes configuration options available to Sentry.
    celery
    django
    flask
+   pylons
    logging
    logbook
    wsgi
