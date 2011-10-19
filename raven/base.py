@@ -79,6 +79,20 @@ class Client(object):
         - identifying module versions
         - coercing data
         - generating message identifiers
+
+        You may pass the ``stack`` parameter to specify an explicit stack,
+        or simply to tell Raven that you want to capture the stacktrace.
+
+        To automatically grab the stack from a non-exception:
+
+        >>> client.process(message='test', stack=True)
+
+        To capture an explicit stack (e.g. something from a different threadframe?):
+
+        >>> import inspect
+        >>> from raven.utils import iter_stack_frames
+        >>> client.process(message='test', stack=iter_stack_frames(inspect.stack()))
+
         """
 
         if kwargs.get('data'):
@@ -91,22 +105,27 @@ class Client(object):
         if '__sentry__' not in data:
             data['__sentry__'] = {}
 
-        if kwargs.pop('stack', self.auto_log_stacks) and not data['__sentry__'].get('frames'):
-            stack = []
-            found = None
-            for frame in iter_stack_frames():
-                # There are initial frames from Sentry that need skipped
-                name = frame.f_globals.get('__name__')
-                if found is None:
-                    if name == 'logging':
-                        found = False
-                    continue
-                elif not found:
-                    if name != 'logging':
-                        found = True
-                    else:
+        get_stack = kwargs.pop('stack', self.auto_log_stacks)
+        if get_stack and not data['__sentry__'].get('frames'):
+            if get_stack is True:
+                stack = []
+                found = None
+                for frame in iter_stack_frames():
+                    # There are initial frames from Sentry that need skipped
+                    name = frame.f_globals.get('__name__')
+                    if found is None:
+                        if name == 'logging':
+                            found = False
                         continue
-                stack.append(frame)
+                    elif not found:
+                        if name != 'logging':
+                            found = True
+                        else:
+                            continue
+                    stack.append(frame)
+            else:
+                # assume stack was a list of frames
+                stack = get_stack or []
             data['__sentry__']['frames'] = varmap(shorten, get_stack_info(stack))
 
         kwargs.setdefault('level', logging.ERROR)
