@@ -149,7 +149,6 @@ class Client(object):
             event_type = 'sentry.events.%s' % event_type
 
         handler = self.module_cache[event_type](self)
-
         result = handler.capture(**kwargs)
 
         if not culprit:

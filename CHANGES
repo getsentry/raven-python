@@ -1,3 +1,23 @@
+0.7.0
+
+* You can now explicitly pass a list of frame objects to the process method.
+
+0.6.1
+
+* The default logging handler (SentryHandler) will now accept a set of kwargs to instantiate
+  a new client with (GH-10).
+* Fixed a bug with checksum generation when module or function were missing (GH-9).
+
+0.6
+
+* Added a Django-specific WSGI middleware.
+
+0.5.1
+
+* Two minor fixes for the Django client:
+ * Ensure the __sentry__ key exists in data in (GH-8).
+ * properly set kwargs['data'] to an empty list when its a NoneType (GH-6).
+
 0.5
 
 * Require ``servers`` on base Client.

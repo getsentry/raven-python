@@ -14,8 +14,21 @@ from django.test import TestCase
 from raven.base import Client
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
+from raven.contrib.django.middleware.wsgi import Sentry
+
+from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
+
+class MockClientHandler(TestClientHandler):
+    def __call__(self, environ, start_response=[]):
+        # this pretends doesnt require start_response
+        return super(MockClientHandler, self).__call__(environ)
+
+class MockSentryMiddleware(Sentry):
+    def __call__(self, environ, start_response=[]):
+        # this pretends doesnt require start_response
+        return list(super(MockSentryMiddleware, self).__call__(environ, start_response))
 
 class TempStoreClient(DjangoClient):
     def __init__(self, *args, **kwargs):
@@ -126,22 +139,39 @@ class DjangoClientTest(TestCase):
             self.assertEquals(event['message'], 'request')
             self.assertEquals(event['view'], 'tests.contrib.django.middleware.process_request')
 
-    # XXX: Django doesn't handle response middleware exceptions (yet)
-    # def test_response_middlware_exception(self):
-    #     orig = list(settings.MIDDLEWARE_CLASSES)
-    #     settings.MIDDLEWARE_CLASSES = orig + ['tests.middleware.BrokenResponseMiddleware',]
-    #
-    #     self.assertRaises(ImportError, self.client.get, reverse('sentry'))
-    #     self.assertEquals(Message.objects.count(), 1)
-    #     self.assertEquals(GroupedMessage.objects.count(), 1)
-    #     last = Message.objects.get()
-    #     self.assertEquals(last.logger, 'root')
-    #     self.assertEquals(last.class_name, 'ImportError')
-    #     self.assertEquals(last.level, logging.ERROR)
-    #     self.assertEquals(last.message, 'response')
-    #     self.assertEquals(last.view, 'tests.middleware.process_response')
-    #
-    #     settings.MIDDLEWARE_CLASSES = orig
+    def test_response_middlware_exception(self):
+        with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenResponseMiddleware']):
+            self.assertRaises(ImportError, self.client.get, reverse('sentry-no-error'))
+
+            self.assertEquals(len(self.raven.events), 1)
+            event = self.raven.events.pop(0)
+
+            self.assertEquals(event['class_name'], 'ImportError')
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], 'response')
+            self.assertEquals(event['view'], 'tests.contrib.django.middleware.process_response')
+
+    def test_broken_500_handler_with_middleware(self):
+        with Settings(BREAK_THAT_500=True):
+            client = TestClient(REMOTE_ADDR='127.0.0.1')
+            client.handler = MockSentryMiddleware(MockClientHandler())
+
+            self.assertRaises(Exception, client.get, reverse('sentry-raise-exc'))
+
+            self.assertEquals(len(self.raven.events), 2)
+            event = self.raven.events.pop(0)
+
+            self.assertEquals(event['class_name'], 'Exception')
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], 'view exception')
+            self.assertEquals(event['view'], 'tests.contrib.django.views.raise_exc')
+
+            event = self.raven.events.pop(0)
+
+            self.assertEquals(event['class_name'], 'ValueError')
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], 'handler500')
+            self.assertEquals(event['view'], 'tests.contrib.django.urls.handler500')
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):

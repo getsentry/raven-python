@@ -12,9 +12,21 @@ import logging
 import sys
 import traceback
 
+from raven.base import Client
+
+
 class SentryHandler(logging.Handler):
-    def __init__(self, client=None):
-        self.client = client
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1:
+            self.client = args[0]
+        elif 'client' in kwargs:
+            self.client = kwargs['client']
+        elif len(args) == 2 and not kwargs:
+            servers, key = args
+            self.client = Client(servers=servers, key=key)
+        else:
+            self.client = Client(*args, **kwargs)
+
         logging.Handler.__init__(self)
 
     def emit(self, record):

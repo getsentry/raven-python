@@ -32,8 +32,13 @@ class DjangoClient(Client):
             else:
                 post_data = request.POST
 
-            if 'data' not in kwargs:
-                kwargs['data'] = {}
+            if not kwargs.get('data'):
+                data = kwargs['data'] = {}
+            else:
+                data = kwargs['data']
+
+            if not data.get('__sentry__'):
+                data['__sentry__'] = {}
 
             kwargs['data'].update(dict(
                 META=request.META,
@@ -55,7 +60,7 @@ class DjangoClient(Client):
                         'is_authenticated': False,
                     }
 
-                kwargs['data']['__sentry__']['user'] = user_info
+                data['__sentry__']['user'] = user_info
 
             if not kwargs.get('url'):
                 kwargs['url'] = request.build_absolute_uri()

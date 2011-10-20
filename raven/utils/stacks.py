@@ -100,8 +100,10 @@ def iter_traceback_frames(tb):
             yield tb.tb_frame
         tb = tb.tb_next
 
-def iter_stack_frames():
-    for frame_crud in inspect.stack()[1:]:
+def iter_stack_frames(frames=None):
+    if not frames:
+        frames = inspect.stack()[1:]
+    for frame_crud in frames:
         yield frame_crud[0]
 
 def get_stack_info(frames):
