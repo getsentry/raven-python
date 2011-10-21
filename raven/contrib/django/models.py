@@ -20,7 +20,6 @@ from django.utils.hashcompat import md5_constructor
 
 logger = logging.getLogger('sentry.errors.client')
 
-
 def get_installed_apps():
     """
     Generate a list of modules in settings.INSTALLED_APPS.
@@ -90,18 +89,17 @@ def sentry_exception_handler(request=None, **kwargs):
             if transaction.is_dirty():
                 transaction.rollback()
 
-            extra = dict(
-                request=request,
-            )
-
-            get_client().create_from_exception(**extra)
+            get_client().capture('Exception', exc_info=exc_info, request=request)
         except Exception, exc:
             try:
                 logger.exception(u'Unable to process log entry: %s' % (exc,))
             except Exception, exc:
                 warnings.warn(u'Unable to process log entry: %s' % (exc,))
         finally:
-            del exc_info
+            try:
+                del exc_info
+            except Exception, e:
+                logger.exception(e)
 
     return actually_do_stuff(request, **kwargs)
 

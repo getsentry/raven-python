@@ -69,7 +69,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     context_line = source[lineno].strip('\n')
     post_context = [line.strip('\n') for line in source[lineno+1:upper_bound]]
 
-    return lower_bound, pre_context, context_line, post_context
+    return pre_context, context_line, post_context
 
 def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # We iterate through each frame looking for a deterministic culprit
@@ -118,8 +118,8 @@ def get_stack_info(frames):
         lineno = frame.f_lineno - 1
         loader = frame.f_globals.get('__loader__')
         module_name = frame.f_globals.get('__name__')
-        pre_context_lineno, pre_context, context_line, post_context = get_lines_from_file(filename, lineno, 7, loader, module_name)
-        if pre_context_lineno is not None:
+        pre_context, context_line, post_context = get_lines_from_file(filename, lineno, 7, loader, module_name)
+        if context_line:
             results.append({
                 'id': id(frame),
                 'filename': filename,
@@ -127,10 +127,9 @@ def get_stack_info(frames):
                 'function': function,
                 'lineno': lineno + 1,
                 # TODO: vars need to be references
-                'vars': transform(frame.f_locals.items()),
+                'vars': transform(frame.f_locals),
                 'pre_context': pre_context,
                 'context_line': context_line,
                 'post_context': post_context,
-                'pre_context_lineno': pre_context_lineno + 1,
             })
     return results

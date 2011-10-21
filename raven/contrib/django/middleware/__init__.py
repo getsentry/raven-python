@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 from django.middleware.common import _is_ignorable_404
 from raven.contrib.django.models import get_client
+from raven.contrib.django.utils import get_data_from_request
 import threading
 import logging
 
@@ -18,7 +19,12 @@ class Sentry404CatchMiddleware(object):
         if response.status_code != 404 or _is_ignorable_404(request.get_full_path()):
             return response
         client = get_client()
-        result = client.create_from_text('Http 404', request=request, level=logging.INFO, logger='http404')
+        data = get_data_from_request(request)
+        data.update({
+            'level': logging.INFO,
+            'logger': 'http404',
+        })
+        result = client.capture('Message', message='Page Not Found: %s' % request.build_absolute_uri(), data=data)
         request.sentry = {
             'id': client.get_ident(result),
         }

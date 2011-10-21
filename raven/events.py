@@ -10,7 +10,7 @@ import logging
 import sys
 
 from raven.utils import varmap
-from raven.utils.encoding import transform, shorten
+from raven.utils.encoding import shorten, to_unicode
 from raven.utils.stacks import get_stack_info, iter_traceback_frames, \
                                get_culprit
 
@@ -46,7 +46,7 @@ class Exception(BaseEvent):
     def get_hash(self, data):
         exc = data['sentry.interfaces.Exception']
         output = [exc['type'], exc['value']]
-        for frame in data['sentry.interfaces.Stacktrace']:
+        for frame in data['sentry.interfaces.Stacktrace']['frames']:
             output.append(frame['module'])
             output.append(frame['function'])
         return output
@@ -84,7 +84,7 @@ class Exception(BaseEvent):
             'level': logging.ERROR,
             'culprit': culprit,
             'sentry.interfaces.Exception': {
-                'value': transform(exc_value),
+                'value': to_unicode(exc_value),
                 'type': exc_type,
             },
             'sentry.interfaces.Stacktrace': {

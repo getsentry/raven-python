@@ -23,8 +23,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        data = event['data']['__sentry__']
-        self.assertFalse('frames' in data)
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
 
     def test_stack_explicit_frames(self):
         frames = inspect.stack()
@@ -34,10 +33,9 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        data = event['data']['__sentry__']
-        self.assertTrue('frames' in data)
-        self.assertEquals(len(frames), len(data['frames']))
-        for frame, frame_i in zip(frames, data['frames']):
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertEquals(len(frames), len(event['sentry.interfaces.Stacktrace']['frames']))
+        for frame, frame_i in zip(frames, event['sentry.interfaces.Stacktrace']['frames']):
             self.assertEquals(frame[0].f_code.co_filename, frame_i['filename'])
             self.assertEquals(frame[0].f_code.co_name, frame_i['function'])
 
@@ -47,5 +45,4 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        data = event['data']['__sentry__']
-        self.assertTrue('frames' in data)
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)

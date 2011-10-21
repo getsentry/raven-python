@@ -11,6 +11,7 @@ from __future__ import absolute_import
 from flask import request
 from flask.signals import got_request_exception
 from raven.base import Client
+from raven.contrib.flask.utils import get_data_from_request
 
 class Sentry(object):
 
@@ -24,13 +25,9 @@ class Sentry(object):
 
     def handle_exception(self, client):
         def _handle_exception(sender, **kwargs):
-            client.create_from_exception(
-                exc_info=kwargs.get('exc_info'),
-                url=request.url,
-                data={
-                    'META': request.environ,
-                    'GET': request.args,
-                    'POST': request.form,
+            client.capture('Exception', exc_info=kwargs.get('exc_info'),
+                data=get_data_from_request(request),
+                extra={
                     'app': sender.name,
                 },
             )

@@ -10,18 +10,17 @@ from __future__ import absolute_import
 
 import base64
 import datetime
+import hashlib
 import logging
-import sys
 import time
-import traceback
 import urllib2
 import uuid
 
 import raven
 from raven.conf import defaults
 from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
-from raven.utils.encoding import transform, force_unicode, shorten
-from raven.utils.stacks import get_stack_info, iter_stack_frames, iter_traceback_frames, \
+from raven.utils.encoding import transform, shorten
+from raven.utils.stacks import get_stack_info, iter_stack_frames, \
                                        get_culprit
 
 class ModuleProxyCache(dict):
@@ -87,8 +86,11 @@ class Client(object):
         """
         return '$'.join(result)
 
+    def get_handler(self, name):
+        return self.module_cache[name](self)
+
     def capture(self, event_type, data=None, date=None, time_spent=None, event_id=None,
-                extra=None, culprit=None, level=None, stack=None, **kwargs):
+                extra=None, stack=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -98,7 +100,7 @@ class Client(object):
         >>>     'sentry.interfaces.Http': {
         >>>         'url': '...',
         >>>         'data': {},
-        >>>         'querystring': '...',
+        >>>         'query_string': '...',
         >>>         'method': 'POST',
         >>>     },
         >>> }, extra={
@@ -146,13 +148,15 @@ class Client(object):
 
         if '.' not in event_type:
             # Assume it's a builtin
-            event_type = 'sentry.events.%s' % event_type
+            event_type = 'raven.events.%s' % event_type
 
-        handler = self.module_cache[event_type](self)
+        handler = self.get_handler(event_type)
         result = handler.capture(**kwargs)
 
-        if not culprit:
-            culprit = result.pop('culprit', None)
+        # data (explicit) culprit takes over auto event detection
+        culprit = result.pop('culprit', None)
+        if data.get('culprit'):
+            culprit = data['culprit']
 
         for k, v in result.iteritems():
             if k not in data:
@@ -161,19 +165,22 @@ class Client(object):
                 data[k].update(v)
 
         if stack and 'sentry.interfaces.Stacktrace' not in data:
-            frames = varmap(shorten, get_stack_info(iter_stack_frames()))
+            if stack is True:
+                frames = iter_stack_frames()
+            else:
+                frames = stack
 
             data.update({
                 'sentry.interfaces.Stacktrace': {
-                    'frames': frames
+                    'frames': varmap(shorten, get_stack_info(frames))
                 },
             })
 
         if 'sentry.interfaces.Stacktrace' in data and not culprit:
-            culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
+            culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'], self.include_paths, self.exclude_paths)
 
-        if not data['level']:
-            data['level'] = level or logging.ERROR
+        if not data.get('level'):
+            data['level'] = logging.ERROR
         data['modules'] = versions = get_versions(self.include_paths)
         data['server_name'] = self.name
         data['site'] = self.site
@@ -182,9 +189,6 @@ class Client(object):
 
         # Shorten lists/strings
         for k, v in extra.iteritems():
-            # a . means its a builtin interfaces
-            if '.' not in k:
-                continue
             data['extra'][k] = shorten(v, string_length=self.string_max_length, list_length=self.list_max_length)
 
         if culprit:
@@ -204,7 +208,10 @@ class Client(object):
             if version:
                 data['version'] = (module, version)
 
-        data['checksum'] = checksum = handler.get_hash(data)
+        checksum = hashlib.md5()
+        for bit in handler.get_hash(data):
+            checksum.update(bit)
+        data['checksum'] = checksum = checksum.hexdigest()
 
         # create ID client-side so that it can be passed to application
         event_id = uuid.uuid4().hex
@@ -212,7 +219,7 @@ class Client(object):
 
         # Run the data through processors
         for processor in self.get_processors():
-            data.update(self.module_cache[processor].process(data))
+            data.update(processor.process(data))
 
         # Make sure all data is coerced
         data = transform(data)
@@ -222,7 +229,13 @@ class Client(object):
 
         data['message'] = handler.to_string(data)
 
-        self.send(data=data, date=date, time_spent=time_spent, event_id=event_id)
+        data.update({
+            'date': date,
+            'time_spent': time_spent,
+            'event_id': event_id,
+        })
+
+        self.send(**data)
 
         return (event_id, checksum)
 
@@ -237,7 +250,7 @@ class Client(object):
             response = urllib2.urlopen(req, data).read()
         return response
 
-    def send(self, **kwargs):
+    def send(self, **data):
         """
         Sends the message to the server.
 
@@ -247,7 +260,7 @@ class Client(object):
         """
         # if kwargs.get('date'):
         #     kwargs['date'] = kwargs['date'].strftime('%Y-%m-%dT%H:%M:%S.%f')
-        message = base64.b64encode(json.dumps(kwargs).encode('zlib'))
+        message = base64.b64encode(json.dumps(data).encode('zlib'))
 
         for url in self.servers:
             timestamp = time.time()
@@ -263,44 +276,11 @@ class Client(object):
                 body = e.read()
                 self.logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
                              exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-                self.logger.log(kwargs.pop('level', None) or logging.ERROR, kwargs.pop('message', None))
+                self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
             except urllib2.URLError, e:
                 self.logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
                              exc_info=True, extra={'data': {'remote_url': url}})
-                self.logger.log(kwargs.pop('level', None) or logging.ERROR, kwargs.pop('message', None))
-
-    def create_from_record(self, record, **kwargs):
-        """
-        Creates an event for a ``logging`` module ``record`` instance.
-
-        If the record contains an attribute, ``stack``, that evaluates to True,
-        it will pass this information on to process in order to grab the stack
-        frames.
-
-        >>> class ExampleHandler(logging.Handler):
-        >>>     def emit(self, record):
-        >>>         self.format(record)
-        >>>         client.create_from_record(record)
-        """
-        data = kwargs.pop('data') or {}
-
-        # If there's no exception being processed, exc_info may be a 3-tuple of None
-        # http://docs.python.org/library/sys.html#sys.exc_info
-        if record.exc_info and all(record.exc_info):
-            handler = self.module_cache['sentry.events.Exception'](self)
-
-            data.update(handler.capture(exc_info=record.exc_info))
-
-        for k in ('url', 'view'):
-            data[k] = record.__dict__.get(k)
-
-        if getattr(record, 'data', None):
-            extra = record.data
-        else:
-            extra = kwargs.pop('extra')
-
-        return self.capture('Message', message=record.msg, params=self.args, level=record.levelno,
-                            stack=getattr(record, 'stack', None), data=data, extra=extra, **kwargs)
+                self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
 
     def create_from_text(self, message, **kwargs):
         """
@@ -308,10 +288,7 @@ class Client(object):
 
         >>> client.create_from_text('My event just happened!')
         """
-        return self.process(
-            message=message,
-            **kwargs
-        )
+        return self.capture('Message', message=message, **kwargs)
 
     def create_from_exception(self, exc_info=None, **kwargs):
         """

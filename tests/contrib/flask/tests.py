@@ -32,10 +32,22 @@ class FlaskTest(TestCase):
         response = self.client.get('/an-error/?foo=bar')
         self.assertEquals(response.status_code, 500)
         self.assertEquals(len(client.events), 1)
+
         event = client.events.pop(0)
-        self.assertEquals(event['class_name'], 'ValueError')
+
+        self.assertTrue('sentry.interfaces.Exception' in event)
+        exc = event['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'ValueError')
+        self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'hello world')
-        self.assertEquals(event['url'], 'http://localhost/an-error/?foo=bar')
-        self.assertEquals(event['view'], 'tests.contrib.flask.tests.an_error')
+        self.assertEquals(event['message'], 'ValueError: hello world')
+
+        self.assertTrue('sentry.interfaces.Http' in event)
+        http = event['sentry.interfaces.Http']
+        self.assertEquals(http['url'], 'http://localhost/an-error/')
+        self.assertEquals(http['query_string'], 'foo=bar')
+        self.assertEquals(http['method'], 'GET')
+        self.assertEquals(http['data'], {'foo': 'bar'})
+
+        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests.an_error')
 

@@ -30,7 +30,12 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(event['logger'], __name__)
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'This is a test error')
-        self.assertFalse('frames' in event['data']['__sentry__'])
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test error')
+        self.assertEquals(msg['params'], ())
 
         logger.warning('This is a test warning')
         self.assertEquals(len(client.events), 1)
@@ -38,13 +43,23 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(event['logger'], __name__)
         self.assertEquals(event['level'], logging.WARNING)
         self.assertEquals(event['message'], 'This is a test warning')
-        self.assertFalse('frames' in event['data']['__sentry__'])
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test warning')
+        self.assertEquals(msg['params'], ())
 
         logger.info('This is a test info with a url', extra=dict(url='http://example.com'))
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
-        self.assertEquals(event['url'], 'http://example.com')
-        self.assertFalse('frames' in event['data']['__sentry__'])
+        self.assertEquals(event['extra']['url'], 'http://example.com')
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test info with a url')
+        self.assertEquals(msg['params'], ())
 
         try:
             raise ValueError('This is a test ValueError')
@@ -54,29 +69,54 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
 
-        self.assertEquals(event['class_name'], 'ValueError')
         self.assertEquals(event['message'], 'This is a test info with an exception')
-        self.assertTrue('__sentry__' in event['data'])
-        self.assertTrue('exception' in event['data']['__sentry__'])
-        self.assertTrue('frames' in event['data']['__sentry__'])
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('sentry.interfaces.Exception' in event)
+        exc = event['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'ValueError')
+        self.assertEquals(exc['value'], 'This is a test ValueError')
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test info with an exception')
+        self.assertEquals(msg['params'], ())
 
         # test stacks
         logger.info('This is a test of stacks', extra={'stack': True})
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
-        self.assertEquals(event['view'], 'tests.handlers.tests.test_logger')
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test of stacks')
+        self.assertEquals(msg['params'], ())
+        self.assertEquals(event['culprit'], 'tests.handlers.tests.test_logger')
         self.assertEquals(event['message'], 'This is a test of stacks')
-        self.assertTrue('__sentry__' in event['data'])
-        self.assertTrue('frames' in event['data']['__sentry__'])
 
         # test no stacks
         logger.info('This is a test of no stacks', extra={'stack': False})
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
-        self.assertEquals(event['view'], None)
+        self.assertEquals(event.get('culprit'), None)
         self.assertEquals(event['message'], 'This is a test of no stacks')
-        self.assertTrue('__sentry__' in event['data'])
-        self.assertFalse('frames' in event['data']['__sentry__'])
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test of no stacks')
+        self.assertEquals(msg['params'], ())
+
+        # test args
+        logger.info('This is a test of %s', 'args')
+        self.assertEquals(len(client.events), 1)
+        event = client.events.pop(0)
+        self.assertEquals(event['message'], 'This is a test of args')
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test of %s')
+        self.assertEquals(msg['params'], ('args',))
 
     def test_init(self):
         client = TempStoreClient(include_paths=['tests'])

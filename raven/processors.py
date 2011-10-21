@@ -7,6 +7,9 @@ raven.core.processors
 """
 
 class Processor(object):
+    def __init__(self, client):
+        self.client = client
+
     def process(self, data, **kwargs):
         resp = self.get_data(data)
         if resp:
@@ -22,7 +25,7 @@ class SantizePasswordsProcessor(Processor):
             if 'frames' in data['sentry.interfaces.Stacktrace']:
                 for frame in data['sentry.interfaces.Stacktrace']['frames']:
                     if 'vars' in frame:
-                        for k,v in frame['vars'].iteritems():
+                        for k, v in frame['vars'].iteritems():
                             if 'password' in k or 'secret' in k:
                                 # store mask as a fixed length for security
                                 frame['vars'][k] = '*'*16

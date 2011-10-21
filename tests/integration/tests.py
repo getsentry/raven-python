@@ -17,13 +17,13 @@ class ServerTest(TestCase):
         self.raven = DjangoClient(include_paths=['tests'])
 
     def test_text(self):
-        message_id, checksum = self.raven.create_from_text('hello')
+        event_id, checksum = self.raven.create_from_text('hello')
 
         self.assertEquals(GroupedMessage.objects.count(), 1)
         self.assertEquals(Message.objects.count(), 1)
 
         message = Message.objects.get()
-        self.assertEquals(message.message_id, message_id)
+        self.assertEquals(message.event_id, event_id)
         self.assertEquals(message.checksum, checksum)
         self.assertEquals(message.message, 'hello')
         self.assertEquals(message.logger, 'root')
@@ -39,13 +39,13 @@ class ServerTest(TestCase):
         except: pass
         else: self.fail('Whatttt?')
 
-        message_id, checksum = self.raven.create_from_exception()
+        event_id, checksum = self.raven.create_from_exception()
 
         self.assertEquals(GroupedMessage.objects.count(), 1)
         self.assertEquals(Message.objects.count(), 1)
 
         message = Message.objects.get()
-        self.assertEquals(message.message_id, message_id)
+        self.assertEquals(message.event_id, event_id)
         self.assertEquals(message.checksum, checksum)
         self.assertEquals(message.class_name, 'ValueError')
         self.assertEquals(message.message, 'hello')
