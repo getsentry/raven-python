@@ -8,7 +8,7 @@ def get_data_from_request(request):
         'sentry.interfaces.Http': {
             'method': request.method,
             'url': request.build_absolute_uri(),
-            'query_string': request.META['QUERY_STRING'],
+            'query_string': request.META.get('QUERY_STRING'),
             'data': data,
             'cookies': dict(request.COOKIES),
         }
@@ -60,10 +60,10 @@ def get_data_from_template(source):
     context_line = source_lines[lineno]
 
     return {
-        'sentry.interface.Template': {
+        'sentry.interfaces.Template': {
             'filename': origin.name,
             'pre_context': pre_context,
-            'context_line': context_line,
+            'context_line': context_line[1],
             'lineno': lineno,
             'post_context': post_context,
         },

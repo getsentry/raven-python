@@ -50,6 +50,8 @@ def get_client(client=None):
             string_max_length=getattr(django_settings, 'MAX_LENGTH_STRING', None),
             list_max_length=getattr(django_settings, 'MAX_LENGTH_LIST', None),
             site=getattr(django_settings, 'SENTRY_SITE', None),
+            project=getattr(django_settings, 'SENTRY_PROJECT', None),
+            processors=getattr(django_settings, 'SENTRY_PROCESSORS', None),
         )
         if not tmp_client:
             _client = (client, instance)
