@@ -9,7 +9,7 @@ from __future__ import absolute_import
 import logging
 
 from django.test import TestCase
-from sentry.models import GroupedMessage, Message
+from sentry.models import Group, Event
 from raven.contrib.django import DjangoClient
 
 class ServerTest(TestCase):
@@ -19,20 +19,24 @@ class ServerTest(TestCase):
     def test_text(self):
         event_id, checksum = self.raven.create_from_text('hello')
 
-        self.assertEquals(GroupedMessage.objects.count(), 1)
-        self.assertEquals(Message.objects.count(), 1)
+        self.assertEquals(Group.objects.count(), 1)
+        self.assertEquals(Event.objects.count(), 1)
 
-        message = Message.objects.get()
+        message = Event.objects.get()
         self.assertEquals(message.event_id, event_id)
         self.assertEquals(message.checksum, checksum)
         self.assertEquals(message.message, 'hello')
         self.assertEquals(message.logger, 'root')
         self.assertEquals(message.level, logging.ERROR)
         data = message.data
-        self.assertTrue('__sentry__' in data)
-        self.assertTrue('versions' in data['__sentry__'])
-        self.assertTrue('tests' in data['__sentry__']['versions'])
-        self.assertEquals(data['__sentry__']['versions']['tests'], '1.0')
+        self.assertTrue('modules' in data)
+        versions = data['modules']
+        self.assertTrue('tests' in versions)
+        self.assertEquals(versions['tests'], '1.0')
+        self.assertTrue('sentry.interfaces.Message' in data)
+        message = data['sentry.interfaces.Message']
+        self.assertEquals(message['message'], 'hello')
+        self.assertEquals(message['params'], ())
 
     def test_exception(self):
         try: raise ValueError('hello')
@@ -41,29 +45,27 @@ class ServerTest(TestCase):
 
         event_id, checksum = self.raven.create_from_exception()
 
-        self.assertEquals(GroupedMessage.objects.count(), 1)
-        self.assertEquals(Message.objects.count(), 1)
+        self.assertEquals(Group.objects.count(), 1)
+        self.assertEquals(Event.objects.count(), 1)
 
-        message = Message.objects.get()
+        message = Event.objects.get()
         self.assertEquals(message.event_id, event_id)
         self.assertEquals(message.checksum, checksum)
-        self.assertEquals(message.class_name, 'ValueError')
-        self.assertEquals(message.message, 'hello')
+        self.assertEquals(message.message, 'ValueError: hello')
         self.assertEquals(message.logger, 'root')
         self.assertEquals(message.level, logging.ERROR)
         data = message.data
-        self.assertTrue('__sentry__' in data)
-        self.assertTrue('versions' in data['__sentry__'])
-        self.assertTrue('tests' in data['__sentry__']['versions'])
-        self.assertEquals(data['__sentry__']['versions']['tests'], '1.0')
-        self.assertTrue('frames' in data['__sentry__'])
-        self.assertEquals(len(data['__sentry__']['frames']), 1)
-        frame = data['__sentry__']['frames'][0]
+        self.assertTrue('modules' in data)
+        versions = data['modules']
+        self.assertTrue('tests' in versions)
+        self.assertEquals(versions['tests'], '1.0')
+        self.assertTrue('sentry.interfaces.Exception' in data)
+        exc = data['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'ValueError')
+        self.assertEquals(exc['value'], 'hello')
+        self.assertTrue('sentry.interfaces.Stacktrace' in data)
+        frames = data['sentry.interfaces.Stacktrace']['frames']
+        frame = frames[0]
         self.assertEquals(frame['function'], 'test_exception')
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['filename'], __file__)
-        self.assertTrue('exception' in data['__sentry__'])
-        exception = data['__sentry__']['exception']
-        self.assertTrue(len(exception), 1)
-        self.assertEquals(exception[0], '__builtin__')
-        self.assertEquals(exception[1], ('hello',))

@@ -64,7 +64,7 @@ class DjangoClient(Client):
         if self.servers:
             return super(DjangoClient, self).send(**kwargs)
         else:
-            from sentry.models import GroupedMessage
+            from sentry.models import Group
 
-            return GroupedMessage.objects.from_kwargs(**kwargs)
+            return Group.objects.from_kwargs(**kwargs)
 

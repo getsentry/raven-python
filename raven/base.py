@@ -51,7 +51,7 @@ class Client(object):
     def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, site=None, public_key=None, secret_key=None,
-                 processors=None, **kwargs):
+                 processors=None, project=1, **kwargs):
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
             raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
@@ -68,6 +68,7 @@ class Client(object):
         self.site = site or unicode(defaults.SITE)
         self.public_key = public_key
         self.secret_key = secret_key
+        self.project = project
 
         self.processors = processors or defaults.PROCESSORS
         self.logger = logging.getLogger(__name__)
@@ -112,7 +113,6 @@ class Client(object):
         >>> {
         >>>     # the culprit and version information
         >>>     'culprit': 'full.module.name', # or /arbitrary/path
-        >>>     'version': ('full.module.name', 'version string'),
         >>>
         >>>     # all detectable installed modules
         >>>     'modules': {
@@ -181,7 +181,7 @@ class Client(object):
 
         if not data.get('level'):
             data['level'] = logging.ERROR
-        data['modules'] = versions = get_versions(self.include_paths)
+        data['modules'] = get_versions(self.include_paths)
         data['server_name'] = self.name
         data['site'] = self.site
         data.setdefault('extra', {})
@@ -193,20 +193,6 @@ class Client(object):
 
         if culprit:
             data['culprit'] = culprit
-
-            # get list of modules from right to left
-            parts = culprit.split('.')
-            module_list = ['.'.join(parts[:idx]) for idx in xrange(1, len(parts)+1)][::-1]
-            version = None
-            module = None
-            for m in module_list:
-                if m in versions:
-                    module = m
-                    version = versions[m]
-
-            # store our "best guess" for application version
-            if version:
-                data['version'] = (module, version)
 
         checksum = hashlib.md5()
         for bit in handler.get_hash(data):
@@ -233,6 +219,7 @@ class Client(object):
             'date': date,
             'time_spent': time_spent,
             'event_id': event_id,
+            'project': self.project,
         })
 
         self.send(**data)

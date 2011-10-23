@@ -269,28 +269,6 @@ class DjangoClientTest(TestCase):
 
         self.assertEquals(event['message'], 'test')
 
-    def test_versions(self):
-        import raven
-        include_paths = self.raven.include_paths
-        self.raven.include_paths = ['raven', 'tests']
-
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
-
-        self.assertEquals(len(self.raven.events), 1)
-        event = self.raven.events.pop(0)
-
-        self.assertTrue('modules' in event)
-        modules = event['modules']
-        self.assertTrue('raven' in modules)
-        self.assertEquals(modules['raven'], raven.VERSION)
-        self.assertTrue('version' in event)
-        self.assertTrue(isinstance(event['version'], (list, tuple)))
-        self.assertEquals(len(event['version']), 2)
-        self.assertEquals(event['version'][0], 'tests')
-        self.assertEquals(event['version'][1], '1.0')
-
-        self.raven.include_paths = include_paths
-
     def test_404_middleware(self):
         with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.Sentry404CatchMiddleware']):
             resp = self.client.get('/non-existant-page')
