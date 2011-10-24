@@ -3,11 +3,13 @@
 from __future__ import absolute_import
 
 import logging
+from StringIO import StringIO
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
+from django.core.handlers.wsgi import WSGIRequest
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 
@@ -296,3 +298,24 @@ class DjangoClientTest(TestCase):
 
         self.assertEquals(get_client('%s.%s' % (self.raven.__class__.__module__, self.raven.__class__.__name__)), self.raven)
         self.assertEquals(get_client(), self.raven)
+
+    def test_raw_post_data_partial_read(self):
+        # This test only applies to Django 1.3+
+        v = '{"foo": "bar"}'
+        request = WSGIRequest(environ={
+            'wsgi.input': StringIO(v + '\r\n\r\n'),
+            'REQUEST_METHOD': 'POST',
+            'SERVER_NAME': 'testserver',
+            'SERVER_PORT': '80',
+            'CONTENT_TYPE': 'application/octet-stream',
+            'CONTENT_LENGTH': len(v),
+            'ACCEPT': 'application/json',
+        })
+        request.read(1)
+
+        self.raven.process(request=request)
+
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+
+        self.assertEquals(event['data']['POST'], '<unavailable>')
