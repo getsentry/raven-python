@@ -123,6 +123,7 @@ class Client(object):
                         else:
                             continue
                     stack.append(frame)
+                stack.reverse()
             else:
                 # assume stack was a list of frames
                 stack = get_stack or []
