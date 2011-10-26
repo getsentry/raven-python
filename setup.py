@@ -19,6 +19,7 @@ tests_require = [
     'django-sentry',
     'django-nose',
     'nose',
+    'mock',
     'unittest2',
 ]
 

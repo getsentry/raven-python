@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 import logging
+from celery.tests.utils import with_eager_tasks
 from StringIO import StringIO
 
 from django.conf import settings
@@ -14,6 +15,7 @@ from django.template import TemplateSyntaxError
 from django.test import TestCase
 
 from raven.base import Client
+from raven.contrib.celery import make_celery_client
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
 from raven.contrib.django.middleware.wsgi import Sentry
@@ -319,3 +321,21 @@ class DjangoClientTest(TestCase):
         event = self.raven.events.pop(0)
 
         self.assertEquals(event['data']['POST'], '<unavailable>')
+
+class IsolatedCeleryClientTest(TestCase):
+    def setUp(self):
+        self.client = make_celery_client(TempStoreClient())
+
+    def test_without_eager(self):
+        self.client.create_from_text('test')
+
+        # it should only have been queued
+        self.assertEquals(len(self.client.events), 0)
+
+    @with_eager_tasks
+    def test_with_eager(self):
+        self.client.create_from_text('test')
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'test')
