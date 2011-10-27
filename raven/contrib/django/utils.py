@@ -1,6 +1,10 @@
 def get_data_from_request(request):
-    if not request.POST and request.raw_post_data:
-        data = request.raw_post_data
+    if request.method == 'POST':
+        try:
+            data = request.raw_post_data and request.raw_post_data or request.POST
+        except Exception:
+            # assume we had a partial read:
+            data = '<unavailable>'
     else:
         data = dict(request.REQUEST.items())
 

@@ -167,6 +167,7 @@ class Client(object):
         if stack and 'sentry.interfaces.Stacktrace' not in data:
             if stack is True:
                 frames = iter_stack_frames()
+
             else:
                 frames = stack
 
@@ -286,6 +287,10 @@ class Client(object):
         >>>     client.create_from_exception(exc_info)
         >>> finally:
         >>>     del exc_info
+
+        If exc_info is not provided, or is set to True, then this method will
+        perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
+        for you.
         """
         return self.capture('Exception', exc_info=exc_info, **kwargs)
 

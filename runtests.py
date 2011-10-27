@@ -11,7 +11,7 @@ sys.path.insert(0, where_am_i)
 
 logging.getLogger('sentry').addHandler(logging.StreamHandler())
 
-# adding eggs to path 
+# adding eggs to path
 files = listdir(where_am_i)
 
 for file in files:

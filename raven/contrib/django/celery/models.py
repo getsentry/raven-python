@@ -1,5 +1,5 @@
 """
-raven.contrib.celery.models
+raven.contrib.django.celery.models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.

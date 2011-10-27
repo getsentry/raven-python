@@ -19,6 +19,7 @@ __all__ = ('BaseEvent', 'Exception', 'Message', 'Query')
 class BaseEvent(object):
     def __init__(self, client):
         self.client = client
+        self.logger = logging.getLogger(__name__)
 
     def to_string(self, data):
         raise NotImplementedError
@@ -52,8 +53,9 @@ class Exception(BaseEvent):
         return output
 
     def capture(self, exc_info=None, **kwargs):
-        new_exc_info = exc_info is None
-        if new_exc_info:
+        new_exc_info = False
+        if not exc_info or exc_info is True:
+            new_exc_info = True
             exc_info = sys.exc_info()
 
         try:
@@ -74,7 +76,11 @@ class Exception(BaseEvent):
                 exc_type = exc_type.__name__
         finally:
             if new_exc_info:
-                del exc_info
+                try:
+                    del exc_info
+                    del exc_traceback
+                except Exception, e:
+                    self.logger.exception(e)
         # if isinstance(exc_value, TemplateSyntaxError) and hasattr(exc_value, 'source'):
         #     origin, (start, end) = exc_value.source
         #     result['template'] = (origin.reload(), start, end, origin.name)
