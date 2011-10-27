@@ -292,8 +292,14 @@ class Client(object):
         >>>     client.create_from_exception(exc_info)
         >>> finally:
         >>>     del exc_info
+
+        If exc_info is not provided, or is set to True, then this method will
+        perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
+        for you.
         """
+        new_exc = False
         if not exc_info or exc_info is True:
+            new_exc = True
             exc_info = sys.exc_info()
 
         data = kwargs.pop('data', {}) or {}
@@ -325,11 +331,12 @@ class Client(object):
         finally:
             # It's important that we cleanup the frames object (specifically exc_info[2])
             # to ensure that GC can happen properly.
-            try:
-                del exc_info
-                del exc_traceback
-            except Exception, e:
-                logger.exception(e)
+            if new_exc:
+                try:
+                    del exc_info
+                    del exc_traceback
+                except Exception, e:
+                    logger.exception(e)
 
 class DummyClient(Client):
     "Sends messages into an empty void"
