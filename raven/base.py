@@ -293,7 +293,6 @@ class Client(object):
         >>> finally:
         >>>     del exc_info
         """
-        new_exc = bool(exc_info)
         if not exc_info or exc_info is True:
             exc_info = sys.exc_info()
 
@@ -324,11 +323,13 @@ class Client(object):
                 **kwargs
             )
         finally:
-            if new_exc:
-                try:
-                    del exc_info
-                except Exception, e:
-                    logger.exception(e)
+            # It's important that we cleanup the frames object (specifically exc_info[2])
+            # to ensure that GC can happen properly.
+            try:
+                del exc_info
+                del exc_traceback
+            except Exception, e:
+                logger.exception(e)
 
 class DummyClient(Client):
     "Sends messages into an empty void"
