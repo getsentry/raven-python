@@ -103,8 +103,10 @@ def iter_traceback_frames(tb):
 def iter_stack_frames(frames=None):
     if not frames:
         frames = inspect.stack()[1:]
-    for frame_crud in frames:
-        yield frame_crud[0]
+    for frame in (f[0] for f in frames):
+        if frame.f_locals.get('__traceback_hide__'):
+            continue
+        yield frame
 
 def get_stack_info(frames):
     results = []
