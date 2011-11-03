@@ -123,7 +123,6 @@ def get_stack_info(frames):
         pre_context_lineno, pre_context, context_line, post_context = get_lines_from_file(filename, lineno, 7, loader, module_name)
         if pre_context_lineno is not None:
             results.append({
-                'id': id(frame),
                 'filename': filename,
                 'module': module_name,
                 'function': function,
