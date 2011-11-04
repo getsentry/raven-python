@@ -21,6 +21,20 @@ class DjangoClient(Client):
     def __init__(self, servers=None, **kwargs):
         super(DjangoClient, self).__init__(servers=servers, **kwargs)
 
+    def get_user_info(request):
+        if request.user.is_authenticated():
+            user_info = {
+                'is_authenticated': True,
+                'id': request.user.pk,
+                'username': request.user.username,
+                'email': request.user.email,
+            }
+        else:
+            user_info = {
+                'is_authenticated': False,
+            }
+        return user_info
+
     def process(self, **kwargs):
         from django.http import HttpRequest
 
@@ -49,19 +63,7 @@ class DjangoClient(Client):
             ))
 
             if hasattr(request, 'user'):
-                if request.user.is_authenticated():
-                    user_info = {
-                        'is_authenticated': True,
-                        'id': request.user.pk,
-                        'username': request.user.username,
-                        'email': request.user.email,
-                    }
-                else:
-                    user_info = {
-                        'is_authenticated': False,
-                    }
-
-                data['__sentry__']['user'] = user_info
+                data['__sentry__']['user'] = self.get_user_info(request)
 
             if not kwargs.get('url'):
                 kwargs['url'] = request.build_absolute_uri()
