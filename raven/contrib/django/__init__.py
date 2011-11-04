@@ -21,7 +21,7 @@ class DjangoClient(Client):
     def __init__(self, servers=None, **kwargs):
         super(DjangoClient, self).__init__(servers=servers, **kwargs)
 
-    def get_user_info(request):
+    def get_user_info(self, request):
         if request.user.is_authenticated():
             user_info = {
                 'is_authenticated': True,
