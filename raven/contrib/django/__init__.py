@@ -15,7 +15,7 @@ from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
 
 from raven.base import Client
-from raven.contrib.django.utils import get_data_from_request, get_data_from_template
+from raven.contrib.django.utils import get_data_from_template
 
 logger = logging.getLogger('sentry.errors.client.django')
 
@@ -25,6 +25,45 @@ class DjangoClient(Client):
     def __init__(self, servers=None, **kwargs):
         super(DjangoClient, self).__init__(servers=servers, **kwargs)
 
+    def get_user_info(self, request):
+        if request.user.is_authenticated():
+            user_info = {
+                'is_authenticated': True,
+                'id': request.user.pk,
+                'username': request.user.username,
+                'email': request.user.email,
+            }
+        else:
+            user_info = {
+                'is_authenticated': False,
+            }
+        return user_info
+
+    def get_data_from_request(self, request):
+        if request.method == 'POST':
+            try:
+                data = request.raw_post_data and request.raw_post_data or request.POST
+            except Exception:
+                # assume we had a partial read:
+                data = '<unavailable>'
+        else:
+            data = dict(request.REQUEST.items())
+
+        result = {
+            'sentry.interfaces.Http': {
+                'method': request.method,
+                'url': request.build_absolute_uri(),
+                'query_string': request.META.get('QUERY_STRING'),
+                'data': data,
+                'cookies': dict(request.COOKIES),
+            }
+        }
+
+        if hasattr(request, 'user'):
+            result['sentry.interfaces.User'] = self.get_user_info(request)
+
+        return result
+
     def capture(self, event_type, request=None, **kwargs):
         if 'data' not in kwargs:
             kwargs['data'] = data = {}
@@ -33,7 +72,7 @@ class DjangoClient(Client):
 
         is_http_request = isinstance(request, HttpRequest)
         if is_http_request:
-            data.update(get_data_from_request(request))
+            data.update(self.get_data_from_request(request))
 
         if kwargs.get('exc_info'):
             exc_value = kwargs['exc_info'][1]

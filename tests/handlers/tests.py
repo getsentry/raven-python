@@ -2,6 +2,7 @@ import logging
 from unittest2 import TestCase
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
+from raven.utils.stacks import iter_stack_frames
 
 class TempStoreClient(Client):
     def __init__(self, servers=None, **kwargs):
@@ -117,6 +118,19 @@ class LoggingHandlerTest(TestCase):
         msg = event['sentry.interfaces.Message']
         self.assertEquals(msg['message'], 'This is a test of %s')
         self.assertEquals(msg['params'], ('args',))
+
+        # test explicit stack
+        logger.info('This is a test of stacks', extra={'stack': iter_stack_frames()})
+        self.assertEquals(len(client.events), 1)
+        event = client.events.pop(0)
+        self.assertEquals(event['culprit'], 'tests.handlers.tests.test_logger')
+        self.assertEquals(event['message'], 'This is a test of stacks')
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test of stacks')
+        self.assertEquals(msg['params'], ())
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
 
     def test_init(self):
         client = TempStoreClient(include_paths=['tests'])

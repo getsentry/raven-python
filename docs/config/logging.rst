@@ -39,7 +39,7 @@ your ``extra`` clause::
 
     logger.error('There was some crazy error', exc_info=True, extra={
         # Optionally you can pass additional arguments to specify request info
-        'view': 'my.view.name',
+        'culprit': 'my.view.name',
         'url': request.build_absolute_url(),
 
         'data': {
