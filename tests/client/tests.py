@@ -27,7 +27,10 @@ class ClientTest(TestCase):
         self.assertFalse('frames' in data)
 
     def test_stack_explicit_frames(self):
-        frames = inspect.stack()
+        def bar():
+            return inspect.stack()
+
+        frames = bar()
 
         self.client.create_from_text('test', stack=iter_stack_frames(frames))
 
@@ -37,6 +40,7 @@ class ClientTest(TestCase):
         data = event['data']['__sentry__']
         self.assertTrue('frames' in data)
         self.assertEquals(len(frames), len(data['frames']))
+
         for frame, frame_i in zip(frames, data['frames']):
             self.assertEquals(frame[0].f_code.co_filename, frame_i['filename'])
             self.assertEquals(frame[0].f_code.co_name, frame_i['function'])

@@ -18,7 +18,7 @@ class SentryHandler(logging.Handler):
         from raven.contrib.django.models import get_client
 
         # Fetch the request from a threadlocal variable, if available
-        request = getattr(SentryLogMiddleware.thread, 'request', None)
+        request = getattr(record, 'request', getattr(SentryLogMiddleware.thread, 'request', None))
 
         self.format(record)
 
