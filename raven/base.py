@@ -185,7 +185,7 @@ class Client(object):
         kwargs['data'] = transform(data)
 
         if 'timestamp' not in kwargs:
-            kwargs['timestamp'] = datetime.datetime.now()
+            kwargs['timestamp'] = datetime.datetime.utcnow()
 
         self.send(**kwargs)
 
