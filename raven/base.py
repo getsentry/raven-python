@@ -212,7 +212,7 @@ class Client(object):
         data = transform(data)
 
         if 'timestamp' not in kwargs:
-            kwargs['timestamp'] = datetime.datetime.now()
+            kwargs['timestamp'] = datetime.datetime.utcnow()
 
         data['message'] = handler.to_string(data)
 

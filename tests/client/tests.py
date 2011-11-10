@@ -26,7 +26,10 @@ class ClientTest(TestCase):
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
 
     def test_stack_explicit_frames(self):
-        frames = inspect.stack()
+        def bar():
+            return inspect.stack()
+
+        frames = bar()
 
         self.client.create_from_text('test', stack=iter_stack_frames(frames))
 
