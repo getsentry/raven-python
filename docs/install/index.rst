@@ -24,7 +24,9 @@ If you're upgrading from the original ``sentry.client`` there are a few things y
 
 * SENTRY_SERVER is deprecated in favor of SENTRY_SERVERS (which is a list of URIs).
 * ``sentry.client`` should be replaced with ``raven.contrib.django`` in ``INSTALLED_APPS``.
+* ``sentry.client.celery`` should be replaced with ``raven.contrib.django.celery`` in ``INSTALLED_APPS``.
 * ``sentry.handlers.SentryHandler`` should be replaced with ``raven.contrib.django.handlers.SentryHandler``
   in your logging configuration.
 * All Django specific middleware has been moved to ``raven.contrib.django.middleware``.
 * The default Django client is now ``raven.contrib.django.DjangoClient``.
+* The Django Celery client is now ``raven.contrib.django.celery.CeleryClient``.
