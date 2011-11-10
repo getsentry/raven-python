@@ -33,9 +33,9 @@ class Exception(BaseEvent):
     Exceptions store the following metadata:
 
     - value: 'My exception value'
-    - type: 'module.ClassName'
+    - type: 'ClassName'
+    - module '__builtin__' (i.e. __builtin__.TypeError)
     - frames: a list of serialized frames (see _get_traceback_frames)
-    - template: 'template/name.html'
     """
 
     def to_string(self, data):
@@ -65,12 +65,9 @@ class Exception(BaseEvent):
 
             culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
 
-            if hasattr(exc_type, '__class__'):
-                exc_module = exc_type.__class__.__module__
-                if exc_module == '__builtin__':
-                    exc_type = exc_type.__name__
-                else:
-                    exc_type = '%s.%s' % (exc_module, exc_type.__name__)
+            if hasattr(exc_type, '__module__'):
+                exc_module = exc_type.__module__
+                exc_type = exc_type.__name__
             else:
                 exc_module = None
                 exc_type = exc_type.__name__
@@ -92,6 +89,7 @@ class Exception(BaseEvent):
             'sentry.interfaces.Exception': {
                 'value': to_unicode(exc_value),
                 'type': exc_type,
+                'module': exc_module,
             },
             'sentry.interfaces.Stacktrace': {
                 'frames': frames

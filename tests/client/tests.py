@@ -17,6 +17,22 @@ class ClientTest(TestCase):
     def setUp(self):
         self.client = TempStoreClient()
 
+    def test_exception(self):
+        try:
+            raise ValueError('foo')
+        except:
+            self.client.capture('Exception')
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'ValueError: foo')
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('sentry.interfaces.Exception' in event)
+        exc = event['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'ValueError')
+        self.assertEquals(exc['value'], 'foo')
+        self.assertEquals(exc['module'], ValueError.__module__) # this differs in some Python versions
+
     def test_message(self):
         self.client.create_from_text('test')
 
