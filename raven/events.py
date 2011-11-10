@@ -78,10 +78,6 @@ class Exception(BaseEvent):
                     del exc_traceback
                 except Exception, e:
                     self.logger.exception(e)
-        # if isinstance(exc_value, TemplateSyntaxError) and hasattr(exc_value, 'source'):
-        #     origin, (start, end) = exc_value.source
-        #     result['template'] = (origin.reload(), start, end, origin.name)
-        #     result['tags'].append(('template', origin.loadname))
 
         return {
             'level': logging.ERROR,
