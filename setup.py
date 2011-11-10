@@ -16,7 +16,7 @@ tests_require = [
 
     'blinker>=1.1',
     'Flask>=0.8',
-    'django-sentry',
+    'django-sentry>=2.0.0',
     'django-nose',
     'nose',
     'mock',
@@ -32,7 +32,7 @@ if sys.version_info[:2] < (2, 5):
 
 setup(
     name='raven',
-    version='0.8.0',
+    version='2.0.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',
