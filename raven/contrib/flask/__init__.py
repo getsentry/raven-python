@@ -48,6 +48,7 @@ class Sentry(object):
                 servers=app.config.get('SENTRY_SERVERS'),
                 name=app.config.get('SENTRY_NAME'),
                 key=app.config.get('SENTRY_KEY'),
+                site=app.config.get('SENTRY_SITE_NAME'),
             )
         else:
             client = self.client
