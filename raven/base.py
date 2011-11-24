@@ -197,7 +197,7 @@ class Client(object):
 
         checksum = hashlib.md5()
         for bit in handler.get_hash(data):
-            checksum.update(bit)
+            checksum.update(bit or '')
         data['checksum'] = checksum = checksum.hexdigest()
 
         # create ID client-side so that it can be passed to application
