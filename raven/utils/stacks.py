@@ -79,10 +79,7 @@ def get_culprit(frames, include_paths=[], exclude_paths=[]):
     best_guess = None
     culprit = None
     for frame in frames:
-        try:
-            culprit = '.'.join([frame['module'], frame['function']])
-        except KeyError:
-            continue
+        culprit = '.'.join((f or '<unknown>' for f in [frame.get('module'), frame.get('function')]))
         if any((culprit.startswith(k) for k in include_paths)):
             if not (best_guess and any((culprit.startswith(k) for k in exclude_paths))):
                 best_guess = culprit
