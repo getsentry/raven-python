@@ -12,9 +12,12 @@ import logbook
 import sys
 
 class SentryHandler(logbook.Handler):
-    def __init__(self, client):
-        self.client = client
-        super(SentryHandler, self).__init__()
+    def __init__(self, *args, **kwargs):
+        try:
+            self.client = kwargs.pop('client')
+        except KeyError:
+            raise TypeError('Expected keyword argument for SentryHandler: client')
+        super(SentryHandler, self).__init__(*args, **kwargs)
 
     def emit(self, record):
         self.format(record)
