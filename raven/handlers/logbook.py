@@ -20,7 +20,7 @@ class SentryHandler(logbook.Handler):
         self.format(record)
 
         # Avoid typical config issues by overriding loggers behavior
-        if record.name.startswith('sentry.errors'):
+        if record.channel.startswith('sentry.errors'):
             print >> sys.stderr, "Recursive log message sent to SentryHandler"
             print >> sys.stderr, record.message
             return
