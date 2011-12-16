@@ -4,8 +4,10 @@ import logging
 from unittest2 import TestCase
 
 from raven.utils.encoding import transform, shorten
+from raven.utils.stacks import get_culprit
 
 logger = logging.getLogger('sentry.tests')
+
 
 class TransformTest(TestCase):
     def test_incorrect_unicode(self):
@@ -65,6 +67,7 @@ class TransformTest(TestCase):
         uuid = uuid.uuid4()
         self.assertEquals(transform(uuid), repr(uuid))
 
+
 class GetVersionsTest(TestCase):
     def test_get_versions(self):
         import raven
@@ -73,6 +76,7 @@ class GetVersionsTest(TestCase):
         self.assertEquals(versions.get('raven'), raven.VERSION)
         versions = get_versions(['raven.contrib.django'])
         self.assertEquals(versions.get('raven'), raven.VERSION)
+
 
 class ShortenTest(TestCase):
     def test_shorten_string(self):
@@ -109,3 +113,22 @@ class ShortenTest(TestCase):
     #     self.assertEquals(len(result), 52)
     #     self.assertEquals(result[-2], '...')
     #     self.assertEquals(result[-1], '(450 more elements)')
+
+
+class StackTest(TestCase):
+    def test_get_culprit_bad_module(self):
+        culprit = get_culprit([{
+            'module': None,
+            'function': 'foo',
+        }])
+        self.assertEquals(culprit, '<no module>.foo')
+
+        culprit = get_culprit([{
+            'module': 'foo',
+            'function': None,
+        }])
+        self.assertEquals(culprit, 'foo.<no function>')
+
+        culprit = get_culprit([{
+        }])
+        self.assertEquals(culprit, '<no module>.<no function>')

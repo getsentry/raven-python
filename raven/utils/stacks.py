@@ -13,6 +13,7 @@ from raven.utils.encoding import transform
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
 
+
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
     """
     Returns context_lines before and after lineno from file.
@@ -67,9 +68,10 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
 
     pre_context = [line.strip('\n') for line in source[lower_bound:lineno]]
     context_line = source[lineno].strip('\n')
-    post_context = [line.strip('\n') for line in source[lineno+1:upper_bound]]
+    post_context = [line.strip('\n') for line in source[lineno + 1:upper_bound]]
 
     return lower_bound, pre_context, context_line, post_context
+
 
 def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # We iterate through each frame looking for a deterministic culprit
@@ -80,7 +82,7 @@ def get_culprit(frames, include_paths=[], exclude_paths=[]):
     culprit = None
     for frame in frames:
         try:
-            culprit = '.'.join([frame['module'], frame['function']])
+            culprit = '.'.join([frame.get('module') or '<no module>', frame.get('function') or '<no function>'])
         except KeyError:
             continue
         if any((culprit.startswith(k) for k in include_paths)):
@@ -92,6 +94,7 @@ def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # Return either the best guess or the last frames call
     return best_guess or culprit
 
+
 def iter_traceback_frames(tb):
     while tb:
         # support for __traceback_hide__ which is used by a few libraries
@@ -100,6 +103,7 @@ def iter_traceback_frames(tb):
             yield tb.tb_frame
         tb = tb.tb_next
 
+
 def iter_stack_frames(frames=None):
     if not frames:
         frames = inspect.stack()[1:]
@@ -107,6 +111,7 @@ def iter_stack_frames(frames=None):
         if frame.f_locals.get('__traceback_hide__'):
             continue
         yield frame
+
 
 def get_stack_info(frames):
     results = []
