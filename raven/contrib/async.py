@@ -18,12 +18,13 @@ class AsyncClient(Client):
     """This client uses a single background thread to dispatch errors."""
     _terminator = object()
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Starts the task thread."""
         self.queue = Queue(-1)
         self._lock = Lock()
         self._thread = None
         self.start()
+        super(AsyncClient, self).__init__(*args, **kwargs)
 
     def main_thread_terminated(self):
         size = self.queue.qsize()
