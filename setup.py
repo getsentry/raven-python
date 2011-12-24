@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""
+Raven
+======
+
+Raven is a Python client for `Sentry <http://aboutsentry.com/>`_. It provides
+full out-of-the-box support for many of the popular frameworks, including
+Django, and Flask. Raven also includes drop-in support for any WSGI-compatible
+web application.
+"""
 
 import sys
 
@@ -36,7 +45,8 @@ setup(
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',
-    description = 'Exception Logging to a Database in Django',
+    description='Raven is a client for Sentry',
+    long_description=__doc__,
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,
     install_requires=install_requires,
