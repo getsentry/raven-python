@@ -9,5 +9,6 @@ def get_data_from_request(request):
             'query_string': urlparts.query,
             'method': request.method,
             'data': request.form or request.args,
+            'env': dict(request.headers),
         }
     }

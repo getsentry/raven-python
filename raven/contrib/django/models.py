@@ -20,6 +20,7 @@ from django.utils.hashcompat import md5_constructor
 
 logger = logging.getLogger('sentry.errors.client')
 
+
 def get_installed_apps():
     """
     Generate a list of modules in settings.INSTALLED_APPS.
@@ -30,6 +31,8 @@ def get_installed_apps():
     return out
 
 _client = (None, None)
+
+
 def get_client(client=None):
     global _client
 
@@ -60,6 +63,7 @@ def get_client(client=None):
 
 client = get_client()
 
+
 def get_transaction_wrapper(client):
     if client.servers:
         class MockTransaction(object):
@@ -77,6 +81,7 @@ def get_transaction_wrapper(client):
         from django.db import transaction
 
     return transaction
+
 
 def sentry_exception_handler(request=None, **kwargs):
     transaction = get_transaction_wrapper(get_client())

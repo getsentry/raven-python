@@ -334,6 +334,34 @@ class DjangoClientTest(TestCase):
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
 
+    def test_request_capture(self):
+        request = WSGIRequest(environ={
+            'wsgi.input': StringIO(),
+            'REQUEST_METHOD': 'POST',
+            'SERVER_NAME': 'testserver',
+            'SERVER_PORT': '80',
+            'CONTENT_TYPE': 'text/html',
+            'ACCEPT': 'text/html',
+        })
+        request.read(1)
+
+        self.raven.capture('Message', message='foo', request=request)
+
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+
+        self.assertTrue('sentry.interfaces.Http' in event)
+        http = event['sentry.interfaces.Http']
+        self.assertEquals(http['method'], 'POST')
+        self.assertEquals(http['data'], '<unavailable>')
+        self.assertTrue('env' in http)
+        env = http['env']
+        self.assertEquals(env['CONTENT_TYPE'], 'text/html')
+        self.assertEquals(env['ACCEPT'], 'text/html')
+        self.assertEquals(env['SERVER_NAME'], 'testserver')
+        self.assertEquals(env['SERVER_PORT'], '80')
+        self.assertEquals(env['REQUEST_METHOD'], 'POST')
+
 class IsolatedCeleryClientTest(TestCase):
     def setUp(self):
         self.client = make_celery_client(TempStoreClient())

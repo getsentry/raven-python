@@ -41,6 +41,7 @@ class FlaskTest(TestCase):
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
+        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests.an_error')
 
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
@@ -48,6 +49,11 @@ class FlaskTest(TestCase):
         self.assertEquals(http['query_string'], 'foo=bar')
         self.assertEquals(http['method'], 'GET')
         self.assertEquals(http['data'], {'foo': 'bar'})
-
-        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests.an_error')
-
+        self.assertTrue('env' in http)
+        env = http['env']
+        self.assertTrue('Content-Length' in env)
+        self.assertEquals(env['Content-Length'], '0')
+        self.assertTrue('Content-Type' in env)
+        self.assertEquals(env['Content-Type'], '')
+        self.assertTrue('Host' in env)
+        self.assertEquals(env['Host'], 'localhost')

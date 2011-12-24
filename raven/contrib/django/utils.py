@@ -2,9 +2,10 @@ def linebreak_iter(template_source):
     yield 0
     p = template_source.find('\n')
     while p >= 0:
-        yield p+1
-        p = template_source.find('\n', p+1)
+        yield p + 1
+        p = template_source.find('\n', p + 1)
     yield len(template_source) + 1
+
 
 def get_data_from_template(source):
     origin, (start, end) = source
@@ -22,8 +23,8 @@ def get_data_from_template(source):
     if not source_lines or lineno is None:
         return {}
 
-    pre_context = source_lines[max(lineno-3, 0):lineno]
-    post_context = source_lines[lineno+1:lineno+4]
+    pre_context = source_lines[max(lineno - 3, 0):lineno]
+    post_context = source_lines[(lineno + 1):(lineno + 4)]
     context_line = source_lines[lineno]
 
     return {

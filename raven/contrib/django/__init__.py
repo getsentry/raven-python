@@ -19,6 +19,7 @@ from raven.contrib.django.utils import get_data_from_template
 
 logger = logging.getLogger('sentry.errors.client.django')
 
+
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client')
 
@@ -56,6 +57,7 @@ class DjangoClient(Client):
                 'query_string': request.META.get('QUERY_STRING'),
                 'data': data,
                 'cookies': dict(request.COOKIES),
+                'env': dict(request.META),
             }
         }
 
