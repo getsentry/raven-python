@@ -8,10 +8,12 @@ raven.utils.stacks
 
 import inspect
 import re
+import sys
 
 from raven.utils.encoding import transform
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
+
 
 def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
     """
@@ -67,9 +69,10 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
 
     pre_context = [line.strip('\n') for line in source[lower_bound:lineno]]
     context_line = source[lineno].strip('\n')
-    post_context = [line.strip('\n') for line in source[lineno+1:upper_bound]]
+    post_context = [line.strip('\n') for line in source[(lineno + 1):upper_bound]]
 
     return pre_context, context_line, post_context
+
 
 def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # We iterate through each frame looking for a deterministic culprit
@@ -89,6 +92,7 @@ def get_culprit(frames, include_paths=[], exclude_paths=[]):
     # Return either the best guess or the last frames call
     return best_guess or culprit
 
+
 def iter_traceback_frames(tb):
     while tb:
         # support for __traceback_hide__ which is used by a few libraries
@@ -96,6 +100,7 @@ def iter_traceback_frames(tb):
         if not tb.tb_frame.f_locals.get('__traceback_hide__'):
             yield tb.tb_frame
         tb = tb.tb_next
+
 
 def iter_stack_frames(frames=None):
     if not frames:
@@ -105,6 +110,7 @@ def iter_stack_frames(frames=None):
             continue
         yield frame
 
+
 def get_stack_info(frames):
     results = []
     for frame in frames:
@@ -112,14 +118,24 @@ def get_stack_info(frames):
         if frame.f_locals.get('__traceback_hide__'):
             continue
 
-        filename = frame.f_code.co_filename
+        abs_path = frame.f_code.co_filename
         function = frame.f_code.co_name
         lineno = frame.f_lineno - 1
         loader = frame.f_globals.get('__loader__')
         module_name = frame.f_globals.get('__name__')
-        pre_context, context_line, post_context = get_lines_from_file(filename, lineno, 7, loader, module_name)
+        pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 7, loader, module_name)
+
+        # Try to pull a relative file path
+        # This changes /foo/site-packages/baz/bar.py into baz/bar.py
+        try:
+            base_filename = sys.modules[module_name.split('.', 1)[0]].__file__
+            filename = abs_path.split(base_filename.rsplit('/', 2)[0], 1)[-1][1:]
+        except:
+            filename = abs_path
+
         if context_line:
             results.append({
+                'abs_path': abs_path,
                 'filename': filename,
                 'module': module_name,
                 'function': function,

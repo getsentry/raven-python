@@ -12,6 +12,7 @@ from django.test import TestCase
 from sentry.models import Group, Event
 from raven.contrib.django import DjangoClient
 
+
 class ServerTest(TestCase):
     def setUp(self):
         self.raven = DjangoClient(include_paths=['tests'])
@@ -39,9 +40,12 @@ class ServerTest(TestCase):
         self.assertEquals(message['params'], ())
 
     def test_exception(self):
-        try: raise ValueError('hello')
-        except: pass
-        else: self.fail('Whatttt?')
+        try:
+            raise ValueError('hello')
+        except:
+            pass
+        else:
+            self.fail('Whatttt?')
 
         event_id, checksum = self.raven.create_from_exception()
 
@@ -68,4 +72,5 @@ class ServerTest(TestCase):
         frame = frames[0]
         self.assertEquals(frame['function'], 'test_exception')
         self.assertEquals(frame['module'], __name__)
-        self.assertEquals(frame['filename'], __file__)
+        self.assertEquals(frame['filename'], 'tests/integration/tests.py')
+        self.assertEquals(frame['abs_path'], __file__)
