@@ -16,6 +16,7 @@ from django.template.loader import LoaderOrigin
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template
+from raven.utils.wsgi import get_headers, get_environ
 
 logger = logging.getLogger('sentry.errors.client.django')
 
@@ -50,6 +51,8 @@ class DjangoClient(Client):
         else:
             data = dict(request.REQUEST.items())
 
+        environ = request.META
+
         result = {
             'sentry.interfaces.Http': {
                 'method': request.method,
@@ -57,7 +60,8 @@ class DjangoClient(Client):
                 'query_string': request.META.get('QUERY_STRING'),
                 'data': data,
                 'cookies': dict(request.COOKIES),
-                'env': dict(request.META),
+                'headers': dict(get_headers(environ)),
+                'env': dict(get_environ(environ)),
             }
         }
 

@@ -1,5 +1,8 @@
 import urlparse
 
+from raven.utils.wsgi import get_headers, get_environ
+
+
 def get_data_from_request(request):
     urlparts = urlparse.urlsplit(request.url)
 
@@ -9,6 +12,7 @@ def get_data_from_request(request):
             'query_string': urlparts.query,
             'method': request.method,
             'data': request.form or request.args,
-            'env': dict(request.headers),
+            'headers': dict(get_headers(request.environ)),
+            'env': dict(get_environ(request.environ)),
         }
     }

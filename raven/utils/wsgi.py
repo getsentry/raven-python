@@ -7,6 +7,29 @@ This module implements WSGI related helpers adapted from ``werkzeug.wsgi``
 
 import urllib
 
+
+# `get_headers` comes from `werkzeug.datastructures.EnvironHeaders`
+def get_headers(environ):
+    """
+    Returns only proper HTTP headers.
+    """
+    for key, value in environ.iteritems():
+        if key.startswith('HTTP_') and key not in \
+           ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
+            yield key[5:].replace('_', '-').title(), value
+        elif key in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
+            yield key.replace('_', '-').title(), value
+
+
+def get_environ(environ):
+    """
+    Returns our whitelisted environment variables.
+    """
+    for key in ('REMOTE_ADDR', 'SERVER_NAME', 'SERVER_PORT'):
+        if key in environ:
+            yield key, environ[key]
+
+
 # `get_host` comes from `werkzeug.wsgi`
 def get_host(environ):
     """Return the real host for the given WSGI environment.  This takes care
@@ -23,6 +46,7 @@ def get_host(environ):
        in (('https', '443'), ('http', '80')):
         result += ':' + environ['SERVER_PORT']
     return result
+
 
 # `get_current_url` comes from `werkzeug.wsgi`
 def get_current_url(environ, root_only=False, strip_querystring=False,

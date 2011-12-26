@@ -354,13 +354,16 @@ class DjangoClientTest(TestCase):
         http = event['sentry.interfaces.Http']
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
-        self.assertTrue('env' in http)
+        self.assertTrue('headers' in http)
+        headers = http['headers']
+        self.assertTrue('Content-Type' in headers, headers.keys())
+        self.assertEquals(headers['Content-Type'], 'text/html')
         env = http['env']
-        self.assertEquals(env['CONTENT_TYPE'], 'text/html')
-        self.assertEquals(env['ACCEPT'], 'text/html')
+        self.assertTrue('SERVER_NAME' in env, env.keys())
         self.assertEquals(env['SERVER_NAME'], 'testserver')
+        self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
-        self.assertEquals(env['REQUEST_METHOD'], 'POST')
+
 
 class IsolatedCeleryClientTest(TestCase):
     def setUp(self):
