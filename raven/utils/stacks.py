@@ -126,7 +126,7 @@ def get_stack_info(frames):
         lineno = frame.f_lineno - 1
         loader = frame.f_globals.get('__loader__')
         module_name = frame.f_globals.get('__name__')
-        pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 7, loader, module_name)
+        pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 3, loader, module_name)
 
         # Try to pull a relative file path
         # This changes /foo/site-packages/baz/bar.py into baz/bar.py
