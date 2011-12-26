@@ -121,14 +121,14 @@ class StackTest(TestCase):
             'module': None,
             'function': 'foo',
         }])
-        self.assertEquals(culprit, '<no module>.foo')
+        self.assertEquals(culprit, '<unknown>.foo')
 
         culprit = get_culprit([{
             'module': 'foo',
             'function': None,
         }])
-        self.assertEquals(culprit, 'foo.<no function>')
+        self.assertEquals(culprit, 'foo.<unknown>')
 
         culprit = get_culprit([{
         }])
-        self.assertEquals(culprit, '<no module>.<no function>')
+        self.assertEquals(culprit, '<unknown>.<unknown>')
