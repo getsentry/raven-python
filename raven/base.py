@@ -23,6 +23,7 @@ from raven.utils.encoding import transform, shorten
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
                                        get_culprit
 
+
 class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
@@ -32,6 +33,7 @@ class ModuleProxyCache(dict):
         self[key] = handler
 
         return handler
+
 
 class Client(object):
     """
@@ -57,15 +59,18 @@ class Client(object):
             raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
 
         self.servers = servers
-        self.include_paths = include_paths or set(defaults.INCLUDE_PATHS)
-        self.exclude_paths = exclude_paths or set(defaults.EXCLUDE_PATHS)
-        self.timeout = timeout or int(defaults.TIMEOUT)
-        self.name = name or unicode(defaults.NAME)
-        self.auto_log_stacks = auto_log_stacks or bool(defaults.AUTO_LOG_STACKS)
-        self.key = key or defaults.KEY
-        self.string_max_length = string_max_length or int(defaults.MAX_LENGTH_STRING)
-        self.list_max_length = list_max_length or int(defaults.MAX_LENGTH_LIST)
-        self.site = site or unicode(defaults.SITE)
+        self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
+        self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
+        self.timeout = int(timeout or defaults.TIMEOUT)
+        self.name = unicode(name or defaults.NAME)
+        self.auto_log_stacks = bool(auto_log_stacks or defaults.AUTO_LOG_STACKS)
+        self.key = str(key or defaults.KEY)
+        self.string_max_length = int(string_max_length or defaults.MAX_LENGTH_STRING)
+        self.list_max_length = int(list_max_length or defaults.MAX_LENGTH_LIST)
+        if (site or defaults.SITE):
+            self.site = unicode(site or defaults.SITE)
+        else:
+            self.site = None
         self.public_key = public_key
         self.secret_key = secret_key
         self.project = project
@@ -293,6 +298,7 @@ class Client(object):
         for you.
         """
         return self.capture('Exception', exc_info=exc_info, **kwargs)
+
 
 class DummyClient(Client):
     "Sends messages into an empty void"
