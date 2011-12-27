@@ -187,6 +187,7 @@ class Client(object):
 
         if not data.get('level'):
             data['level'] = logging.ERROR
+        data['logger'] = kwargs.get('logger')
         data['modules'] = get_versions(self.include_paths)
         data['server_name'] = self.name
         data['site'] = self.site
