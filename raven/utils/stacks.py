@@ -139,7 +139,7 @@ def get_stack_info(frames):
         if context_line:
             results.append({
                 'abs_path': abs_path,
-                'filename': filename,
+                'filename': filename or abs_path,
                 'module': module_name,
                 'function': function,
                 'lineno': lineno + 1,
