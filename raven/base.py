@@ -109,6 +109,8 @@ class Client(object):
         >>>         'query_string': '...',
         >>>         'method': 'POST',
         >>>     },
+        >>>     'logger': 'logger.name',
+        >>>     'site': 'site.name',
         >>> }, extra={
         >>>     'key': 'value',
         >>> })
@@ -187,10 +189,8 @@ class Client(object):
 
         if not data.get('level'):
             data['level'] = logging.ERROR
-        data['logger'] = kwargs.get('logger')
         data['modules'] = get_versions(self.include_paths)
         data['server_name'] = self.name
-        data['site'] = self.site
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
 

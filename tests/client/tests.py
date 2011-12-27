@@ -74,3 +74,17 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
+
+    def test_site(self):
+        self.client.capture('Message', message='test', data={'site': 'test'})
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['site'], 'test')
+
+    def test_logger(self):
+        self.client.capture('Message', message='test', data={'logger': 'test'})
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['logger'], 'test')
