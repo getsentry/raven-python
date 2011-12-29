@@ -37,7 +37,7 @@ Django 1.3
         },
         'handlers': {
             'sentry': {
-                'level': 'DEBUG',
+                'level': 'ERROR',
                 'class': 'raven.contrib.django.handlers.SentryHandler',
                 'formatter': 'verbose'
             },
