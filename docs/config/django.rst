@@ -48,6 +48,11 @@ Django 1.3
             }
         },
         'loggers': {
+            'django.db.backends': {
+                'level': 'ERROR',
+                'handlers': ['console'],
+                'propagate': False,
+            },
             'sentry.errors': {
                 'level': 'DEBUG',
                 'handlers': ['console'],
