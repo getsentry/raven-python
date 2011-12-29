@@ -65,3 +65,6 @@ AUTO_LOG_STACKS = False
 PROCESSORS = (
     'raven.processors.SantizePasswordsProcessor',
 )
+
+# Default Project ID
+PROJECT = 1
