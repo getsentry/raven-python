@@ -53,7 +53,7 @@ class Client(object):
     def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, site=None, public_key=None, secret_key=None,
-                 processors=None, project=1, **kwargs):
+                 processors=None, project=None, **kwargs):
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
             raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
@@ -73,7 +73,7 @@ class Client(object):
             self.site = None
         self.public_key = public_key
         self.secret_key = secret_key
-        self.project = project
+        self.project = int(project or defaults.PROJECT)
 
         self.processors = processors or defaults.PROCESSORS
         self.logger = logging.getLogger(__name__)
