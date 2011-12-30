@@ -18,7 +18,7 @@ class ServerTest(TestCase):
         self.raven = DjangoClient(include_paths=['tests'])
 
     def test_text(self):
-        event_id, checksum = self.raven.create_from_text('hello')
+        event_id, checksum = self.raven.capture('Message', message='hello')
 
         self.assertEquals(Group.objects.count(), 1)
         self.assertEquals(Event.objects.count(), 1)
@@ -47,7 +47,7 @@ class ServerTest(TestCase):
         else:
             self.fail('Whatttt?')
 
-        event_id, checksum = self.raven.create_from_exception()
+        event_id, checksum = self.raven.capture('Exception')
 
         self.assertEquals(Group.objects.count(), 1)
         self.assertEquals(Event.objects.count(), 1)

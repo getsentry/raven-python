@@ -217,13 +217,13 @@ class Client(object):
         # Make sure all data is coerced
         data = transform(data)
 
-        if 'timestamp' not in kwargs:
-            kwargs['timestamp'] = datetime.datetime.utcnow()
+        if not date:
+            date = datetime.datetime.utcnow()
 
         data['message'] = handler.to_string(data)
 
         data.update({
-            'date': date,
+            'timestamp': date,
             'time_spent': time_spent,
             'event_id': event_id,
             'project': self.project,
@@ -252,8 +252,6 @@ class Client(object):
         each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
         directly.
         """
-        # if kwargs.get('date'):
-        #     kwargs['date'] = kwargs['date'].strftime('%Y-%m-%dT%H:%M:%S.%f')
         message = base64.b64encode(json.dumps(data).encode('zlib'))
 
         for url in self.servers:

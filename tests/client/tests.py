@@ -41,6 +41,7 @@ class ClientTest(TestCase):
         self.assertEquals(frame['filename'], 'tests/client/tests.py')
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test_exception')
+        self.assertTrue('timestamp' in event)
 
     def test_message(self):
         self.client.create_from_text('test')
@@ -49,6 +50,7 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('timestamp' in event)
 
     def test_stack_explicit_frames(self):
         def bar():
@@ -74,6 +76,7 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('timestamp' in event)
 
     def test_site(self):
         self.client.capture('Message', message='test', data={'site': 'test'})
@@ -81,6 +84,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['site'], 'test')
+        self.assertTrue('timestamp' in event)
 
     def test_logger(self):
         self.client.capture('Message', message='test', data={'logger': 'test'})
@@ -88,3 +92,4 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['logger'], 'test')
+        self.assertTrue('timestamp' in event)
