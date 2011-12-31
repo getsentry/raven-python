@@ -15,6 +15,7 @@ import logging
 import time
 import urllib2
 import uuid
+import warnings
 
 import raven
 from raven.conf import defaults
@@ -282,6 +283,7 @@ class Client(object):
 
         >>> client.create_from_text('My event just happened!')
         """
+        warnings.warn("create_from_text is deprecated. Use capture('Message') instead.", DeprecationWarning)
         return self.capture('Message', message=message, **kwargs)
 
     def create_from_exception(self, exc_info=None, **kwargs):
@@ -300,6 +302,7 @@ class Client(object):
         perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
         for you.
         """
+        warnings.warn("create_from_exception is deprecated. Use capture('Exception') instead.", DeprecationWarning)
         return self.capture('Exception', exc_info=exc_info, **kwargs)
 
 
