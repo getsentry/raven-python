@@ -20,6 +20,15 @@ easily trace them in your application.
 
 More information about Sentry can be found at http://aboutsentry.com
 
+Resources
+---------
+
+* `Documentation <http://raven.readthedocs.org/>`_
+* `Bug Tracker <http://github.com/dcramer/raven/issues>`_
+* `Code <http://github.com/dcramer/raven>`_
+* `Mailing List <https://groups.google.com/group/disqus-opensource>`_
+* `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)
+
 Deprecation Notes
 -----------------
 

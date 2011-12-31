@@ -9,7 +9,11 @@ web application.
 Your application doesn't live on the web? No problem! Raven is easy to use in
 any Python application.
 
-Documentation
--------------
+Resources
+---------
 
-Docs: http://raven.rtfd.org
+* `Documentation <http://raven.readthedocs.org/>`_
+* `Bug Tracker <http://github.com/dcramer/raven/issues>`_
+* `Code <http://github.com/dcramer/raven>`_
+* `Mailing List <https://groups.google.com/group/disqus-opensource>`_
+* `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)
