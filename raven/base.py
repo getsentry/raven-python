@@ -276,6 +276,8 @@ class Client(object):
 
     def create_from_text(self, message, **kwargs):
         """
+        Deprecated.
+
         Creates an event for from ``message``.
 
         >>> client.create_from_text('My event just happened!')
@@ -284,6 +286,8 @@ class Client(object):
 
     def create_from_exception(self, exc_info=None, **kwargs):
         """
+        Deprecated.
+
         Creates an event from an exception.
 
         >>> try:
