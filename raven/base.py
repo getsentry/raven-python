@@ -15,6 +15,8 @@ import logging
 import time
 import urllib2
 import uuid
+from urlparse import urlparse
+from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 
 import raven
 from raven.conf import defaults
@@ -78,6 +80,7 @@ class Client(object):
         self.processors = processors or defaults.PROCESSORS
         self.logger = logging.getLogger(__name__)
         self.module_cache = ModuleProxyCache()
+        self.udp_socket = None
 
     def get_processors(self):
         for processor in self.processors:
@@ -234,6 +237,25 @@ class Client(object):
         return (event_id, checksum)
 
     def send_remote(self, url, data, headers={}):
+        parsed = urlparse(url)
+        if parsed.scheme == 'udp':
+            return self.send_udp(parsed.netloc, data, headers.get('X-Sentry-Auth'))
+        return self.send_http(url, data, headers)
+    def send_udp(self, netloc, data, auth_header):
+        if auth_header is None:
+            # silently ignore attempts to send messages without an auth header
+            return
+        host, port = netloc.split(':')
+        if self.udp_socket is None:
+            self.udp_socket = socket(AF_INET, SOCK_DGRAM)
+            self.udp_socket.setblocking(False)
+        try:
+            self.udp_socket.sendto(auth_header + '\n\n' + data, (host, int(port)))
+        except socket_error:
+            # as far as I understand things this simply can't happen, but still, it can't hurt
+            self.udp_socket.close()
+            self.udp_socket = None
+    def send_http(self, url, data, headers={}):
         """
         Sends a request to a remote webserver using HTTP POST.
         """
