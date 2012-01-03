@@ -9,14 +9,7 @@ Django, and Flask. Raven also includes drop-in support for any WSGI-compatible
 web application.
 """
 
-import sys
-
-try:
-    from setuptools import setup, find_packages, Command
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages, Command
+from setuptools import setup, find_packages
 
 tests_require = [
     'Django>=1.2,<1.4',
@@ -35,9 +28,6 @@ tests_require = [
 install_requires = [
     'simplejson',
 ]
-
-if sys.version_info[:2] < (2, 5):
-    install_requires.append('uuid')
 
 setup(
     name='raven',
