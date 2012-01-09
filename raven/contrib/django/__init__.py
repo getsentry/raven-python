@@ -18,11 +18,9 @@ from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template
 from raven.utils.wsgi import get_headers, get_environ
 
-logger = logging.getLogger('sentry.errors.client.django')
-
 
 class DjangoClient(Client):
-    logger = logging.getLogger('sentry.errors.client')
+    logger = logging.getLogger('sentry.errors.client.django')
 
     def __init__(self, servers=None, **kwargs):
         super(DjangoClient, self).__init__(servers=servers, **kwargs)
@@ -86,7 +84,10 @@ class DjangoClient(Client):
             # legacy ``TemplateSyntaxError.source`` check) which describes template information.
             if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and \
                isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], LoaderOrigin))):
-                data.update(get_data_from_template(getattr(exc_value, 'django_template_source', exc_value.source)))
+                source = getattr(exc_value, 'django_template_source', getattr(exc_value, 'source', None))
+                if source is None:
+                    self.logger.info('Unable to get template source from exception')
+                data.update(get_data_from_template(source))
 
         result = super(DjangoClient, self).capture(event_type, **kwargs)
 
