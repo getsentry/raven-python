@@ -16,6 +16,7 @@ from raven.utils.stacks import get_stack_info, iter_traceback_frames, \
 
 __all__ = ('BaseEvent', 'Exception', 'Message', 'Query')
 
+
 class BaseEvent(object):
     def __init__(self, client):
         self.client = client
@@ -27,6 +28,7 @@ class BaseEvent(object):
     def capture(self, **kwargs):
         return {
         }
+
 
 class Exception(BaseEvent):
     """
@@ -92,6 +94,7 @@ class Exception(BaseEvent):
             },
         }
 
+
 class Message(BaseEvent):
     """
     Messages store the following metadata:
@@ -116,6 +119,7 @@ class Message(BaseEvent):
             }
         }
         return data
+
 
 class Query(BaseEvent):
     """
