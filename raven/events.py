@@ -48,7 +48,7 @@ class Exception(BaseEvent):
 
     def get_hash(self, data):
         exc = data['sentry.interfaces.Exception']
-        output = [exc['type'], exc['value']]
+        output = [exc['type']]
         for frame in data['sentry.interfaces.Stacktrace']['frames']:
             output.append(frame['module'])
             output.append(frame['function'])
