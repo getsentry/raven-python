@@ -288,7 +288,7 @@ class Client(object):
             }
 
             try:
-                return self.send_remote(url=url, data=message, headers=headers)
+                self.send_remote(url=url, data=message, headers=headers)
             except urllib2.HTTPError, e:
                 body = e.read()
                 self.logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
