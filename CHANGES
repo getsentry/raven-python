@@ -1,3 +1,8 @@
+0.7.1
+
+* Servers would stop iterating after the first successful post which was not the
+  intended behavior.
+
 0.7.0
 
 * You can now explicitly pass a list of frame objects to the process method.
