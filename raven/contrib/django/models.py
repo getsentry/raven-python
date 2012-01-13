@@ -53,6 +53,8 @@ def get_client(client=None):
             string_max_length=getattr(django_settings, 'MAX_LENGTH_STRING', None),
             list_max_length=getattr(django_settings, 'MAX_LENGTH_LIST', None),
             site=getattr(django_settings, 'SENTRY_SITE', None),
+            public_key=getattr(django_settings, 'SENTRY_PUBLIC_KEY', None),
+            secret_key=getattr(django_settings, 'SENTRY_SECRET_KEY', None),
             project=getattr(django_settings, 'SENTRY_PROJECT', None),
             processors=getattr(django_settings, 'SENTRY_PROCESSORS', None),
         )
