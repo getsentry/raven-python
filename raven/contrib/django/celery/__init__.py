@@ -11,7 +11,7 @@ from celery.decorators import task
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
 
-queue=getattr(settings, 'SENTRY_CELERY_QUEUE', 'celery')
+queue=getattr(settings, 'SENTRY_CELERY_QUEUE', 'sentry')
 
 @task(queue=queue)
 def send_remote(kwargs):
