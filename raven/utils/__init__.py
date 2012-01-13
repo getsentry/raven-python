@@ -14,6 +14,7 @@ except ImportError:
     pkg_resources = None
 import sys
 
+
 def varmap(func, var, context=None):
     if context is None:
         context = {}
@@ -33,6 +34,8 @@ def varmap(func, var, context=None):
 # We store a cache of module_name->version string to avoid
 # continuous imports and lookups of modules
 _VERSION_CACHE = {}
+
+
 def get_versions(module_list=None):
     if not module_list:
         return {}
@@ -40,7 +43,7 @@ def get_versions(module_list=None):
     ext_module_list = set()
     for m in module_list:
         parts = m.split('.')
-        ext_module_list.update('.'.join(parts[:idx]) for idx in xrange(1, len(parts)+1))
+        ext_module_list.update('.'.join(parts[:idx]) for idx in xrange(1, len(parts) + 1))
 
     versions = {}
     for module_name in ext_module_list:
@@ -79,8 +82,10 @@ def get_versions(module_list=None):
         versions[module_name] = version
     return versions
 
+
 def get_signature(message, timestamp, key):
-    return hmac.new(key, '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
+    return hmac.new(str(key), '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
+
 
 def get_auth_header(signature, timestamp, client, api_key=None):
     header = [
