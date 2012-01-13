@@ -140,5 +140,5 @@ class LoggingHandlerTest(TestCase):
         handler = SentryHandler(client=client)
         assert handler.client == client
 
-        handler = SentryHandler(['http://sentry.local/store/'], 'KEY')
+        handler = SentryHandler(['http://sentry.local/api/store/'], 'KEY')
         assert handler.client

@@ -45,7 +45,7 @@ class Client(object):
 
     >>> from raven import Client
     >>>
-    >>> client = Client(servers=['http://sentry.local/store/'], include_paths=['my.package'])
+    >>> client = Client(servers=['http://sentry.local/api/store/'], include_paths=['my.package'])
     >>> try:
     >>>     1/0
     >>> except ZeroDivisionError:

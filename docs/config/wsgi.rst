@@ -9,7 +9,7 @@ Raven includes a simple to use wsgi middleware.
     from raven.middleware import Sentry
 
     application = Sentry(application, Client(
-        servers=['http://sentry.local/store/'],
+        servers=['http://sentry.local/api/store/'],
         key='my secret key'
     )
 

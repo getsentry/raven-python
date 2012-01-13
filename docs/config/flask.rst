@@ -18,4 +18,4 @@ Additional settings for the client are configured using ``SENTRY_<setting name>`
 
     class MyConfig(object):
         SENTRY_KEY = 'my secret key'
-        SENTRY_SERVERS = ['http://sentry.local/store/']
+        SENTRY_SERVERS = ['http://sentry.local/api/store/']

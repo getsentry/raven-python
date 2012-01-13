@@ -21,8 +21,11 @@ def load(dsn, scope):
     url = urlparse.urlparse(dsn)
     if url.scheme not in ('http', 'https'):
         raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)
+    netloc = url.hostname
+    if url.port and url.port != 80:
+        netloc += ':%s' % url.port
     scope.update({
-        'SENTRY_SERVERS': ['%s://%s/api/store' % (url.scheme, url.netloc)],
+        'SENTRY_SERVERS': ['%s://%s/api/store/' % (url.scheme, netloc)],
         'SENTRY_PROJECT': url.path[1:],
         'SENTRY_PUBLIC_KEY': url.username,
         'SENTRY_SECRET_KEY': url.password,

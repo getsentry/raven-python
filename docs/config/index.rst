@@ -27,7 +27,7 @@ Settings are specified as part of the intialization of the client.
 
     from raven import Client
 
-    client = Client(servers=['http://sentry.local/store/'])
+    client = Client(servers=['http://sentry.local/api/store/'])
 
 
 name
