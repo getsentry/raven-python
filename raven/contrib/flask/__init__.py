@@ -51,4 +51,6 @@ class Sentry(object):
         else:
             client = self.client
 
+        self.client = client
+
         got_request_exception.connect(self.handle_exception(client), sender=app, weak=False)
