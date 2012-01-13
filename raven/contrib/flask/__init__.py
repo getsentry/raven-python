@@ -48,9 +48,8 @@ class Sentry(object):
                 project=app.config.get('SENTRY_PROJECT'),
                 site=app.config.get('SENTRY_SITE_NAME'),
             )
+            self.client = client
         else:
             client = self.client
-
-        self.client = client
 
         got_request_exception.connect(self.handle_exception(client), sender=app, weak=False)
