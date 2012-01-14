@@ -86,8 +86,8 @@ class Exception(BaseEvent):
             'culprit': culprit,
             'sentry.interfaces.Exception': {
                 'value': to_unicode(exc_value),
-                'type': exc_type,
-                'module': exc_module,
+                'type': str(exc_type),
+                'module': str(exc_module),
             },
             'sentry.interfaces.Stacktrace': {
                 'frames': frames
