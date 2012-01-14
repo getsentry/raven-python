@@ -24,9 +24,15 @@ def load(dsn, scope):
     netloc = url.hostname
     if url.port and url.port != 80:
         netloc += ':%s' % url.port
+    path_bits = url.path.rsplit('/', 1)
+    if len(path_bits) > 1:
+        path = path_bits[0]
+    else:
+        path = ''
+    project = path_bits[-1]
     scope.update({
-        'SENTRY_SERVERS': ['%s://%s/api/store/' % (url.scheme, netloc)],
-        'SENTRY_PROJECT': url.path[1:],
+        'SENTRY_SERVERS': ['%s://%s%s/api/store/' % (url.scheme, netloc, path)],
+        'SENTRY_PROJECT': project,
         'SENTRY_PUBLIC_KEY': url.username,
         'SENTRY_SECRET_KEY': url.password,
     })
