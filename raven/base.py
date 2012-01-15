@@ -22,9 +22,9 @@ from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 import raven
 from raven.conf import defaults
 from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
-from raven.utils.encoding import transform, shorten
+from raven.utils.encoding import transform, shorten, to_unicode
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
-                                       get_culprit
+  get_culprit
 
 
 class ModuleProxyCache(dict):
@@ -207,7 +207,7 @@ class Client(object):
 
         checksum = hashlib.md5()
         for bit in handler.get_hash(data):
-            checksum.update(bit or '')
+            checksum.update(to_unicode(bit) or '')
         data['checksum'] = checksum = checksum.hexdigest()
 
         # create ID client-side so that it can be passed to application
