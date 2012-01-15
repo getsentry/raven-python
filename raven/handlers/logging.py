@@ -16,7 +16,7 @@ import traceback
 from raven.base import Client
 
 
-class SentryHandler(logging.Handler):
+class SentryHandler(logging.Handler, object):
     reserved = ['threadName', 'name', 'thread', 'created', 'process', 'processName', 'args', 'module',
                 'filename', 'levelno', 'exc_text', 'pathname', 'lineno', 'msg', 'exc_info', 'funcName',
                 'relativeCreated', 'levelname', 'msecs', 'data', 'stack', 'message']
