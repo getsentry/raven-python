@@ -6,6 +6,7 @@ raven.conf
 :license: BSD, see LICENSE for more details.
 """
 
+import logging
 import urlparse
 
 
@@ -36,3 +37,37 @@ def load(dsn, scope):
         'SENTRY_PUBLIC_KEY': url.username,
         'SENTRY_SECRET_KEY': url.password,
     })
+
+
+def setup_logging(handler, exclude=['raven', 'sentry.errors']):
+    """
+    Configures logging to pipe to Sentry.
+
+    - ``exclude`` is a list of loggers that shouldn't go to Sentry.
+
+    For a typical Python install:
+
+    >>> from raven.handlers.logging import SentryHandler
+    >>> client = Sentry(...)
+    >>> setup_logging(SentryHandler(client))
+
+    Within Django:
+
+    >>> from raven.contrib.django.logging import SentryHandler
+    >>> setup_logging(SentryHandler())
+
+    Returns a boolean based on if logging was configured or not.
+    """
+    logger = logging.getLogger()
+    if handler.__class__ not in map(type, logger.handlers):
+        return False
+
+    logger.addHandler(handler)
+
+    # Add StreamHandler to sentry's default so you can catch missed exceptions
+    for logger_name in exclude:
+        logger = logging.getLogger(logger_name)
+        logger.propagate = False
+        logger.addHandler(logging.StreamHandler())
+
+    return True

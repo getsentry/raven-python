@@ -52,6 +52,11 @@ Django 1.3
                 'handlers': ['console'],
                 'propagate': False,
             },
+            'raven': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
+                'propagate': False,
+            },
             'sentry.errors': {
                 'level': 'DEBUG',
                 'handlers': ['console'],
@@ -66,18 +71,10 @@ Older Versions
 
 ::
 
-    import logging
+    from raven.conf import setup_logging
     from raven.contrib.django.logging import SentryHandler
 
-    logger = logging.getLogger()
-    # ensure we havent already registered the handler
-    if SentryHandler not in map(type, logger.handlers):
-        logger.addHandler(SentryHandler())
-
-        # Add StreamHandler to sentry's default so you can catch missed exceptions
-        logger = logging.getLogger('sentry.errors')
-        logger.propagate = False
-        logger.addHandler(logging.StreamHandler())
+    setup_logging(SentryHandler())
 
 Usage
 ~~~~~

@@ -5,21 +5,11 @@ Sentry supports the ability to directly tie into the ``logging`` module. To use 
 
 ::
 
-    import logging
-    from raven import Client
+    from raven.conf import setup_logging
     from raven.handlers.logging import SentryHandler
 
     client = Client(servers=['http://sentry.local/api/store/'], key='MY SECRET KEY')
-    logger = logging.getLogger()
-
-    # ensure we havent already registered the handler
-    if SentryHandler not in map(type, logger.handlers):
-        logger.addHandler(SentryHandler(client))
-
-        # Add StreamHandler to sentry's default so you can catch missed exceptions
-        logger = logging.getLogger('sentry.errors')
-        logger.propagate = False
-        logger.addHandler(logging.StreamHandler())
+    setup_logging(SentryHandler(client))
 
 Usage
 ~~~~~
