@@ -58,8 +58,26 @@ class TransformTest(TestCase):
         result = transform(x)
         keys = result.keys()
         self.assertEquals(len(keys), 1)
-        self.assertEquals(keys[0], 'foo')
         self.assertTrue(isinstance(keys[0], str))
+        self.assertEquals(keys[0], 'foo')
+
+    def test_dict_keys_utf8_as_str(self):
+        x = {'רונית מגן': 'bar'}
+
+        result = transform(x)
+        keys = result.keys()
+        self.assertEquals(len(keys), 1)
+        self.assertTrue(isinstance(keys[0], str))
+        self.assertEquals(keys[0], 'רונית מגן')
+
+    def test_dict_keys_utf8_as_unicode(self):
+        x = {u'רונית מגן': 'bar'}
+
+        result = transform(x)
+        keys = result.keys()
+        self.assertEquals(len(keys), 1)
+        self.assertTrue(isinstance(keys[0], str))
+        self.assertEquals(keys[0], 'רונית מגן')
 
     def test_uuid(self):
         import uuid
