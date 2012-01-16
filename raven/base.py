@@ -153,7 +153,7 @@ class Client(object):
         if extra is None:
             extra = {}
         if date is None:
-            date = datetime.datetime.now()
+            date = datetime.datetime.utcnow()
         if stack is None:
             stack = self.auto_log_stacks
 
