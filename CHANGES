@@ -1,4 +1,13 @@
-0.8.0-DEV
+1.0.1
+
+* All datetimes are assumed to be utcnow() as of Sentry 2.0.0-RC5
+
+1.0.0
+
+* Now only works with Sentry>=2.0.0 server.
+* Raven is now listed as raven2 on PyPi.
+
+0.8.0
 
 * raven.contrib.celery is now useable.
 * raven.contrib.django.celery is now useable.
