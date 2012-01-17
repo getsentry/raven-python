@@ -100,7 +100,8 @@ def iter_traceback_frames(tb):
     while tb:
         # support for __traceback_hide__ which is used by a few libraries
         # to hide internal frames.
-        if not tb.tb_frame.f_locals.get('__traceback_hide__'):
+        f_locals = tb.tb_frame.f_locals
+        if not (isinstance(f_locals, dict) and f_locals.get('__traceback_hide__')):
             yield tb.tb_frame
         tb = tb.tb_next
 
@@ -109,7 +110,8 @@ def iter_stack_frames(frames=None):
     if not frames:
         frames = inspect.stack()[1:]
     for frame in (f[0] for f in frames):
-        if frame.f_locals.get('__traceback_hide__'):
+        f_locals = frame.f_locals
+        if (isinstance(f_locals, dict) or f_locals.get('__traceback_hide__')):
             continue
         yield frame
 
@@ -118,7 +120,8 @@ def get_stack_info(frames):
     results = []
     for frame in frames:
         # Support hidden frames
-        if frame.f_locals.get('__traceback_hide__'):
+        f_locals = frame.f_locals
+        if (isinstance(f_locals, dict) or f_locals.get('__traceback_hide__')):
             continue
 
         abs_path = frame.f_code.co_filename
@@ -137,6 +140,11 @@ def get_stack_info(frames):
             filename = abs_path
 
         if context_line:
+            f_locals = frame.f_locals
+            if not isinstance(f_locals, dict):
+                # XXX: Genshi (and maybe others) have broken implementations of
+                # f_locals that are not actually dictionaries
+                f_locals = '<invalid local scope>'
             results.append({
                 'abs_path': abs_path,
                 'filename': filename or abs_path,
@@ -144,7 +152,7 @@ def get_stack_info(frames):
                 'function': function,
                 'lineno': lineno + 1,
                 # TODO: vars need to be references
-                'vars': transform(frame.f_locals),
+                'vars': transform(f_locals),
                 'pre_context': pre_context,
                 'context_line': context_line,
                 'post_context': post_context,
