@@ -1,3 +1,9 @@
+1.0.4
+
+* Corrected a bug in setup_logging.
+* Raven now sends "sentry_version" header which is the expected
+  server version.
+
 1.0.3
 
 * Handle more edge cases on stack iteration.

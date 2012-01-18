@@ -92,6 +92,7 @@ def get_auth_header(signature, timestamp, client, api_key=None):
         ('sentry_timestamp', timestamp),
         ('sentry_signature', signature),
         ('sentry_client', client),
+        ('sentry_version', '2.0'),
     ]
     if api_key:
         header.append(('sentry_key', api_key))
