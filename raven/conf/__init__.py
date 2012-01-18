@@ -59,7 +59,7 @@ def setup_logging(handler, exclude=['raven', 'sentry.errors']):
     Returns a boolean based on if logging was configured or not.
     """
     logger = logging.getLogger()
-    if handler.__class__ not in map(type, logger.handlers):
+    if handler.__class__ in map(type, logger.handlers):
         return False
 
     logger.addHandler(handler)
