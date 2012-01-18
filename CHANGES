@@ -1,3 +1,7 @@
+1.0.3
+
+* Handle more edge cases on stack iteration.
+
 1.0.2
 
 * Gracefully handle invalid f_locals.
