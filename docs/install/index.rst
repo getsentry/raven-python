@@ -3,11 +3,11 @@ Install
 
 If you haven't already, start by downloading Raven. The easiest way is with **pip**::
 
-	pip install raven2 --upgrade
+	pip install raven --upgrade
 
 Or with *setuptools*::
 
-	easy_install -U raven2
+	easy_install -U raven
 
 Requirements
 ------------

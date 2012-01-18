@@ -1,3 +1,7 @@
+1.0.5
+
+* Renaming raven2 to raven as it causes too many issues.
+
 1.0.4
 
 * Corrected a bug in setup_logging.
