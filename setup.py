@@ -37,7 +37,7 @@ setup(
     url='http://github.com/dcramer/raven',
     description='Raven is a client for Sentry',
     long_description=__doc__,
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(exclude=("tests", "tests.*",)),
     zip_safe=False,
     install_requires=install_requires,
     tests_require=tests_require,
