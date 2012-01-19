@@ -6,6 +6,7 @@ raven.core.processors
 :license: BSD, see LICENSE for more details.
 """
 
+
 class Processor(object):
     def __init__(self, client):
         self.client = client
@@ -15,6 +16,7 @@ class Processor(object):
         if resp:
             data = resp
         return data
+
 
 class SantizePasswordsProcessor(Processor):
     """
@@ -26,7 +28,8 @@ class SantizePasswordsProcessor(Processor):
                 for frame in data['sentry.interfaces.Stacktrace']['frames']:
                     if 'vars' in frame:
                         for k, v in frame['vars'].iteritems():
-                            if 'password' in k or 'secret' in k:
+                            lower_k = k.lower()
+                            if 'password' in lower_k or 'secret' in lower_k:
                                 # store mask as a fixed length for security
-                                frame['vars'][k] = '*'*16
+                                frame['vars'][k] = '*' * 16
         return data
