@@ -1,3 +1,8 @@
+1.1.0
+
+* varmap was refactored to send keys back to callbacks
+* SanitizePasswordProcessor now handles http data.
+
 1.0.5
 
 * Renaming raven2 to raven as it causes too many issues.

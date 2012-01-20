@@ -184,7 +184,7 @@ class Client(object):
 
             data.update({
                 'sentry.interfaces.Stacktrace': {
-                    'frames': varmap(shorten, get_stack_info(frames))
+                    'frames': varmap(lambda k, v: shorten(v), get_stack_info(frames))
                 },
             })
 
