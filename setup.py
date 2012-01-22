@@ -23,6 +23,7 @@ tests_require = [
     'nose',
     'mock',
     'unittest2',
+    'webob',
 ]
 
 install_requires = [

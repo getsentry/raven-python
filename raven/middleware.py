@@ -7,7 +7,9 @@ raven.middleware
 """
 
 import sys
+import webob
 from raven.utils.wsgi import get_current_url
+
 
 class Sentry(object):
     """
@@ -29,11 +31,20 @@ class Sentry(object):
             raise
 
     def handle_exception(self, exc_info, environ):
+        request = webob.Request(environ)
         event_id = self.client.create_from_exception(
             exc_info=exc_info,
             url=get_current_url(environ, strip_querystring=True),
             data={
-                'META': environ,
+                'sentry.interfaces.Http': {
+                    'method': request.method,
+                    'url': request.path_url,
+                    'query_string': request.query_string,
+                    'data': request.params.mixed(),
+                    'cookies': dict(request.cookies),
+                    'headers': dict(request.headers),
+                    'env': request.environ,
+                }
             },
         )
         return event_id
