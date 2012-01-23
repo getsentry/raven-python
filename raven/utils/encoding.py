@@ -100,7 +100,11 @@ def transform(value, stack=[], context=None):
     #     pre = value.__class__.__name__[1:]
     #     value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
     #     return transform(value)
-    elif not isinstance(value, (int, bool)) and value is not None:
+    elif isinstance(value, int):
+        ret = int(value)
+    elif isinstance(value, bool):
+        ret = bool(value)
+    elif value is not None:
         try:
             ret = transform(repr(value))
         except:
