@@ -52,7 +52,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         except (OSError, IOError):
             pass
     if source is None:
-        return None, [], None, []
+        return None, [], None
 
     encoding = 'ascii'
     for line in source[:2]:
