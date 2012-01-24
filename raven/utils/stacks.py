@@ -131,7 +131,7 @@ def iter_traceback_frames(tb):
     while tb:
         # support for __traceback_hide__ which is used by a few libraries
         # to hide internal frames.
-        f_locals = tb.tb_frame.f_locals
+        f_locals = getattr(tb.tb_frame, 'f_locals', {})
         if not _getitem_from_frame(f_locals, '__traceback_hide__'):
             yield tb.tb_frame
         tb = tb.tb_next
@@ -146,7 +146,7 @@ def iter_stack_frames(frames=None):
     if not frames:
         frames = inspect.stack()[1:]
     for frame in (f[0] for f in frames):
-        f_locals = frame.f_locals
+        f_locals = getattr(frame, 'f_locals', {})
         if _getitem_from_frame(f_locals, '__traceback_hide__'):
             continue
         yield frame
@@ -160,15 +160,16 @@ def get_stack_info(frames):
     results = []
     for frame in frames:
         # Support hidden frames
-        f_locals = frame.f_locals
+        f_locals = getattr(frame, 'f_locals', {})
         if _getitem_from_frame(f_locals, '__traceback_hide__'):
             continue
 
+        f_globals = getattr(frame, 'f_globals', {})
         abs_path = frame.f_code.co_filename
         function = frame.f_code.co_name
         lineno = frame.f_lineno - 1
-        loader = frame.f_globals.get('__loader__')
-        module_name = frame.f_globals.get('__name__')
+        loader = f_globals.get('__loader__')
+        module_name = f_globals.get('__name__')
         pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 3, loader, module_name)
 
         # Try to pull a relative file path
@@ -180,14 +181,12 @@ def get_stack_info(frames):
             filename = abs_path
 
         if context_line:
-            f_locals = frame.f_locals
-            if not isinstance(f_locals, dict):
+            if f_locals is not None and not isinstance(f_locals, dict):
                 # XXX: Genshi (and maybe others) have broken implementations of
                 # f_locals that are not actually dictionaries
                 try:
                     f_locals = to_dict(f_locals)
-                except Exception, e:
-                    print e
+                except Exception:
                     f_locals = '<invalid local scope>'
             results.append({
                 'abs_path': abs_path,

@@ -15,19 +15,30 @@ class TransformTest(TestCase):
         x = 'רונית מגן'
 
         result = transform(x)
+        self.assertEquals(type(result), str)
         self.assertEquals(result, 'רונית מגן')
 
     def test_correct_unicode(self):
         x = 'רונית מגן'.decode('utf-8')
 
         result = transform(x)
+        self.assertEquals(type(result), unicode)
         self.assertEquals(result, x)
 
     def test_bad_string(self):
         x = 'The following character causes problems: \xd4'
 
         result = transform(x)
+        self.assertEquals(type(result), str)
         self.assertEquals(result, '<type \'str\'>')
+
+    def test_int_subclass(self):
+        class X(int):
+            pass
+
+        result = transform(X())
+        self.assertEquals(type(result), int)
+        self.assertEquals(result, 0)
 
     # def test_bad_string(self):
     #     x = 'The following character causes problems: \xd4'
@@ -57,18 +68,20 @@ class TransformTest(TestCase):
         x = {u'foo': 'bar'}
 
         result = transform(x)
+        self.assertEquals(type(result), dict)
         keys = result.keys()
         self.assertEquals(len(keys), 1)
-        self.assertTrue(isinstance(keys[0], str))
+        self.assertTrue(type(keys[0]), str)
         self.assertEquals(keys[0], 'foo')
 
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 
         result = transform(x)
+        self.assertEquals(type(result), dict)
         keys = result.keys()
         self.assertEquals(len(keys), 1)
-        self.assertTrue(isinstance(keys[0], str))
+        self.assertTrue(type(keys[0]), str)
         self.assertEquals(keys[0], 'רונית מגן')
 
     def test_dict_keys_utf8_as_unicode(self):
@@ -77,14 +90,16 @@ class TransformTest(TestCase):
         result = transform(x)
         keys = result.keys()
         self.assertEquals(len(keys), 1)
-        self.assertTrue(isinstance(keys[0], str))
+        self.assertTrue(type(keys[0]), str)
         self.assertEquals(keys[0], 'רונית מגן')
 
     def test_uuid(self):
         import uuid
 
         uuid = uuid.uuid4()
-        self.assertEquals(transform(uuid), repr(uuid))
+        result = transform(uuid)
+        self.assertEquals(result, repr(uuid))
+        self.assertTrue(type(result), str)
 
 
 class GetVersionsTest(TestCase):

@@ -1,6 +1,12 @@
+1.1.1
+
+* Handle frames that are missing f_globals and f_locals.
+* Stricter conversion of int and boolean values.
+* Handle invalid sources for templates in Django.
+
 1.1.0
 
-* varmap was refactored to send keys back to callbacks
+* varmap was refactored to send keys back to callbacks.
 * SanitizePasswordProcessor now handles http data.
 
 1.0.5
