@@ -1,3 +1,7 @@
+1.1.2
+
+* Corrected logging behavior with extra data to match pre 1.x behavior.
+
 1.1.1
 
 * Handle frames that are missing f_globals and f_locals.
