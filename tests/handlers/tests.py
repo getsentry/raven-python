@@ -51,7 +51,11 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test warning')
         self.assertEquals(msg['params'], ())
 
-        logger.info('This is a test info with a url', extra=dict(url='http://example.com'))
+        logger.info('This is a test info with a url', extra=dict(
+            data=dict(
+                url='http://example.com',
+            ),
+        ))
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
         self.assertEquals(event['extra']['url'], 'http://example.com')

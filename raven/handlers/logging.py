@@ -61,14 +61,14 @@ class SentryHandler(logging.Handler, object):
 
     def _emit(self, record, **kwargs):
         # {'threadName': 'MainThread', 'name': 'foo', 'thread': 140735216916832, 'created': 1319164393.308008, 'process': 89141, 'processName': 'MainProcess', 'args': (), 'module': 'Unknown module', 'filename': None, 'levelno': 20, 'exc_text': None, 'pathname': None, 'lineno': None, 'msg': 'test', 'exc_info': (None, None, None), 'funcName': None, 'relativeCreated': 3441.9949054718018, 'levelname': 'INFO', 'msecs': 308.00795555114746}
-        extra = {}
+        data = {}
 
         for k, v in record.__dict__.iteritems():
             if k in self.reserved:
                 continue
-            extra[k] = v
+            data[k] = v
 
-        data = getattr(record, 'data', {})
+        extra = getattr(record, 'data', {})
 
         date = datetime.datetime.utcfromtimestamp(record.created)
 

@@ -19,9 +19,11 @@ A recommended pattern in logging is to simply reference the modules name for eac
     import logging
     logger = logging.getLogger(__name__)
 
-You can also use the ``exc_info`` and ``extra=dict(url=foo)`` arguments on your ``log`` methods. This will store the appropriate information and allow Sentry to render it based on that information::
+You can also use the ``exc_info`` and ``extra={'stack': True}`` arguments on your ``log`` methods. This will store the appropriate information and allow Sentry to render it based on that information::
 
-    logger.error('There was some crazy error', exc_info=True, extra={'url': request.build_absolute_uri()})
+    logger.error('There was some crazy error', exc_info=True, extra={
+        'culprit': 'my.view.name',
+    })
 
 You may also pass additional information to be stored as meta information with the event. As long as the key
 name is not reserved and not private (_foo) it will be displayed on the Sentry dashboard. To do this, pass it as ``data`` within
@@ -30,11 +32,10 @@ your ``extra`` clause::
     logger.error('There was some crazy error', exc_info=True, extra={
         # Optionally you can pass additional arguments to specify request info
         'culprit': 'my.view.name',
-        'url': request.build_absolute_url(),
 
         'data': {
             # You may specify any values here and Sentry will log and output them
-            'username': request.user.username
+            'username': request.user.username,
         }
     })
 
@@ -52,7 +53,9 @@ As of Sentry 1.10.0 the ``logging`` integration also allows easy capture of stac
 logging an exception. This can be done automatically with the ``SENTRY_AUTO_LOG_STACKS`` setting, as well as by passing the
 ``stack`` boolean to ``extra``::
 
-    logger.error('There was an error', extra={'stack': True})
+    logger.error('There was an error', extra={
+        'stack': True,
+    })
 
 .. note::
 
