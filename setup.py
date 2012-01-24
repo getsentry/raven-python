@@ -18,7 +18,7 @@ tests_require = [
 
     'blinker>=1.1',
     'Flask>=0.8',
-    'django-sentry>=2.0.0',
+    'sentry>=2.0.0',
     'django-nose',
     'nose',
     'mock',
