@@ -105,7 +105,8 @@ class Message(BaseEvent):
 
     def to_string(self, data):
         msg = data['sentry.interfaces.Message']
-        return msg['message'] % tuple(msg.get('params', ()))
+        return msg['message'] % tuple(msg.get('params',
+                                              ('UNDEFINED', 'UNDEFINED')))
 
     def get_hash(self, data):
         msg = data['sentry.interfaces.Message']
