@@ -9,9 +9,12 @@ raven.contrib.django.handlers
 from __future__ import absolute_import
 
 import logging
-from raven.handlers.logging import SentryHandler
+from raven.handlers.logging import SentryHandler as BaseSentryHandler
 
-class SentryHandler(SentryHandler):
+
+class SentryHandler(BaseSentryHandler):
+    reserved = BaseSentryHandler.reserved + ['request']
+
     def __init__(self):
         logging.Handler.__init__(self)
 

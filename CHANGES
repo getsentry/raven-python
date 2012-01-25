@@ -1,3 +1,7 @@
+1.1.3
+
+* Fix 'request' attribute on Django logging.
+
 1.1.2
 
 * Corrected logging behavior with extra data to match pre 1.x behavior.
