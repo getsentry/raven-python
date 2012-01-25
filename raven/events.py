@@ -105,7 +105,13 @@ class Message(BaseEvent):
 
     def to_string(self, data):
         msg = data['sentry.interfaces.Message']
-        return msg['message'] % tuple(msg.get('params', ()))
+        message = msg['message']
+        params = msg.get('params', None)
+        if params:
+            return message % tuple(params)
+        self.logger.warn('Unable to find params for message',
+                         extra={'msg': msg})
+        return message
 
     def get_hash(self, data):
         msg = data['sentry.interfaces.Message']
