@@ -19,12 +19,6 @@ class MessageTest(TestCase):
         }
 
         self.assertEqual(message.to_string(data), unformatted_message)
-        self.assertEqual(message.logger.warn.call_count, 1)
-
-        args, kwargs = message.logger.warn.call_args
-        self.assertEqual(args, ('Unable to find params for message',))
-        self.assertEqual(kwargs,
-                         {'extra': {'msg': {'message': unformatted_message}}})
 
         data['sentry.interfaces.Message']['params'] = (1, 2)
         self.assertEqual(message.to_string(data),
