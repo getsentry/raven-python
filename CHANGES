@@ -1,3 +1,7 @@
+1.1.5
+
+* Remove logging attr magic.
+
 1.1.4
 
 * Correct encoding behavior on bool and float types.

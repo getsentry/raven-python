@@ -17,10 +17,6 @@ from raven.base import Client
 
 
 class SentryHandler(logging.Handler, object):
-    reserved = ['threadName', 'name', 'thread', 'created', 'process', 'processName', 'args', 'module',
-                'filename', 'levelno', 'exc_text', 'pathname', 'lineno', 'msg', 'exc_info', 'funcName',
-                'relativeCreated', 'levelname', 'msecs', 'data', 'stack', 'message']
-
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
             self.client = args[0]
@@ -60,11 +56,10 @@ class SentryHandler(logging.Handler, object):
                 pass
 
     def _emit(self, record, **kwargs):
-        # {'threadName': 'MainThread', 'name': 'foo', 'thread': 140735216916832, 'created': 1319164393.308008, 'process': 89141, 'processName': 'MainProcess', 'args': (), 'module': 'Unknown module', 'filename': None, 'levelno': 20, 'exc_text': None, 'pathname': None, 'lineno': None, 'msg': 'test', 'exc_info': (None, None, None), 'funcName': None, 'relativeCreated': 3441.9949054718018, 'levelname': 'INFO', 'msecs': 308.00795555114746}
         data = {}
 
         for k, v in record.__dict__.iteritems():
-            if k in self.reserved:
+            if '.' not in k:
                 continue
             data[k] = v
 

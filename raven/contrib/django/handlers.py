@@ -13,8 +13,6 @@ from raven.handlers.logging import SentryHandler as BaseSentryHandler
 
 
 class SentryHandler(BaseSentryHandler):
-    reserved = BaseSentryHandler.reserved + ['request']
-
     def __init__(self):
         logging.Handler.__init__(self)
 
