@@ -30,6 +30,25 @@ Settings are specified as part of the intialization of the client.
     client = Client(servers=['http://sentry.local/api/store/'])
 
 
+project
+~~~~~~~
+
+Set this to your Sentry project ID. The default value for installations is ``1``.
+
+::
+
+    project = 1
+
+site
+~~~~
+
+An optional, arbitrary string to identify this client installation.
+
+::
+
+    site = 'my site name'
+
+
 name
 ~~~~
 
