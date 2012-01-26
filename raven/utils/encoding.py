@@ -100,10 +100,12 @@ def transform(value, stack=[], context=None):
     #     pre = value.__class__.__name__[1:]
     #     value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
     #     return transform(value)
-    elif isinstance(value, int):
-        ret = int(value)
     elif isinstance(value, bool):
         ret = bool(value)
+    elif isinstance(value, float):
+        ret = float(value)
+    elif isinstance(value, int):
+        ret = int(value)
     elif value is not None:
         try:
             ret = transform(repr(value))
@@ -112,7 +114,7 @@ def transform(value, stack=[], context=None):
             # which if it was not cleaned up correctly, would hit a transaction aborted exception
             ret = u'<BadRepr: %s>' % type(value)
     else:
-        ret = value
+        ret = None
     del context[objid]
     return ret
 

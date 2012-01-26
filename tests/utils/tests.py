@@ -32,6 +32,16 @@ class TransformTest(TestCase):
         self.assertEquals(type(result), str)
         self.assertEquals(result, '<type \'str\'>')
 
+    def test_float(self):
+        result = transform(13.0)
+        self.assertEquals(type(result), float)
+        self.assertEquals(result, 13.0)
+
+    def test_bool(self):
+        result = transform(True)
+        self.assertEquals(type(result), bool)
+        self.assertEquals(result, True)
+
     def test_int_subclass(self):
         class X(int):
             pass
