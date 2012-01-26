@@ -14,6 +14,7 @@ import sys
 import traceback
 
 from raven.base import Client
+from raven.utils.stacks import iter_stack_frames
 
 
 class SentryHandler(logging.Handler, object):
@@ -63,6 +64,26 @@ class SentryHandler(logging.Handler, object):
                 continue
             data[k] = v
 
+        stack = getattr(record, 'stack', None)
+        if stack is True:
+            stack = iter_stack_frames()
+
+        if stack:
+            frames = []
+            started = False
+            last_mod = ''
+            for frame in iter_stack_frames():
+                if not started:
+                    f_globals = getattr(frame, 'f_globals', {})
+                    module_name = f_globals.get('__name__', '')
+                    if last_mod.startswith('logging') and not module_name.startswith('logging'):
+                        started = True
+                    else:
+                        last_mod = module_name
+                        continue
+                frames.append(frame)
+            stack = frames
+
         extra = getattr(record, 'data', {})
 
         date = datetime.datetime.utcfromtimestamp(record.created)
@@ -78,5 +99,5 @@ class SentryHandler(logging.Handler, object):
         data['logger'] = record.name
 
         return self.client.capture('Message', message=record.msg, params=record.args,
-                            stack=getattr(record, 'stack', None), data=data, extra=extra,
+                            stack=stack, data=data, extra=extra,
                             date=date, **kwargs)

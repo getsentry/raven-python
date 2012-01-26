@@ -17,7 +17,7 @@ class LoggingHandlerTest(TestCase):
         self.logger = logging.getLogger(__name__)
 
     def test_logger(self):
-        client = TempStoreClient(include_paths=['tests'])
+        client = TempStoreClient(include_paths=['tests', 'raven'])
         handler = SentryHandler(client)
 
         logger = self.logger
@@ -90,6 +90,10 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        frames = event['sentry.interfaces.Stacktrace']['frames']
+        self.assertNotEquals(len(frames), 1)
+        frame = frames[0]
+        self.assertEquals(frame['module'], __name__)
         self.assertFalse('sentry.interfaces.Exception' in event)
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
