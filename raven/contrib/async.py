@@ -14,17 +14,15 @@ import os
 
 SENTRY_WAIT_SECONDS = 10
 
-class AsyncClient(Client):
-    """This client uses a single background thread to dispatch errors."""
+
+class AsyncWorker(object):
     _terminator = object()
 
-    def __init__(self, *args, **kwargs):
-        """Starts the task thread."""
+    def __init__(self):
         self.queue = Queue(-1)
         self._lock = Lock()
         self._thread = None
         self.start()
-        super(AsyncClient, self).__init__(*args, **kwargs)
 
     def main_thread_terminated(self):
         size = self.queue.qsize()
@@ -35,10 +33,12 @@ class AsyncClient(Client):
                 print "Press Ctrl-Break to quit"
             else:
                 print "Press Ctrl-C to quit"
-            self.stop(timeout = SENTRY_WAIT_SECONDS)
-
+            self.stop(timeout=SENTRY_WAIT_SECONDS)
 
     def start(self):
+        """
+        Starts the task thread.
+        """
         self._lock.acquire()
         try:
             if not self._thread:
@@ -50,7 +50,9 @@ class AsyncClient(Client):
             atexit.register(self.main_thread_terminated)
 
     def stop(self, timeout=None):
-        """Stops the task thread. Synchronous!"""
+        """
+        Stops the task thread. Synchronous!
+        """
         self._lock.acquire()
         try:
             if self._thread:
@@ -60,15 +62,46 @@ class AsyncClient(Client):
         finally:
             self._lock.release()
 
+    def queue(self, callback, kwargs):
+        self.queue.put_nowait((callback, kwargs))
+
     def _target(self):
         while 1:
             record = self.queue.get()
             if record is self._terminator:
                 break
-            self.send_sync(**record)
+            callback, kwargs = record
+            callback(**kwargs)
+
+
+class AsyncClient(Client):
+    """
+    This client uses a single background thread to dispatch errors.
+    """
+    def __init__(self, *args, **kwargs):
+        self.worker = AsyncWorker()
+        super(AsyncClient, self).__init__(*args, **kwargs)
 
     def send_sync(self, **kwargs):
         super(AsyncClient, self).send(**kwargs)
 
     def send(self, **kwargs):
-        self.queue.put_nowait(kwargs)
+        self.worker.queue(self.send_sync, kwargs)
+
+
+class SentryWorker(object):
+    """
+    A WSGI middleware which provides ``environ['raven.worker']``
+    that can be used by clients to process asynchronous tasks.
+
+    >>> from raven.base import Client
+    >>> application = SentryWorker(application)
+    """
+    def __init__(self, application):
+        self.application = application
+        self.worker = AsyncWorker()
+
+    def __call__(self, environ, start_response):
+        environ['raven.worker'] = self.worker
+        for event in self.application(environ, start_response):
+            yield event

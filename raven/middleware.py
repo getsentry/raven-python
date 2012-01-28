@@ -9,8 +9,12 @@ raven.middleware
 import sys
 from raven.utils.wsgi import get_current_url
 
+
 class Sentry(object):
     """
+    A WSGI middleware which will attempt to capture any
+    uncaught exceptions and send them to Sentry.
+
     >>> from raven.base import Client
     >>> application = Sentry(application, Client())
     """
@@ -37,3 +41,5 @@ class Sentry(object):
             },
         )
         return event_id
+
+\
