@@ -19,13 +19,6 @@ def list_from_setting(config, setting):
 class Sentry(Middleware):
 
     def __init__(self, app, config):
-        if not config.get('sentry.servers'):
-            raise TypeError('The sentry.servers config variable is required')
-
-        servers = config.get('sentry_servers')
-        if servers:
-            servers = servers.split()
-
         client = Client(
             dsn=config.get('sentry.dsn'),
             servers=list_from_setting(config, 'sentry.servers'),
