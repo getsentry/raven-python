@@ -12,6 +12,7 @@ import base64
 import datetime
 import hashlib
 import logging
+import os
 import time
 import urllib2
 import uuid
@@ -43,23 +44,55 @@ class Client(object):
     The base Raven client, which handles both local direct communication with Sentry (through
     the GroupedMessage API), as well as communicating over the HTTP API to multiple servers.
 
+    Will read default configuration from the environment variable ``SENTRY_DSN``
+    if available.
+
     >>> from raven import Client
-    >>>
-    >>> client = Client(servers=['http://sentry.local/api/store/'], include_paths=['my.package'])
+
+    >>> # Read configuration from ``os.environ['SENTRY_DSN']``
+    >>> client = Client()
+
+    >>> # Specify a DSN explicitly
+    >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
+
+    >>> # Configure the client manually
+    >>> client = Client(
+    >>>     servers=['http://sentry.local/api/store/'],
+    >>>     include_paths=['my.package'],
+    >>>     project='project_id',
+    >>>     public_key='public_key',
+    >>>     secret_key='secret_key',
+    >>> )
+
+    >>> # Record an exception
     >>> try:
     >>>     1/0
     >>> except ZeroDivisionError:
-    >>>     ident = client.get_ident(client.create_from_exception())
+    >>>     ident = client.get_ident(client.capture('Exception'))
     >>>     print "Exception caught; reference is %%s" %% ident
     """
+    logger = logging.getLogger('raven')
 
-    def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
+    def __init__(self, servers=None, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, site=None, public_key=None, secret_key=None,
-                 processors=None, project=None, **kwargs):
+                 processors=None, project=None, dsn=None, **kwargs):
+        if dsn is None and os.environ.get('SENTRY_DSN'):
+            self.logger.info("Configuring Raven from environment variable 'SENTRY_DSN'")
+            dsn = os.environ['SENTRY_DSN']
+
+        if dsn:
+            # TODO: should we validate other options werent sent?
+            self.logger.info("Configuring Raven from DSN: %r", dsn)
+            options = raven.load(dsn)
+            servers = [options['SENTRY_SERVERS']]
+            project = options['SENTRY_PROJECT']
+            public_key = options['PUBLIC_KEY']
+            secret_key = options['SECRET_KEY']
+
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
-            raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
+            raise TypeError('Missing configuration for client. Please see documentation.')
 
         self.servers = servers
         self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
