@@ -27,6 +27,16 @@ class LoadTest(TestCase):
             'SENTRY_SECRET_KEY': 'bar',
         })
 
+    def test_scope_is_optional(self):
+        dsn = 'https://foo:bar@sentry.local/1'
+        res = load(dsn)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['https://sentry.local/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
+
 
 class SetupLoggingTest(TestCase):
     def test_basic_not_configured(self):

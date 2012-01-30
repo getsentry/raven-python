@@ -10,14 +10,20 @@ import logging
 import urlparse
 
 
-def load(dsn, scope):
+def load(dsn, scope=None):
     """
     Parses a Sentry compatible DSN and loads it
     into the given scope.
 
     >>> import raven
+
     >>> dsn = 'https://public_key:secret_key@sentry.local/project_id'
+
+    >>> # Apply configuratio to local scope
     >>> raven.load(dsn, locals())
+
+    >>> # Return DSN configuration
+    >>> options = raven.load(dsn)
     """
     url = urlparse.urlparse(dsn)
     if url.scheme not in ('http', 'https', 'udp'):
@@ -31,12 +37,15 @@ def load(dsn, scope):
     else:
         path = ''
     project = path_bits[-1]
+    if scope is None:
+        scope = {}
     scope.update({
         'SENTRY_SERVERS': ['%s://%s%s/api/store/' % (url.scheme, netloc, path)],
         'SENTRY_PROJECT': project,
         'SENTRY_PUBLIC_KEY': url.username,
         'SENTRY_SECRET_KEY': url.password,
     })
+    return scope
 
 
 def setup_logging(handler, exclude=['raven', 'sentry.errors']):
