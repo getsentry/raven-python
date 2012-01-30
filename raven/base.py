@@ -85,7 +85,7 @@ class Client(object):
             # TODO: should we validate other options werent sent?
             self.logger.info("Configuring Raven from DSN: %r", dsn)
             options = raven.load(dsn)
-            servers = [options['SENTRY_SERVERS']]
+            servers = options['SENTRY_SERVERS']
             project = options['SENTRY_PROJECT']
             public_key = options['SENTRY_PUBLIC_KEY']
             secret_key = options['SENTRY_SECRET_KEY']

@@ -20,6 +20,13 @@ class ClientTest(TestCase):
     def setUp(self):
         self.client = TempStoreClient()
 
+    def test_dsn(self):
+        client = TempStoreClient(dsn='http://public:secret@example.com/1')
+        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.project, 1)
+        self.assertEquals(client.public_key, 'public')
+        self.assertEquals(client.secret_key, 'secret')
+
     def test_exception(self):
         try:
             raise ValueError('foo')
