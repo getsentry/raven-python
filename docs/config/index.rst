@@ -23,11 +23,27 @@ Client Settings
 
 Settings are specified as part of the intialization of the client.
 
+As of Raven 1.2.0, you can now configure all clients through a standard DSN
+string. This can be specified as a default using the ``SENTRY_DSN`` environment
+variable, as well as passed to all clients by using the ``dsn`` argument.
+
 ::
 
     from raven import Client
 
-    client = Client(servers=['http://sentry.local/api/store/'])
+    # Read configuration from the environment
+    client = Client()
+
+    # Manually specify a DSN
+    client = Client(dsn='http://public:secret@example.com/1')
+
+    # Configure a client manually
+    client = Client(
+        servers=['http://sentry.local/api/store/'],
+        public_key='public_key',
+        secret_key='secret_key',
+        project=1,
+    )
 
 
 project
@@ -38,6 +54,30 @@ Set this to your Sentry project ID. The default value for installations is ``1``
 ::
 
     project = 1
+
+
+public_key
+~~~~~~~~~~
+
+Set this to the public key of the project member which will authenticate as the
+client. You can find this information on the member details page of your project
+within Sentry.
+
+::
+
+    public_key = 'fb9f9e31ea4f40d48855c603f15a2aa4'
+
+
+secret_key
+~~~~~~~~~~
+
+Set this to the secret key of the project member which will authenticate as the
+client. You can find this information on the member details page of your project
+within Sentry.
+
+::
+
+    public_key = '6e968b3d8ba240fcb50072ad9cba0810'
 
 site
 ~~~~
