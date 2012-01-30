@@ -1,3 +1,7 @@
+1.2.0
+
+* Made DSN a first-class citizen throughout Raven.
+
 1.1.6
 
 * Corrected logging stack behavior so that it doesnt capture raven+logging
