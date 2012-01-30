@@ -17,9 +17,8 @@ def list_from_setting(config, setting):
 
 
 class Sentry(Middleware):
-
-    def __init__(self, app, config):
-        client = Client(
+    def __init__(self, app, config, client_cls=Client):
+        client = client_cls(
             dsn=config.get('sentry.dsn'),
             servers=list_from_setting(config, 'sentry.servers'),
             name=config.get('sentry.name'),

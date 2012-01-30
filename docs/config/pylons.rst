@@ -1,6 +1,27 @@
 Configuring Pylons
 ==================
 
+WSGI Middleware
+---------------
+
+A pylons-specific middleware exists to enable easy configuration from settings::
+
+::
+
+    from raven.contrib.pylons import Sentry
+
+    application = Sentry(application, config)
+
+Configuration is handled via the sentry namespace::
+
+.. code-block:: ini
+
+    [sentry]
+    dsn=http://public:secret@example.com/1
+    include_paths=my.package,my.other.package,
+    exclude_paths=my.package.crud
+
+
 Logger setup
 ------------
 
