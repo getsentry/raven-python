@@ -51,7 +51,6 @@ def get_host(environ):
         result = result[:-3]
     elif result.endswith(':443') and scheme == 'https':
         result = result[:-4]
-    print result
     return result
 
 
