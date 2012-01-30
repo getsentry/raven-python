@@ -57,6 +57,7 @@ def get_client(client=None):
             secret_key=getattr(django_settings, 'SENTRY_SECRET_KEY', None),
             project=getattr(django_settings, 'SENTRY_PROJECT', None),
             processors=getattr(django_settings, 'SENTRY_PROCESSORS', None),
+            dsn=getattr(django_settings, 'SENTRY_DSN', None),
         )
         if not tmp_client:
             _client = (client, instance)
