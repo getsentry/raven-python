@@ -5,6 +5,7 @@ from celery.tests.utils import with_eager_tasks
 from raven.base import Client
 from raven.contrib.celery import make_celery_client
 
+
 class TempStoreClient(Client):
     def __init__(self, **kwargs):
         self.events = []
@@ -12,6 +13,7 @@ class TempStoreClient(Client):
 
     def send(self, **kwargs):
         self.events.append(kwargs)
+
 
 class ClientTest(TestCase):
     def setUp(self):
