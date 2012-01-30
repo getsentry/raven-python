@@ -41,5 +41,3 @@ class Sentry(object):
             },
         )
         return event_id
-
-\

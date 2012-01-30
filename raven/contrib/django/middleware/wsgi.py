@@ -8,6 +8,7 @@ raven.contrib.django.middleware.wsgi
 
 from raven.middleware import Sentry
 
+
 class Sentry(Sentry):
     """
     Identical to the default WSGI middleware except that

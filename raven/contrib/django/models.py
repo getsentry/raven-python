@@ -115,4 +115,3 @@ def sentry_exception_handler(request=None, **kwargs):
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
     got_request_exception.connect(sentry_exception_handler)
-
