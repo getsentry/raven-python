@@ -18,8 +18,8 @@ This document describes configuration options available to Sentry.
    wsgi
 
 
-Client Settings
----------------
+Congiruing the Client
+---------------------
 
 Settings are specified as part of the intialization of the client.
 
@@ -45,6 +45,40 @@ variable, as well as passed to all clients by using the ``dsn`` argument.
         project=1,
     )
 
+
+The Sentry DSN
+--------------
+
+The DSN can be found in Sentry by navigation to Account -> Projects -> [Project Name] -> [Member Name]. Its template resembles the following::
+
+    '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+
+It is composed of six important pieces:
+
+* The Protocol used. This can be one of the following: http, https, or udp.
+
+* The public and secret keys to authenticate the client.
+
+* The hostname of the Sentry server.
+
+* An optional path if Sentry is not located at the webserver root. This is specific to HTTP requests.
+
+* The project ID which the authenticated user is bound to.
+
+
+Client Arguments
+----------------
+
+The following are valid arguments which may be passed to the Raven client:
+
+dsn
+~~~
+
+A sentry compatible DSN.
+
+::
+
+    dsn = 'http://public:secret@example.com/1'
 
 project
 ~~~~~~~
