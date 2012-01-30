@@ -37,14 +37,21 @@ def get_host(environ):
 
     :param environ: the WSGI environment to get the host of.
     """
+    scheme = environ.get('wsgi.url_scheme')
     if 'HTTP_X_FORWARDED_HOST' in environ:
-        return environ['HTTP_X_FORWARDED_HOST']
+        result = environ['HTTP_X_FORWARDED_HOST']
     elif 'HTTP_HOST' in environ:
-        return environ['HTTP_HOST']
-    result = environ['SERVER_NAME']
-    if (environ['wsgi.url_scheme'], environ['SERVER_PORT']) not \
-       in (('https', '443'), ('http', '80')):
-        result += ':' + environ['SERVER_PORT']
+        result = environ['HTTP_HOST']
+    else:
+        result = environ['SERVER_NAME']
+        if (scheme, str(environ['SERVER_PORT'])) not \
+           in (('https', '443'), ('http', '80')):
+            result += ':' + environ['SERVER_PORT']
+    if result.endswith(':80') and scheme == 'http':
+        result = result[:-3]
+    elif result.endswith(':443') and scheme == 'https':
+        result = result[:-4]
+    print result
     return result
 
 
