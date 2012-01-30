@@ -40,7 +40,7 @@ class SentryHandler(logging.Handler, object):
         self.format(record)
 
         # Avoid typical config issues by overriding loggers behavior
-        if record.name == 'sentry.errors':
+        if record.name.startswith('sentry.errors'):
             print >> sys.stderr, record.message
             return
 
