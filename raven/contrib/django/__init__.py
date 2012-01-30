@@ -115,5 +115,5 @@ class DjangoClient(Client):
             from sentry.models import Group
             return Group.objects.from_kwargs(**kwargs)
         else:
-            self.logger.error('No servers configured, and sentry not installed. Cannot send message")
+            self.logger.error('No servers configured, and sentry not installed. Cannot send message')
             return None
