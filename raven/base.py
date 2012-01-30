@@ -77,6 +77,13 @@ class Client(object):
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, site=None, public_key=None, secret_key=None,
                  processors=None, project=None, dsn=None, **kwargs):
+        if isinstance(servers, basestring):
+            # must be a DSN:
+            if dsn:
+                raise ValueError("You seem to be incorrectly instantiating the raven Client class.")
+            dsn = servers
+            servers = None
+
         if dsn is None and os.environ.get('SENTRY_DSN'):
             self.logger.info("Configuring Raven from environment variable 'SENTRY_DSN'")
             dsn = os.environ['SENTRY_DSN']

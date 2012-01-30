@@ -21,11 +21,21 @@ class ClientTest(TestCase):
         self.client = TempStoreClient()
 
     def test_dsn(self):
-        client = TempStoreClient(dsn='http://public:secret@example.com/1')
+        client = Client(dsn='http://public:secret@example.com/1')
         self.assertEquals(client.servers, ['http://example.com/api/store/'])
         self.assertEquals(client.project, 1)
         self.assertEquals(client.public_key, 'public')
         self.assertEquals(client.secret_key, 'secret')
+
+    def test_dsn_as_first_arg(self):
+        client = Client('http://public:secret@example.com/1')
+        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.project, 1)
+        self.assertEquals(client.public_key, 'public')
+        self.assertEquals(client.secret_key, 'secret')
+
+    def test_invalid_servers_with_dsn(self):
+        self.assertRaises(ValueError, Client, 'foo', dsn='http://public:secret@example.com/1')
 
     def test_exception(self):
         try:
