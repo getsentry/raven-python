@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 import logging
 
+from django.conf import settings
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
@@ -110,8 +111,9 @@ class DjangoClient(Client):
         """
         if self.servers:
             return super(DjangoClient, self).send(**kwargs)
-        else:
+        elif 'sentry' in settings.INSTALLED_APPS:
             from sentry.models import Group
-
             return Group.objects.from_kwargs(**kwargs)
-
+        else:
+            self.logger.error('No servers configured, and sentry not installed. Cannot send message")
+            return None
