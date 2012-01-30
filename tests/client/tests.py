@@ -95,11 +95,13 @@ class ClientTest(TestCase):
         self.assertEquals(event['logger'], 'test')
         self.assertTrue('timestamp' in event)
 
+
 class ClientUDPTest(TestCase):
     def setUp(self):
         self.server_socket = socket(AF_INET, SOCK_DGRAM)
         self.server_socket.bind(('127.0.0.1', 0))
         self.client = Client(servers=["udp://%s:%s" % self.server_socket.getsockname()], key='BassOmatic')
+
     def test_delivery(self):
         self.client.create_from_text('test')
         data, address = self.server_socket.recvfrom(2**16)
@@ -107,6 +109,6 @@ class ClientUDPTest(TestCase):
         header, payload = data.split("\n\n")
         for substring in ("sentry_timestamp=", "sentry_client=", "sentry_signature="):
             self.assertTrue(substring in header)
-        
+
     def tearDown(self):
         self.server_socket.close()
