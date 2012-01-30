@@ -18,7 +18,7 @@ This document describes configuration options available to Sentry.
    wsgi
 
 
-Congiruing the Client
+Configuring the Client
 ---------------------
 
 Settings are specified as part of the intialization of the client.
