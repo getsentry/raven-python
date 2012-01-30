@@ -1,6 +1,9 @@
 1.2.0
 
 * Made DSN a first-class citizen throughout Raven.
+* Added a Pylons-specific WSGI middleware.
+* Improved the generic WSGI middleware to capture HTTP information.
+* Improved logging and logbook handlers.
 
 1.1.6
 
