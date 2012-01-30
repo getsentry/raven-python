@@ -12,13 +12,28 @@ import logbook
 import sys
 import traceback
 
+from raven.base import Client
+
 
 class SentryHandler(logbook.Handler):
     def __init__(self, *args, **kwargs):
-        try:
-            self.client = kwargs.pop('client')
-        except KeyError:
-            raise TypeError('Expected keyword argument for SentryHandler: client')
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, basestring):
+                self.client = kwargs.pop('client_cls', Client)(dsn=arg)
+            elif isinstance(arg, Client):
+                self.client = arg
+            else:
+                raise ValueError('The first argument to %s must be either a Client instance or a DSN, got %r instead.' % (
+                    self.__class__.__name__,
+                    arg,
+                ))
+            args = []
+        else:
+            try:
+                self.client = kwargs.pop('client')
+            except KeyError:
+                raise TypeError('Expected keyword argument for SentryHandler: client')
         super(SentryHandler, self).__init__(*args, **kwargs)
 
     def emit(self, record):
@@ -26,7 +41,6 @@ class SentryHandler(logbook.Handler):
 
         # # Fetch the request from a threadlocal variable, if available
         # request = getattr(SentryLogMiddleware.thread, 'request', None)
-
         self.format(record)
 
         # Avoid typical config issues by overriding loggers behavior
@@ -54,13 +68,14 @@ class SentryHandler(logbook.Handler):
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
-        if record.exc_info and all(record.exc_info):
+        if record.exc_info is True or (record.exc_info and all(record.exc_info)):
             handler = self.client.get_handler('raven.events.Exception')
 
             data.update(handler.capture(exc_info=record.exc_info))
 
         return self.client.capture('Message',
-            message=record.message,
+            message=record.msg,
+            params=record.args,
             data=data,
             extra=record.extra,
         )

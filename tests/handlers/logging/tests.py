@@ -4,6 +4,7 @@ from raven.base import Client
 from raven.handlers.logging import SentryHandler
 from raven.utils.stacks import iter_stack_frames
 
+
 class TempStoreClient(Client):
     def __init__(self, servers=None, **kwargs):
         self.events = []
@@ -11,6 +12,7 @@ class TempStoreClient(Client):
 
     def send(self, **kwargs):
         self.events.append(kwargs)
+
 
 class LoggingHandlerTest(TestCase):
     def setUp(self):
@@ -99,7 +101,7 @@ class LoggingHandlerTest(TestCase):
         msg = event['sentry.interfaces.Message']
         self.assertEquals(msg['message'], 'This is a test of stacks')
         self.assertEquals(msg['params'], ())
-        self.assertEquals(event['culprit'], 'tests.handlers.tests.test_logger')
+        self.assertEquals(event['culprit'], 'tests.handlers.logging.tests.test_logger')
         self.assertEquals(event['message'], 'This is a test of stacks')
 
         # test no stacks
@@ -131,7 +133,7 @@ class LoggingHandlerTest(TestCase):
         logger.info('This is a test of stacks', extra={'stack': iter_stack_frames()})
         self.assertEquals(len(client.events), 1)
         event = client.events.pop(0)
-        self.assertEquals(event['culprit'], 'tests.handlers.tests.test_logger')
+        self.assertEquals(event['culprit'], 'tests.handlers.logging.tests.test_logger')
         self.assertEquals(event['message'], 'This is a test of stacks')
         self.assertFalse('sentry.interfaces.Exception' in event)
         self.assertTrue('sentry.interfaces.Message' in event)
@@ -140,13 +142,27 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['params'], ())
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
 
-    def test_init(self):
+    def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client)
-        assert handler.client == client
+        self.assertEquals(handler.client, client)
 
+    def test_client_kwarg(self):
+        client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client=client)
-        assert handler.client == client
+        self.assertEquals(handler.client, client)
 
+    def test_args_as_servers_and_key(self):
         handler = SentryHandler(['http://sentry.local/api/store/'], 'KEY')
-        assert handler.client
+        self.assertTrue(isinstance(handler.client, Client))
+
+    def test_first_arg_as_dsn(self):
+        handler = SentryHandler('http://public:secret@example.com/1')
+        self.assertTrue(isinstance(handler.client, Client))
+
+    def test_custom_client_class(self):
+        handler = SentryHandler('http://public:secret@example.com/1', client_cls=TempStoreClient)
+        self.assertTrue(type(handler.client), TempStoreClient)
+
+    def test_invalid_first_arg_type(self):
+        self.assertRaises(ValueError, SentryHandler, object)

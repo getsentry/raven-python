@@ -19,15 +19,25 @@ from raven.utils.stacks import iter_stack_frames
 
 class SentryHandler(logging.Handler, object):
     def __init__(self, *args, **kwargs):
+        client = kwargs.get('client_cls', Client)
         if len(args) == 1:
-            self.client = args[0]
+            arg = args[0]
+            if isinstance(arg, basestring):
+                self.client = client(dsn=arg)
+            elif isinstance(arg, Client):
+                self.client = arg
+            else:
+                raise ValueError('The first argument to %s must be either a Client instance or a DSN, got %r instead.' % (
+                    self.__class__.__name__,
+                    arg,
+                ))
         elif 'client' in kwargs:
             self.client = kwargs['client']
         elif len(args) == 2 and not kwargs:
             servers, key = args
-            self.client = Client(servers=servers, key=key)
+            self.client = client(servers=servers, key=key)
         else:
-            self.client = Client(*args, **kwargs)
+            self.client = client(*args, **kwargs)
 
         logging.Handler.__init__(self)
 
