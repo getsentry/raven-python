@@ -37,6 +37,22 @@ class LoadTest(TestCase):
             'SENTRY_SECRET_KEY': 'bar',
         })
 
+    def test_missing_netloc(self):
+        dsn = 'https://foo:bar@/1'
+        self.assertRaises(ValueError, load, dsn)
+
+    def test_missing_project(self):
+        dsn = 'https://foo:bar@example.com'
+        self.assertRaises(ValueError, load, dsn)
+
+    def test_missing_public_key(self):
+        dsn = 'https://:bar@example.com'
+        self.assertRaises(ValueError, load, dsn)
+
+    def test_missing_secret_key(self):
+        dsn = 'https://bar@example.com'
+        self.assertRaises(ValueError, load, dsn)
+
 
 class SetupLoggingTest(TestCase):
     def test_basic_not_configured(self):

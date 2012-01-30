@@ -39,6 +39,8 @@ def load(dsn, scope=None):
     project = path_bits[-1]
     if scope is None:
         scope = {}
+    if not all([netloc, project, url.username, url.password]):
+        raise ValueError('Invalid Sentry DSN: %r' % dsn)
     scope.update({
         'SENTRY_SERVERS': ['%s://%s%s/api/store/' % (url.scheme, netloc, path)],
         'SENTRY_PROJECT': project,
