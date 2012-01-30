@@ -3,13 +3,24 @@ Configuring ``logging``
 
 Sentry supports the ability to directly tie into the ``logging`` module. To use it simply add ``SentryHandler`` to your logger.
 
-::
+First you'll need to configure a handler::
 
-    from raven.conf import setup_logging
     from raven.handlers.logging import SentryHandler
 
-    client = Client(servers=['http://sentry.local/api/store/'], key='MY SECRET KEY')
-    setup_logging(SentryHandler(client))
+    # Manually specify a client
+    client = Client(...)
+    handler = SentryHandler(client)
+
+You can also automatically configure the default client with a DSN::
+
+    # Configure the default client
+    handler = SentryHandler('http://public:secret@example.com/1')
+
+Finally, call the ``setup_logging`` helper function::
+
+    from raven.conf import setup_logging
+
+    setup_logging(handler)
 
 Usage
 ~~~~~

@@ -35,7 +35,7 @@ variable, as well as passed to all clients by using the ``dsn`` argument.
     client = Client()
 
     # Manually specify a DSN
-    client = Client(dsn='http://public:secret@example.com/1')
+    client = Client('http://public:secret@example.com/1')
 
     # Configure a client manually
     client = Client(
