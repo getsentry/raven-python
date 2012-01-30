@@ -9,23 +9,33 @@ from raven.middleware import Sentry as Middleware
 from raven.base import Client
 
 
+def list_from_setting(config, setting):
+    value = config.get(setting)
+    if not value:
+        return None
+    return value.split()
+
+
 class Sentry(Middleware):
 
     def __init__(self, app, config):
         if not config.get('sentry.servers'):
             raise TypeError('The sentry.servers config variable is required')
 
+        servers = config.get('sentry_servers')
+        if servers:
+            servers = servers.split()
+
         client = Client(
-            servers=config['sentry.servers'].split(),
+            dsn=config.get('sentry.dsn'),
+            servers=list_from_setting(config, 'sentry.servers'),
             name=config.get('sentry.name'),
             key=config.get('sentry.key'),
             public_key=config.get('sentry.public_key'),
             secret_key=config.get('sentry.secret_key'),
-            project=config.get('sentry.site_project'),
-            site=config.get('sentry.site_name'),
-            include_paths=config.get(
-                'sentry.include_paths', '').split() or None,
-            exclude_paths=config.get(
-                'sentry.exclude_paths', '').split() or None,
+            project=config.get('sentry.project'),
+            site=config.get('sentry.site'),
+            include_paths=list_from_setting(config, 'sentry.include_paths'),
+            exclude_paths=list_from_setting(config, 'sentry.exclude_paths'),
         )
         super(Sentry, self).__init__(app, client)
