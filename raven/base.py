@@ -87,8 +87,8 @@ class Client(object):
             options = raven.load(dsn)
             servers = [options['SENTRY_SERVERS']]
             project = options['SENTRY_PROJECT']
-            public_key = options['PUBLIC_KEY']
-            secret_key = options['SECRET_KEY']
+            public_key = options['SENTRY_PUBLIC_KEY']
+            secret_key = options['SENTRY_SECRET_KEY']
 
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
