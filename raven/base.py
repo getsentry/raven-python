@@ -285,17 +285,18 @@ class Client(object):
         return self.send_http(url, data, headers)
 
     def send_remote(self, url, data, headers={}):
+        logger = logging.getLogger('sentry.errors')
         try:
             self._send_remote(url=url, data=data, headers=headers)
         except urllib2.HTTPError, e:
             body = e.read()
-            self.logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
+            logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
                          exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-            self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
+            logger.error('Failed to submit message: %r', data.pop('message', None))
         except urllib2.URLError, e:
-            self.logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
+            logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
                          exc_info=True, extra={'data': {'remote_url': url}})
-            self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
+            logger.error('Failed to submit message: %r', data.pop('message', None))
 
     def send_udp(self, netloc, data, auth_header):
         if auth_header is None:
