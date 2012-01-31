@@ -210,6 +210,7 @@ class StackTest(TestCase):
         self.assertTrue('biz' in vars)
         self.assertEquals(vars['biz'], 'baz')
 
+
 class WsgiTest(TestCase):
     def test_get_headers_retarded_key(self):
         result = dict(get_headers({
