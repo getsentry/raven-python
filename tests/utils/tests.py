@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
+import uuid
 from mock import Mock
 from unittest2 import TestCase
 
+from raven.utils import json
 from raven.utils.encoding import transform, shorten
 from raven.utils.stacks import get_culprit, get_stack_info
 from raven.utils.wsgi import get_headers
@@ -217,3 +220,21 @@ class WsgiTest(TestCase):
             ('wtf', 'is', 'wrong', 'with', 'people'): 'foo',
         }))
         self.assertEquals(result, {})
+
+
+class JSONTest(TestCase):
+    def test_uuid(self):
+        res = uuid.uuid4()
+        self.assertEquals(json.dumps(res), '"%s"' % res.hex)
+
+    def test_datetime(self):
+        res = datetime.datetime(day=1, month=1, year=2011, hour=1, minute=1, second=1)
+        self.assertEquals(json.dumps(res), '"2011-01-01T01:01:01.000000Z"')
+
+    def test_set(self):
+        res = set(['foo', 'bar'])
+        self.assertEquals(json.dumps(res), '["foo", "bar"]')
+
+    def test_frozenset(self):
+        res = frozenset(['foo', 'bar'])
+        self.assertEquals(json.dumps(res), '["foo", "bar"]')
