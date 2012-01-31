@@ -1,3 +1,10 @@
+1.2.2
+
+* Gracefully handle exceptions in Django client when using integrated
+  setup.
+* Added Client.error_logger as a new logger instance that points to
+  ``sentry.errors``.
+
 1.2.1
 
 * Corrected behavior with raven logging errors to send_remote

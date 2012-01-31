@@ -113,7 +113,10 @@ class DjangoClient(Client):
             return super(DjangoClient, self).send(**kwargs)
         elif 'sentry' in settings.INSTALLED_APPS:
             from sentry.models import Group
-            return Group.objects.from_kwargs(**kwargs)
+            try:
+                return Group.objects.from_kwargs(**kwargs)
+            except Exception, e:
+                self.logger.error('Unable to record event: %s', e)
         else:
             self.logger.error('No servers configured, and sentry not installed. Cannot send message')
             return None

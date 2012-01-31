@@ -77,6 +77,11 @@ class Client(object):
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, site=None, public_key=None, secret_key=None,
                  processors=None, project=None, dsn=None, **kwargs):
+        # configure loggers first
+        cls = self.__class__
+        self.logger = logging.getLogger('%s.%s' % (cls.__module__, cls.__name__))
+        self.error_logger = logging.getLogger('sentry.errors')
+
         if isinstance(servers, basestring):
             # must be a DSN:
             if dsn:
@@ -119,7 +124,6 @@ class Client(object):
         self.project = int(project or defaults.PROJECT)
 
         self.processors = processors or defaults.PROCESSORS
-        self.logger = logging.getLogger(__name__)
         self.module_cache = ModuleProxyCache()
         self.udp_socket = None
 
@@ -285,18 +289,17 @@ class Client(object):
         return self.send_http(url, data, headers)
 
     def send_remote(self, url, data, headers={}):
-        logger = logging.getLogger('sentry.errors')
         try:
             self._send_remote(url=url, data=data, headers=headers)
         except urllib2.HTTPError, e:
             body = e.read()
-            logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
+            self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
                          exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-            logger.error('Failed to submit message: %r', data.pop('message', None))
+            self.error_logger.error('Failed to submit message: %r', data.pop('message', None))
         except urllib2.URLError, e:
-            logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
+            self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
                          exc_info=True, extra={'data': {'remote_url': url}})
-            logger.error('Failed to submit message: %r', data.pop('message', None))
+            self.error_logger.error('Failed to submit message: %r', data.pop('message', None))
 
     def send_udp(self, netloc, data, auth_header):
         if auth_header is None:
