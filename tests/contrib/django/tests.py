@@ -25,15 +25,18 @@ from django.test.client import Client as TestClient, ClientHandler as TestClient
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
+
 class MockClientHandler(TestClientHandler):
     def __call__(self, environ, start_response=[]):
         # this pretends doesnt require start_response
         return super(MockClientHandler, self).__call__(environ)
 
+
 class MockSentryMiddleware(Sentry):
     def __call__(self, environ, start_response=[]):
         # this pretends doesnt require start_response
         return list(super(MockSentryMiddleware, self).__call__(environ, start_response))
+
 
 class TempStoreClient(DjangoClient):
     def __init__(self, *args, **kwargs):
@@ -42,6 +45,7 @@ class TempStoreClient(DjangoClient):
 
     def send(self, **kwargs):
         self.events.append(kwargs)
+
 
 class Settings(object):
     """
@@ -68,6 +72,7 @@ class Settings(object):
                 delattr(settings, k)
             else:
                 setattr(settings, k, v)
+
 
 class DjangoClientTest(TestCase):
     ## Fixture setup/teardown
@@ -363,6 +368,36 @@ class DjangoClientTest(TestCase):
         self.assertEquals(env['SERVER_NAME'], 'testserver')
         self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
+
+
+class DjangoLoggingTest(TestCase):
+    def setUp(self):
+        self.logger = logging.getLogger(__name__)
+        self.raven = get_client()
+
+    def test_request_kwarg(self):
+        handler = SentryHandler()
+
+        logger = self.logger
+        logger.handlers = []
+        logger.addHandler(handler)
+
+        logger.error('This is a test error', extra={
+            'request': WSGIRequest(environ={
+                'wsgi.input': StringIO(),
+                'REQUEST_METHOD': 'POST',
+                'SERVER_NAME': 'testserver',
+                'SERVER_PORT': '80',
+                'CONTENT_TYPE': 'application/octet-stream',
+                'ACCEPT': 'application/json',
+            })
+        })
+
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+        self.assertTrue('sentry.interfaces.Http' in event)
+        http = event['sentry.interfaces.Http']
+        self.assertEquals(http['method'], 'POST')
 
 
 class IsolatedCeleryClientTest(TestCase):

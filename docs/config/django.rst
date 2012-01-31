@@ -13,7 +13,7 @@ Using the Django integration is as simple as adding Raven to your installed apps
 Additional settings for the client are configured using ``SENTRY_<setting name>``::
 
     SENTRY_KEY = 'my secret key'
-    SENTRY_SERVERS = ['http://sentry.local/store/']
+    SENTRY_SERVERS = ['http://sentry.local/api/store/']
 
 Integration with ``logging``
 ----------------------------
@@ -39,7 +39,6 @@ Django 1.3
             'sentry': {
                 'level': 'ERROR',
                 'class': 'raven.contrib.django.handlers.SentryHandler',
-                'formatter': 'verbose'
             },
             'console': {
                 'level': 'DEBUG',
@@ -50,6 +49,11 @@ Django 1.3
         'loggers': {
             'django.db.backends': {
                 'level': 'ERROR',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+            'raven': {
+                'level': 'DEBUG',
                 'handlers': ['console'],
                 'propagate': False,
             },
@@ -67,18 +71,10 @@ Older Versions
 
 ::
 
-    import logging
+    from raven.conf import setup_logging
     from raven.contrib.django.logging import SentryHandler
 
-    logger = logging.getLogger()
-    # ensure we havent already registered the handler
-    if SentryHandler not in map(type, logger.handlers):
-        logger.addHandler(SentryHandler())
-
-        # Add StreamHandler to sentry's default so you can catch missed exceptions
-        logger = logging.getLogger('sentry.errors')
-        logger.propagate = False
-        logger.addHandler(logging.StreamHandler())
+    setup_logging(SentryHandler())
 
 Usage
 ~~~~~

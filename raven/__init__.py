@@ -6,7 +6,7 @@ sentry
 :license: BSD, see LICENSE for more details.
 """
 
-__all__ = ('VERSION', 'Client')
+__all__ = ('VERSION', 'Client', 'load')
 
 try:
     VERSION = __import__('pkg_resources') \
@@ -15,3 +15,4 @@ except Exception, e:
     VERSION = 'unknown'
 
 from base import Client
+from conf import load

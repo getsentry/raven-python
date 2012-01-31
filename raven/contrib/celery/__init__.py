@@ -8,8 +8,10 @@ raven.contrib.celery
 
 from celery.decorators import task
 
+
 class _EmptyClass(object):
     pass
+
 
 def make_celery_client_class(parent):
     class CeleryClient(parent):
@@ -21,6 +23,7 @@ def make_celery_client_class(parent):
         def send_remote(self, data):
             return super(CeleryClient, self).send(**data)
     return CeleryClient
+
 
 def make_celery_client(client):
     cls = make_celery_client_class(client.__class__)

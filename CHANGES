@@ -1,8 +1,79 @@
-0.8.0-DEV
+1.2.0
+
+* Made DSN a first-class citizen throughout Raven.
+* Added a Pylons-specific WSGI middleware.
+* Improved the generic WSGI middleware to capture HTTP information.
+* Improved logging and logbook handlers.
+
+1.1.6
+
+* Corrected logging stack behavior so that it doesnt capture raven+logging
+  extensions are part of the frames.
+
+1.1.5
+
+* Remove logging attr magic.
+
+1.1.4
+
+* Correct encoding behavior on bool and float types.
+
+1.1.3
+
+* Fix 'request' attribute on Django logging.
+
+1.1.2
+
+* Corrected logging behavior with extra data to match pre 1.x behavior.
+
+1.1.1
+
+* Handle frames that are missing f_globals and f_locals.
+* Stricter conversion of int and boolean values.
+* Handle invalid sources for templates in Django.
+
+1.1.0
+
+* varmap was refactored to send keys back to callbacks.
+* SanitizePasswordProcessor now handles http data.
+
+1.0.5
+
+* Renaming raven2 to raven as it causes too many issues.
+
+1.0.4
+
+* Corrected a bug in setup_logging.
+* Raven now sends "sentry_version" header which is the expected
+  server version.
+
+1.0.3
+
+* Handle more edge cases on stack iteration.
+
+1.0.2
+
+* Gracefully handle invalid f_locals.
+
+1.0.1
+
+* All datetimes are assumed to be utcnow() as of Sentry 2.0.0-RC5
+
+1.0.0
+
+* Now only works with Sentry>=2.0.0 server.
+* Raven is now listed as raven2 on PyPi.
+
+0.8.0
 
 * raven.contrib.celery is now useable.
 * raven.contrib.django.celery is now useable.
 * Fixed a bug with request.raw_post_data buffering in Django.
+
+0.7.1
+
+* Servers would stop iterating after the first successful post which was not the
+  intended behavior.
 
 0.7.0
 

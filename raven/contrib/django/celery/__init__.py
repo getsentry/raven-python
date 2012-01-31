@@ -28,3 +28,4 @@ class CeleryClient(DjangoClient):
         else:
             super(DjangoClient, self).send(**kwargs)
 
+CeleryClient = make_celery_client_class(DjangoClient)

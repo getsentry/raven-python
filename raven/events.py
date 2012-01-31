@@ -16,6 +16,7 @@ from raven.utils.stacks import get_stack_info, iter_traceback_frames, \
 
 __all__ = ('BaseEvent', 'Exception', 'Message', 'Query')
 
+
 class BaseEvent(object):
     def __init__(self, client):
         self.client = client
@@ -27,6 +28,7 @@ class BaseEvent(object):
     def capture(self, **kwargs):
         return {
         }
+
 
 class Exception(BaseEvent):
     """
@@ -46,7 +48,7 @@ class Exception(BaseEvent):
 
     def get_hash(self, data):
         exc = data['sentry.interfaces.Exception']
-        output = [exc['type'], exc['value']]
+        output = [exc['type']]
         for frame in data['sentry.interfaces.Stacktrace']['frames']:
             output.append(frame['module'])
             output.append(frame['function'])
@@ -61,7 +63,7 @@ class Exception(BaseEvent):
         try:
             exc_type, exc_value, exc_traceback = exc_info
 
-            frames = varmap(shorten, get_stack_info(iter_traceback_frames(exc_traceback)))
+            frames = varmap(lambda k, v: shorten(v), get_stack_info(iter_traceback_frames(exc_traceback)))
 
             culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
 
@@ -84,13 +86,14 @@ class Exception(BaseEvent):
             'culprit': culprit,
             'sentry.interfaces.Exception': {
                 'value': to_unicode(exc_value),
-                'type': exc_type,
-                'module': exc_module,
+                'type': str(exc_type),
+                'module': str(exc_module),
             },
             'sentry.interfaces.Stacktrace': {
                 'frames': frames
             },
         }
+
 
 class Message(BaseEvent):
     """
@@ -102,7 +105,9 @@ class Message(BaseEvent):
 
     def to_string(self, data):
         msg = data['sentry.interfaces.Message']
-        return msg['message'] % tuple(msg.get('params', ()))
+        if msg.get('params'):
+            return msg['message'] % tuple(msg['params'])
+        return msg['message']
 
     def get_hash(self, data):
         msg = data['sentry.interfaces.Message']
@@ -116,6 +121,7 @@ class Message(BaseEvent):
             }
         }
         return data
+
 
 class Query(BaseEvent):
     """

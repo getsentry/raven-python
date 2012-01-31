@@ -53,8 +53,11 @@ def get_client(client=None):
             string_max_length=getattr(django_settings, 'MAX_LENGTH_STRING', None),
             list_max_length=getattr(django_settings, 'MAX_LENGTH_LIST', None),
             site=getattr(django_settings, 'SENTRY_SITE', None),
+            public_key=getattr(django_settings, 'SENTRY_PUBLIC_KEY', None),
+            secret_key=getattr(django_settings, 'SENTRY_SECRET_KEY', None),
             project=getattr(django_settings, 'SENTRY_PROJECT', None),
             processors=getattr(django_settings, 'SENTRY_PROCESSORS', None),
+            dsn=getattr(django_settings, 'SENTRY_DSN', None),
         )
         if not tmp_client:
             _client = (client, instance)
@@ -112,4 +115,3 @@ def sentry_exception_handler(request=None, **kwargs):
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
     got_request_exception.connect(sentry_exception_handler)
-

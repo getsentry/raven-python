@@ -52,7 +52,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         except (OSError, IOError):
             pass
     if source is None:
-        return None, [], None, []
+        return None, [], None
 
     encoding = 'ascii'
     for line in source[:2]:
@@ -96,36 +96,80 @@ def get_culprit(frames, include_paths=[], exclude_paths=[]):
     return best_guess or culprit
 
 
+def _getitem_from_frame(f_locals, key, default=None):
+    """
+    f_locals is not guaranteed to have .get(), but it will always
+    support __getitem__. Even if it doesnt, we return ``default``.
+    """
+    try:
+        return f_locals[key]
+    except Exception:
+        return default
+
+
+def to_dict(dictish):
+    """
+    Given something that closely resembles a dictionary, we attempt
+    to coerce it into a propery dictionary.
+    """
+    if hasattr(dictish, 'iterkeys'):
+        m = dictish.iterkeys
+    elif hasattr(dictish, 'keys'):
+        m = dictish.keys
+    else:
+        raise ValueError(dictish)
+
+    return dict((k, dictish[k]) for k in m())
+
+
 def iter_traceback_frames(tb):
+    """
+    Given a traceback object, it will iterate over all
+    frames that do not contain the ``__traceback_hide__``
+    local variable.
+    """
     while tb:
         # support for __traceback_hide__ which is used by a few libraries
         # to hide internal frames.
-        if not tb.tb_frame.f_locals.get('__traceback_hide__'):
+        f_locals = getattr(tb.tb_frame, 'f_locals', {})
+        if not _getitem_from_frame(f_locals, '__traceback_hide__'):
             yield tb.tb_frame
         tb = tb.tb_next
 
 
 def iter_stack_frames(frames=None):
+    """
+    Given an optional list of frames (defaults to current stack),
+    iterates over all frames that do not contain the ``__traceback_hide__``
+    local variable.
+    """
     if not frames:
         frames = inspect.stack()[1:]
     for frame in (f[0] for f in frames):
-        if frame.f_locals.get('__traceback_hide__'):
+        f_locals = getattr(frame, 'f_locals', {})
+        if _getitem_from_frame(f_locals, '__traceback_hide__'):
             continue
         yield frame
 
 
 def get_stack_info(frames):
+    """
+    Given a list of frames, returns a list of stack information
+    dictionary objects that are JSON-ready.
+    """
     results = []
     for frame in frames:
         # Support hidden frames
-        if frame.f_locals.get('__traceback_hide__'):
+        f_locals = getattr(frame, 'f_locals', {})
+        if _getitem_from_frame(f_locals, '__traceback_hide__'):
             continue
 
+        f_globals = getattr(frame, 'f_globals', {})
         abs_path = frame.f_code.co_filename
         function = frame.f_code.co_name
         lineno = frame.f_lineno - 1
-        loader = frame.f_globals.get('__loader__')
-        module_name = frame.f_globals.get('__name__')
+        loader = f_globals.get('__loader__')
+        module_name = f_globals.get('__name__')
         pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 3, loader, module_name)
 
         # Try to pull a relative file path
@@ -137,6 +181,13 @@ def get_stack_info(frames):
             filename = abs_path
 
         if context_line:
+            if f_locals is not None and not isinstance(f_locals, dict):
+                # XXX: Genshi (and maybe others) have broken implementations of
+                # f_locals that are not actually dictionaries
+                try:
+                    f_locals = to_dict(f_locals)
+                except Exception:
+                    f_locals = '<invalid local scope>'
             results.append({
                 'abs_path': abs_path,
                 'filename': filename or abs_path,
@@ -144,7 +195,7 @@ def get_stack_info(frames):
                 'function': function,
                 'lineno': lineno + 1,
                 # TODO: vars need to be references
-                'vars': transform(frame.f_locals),
+                'vars': transform(f_locals),
                 'pre_context': pre_context,
                 'context_line': context_line,
                 'post_context': post_context,

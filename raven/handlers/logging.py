@@ -14,23 +14,30 @@ import sys
 import traceback
 
 from raven.base import Client
+from raven.utils.stacks import iter_stack_frames
 
 
-class SentryHandler(logging.Handler):
-    reserved = ['threadName', 'name', 'thread', 'created', 'process', 'processName', 'args', 'module',
-                'filename', 'levelno', 'exc_text', 'pathname', 'lineno', 'msg', 'exc_info', 'funcName',
-                'relativeCreated', 'levelname', 'msecs', 'data', 'stack', 'message']
-
+class SentryHandler(logging.Handler, object):
     def __init__(self, *args, **kwargs):
+        client = kwargs.get('client_cls', Client)
         if len(args) == 1:
-            self.client = args[0]
+            arg = args[0]
+            if isinstance(arg, basestring):
+                self.client = client(dsn=arg)
+            elif isinstance(arg, Client):
+                self.client = arg
+            else:
+                raise ValueError('The first argument to %s must be either a Client instance or a DSN, got %r instead.' % (
+                    self.__class__.__name__,
+                    arg,
+                ))
         elif 'client' in kwargs:
             self.client = kwargs['client']
         elif len(args) == 2 and not kwargs:
             servers, key = args
-            self.client = Client(servers=servers, key=key)
+            self.client = client(servers=servers, key=key)
         else:
-            self.client = Client(*args, **kwargs)
+            self.client = client(*args, **kwargs)
 
         logging.Handler.__init__(self)
 
@@ -43,7 +50,7 @@ class SentryHandler(logging.Handler):
         self.format(record)
 
         # Avoid typical config issues by overriding loggers behavior
-        if record.name == 'sentry.errors':
+        if record.name.startswith('sentry.errors'):
             print >> sys.stderr, record.message
             return
 
@@ -60,15 +67,34 @@ class SentryHandler(logging.Handler):
                 pass
 
     def _emit(self, record, **kwargs):
-        # {'threadName': 'MainThread', 'name': 'foo', 'thread': 140735216916832, 'created': 1319164393.308008, 'process': 89141, 'processName': 'MainProcess', 'args': (), 'module': 'Unknown module', 'filename': None, 'levelno': 20, 'exc_text': None, 'pathname': None, 'lineno': None, 'msg': 'test', 'exc_info': (None, None, None), 'funcName': None, 'relativeCreated': 3441.9949054718018, 'levelname': 'INFO', 'msecs': 308.00795555114746}
-        extra = {}
+        data = {}
 
         for k, v in record.__dict__.iteritems():
-            if k in self.reserved:
+            if '.' not in k:
                 continue
-            extra[k] = v
+            data[k] = v
 
-        data = getattr(record, 'data', {})
+        stack = getattr(record, 'stack', None)
+        if stack is True:
+            stack = iter_stack_frames()
+
+        if stack:
+            frames = []
+            started = False
+            last_mod = ''
+            for frame in iter_stack_frames():
+                if not started:
+                    f_globals = getattr(frame, 'f_globals', {})
+                    module_name = f_globals.get('__name__', '')
+                    if last_mod.startswith('logging') and not module_name.startswith('logging'):
+                        started = True
+                    else:
+                        last_mod = module_name
+                        continue
+                frames.append(frame)
+            stack = frames
+
+        extra = getattr(record, 'data', {})
 
         date = datetime.datetime.utcfromtimestamp(record.created)
 
@@ -83,5 +109,5 @@ class SentryHandler(logging.Handler):
         data['logger'] = record.name
 
         return self.client.capture('Message', message=record.msg, params=record.args,
-                            stack=getattr(record, 'stack', None), data=data, extra=extra,
+                            stack=stack, data=data, extra=extra,
                             date=date, **kwargs)

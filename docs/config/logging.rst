@@ -3,23 +3,24 @@ Configuring ``logging``
 
 Sentry supports the ability to directly tie into the ``logging`` module. To use it simply add ``SentryHandler`` to your logger.
 
-::
+First you'll need to configure a handler::
 
-    import logging
-    from raven import Client
     from raven.handlers.logging import SentryHandler
 
-    client = Client(servers=['http://sentry.local/store/'], key='MY SECRET KEY')
-    logger = logging.getLogger()
+    # Manually specify a client
+    client = Client(...)
+    handler = SentryHandler(client)
 
-    # ensure we havent already registered the handler
-    if SentryHandler not in map(type, logger.handlers):
-        logger.addHandler(SentryHandler(client))
+You can also automatically configure the default client with a DSN::
 
-        # Add StreamHandler to sentry's default so you can catch missed exceptions
-        logger = logging.getLogger('sentry.errors')
-        logger.propagate = False
-        logger.addHandler(logging.StreamHandler())
+    # Configure the default client
+    handler = SentryHandler('http://public:secret@example.com/1')
+
+Finally, call the ``setup_logging`` helper function::
+
+    from raven.conf import setup_logging
+
+    setup_logging(handler)
 
 Usage
 ~~~~~
@@ -29,9 +30,11 @@ A recommended pattern in logging is to simply reference the modules name for eac
     import logging
     logger = logging.getLogger(__name__)
 
-You can also use the ``exc_info`` and ``extra=dict(url=foo)`` arguments on your ``log`` methods. This will store the appropriate information and allow Sentry to render it based on that information::
+You can also use the ``exc_info`` and ``extra={'stack': True}`` arguments on your ``log`` methods. This will store the appropriate information and allow Sentry to render it based on that information::
 
-    logger.error('There was some crazy error', exc_info=True, extra={'url': request.build_absolute_uri()})
+    logger.error('There was some crazy error', exc_info=True, extra={
+        'culprit': 'my.view.name',
+    })
 
 You may also pass additional information to be stored as meta information with the event. As long as the key
 name is not reserved and not private (_foo) it will be displayed on the Sentry dashboard. To do this, pass it as ``data`` within
@@ -40,11 +43,10 @@ your ``extra`` clause::
     logger.error('There was some crazy error', exc_info=True, extra={
         # Optionally you can pass additional arguments to specify request info
         'culprit': 'my.view.name',
-        'url': request.build_absolute_url(),
 
         'data': {
             # You may specify any values here and Sentry will log and output them
-            'username': request.user.username
+            'username': request.user.username,
         }
     })
 
@@ -62,7 +64,9 @@ As of Sentry 1.10.0 the ``logging`` integration also allows easy capture of stac
 logging an exception. This can be done automatically with the ``SENTRY_AUTO_LOG_STACKS`` setting, as well as by passing the
 ``stack`` boolean to ``extra``::
 
-    logger.error('There was an error', extra={'stack': True})
+    logger.error('There was an error', extra={
+        'stack': True,
+    })
 
 .. note::
 

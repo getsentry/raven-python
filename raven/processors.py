@@ -6,27 +6,62 @@ raven.core.processors
 :license: BSD, see LICENSE for more details.
 """
 
+
+from raven.utils import varmap
+
+
 class Processor(object):
     def __init__(self, client):
         self.client = client
 
+    def get_data(self, data, **kwargs):
+        return
+
     def process(self, data, **kwargs):
-        resp = self.get_data(data)
+        resp = self.get_data(data, **kwargs)
         if resp:
             data = resp
         return data
 
+
 class SantizePasswordsProcessor(Processor):
     """
-    Asterisk out passwords from password fields in frames.
+    Asterisk out passwords from password fields in frames, http,
+    and basic extra data.
     """
+    MASK = '*' * 16
+
+    def sanitize(self, key, value):
+        if not key:  # key can be a NoneType
+            return value
+
+        key = key.lower()
+        if 'password' in key or 'secret' in key:
+            # store mask as a fixed length for security
+            return self.MASK
+
+        return value
+
+    def filter_stacktrace(self, data):
+        if 'frames' not in data:
+            return
+        for frame in data['frames']:
+            if 'vars' not in frame:
+                continue
+            frame['vars'] = varmap(self.sanitize, frame['vars'])
+
+    def filter_http(self, data):
+        for n in ('data', 'cookies', 'headers', 'env'):
+            if n not in data:
+                continue
+
+            data[n] = varmap(self.sanitize, data[n])
+
     def process(self, data, **kwargs):
         if 'sentry.interfaces.Stacktrace' in data:
-            if 'frames' in data['sentry.interfaces.Stacktrace']:
-                for frame in data['sentry.interfaces.Stacktrace']['frames']:
-                    if 'vars' in frame:
-                        for k, v in frame['vars'].iteritems():
-                            if 'password' in k or 'secret' in k:
-                                # store mask as a fixed length for security
-                                frame['vars'][k] = '*'*16
+            self.filter_stacktrace(data['sentry.interfaces.Stacktrace'])
+
+        if 'sentry.interfaces.Http' in data:
+            self.filter_http(data['sentry.interfaces.Http'])
+
         return data

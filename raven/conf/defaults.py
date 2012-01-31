@@ -49,9 +49,6 @@ EXCLUDE_PATHS = []
 # where an exception is located
 INCLUDE_PATHS = []
 
-# Absolute URL to the sentry root directory. Should not include a trailing slash.
-URL_PREFIX = ''
-
 # The maximum number of elements to store for a list-like structure.
 MAX_LENGTH_LIST = 50
 

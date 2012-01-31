@@ -12,6 +12,7 @@ import base64
 import datetime
 import hashlib
 import logging
+import os
 import time
 import urllib2
 import uuid
@@ -22,9 +23,9 @@ from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 import raven
 from raven.conf import defaults
 from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
-from raven.utils.encoding import transform, shorten
+from raven.utils.encoding import transform, shorten, to_unicode
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
-                                       get_culprit
+  get_culprit
 
 
 class ModuleProxyCache(dict):
@@ -43,23 +44,62 @@ class Client(object):
     The base Raven client, which handles both local direct communication with Sentry (through
     the GroupedMessage API), as well as communicating over the HTTP API to multiple servers.
 
+    Will read default configuration from the environment variable ``SENTRY_DSN``
+    if available.
+
     >>> from raven import Client
-    >>>
-    >>> client = Client(servers=['http://sentry.local/store/'], include_paths=['my.package'])
+
+    >>> # Read configuration from ``os.environ['SENTRY_DSN']``
+    >>> client = Client()
+
+    >>> # Specify a DSN explicitly
+    >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
+
+    >>> # Configure the client manually
+    >>> client = Client(
+    >>>     servers=['http://sentry.local/api/store/'],
+    >>>     include_paths=['my.package'],
+    >>>     project='project_id',
+    >>>     public_key='public_key',
+    >>>     secret_key='secret_key',
+    >>> )
+
+    >>> # Record an exception
     >>> try:
     >>>     1/0
     >>> except ZeroDivisionError:
-    >>>     ident = client.get_ident(client.create_from_exception())
+    >>>     ident = client.get_ident(client.capture('Exception'))
     >>>     print "Exception caught; reference is %%s" %% ident
     """
+    logger = logging.getLogger('raven')
 
-    def __init__(self, servers, include_paths=None, exclude_paths=None, timeout=None,
+    def __init__(self, servers=None, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
                  list_max_length=None, site=None, public_key=None, secret_key=None,
-                 processors=None, project=None, **kwargs):
+                 processors=None, project=None, dsn=None, **kwargs):
+        if isinstance(servers, basestring):
+            # must be a DSN:
+            if dsn:
+                raise ValueError("You seem to be incorrectly instantiating the raven Client class.")
+            dsn = servers
+            servers = None
+
+        if dsn is None and os.environ.get('SENTRY_DSN'):
+            self.logger.info("Configuring Raven from environment variable 'SENTRY_DSN'")
+            dsn = os.environ['SENTRY_DSN']
+
+        if dsn:
+            # TODO: should we validate other options werent sent?
+            self.logger.info("Configuring Raven from DSN: %r", dsn)
+            options = raven.load(dsn)
+            servers = options['SENTRY_SERVERS']
+            project = options['SENTRY_PROJECT']
+            public_key = options['SENTRY_PUBLIC_KEY']
+            secret_key = options['SENTRY_SECRET_KEY']
+
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
-            raise TypeError('You must specify a key to communicate with the remote Sentry servers.')
+            raise TypeError('Missing configuration for client. Please see documentation.')
 
         self.servers = servers
         self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
@@ -153,7 +193,7 @@ class Client(object):
         if extra is None:
             extra = {}
         if date is None:
-            date = datetime.datetime.now()
+            date = datetime.datetime.utcnow()
         if stack is None:
             stack = self.auto_log_stacks
 
@@ -184,7 +224,7 @@ class Client(object):
 
             data.update({
                 'sentry.interfaces.Stacktrace': {
-                    'frames': varmap(shorten, get_stack_info(frames))
+                    'frames': varmap(lambda k, v: shorten(v), get_stack_info(frames))
                 },
             })
 
@@ -207,7 +247,7 @@ class Client(object):
 
         checksum = hashlib.md5()
         for bit in handler.get_hash(data):
-            checksum.update(bit or '')
+            checksum.update(to_unicode(bit) or '')
         data['checksum'] = checksum = checksum.hexdigest()
 
         # create ID client-side so that it can be passed to application
@@ -237,11 +277,24 @@ class Client(object):
 
         return (event_id, checksum)
 
-    def send_remote(self, url, data, headers={}):
+    def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
         if parsed.scheme == 'udp':
             return self.send_udp(parsed.netloc, data, headers.get('X-Sentry-Auth'))
         return self.send_http(url, data, headers)
+
+    def send_remote(self, url, data, headers={}):
+        try:
+            self._send_remote(url=url, data=data, headers=headers)
+        except urllib2.HTTPError, e:
+            body = e.read()
+            self.logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
+                         exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
+            self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
+        except urllib2.URLError, e:
+            self.logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
+                         exc_info=True, extra={'data': {'remote_url': url}})
+            self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
 
     def send_udp(self, netloc, data, auth_header):
         if auth_header is None:
@@ -287,17 +340,7 @@ class Client(object):
                 'Content-Type': 'application/octet-stream',
             }
 
-            try:
-                return self.send_remote(url=url, data=message, headers=headers)
-            except urllib2.HTTPError, e:
-                body = e.read()
-                self.logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
-                             exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-                self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
-            except urllib2.URLError, e:
-                self.logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
-                             exc_info=True, extra={'data': {'remote_url': url}})
-                self.logger.log(data.pop('level', None) or logging.ERROR, data.pop('message', None))
+            self.send_remote(url=url, data=message, headers=headers)
 
     def create_from_text(self, message, **kwargs):
         """

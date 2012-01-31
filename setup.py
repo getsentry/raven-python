@@ -12,17 +12,18 @@ web application.
 from setuptools import setup, find_packages
 
 tests_require = [
+    'blinker>=1.1',
+    'celery',
     'Django>=1.2,<1.4',
     'django-celery',
-    'celery',
-
-    'blinker>=1.1',
-    'Flask>=0.8',
-    'django-sentry>=2.0.0',
     'django-nose',
+    'Flask>=0.8',
+    'logbook',
     'nose',
     'mock',
+    'sentry>=2.0.0',
     'unittest2',
+    'webob',
 ]
 
 install_requires = [
@@ -31,7 +32,7 @@ install_requires = [
 
 setup(
     name='raven',
-    version='2.0.0',
+    version='1.2.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',

@@ -9,6 +9,7 @@ raven.utils.encoding
 import uuid
 from types import ClassType, TypeType
 
+
 def force_unicode(s, encoding='utf-8', errors='strict'):
     """
     Similar to smart_unicode, except that lazy instances are resolved to
@@ -59,6 +60,7 @@ def _has_sentry_metadata(value):
     except:
         return False
 
+
 def transform(value, stack=[], context=None):
     # TODO: make this extendable
     if context is None:
@@ -76,20 +78,19 @@ def transform(value, stack=[], context=None):
     elif isinstance(value, (tuple, list, set, frozenset)):
         try:
             ret = type(value)(transform_rec(o) for o in value)
-        except TypeError:
+        except Exception:
             # We may be dealing with a namedtuple
-            ret = type(value)(transform_rec(o) for o in value[:])
+            class value_type(list):
+                __name__ = type(value).__name__
+            ret = value_type(transform_rec(o) for o in value[:])
     elif isinstance(value, uuid.UUID):
         ret = repr(value)
     elif isinstance(value, dict):
-        ret = dict((str(k), transform_rec(v)) for k, v in value.iteritems())
+        ret = dict((to_string(k), transform_rec(v)) for k, v in value.iteritems())
     elif isinstance(value, unicode):
         ret = to_unicode(value)
     elif isinstance(value, str):
-        try:
-            ret = str(value.decode('utf-8').encode('utf-8'))
-        except:
-            ret = to_unicode(value)
+        ret = to_string(value)
     elif not isinstance(value, (ClassType, TypeType)) and \
             _has_sentry_metadata(value):
         ret = transform_rec(value.__sentry__())
@@ -99,7 +100,13 @@ def transform(value, stack=[], context=None):
     #     pre = value.__class__.__name__[1:]
     #     value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
     #     return transform(value)
-    elif not isinstance(value, (int, bool)) and value is not None:
+    elif isinstance(value, bool):
+        ret = bool(value)
+    elif isinstance(value, float):
+        ret = float(value)
+    elif isinstance(value, int):
+        ret = int(value)
+    elif value is not None:
         try:
             ret = transform(repr(value))
         except:
@@ -107,21 +114,30 @@ def transform(value, stack=[], context=None):
             # which if it was not cleaned up correctly, would hit a transaction aborted exception
             ret = u'<BadRepr: %s>' % type(value)
     else:
-        ret = value
+        ret = None
     del context[objid]
     return ret
+
 
 def to_unicode(value):
     try:
         value = unicode(force_unicode(value))
     except (UnicodeEncodeError, UnicodeDecodeError):
         value = '(Error decoding value)'
-    except Exception: # in some cases we get a different exception
+    except Exception:  # in some cases we get a different exception
         try:
             value = str(repr(type(value)))
         except Exception:
             value = '(Error decoding value)'
     return value
+
+
+def to_string(value):
+    try:
+        return str(value.decode('utf-8').encode('utf-8'))
+    except:
+        return to_unicode(value).encode('utf-8')
+
 
 def shorten(var, list_length=50, string_length=200):
     var = transform(var)

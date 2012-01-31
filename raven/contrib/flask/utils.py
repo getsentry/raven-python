@@ -11,7 +11,7 @@ def get_data_from_request(request):
             'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
             'query_string': urlparts.query,
             'method': request.method,
-            'data': request.form or request.args,
+            'data': request.form,
             'headers': dict(get_headers(request.environ)),
             'env': dict(get_environ(request.environ)),
         }

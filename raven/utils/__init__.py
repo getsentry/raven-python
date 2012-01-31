@@ -14,25 +14,33 @@ except ImportError:
     pkg_resources = None
 import sys
 
-def varmap(func, var, context=None):
+
+def varmap(func, var, context=None, name=None):
+    """
+    Executes ``func(key_name, value)`` on all values
+    recurisively discovering dict and list scoped
+    values.
+    """
     if context is None:
         context = {}
     objid = id(var)
     if objid in context:
-        return func('<...>')
+        return func(name, '<...>')
     context[objid] = 1
     if isinstance(var, dict):
-        ret = dict((k, varmap(func, v, context)) for k, v in var.iteritems())
+        ret = dict((k, varmap(func, v, context, k)) for k, v in var.iteritems())
     elif isinstance(var, (list, tuple)):
-        ret = [varmap(func, f, context) for f in var]
+        ret = [varmap(func, f, context, name) for f in var]
     else:
-        ret = func(var)
+        ret = func(name, var)
     del context[objid]
     return ret
 
 # We store a cache of module_name->version string to avoid
 # continuous imports and lookups of modules
 _VERSION_CACHE = {}
+
+
 def get_versions(module_list=None):
     if not module_list:
         return {}
@@ -40,7 +48,7 @@ def get_versions(module_list=None):
     ext_module_list = set()
     for m in module_list:
         parts = m.split('.')
-        ext_module_list.update('.'.join(parts[:idx]) for idx in xrange(1, len(parts)+1))
+        ext_module_list.update('.'.join(parts[:idx]) for idx in xrange(1, len(parts) + 1))
 
     versions = {}
     for module_name in ext_module_list:
@@ -79,14 +87,17 @@ def get_versions(module_list=None):
         versions[module_name] = version
     return versions
 
+
 def get_signature(message, timestamp, key):
-    return hmac.new(key, '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
+    return hmac.new(str(key), '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
+
 
 def get_auth_header(signature, timestamp, client, api_key=None):
     header = [
         ('sentry_timestamp', timestamp),
         ('sentry_signature', signature),
         ('sentry_client', client),
+        ('sentry_version', '2.0'),
     ]
     if api_key:
         header.append(('sentry_key', api_key))

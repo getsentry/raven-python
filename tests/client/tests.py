@@ -20,6 +20,23 @@ class ClientTest(TestCase):
     def setUp(self):
         self.client = TempStoreClient()
 
+    def test_dsn(self):
+        client = Client(dsn='http://public:secret@example.com/1')
+        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.project, 1)
+        self.assertEquals(client.public_key, 'public')
+        self.assertEquals(client.secret_key, 'secret')
+
+    def test_dsn_as_first_arg(self):
+        client = Client('http://public:secret@example.com/1')
+        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.project, 1)
+        self.assertEquals(client.public_key, 'public')
+        self.assertEquals(client.secret_key, 'secret')
+
+    def test_invalid_servers_with_dsn(self):
+        self.assertRaises(ValueError, Client, 'foo', dsn='http://public:secret@example.com/1')
+
     def test_exception(self):
         try:
             raise ValueError('foo')
@@ -95,11 +112,13 @@ class ClientTest(TestCase):
         self.assertEquals(event['logger'], 'test')
         self.assertTrue('timestamp' in event)
 
+
 class ClientUDPTest(TestCase):
     def setUp(self):
         self.server_socket = socket(AF_INET, SOCK_DGRAM)
         self.server_socket.bind(('127.0.0.1', 0))
         self.client = Client(servers=["udp://%s:%s" % self.server_socket.getsockname()], key='BassOmatic')
+
     def test_delivery(self):
         self.client.create_from_text('test')
         data, address = self.server_socket.recvfrom(2**16)
@@ -107,6 +126,6 @@ class ClientUDPTest(TestCase):
         header, payload = data.split("\n\n")
         for substring in ("sentry_timestamp=", "sentry_client=", "sentry_signature="):
             self.assertTrue(substring in header)
-        
+
     def tearDown(self):
         self.server_socket.close()
