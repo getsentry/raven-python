@@ -270,8 +270,9 @@ class Client(object):
             'timestamp': date,
             'time_spent': time_spent,
             'event_id': event_id,
-            'project': self.project,
         })
+        data.setdefault('project', self.project)
+        data.setdefault('site', self.site)
 
         self.send(**data)
 
