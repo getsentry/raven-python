@@ -1,3 +1,10 @@
+1.2.1
+
+* Corrected behavior with raven logging errors to send_remote
+  which could potentially cause a very large backlog to Sentry
+  when it should just log to ``sentry.errors``.
+* Ensure the ``site`` argument is sent to the server.
+
 1.2.0
 
 * Made DSN a first-class citizen throughout Raven.
