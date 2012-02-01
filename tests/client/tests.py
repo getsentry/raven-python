@@ -46,6 +46,12 @@ class ClientTest(TestCase):
             },
         )
 
+    def test_encode_decode(self):
+        data = {'foo': 'bar'}
+        encoded = self.client.encode(data)
+        self.assertTrue(type(encoded), str)
+        self.assertEquals(data, self.client.decode(encoded))
+
     def test_dsn(self):
         client = Client(dsn='http://public:secret@example.com/1')
         self.assertEquals(client.servers, ['http://example.com/api/store/'])

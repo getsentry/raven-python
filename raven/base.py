@@ -326,10 +326,17 @@ class Client(object):
 
     def send(self, **data):
         """
-        Serializes and signs ``data`` and passes the payload off to ``send_remote``
+        Serializes the message and passes the payload onto ``send_encoded``.
         """
-        message = base64.b64encode(json.dumps(data).encode('zlib'))
+        message = self.encode(data)
 
+        return self.send_encoded(message)
+
+    def send_encoded(self, message):
+        """
+        Given an already serialized message, signs the message and passes the payload
+        off to ``send_remote`` for each server specified in the servers configuration.
+        """
         for url in self.servers:
             timestamp = time.time()
             signature = get_signature(message, timestamp, self.secret_key or self.key)
@@ -339,6 +346,18 @@ class Client(object):
             }
 
             self.send_remote(url=url, data=message, headers=headers)
+
+    def encode(self, data):
+        """
+        Serializes ``data`` into a raw string.
+        """
+        return base64.b64encode(json.dumps(data).encode('zlib'))
+
+    def decode(self, data):
+        """
+        Unserializes a string, ``data``.
+        """
+        return json.loads(base64.b64decode(data).decode('zlib'))
 
     def create_from_text(self, message, **kwargs):
         """
