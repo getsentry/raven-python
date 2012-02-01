@@ -196,7 +196,7 @@ class Client(object):
             data = {}
         if extra is None:
             extra = {}
-        if date is None:
+        if not date:
             date = datetime.datetime.utcnow()
         if stack is None:
             stack = self.auto_log_stacks
@@ -264,9 +264,6 @@ class Client(object):
 
         # Make sure all data is coerced
         data = transform(data)
-
-        if not date:
-            date = datetime.datetime.utcnow()
 
         data['message'] = handler.to_string(data)
 

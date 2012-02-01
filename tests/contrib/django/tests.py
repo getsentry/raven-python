@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 
+import datetime
 import logging
 from celery.tests.utils import with_eager_tasks
 from StringIO import StringIO
@@ -80,6 +81,17 @@ class DjangoClientTest(TestCase):
 
     def setUp(self):
         self.raven = get_client()
+
+    def test_basic(self):
+        self.raven.capture('Message', message='foo')
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        message = event['sentry.interfaces.Message']
+        self.assertEquals(message['message'], 'foo')
+        self.assertEquals(event['level'], logging.ERROR)
+        self.assertEquals(event['message'], 'foo')
+        self.assertEquals(type(event['timestamp']), datetime.datetime)
 
     def test_signal_integration(self):
         try:

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import inspect
+import mock
+import raven
 from socket import socket, AF_INET, SOCK_DGRAM
 from unittest2 import TestCase
 from raven.base import Client
@@ -19,6 +21,30 @@ class TempStoreClient(Client):
 class ClientTest(TestCase):
     def setUp(self):
         self.client = TempStoreClient()
+
+    @mock.patch('raven.base.Client.send_remote')
+    @mock.patch('raven.base.get_signature')
+    @mock.patch('raven.base.time.time')
+    def test_send(self, time, get_signature, send_remote):
+        time.return_value = 1328055286.51
+        get_signature.return_value = 'signature'
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+        client.send(**{
+            'foo': 'bar',
+        })
+        send_remote.assert_called_once_with(
+            url='http://example.com',
+            data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
+            headers={
+                'Content-Type': 'application/octet-stream',
+                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, sentry_signature=signature, sentry_client=raven/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
+            },
+        )
 
     def test_dsn(self):
         client = Client(dsn='http://public:secret@example.com/1')
