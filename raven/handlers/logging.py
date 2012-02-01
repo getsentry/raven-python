@@ -70,7 +70,7 @@ class SentryHandler(logging.Handler, object):
         data = {}
 
         for k, v in record.__dict__.iteritems():
-            if '.' not in k:
+            if '.' not in k and k not in ('culprit',):
                 continue
             data[k] = v
 

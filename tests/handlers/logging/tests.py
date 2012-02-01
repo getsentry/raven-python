@@ -14,22 +14,19 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
-class LoggingHandlerTest(TestCase):
+class LoggingIntegrationTest(TestCase):
     def setUp(self):
+        self.client = TempStoreClient(include_paths=['tests', 'raven'])
+        self.handler = SentryHandler(self.client)
         self.logger = logging.getLogger(__name__)
+        self.logger.handlers = []
+        self.logger.addHandler(self.handler)
 
-    def test_logger(self):
-        client = TempStoreClient(include_paths=['tests', 'raven'])
-        handler = SentryHandler(client)
+    def test_logger_basic(self):
+        self.logger.error('This is a test error')
 
-        logger = self.logger
-        logger.handlers = []
-        logger.addHandler(handler)
-
-        logger.error('This is a test error')
-
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
         self.assertEquals(event['logger'], __name__)
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'This is a test error')
@@ -40,9 +37,10 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test error')
         self.assertEquals(msg['params'], ())
 
-        logger.warning('This is a test warning')
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+    def test_logger_warning(self):
+        self.logger.warning('This is a test warning')
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
         self.assertEquals(event['logger'], __name__)
         self.assertEquals(event['level'], logging.WARNING)
         self.assertEquals(event['message'], 'This is a test warning')
@@ -53,13 +51,14 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test warning')
         self.assertEquals(msg['params'], ())
 
-        logger.info('This is a test info with a url', extra=dict(
+    def test_logger_extra_data(self):
+        self.logger.info('This is a test info with a url', extra=dict(
             data=dict(
                 url='http://example.com',
             ),
         ))
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
         self.assertEquals(event['extra']['url'], 'http://example.com')
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
         self.assertFalse('sentry.interfaces.Exception' in event)
@@ -68,13 +67,14 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test info with a url')
         self.assertEquals(msg['params'], ())
 
+    def test_logger_exc_info(self):
         try:
             raise ValueError('This is a test ValueError')
         except ValueError:
-            logger.info('This is a test info with an exception', exc_info=True)
+            self.logger.info('This is a test info with an exception', exc_info=True)
 
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
 
         self.assertEquals(event['message'], 'This is a test info with an exception')
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
@@ -87,10 +87,22 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test info with an exception')
         self.assertEquals(msg['params'], ())
 
-        # test stacks
-        logger.info('This is a test of stacks', extra={'stack': True})
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+    def test_message_params(self):
+        self.logger.info('This is a test of %s', 'args')
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'This is a test of args')
+        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertFalse('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test of %s')
+        self.assertEquals(msg['params'], ('args',))
+
+    def test_record_stack(self):
+        self.logger.info('This is a test of stacks', extra={'stack': True})
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
         frames = event['sentry.interfaces.Stacktrace']['frames']
         self.assertNotEquals(len(frames), 1)
@@ -101,13 +113,13 @@ class LoggingHandlerTest(TestCase):
         msg = event['sentry.interfaces.Message']
         self.assertEquals(msg['message'], 'This is a test of stacks')
         self.assertEquals(msg['params'], ())
-        self.assertEquals(event['culprit'], 'tests.handlers.logging.tests.test_logger')
+        self.assertEquals(event['culprit'], 'tests.handlers.logging.tests.test_record_stack')
         self.assertEquals(event['message'], 'This is a test of stacks')
 
-        # test no stacks
-        logger.info('This is a test of no stacks', extra={'stack': False})
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+    def test_no_record_stack(self):
+        self.logger.info('This is a test of no stacks', extra={'stack': False})
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
         self.assertEquals(event.get('culprit'), None)
         self.assertEquals(event['message'], 'This is a test of no stacks')
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
@@ -117,23 +129,11 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test of no stacks')
         self.assertEquals(msg['params'], ())
 
-        # test args
-        logger.info('This is a test of %s', 'args')
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
-        self.assertEquals(event['message'], 'This is a test of args')
-        self.assertFalse('sentry.interfaces.Stacktrace' in event)
-        self.assertFalse('sentry.interfaces.Exception' in event)
-        self.assertTrue('sentry.interfaces.Message' in event)
-        msg = event['sentry.interfaces.Message']
-        self.assertEquals(msg['message'], 'This is a test of %s')
-        self.assertEquals(msg['params'], ('args',))
-
-        # test explicit stack
-        logger.info('This is a test of stacks', extra={'stack': iter_stack_frames()})
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
-        self.assertEquals(event['culprit'], 'tests.handlers.logging.tests.test_logger')
+    def test_explicit_stack(self):
+        self.logger.info('This is a test of stacks', extra={'stack': iter_stack_frames()})
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['culprit'], 'tests.handlers.logging.tests.test_explicit_stack')
         self.assertEquals(event['message'], 'This is a test of stacks')
         self.assertFalse('sentry.interfaces.Exception' in event)
         self.assertTrue('sentry.interfaces.Message' in event)
@@ -142,6 +142,14 @@ class LoggingHandlerTest(TestCase):
         self.assertEquals(msg['params'], ())
         self.assertTrue('sentry.interfaces.Stacktrace' in event)
 
+    def test_extra_culprit(self):
+        self.logger.info('This is a test of stacks', extra={'culprit': 'foo.bar'})
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['culprit'], 'foo.bar')
+
+
+class LoggingHandlerTest(TestCase):
     def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client)
