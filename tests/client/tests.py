@@ -69,7 +69,16 @@ class ClientTest(TestCase):
     def test_invalid_servers_with_dsn(self):
         self.assertRaises(ValueError, Client, 'foo', dsn='http://public:secret@example.com/1')
 
-    def test_exception(self):
+    def test_explicit_message(self):
+        self.client.capture('Message', message='test', data={
+            'message': 'foo'
+        })
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'foo')
+
+    def test_exception_event(self):
         try:
             raise ValueError('foo')
         except:
@@ -90,11 +99,11 @@ class ClientTest(TestCase):
         self.assertEquals(frame['abs_path'], __file__)
         self.assertEquals(frame['filename'], 'tests/client/tests.py')
         self.assertEquals(frame['module'], __name__)
-        self.assertEquals(frame['function'], 'test_exception')
+        self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
 
-    def test_message(self):
-        self.client.create_from_text('test')
+    def test_message_event(self):
+        self.client.capture('Message', message='test')
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)

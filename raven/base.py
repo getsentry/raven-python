@@ -265,7 +265,8 @@ class Client(object):
         # Make sure all data is coerced
         data = transform(data)
 
-        data['message'] = handler.to_string(data)
+        if 'message' not in data:
+            data['message'] = handler.to_string(data)
 
         data.update({
             'timestamp': date,
