@@ -116,7 +116,7 @@ class DjangoClient(Client):
             try:
                 return Group.objects.from_kwargs(**kwargs)
             except Exception, e:
-                self.logger.error('Unable to record event: %s', e)
+                self.error_logger.error('Unable to record event: %s', e)
         else:
-            self.logger.error('No servers configured, and sentry not installed. Cannot send message')
+            self.error_logger.error('No servers configured, and sentry not installed. Cannot send message')
             return None
