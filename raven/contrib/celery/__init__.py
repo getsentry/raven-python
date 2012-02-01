@@ -7,27 +7,19 @@ raven.contrib.celery
 """
 
 from celery.decorators import task
+from raven.base import Client
 
 
-class _EmptyClass(object):
+class CeleryMixin(object):
+    def send_encoded(self, message):
+        "Errors through celery"
+        self.send_raw.delay(message)
+
+    @task(routing_key='sentry')
+    def send_raw(self, message):
+        return super(CeleryMixin, self).send_encoded(message)
+
+
+class CeleryClient(CeleryMixin, Client):
     pass
 
-
-def make_celery_client_class(parent):
-    class CeleryClient(parent):
-        def send(self, **kwargs):
-            "Errors through celery"
-            self.send_remote.delay(kwargs)
-
-        @task(routing_key='sentry')
-        def send_remote(self, data):
-            return super(CeleryClient, self).send(**data)
-    return CeleryClient
-
-
-def make_celery_client(client):
-    cls = make_celery_client_class(client.__class__)
-    new_client = _EmptyClass()
-    new_client.__class__ = cls
-    new_client.__dict__.update(client.__dict__)
-    return new_client

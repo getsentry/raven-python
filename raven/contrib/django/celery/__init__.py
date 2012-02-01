@@ -6,7 +6,15 @@ raven.contrib.django.celery
 :license: BSD, see LICENSE for more details.
 """
 
-from raven.contrib.celery import make_celery_client_class
+from raven.contrib.celery import CeleryMixin
 from raven.contrib.django import DjangoClient
+from celery.decorators import task
 
-CeleryClient = make_celery_client_class(DjangoClient)
+
+class CeleryClient(CeleryMixin, DjangoClient):
+    def send_integrated(self, kwargs):
+        self.send_raw_integrated.delay(kwargs)
+
+    @task(routing_key='sentry')
+    def send_raw_integrated(self, kwargs):
+        super(CeleryClient, self).send_integrated(kwargs)

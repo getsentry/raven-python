@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 
+import mock
 import datetime
 import logging
 from celery.tests.utils import with_eager_tasks
@@ -16,8 +17,8 @@ from django.template import TemplateSyntaxError
 from django.test import TestCase
 
 from raven.base import Client
-from raven.contrib.celery import make_celery_client
 from raven.contrib.django import DjangoClient
+from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import get_client
 from raven.contrib.django.middleware.wsgi import Sentry
@@ -412,20 +413,69 @@ class DjangoLoggingTest(TestCase):
         self.assertEquals(http['method'], 'POST')
 
 
-class IsolatedCeleryClientTest(TestCase):
+class CeleryIsolatedClientTest(TestCase):
     def setUp(self):
-        self.client = make_celery_client(TempStoreClient())
+        self.client = CeleryClient(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+        )
 
-    def test_without_eager(self):
-        self.client.create_from_text('test')
+    @mock.patch('raven.contrib.django.celery.CeleryClient.send_raw')
+    def test_send_encoded(self, send_raw):
+        self.client.send_encoded('foo')
 
-        # it should only have been queued
-        self.assertEquals(len(self.client.events), 0)
+        send_raw.delay.assert_called_once_with('foo')
+
+    @mock.patch('raven.contrib.django.celery.CeleryClient.send_raw')
+    def test_without_eager(self, send_raw):
+        """
+        Integration test to ensure it propagates all the way down
+        and calls delay on the task.
+        """
+        self.client.capture('Message', message='test')
+
+        self.assertEquals(send_raw.delay.call_count, 1)
 
     @with_eager_tasks
-    def test_with_eager(self):
-        self.client.create_from_text('test')
+    @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
+    def test_with_eager(self, send_encoded):
+        """
+        Integration test to ensure it propagates all the way down
+        and calls the parent client's send_encoded method.
+        """
+        self.client.capture('Message', message='test')
 
-        self.assertEquals(len(self.client.events), 1)
-        event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
+        self.assertEquals(send_encoded.call_count, 1)
+
+
+class CeleryIntegratedClientTest(TestCase):
+    def setUp(self):
+        self.client = CeleryClient()
+
+    @mock.patch('raven.contrib.django.celery.CeleryClient.send_raw_integrated')
+    def test_send_encoded(self, send_raw):
+        self.client.send_integrated('foo')
+
+        send_raw.delay.assert_called_once_with('foo')
+
+    @mock.patch('raven.contrib.django.celery.CeleryClient.send_raw_integrated')
+    def test_without_eager(self, send_raw):
+        """
+        Integration test to ensure it propagates all the way down
+        and calls delay on the task.
+        """
+        self.client.capture('Message', message='test')
+
+        self.assertEquals(send_raw.delay.call_count, 1)
+
+    @with_eager_tasks
+    @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
+    def test_with_eager(self, send_encoded):
+        """
+        Integration test to ensure it propagates all the way down
+        and calls the parent client's send_encoded method.
+        """
+        self.client.capture('Message', message='test')
+
+        self.assertEquals(send_encoded.call_count, 1)
