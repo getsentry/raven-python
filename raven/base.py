@@ -360,26 +360,29 @@ class Client(object):
         """
         return json.loads(base64.b64decode(data).decode('zlib'))
 
-    def create_from_text(self, message, **kwargs):
-        """
-        Deprecated.
+    def create_from_text(self, *args, **kwargs):
+        warnings.warn("create_from_text is deprecated. Use message() instead.", DeprecationWarning)
+        return self.message(*args, **kwargs)
 
+    def create_from_exception(self, *args, **kwargs):
+        warnings.warn("create_from_exception is deprecated. Use exception() instead.", DeprecationWarning)
+        return self.exception(*args, **kwargs)
+
+    def message(self, message, **kwargs):
+        """
         Creates an event for from ``message``.
 
-        >>> client.create_from_text('My event just happened!')
+        >>> client.message('My event just happened!')
         """
-        warnings.warn("create_from_text is deprecated. Use capture('Message') instead.", DeprecationWarning)
         return self.capture('Message', message=message, **kwargs)
 
-    def create_from_exception(self, exc_info=None, **kwargs):
+    def exception(self, exc_info=None, **kwargs):
         """
-        Deprecated.
-
         Creates an event from an exception.
 
         >>> try:
         >>>     exc_info = sys.exc_info()
-        >>>     client.create_from_exception(exc_info)
+        >>>     client.exception(exc_info)
         >>> finally:
         >>>     del exc_info
 
@@ -387,7 +390,6 @@ class Client(object):
         perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
         for you.
         """
-        warnings.warn("create_from_exception is deprecated. Use capture('Exception') instead.", DeprecationWarning)
         return self.capture('Exception', exc_info=exc_info, **kwargs)
 
 
