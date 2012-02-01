@@ -69,7 +69,7 @@ class ClientTest(TestCase):
     def test_invalid_servers_with_dsn(self):
         self.assertRaises(ValueError, Client, 'foo', dsn='http://public:secret@example.com/1')
 
-    def test_explicit_message(self):
+    def test_explicit_message_on_message_event(self):
         self.client.capture('Message', message='test', data={
             'message': 'foo'
         })
@@ -77,6 +77,16 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'foo')
+
+    def test_explicit_message_on_exception_event(self):
+        try:
+            raise ValueError('foo')
+        except:
+            self.client.capture('Exception', data={'message': 'foobar'})
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'foobar')
 
     def test_exception_event(self):
         try:
