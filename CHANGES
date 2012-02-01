@@ -1,3 +1,8 @@
+1.3.0
+
+* Refactored client send API to be more easily extensible.
+* MOAR TESTS!
+
 1.2.2
 
 * Gracefully handle exceptions in Django client when using integrated
