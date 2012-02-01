@@ -326,11 +326,7 @@ class Client(object):
 
     def send(self, **data):
         """
-        Sends the message to the server.
-
-        If ``servers`` was passed into the constructor, this will serialize the data and pipe it to
-        each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
-        directly.
+        Serializes and signs ``data`` and passes the payload off to ``send_remote``
         """
         message = base64.b64encode(json.dumps(data).encode('zlib'))
 

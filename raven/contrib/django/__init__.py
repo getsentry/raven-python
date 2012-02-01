@@ -103,7 +103,7 @@ class DjangoClient(Client):
 
     def send(self, **kwargs):
         """
-        Sends the message to the server.
+        Serializes and signs ``data`` and passes the payload off to ``send_remote``
 
         If ``servers`` was passed into the constructor, this will serialize the data and pipe it to
         each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
