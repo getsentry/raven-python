@@ -156,6 +156,10 @@ def get_stack_info(frames):
     """
     Given a list of frames, returns a list of stack information
     dictionary objects that are JSON-ready.
+
+    We have to be careful here as certain implementations of the
+    _Frame class do not contain the nescesary data to lookup all
+    of the information we want.
     """
     results = []
     for frame in frames:
@@ -165,12 +169,25 @@ def get_stack_info(frames):
             continue
 
         f_globals = getattr(frame, 'f_globals', {})
-        abs_path = frame.f_code.co_filename
-        function = frame.f_code.co_name
-        lineno = frame.f_lineno - 1
         loader = f_globals.get('__loader__')
         module_name = f_globals.get('__name__')
-        pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 3, loader, module_name)
+
+        f_code = getattr(frame, 'f_code', None)
+        if f_code:
+            abs_path = frame.f_code.co_filename
+            function = frame.f_code.co_name
+        else:
+            abs_path = None
+            function = None
+
+        lineno = getattr(frame, 'f_lineno', None)
+        if lineno:
+            lineno -= 1
+
+        if lineno is not None and abs_path:
+            pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 3, loader, module_name)
+        else:
+            pre_context, context_line, post_context = [], None, []
 
         # Try to pull a relative file path
         # This changes /foo/site-packages/baz/bar.py into baz/bar.py
