@@ -1,3 +1,10 @@
+1.3.3
+
+* Django can now be configured by setting SENTRY_DSN.
+* Improve logging for send_remote failures (and correct issue created when
+  send_encoded was introduced).
+* Renamed SantizePassworsProcessor to SanitizePassworsProcessor.
+
 1.3.2
 
 * Support sending the culprit with logging messages as part of extra.
