@@ -24,7 +24,7 @@ class Processor(object):
         return data
 
 
-class SantizePasswordsProcessor(Processor):
+class SanitizePasswordsProcessor(Processor):
     """
     Asterisk out passwords from password fields in frames, http,
     and basic extra data.

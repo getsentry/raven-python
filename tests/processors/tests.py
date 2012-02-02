@@ -2,7 +2,7 @@
 
 from mock import Mock
 from unittest2 import TestCase
-from raven.processors import SantizePasswordsProcessor
+from raven.processors import SanitizePasswordsProcessor
 
 
 class SantizePasswordsProcessorTest(TestCase):
@@ -22,7 +22,7 @@ class SantizePasswordsProcessorTest(TestCase):
             }
         }
 
-        proc = SantizePasswordsProcessor(Mock())
+        proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
 
         self.assertTrue('sentry.interfaces.Stacktrace' in result)
@@ -71,7 +71,7 @@ class SantizePasswordsProcessorTest(TestCase):
             }
         }
 
-        proc = SantizePasswordsProcessor(Mock())
+        proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
 
         self.assertTrue('sentry.interfaces.Http' in result)

@@ -60,7 +60,7 @@ AUTO_LOG_STACKS = False
 
 # Client-side data processors to apply
 PROCESSORS = (
-    'raven.processors.SantizePasswordsProcessor',
+    'raven.processors.SanitizePasswordsProcessor',
 )
 
 # Default Project ID
