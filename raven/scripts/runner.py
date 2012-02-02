@@ -8,6 +8,7 @@ raven.scripts.runner
 
 from __future__ import absolute_import
 
+import os
 import sys
 
 from raven import Client
@@ -15,7 +16,17 @@ from raven import Client
 
 def main():
     dsn = ' '.join(sys.argv[2:])
+    if not (dsn or os.environ.get('SENTRY_DSN')):
+        print "Error: No configuration detected!"
+        print "You must either pass a DSN to the command, or set the SENTRY_DSN environment variable."
+        sys.exit(1)
+
+    print "Using DSN configuration:"
+    print " ", dsn
+    print
+
     client = Client(dsn)
+
     print "Client configuration:"
     for k in ('servers', 'project', 'public_key', 'secret_key'):
         print '  %-15s: %s' % (k, getattr(client, k))
