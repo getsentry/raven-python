@@ -289,15 +289,23 @@ class Client(object):
     def send_remote(self, url, data, headers={}):
         try:
             self._send_remote(url=url, data=data, headers=headers)
-        except urllib2.HTTPError, e:
-            body = e.read()
-            self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
-                         exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-            self.error_logger.error('Failed to submit message: %r', data.pop('message', None))
-        except urllib2.URLError, e:
-            self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
-                         exc_info=True, extra={'data': {'remote_url': url}})
-            self.error_logger.error('Failed to submit message: %r', data.pop('message', None))
+        except Exception, e:
+            if isinstance(e, urllib2.HTTPError):
+                body = e.read()
+                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
+                    exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
+            else:
+                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
+                    exc_info=True, extra={'data': {'remote_url': url}})
+
+            # decode message so we can show the actual event
+            try:
+                data = self.decode(data)
+            except:
+                message = '<failed decoding data>'
+            else:
+                message = data.pop('message', '<no message value>')
+            self.error_logger.error('Failed to submit message: %r', message)
 
     def send_udp(self, netloc, data, auth_header):
         if auth_header is None:
