@@ -12,8 +12,8 @@ Using the Django integration is as simple as adding Raven to your installed apps
 
 Additional settings for the client are configured using ``SENTRY_<setting name>``::
 
-    SENTRY_KEY = 'my secret key'
-    SENTRY_SERVERS = ['http://sentry.local/api/store/']
+    SENTRY_DSN = 'http://public:secret@example.com/1'
+
 
 Integration with ``logging``
 ----------------------------
