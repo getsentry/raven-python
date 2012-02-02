@@ -79,7 +79,7 @@ Older Versions
 ::
 
     from raven.conf import setup_logging
-    from raven.contrib.django.logging import SentryHandler
+    from raven.contrib.django.handlers import SentryHandler
 
     setup_logging(SentryHandler())
 
