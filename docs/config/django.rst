@@ -15,6 +15,13 @@ Additional settings for the client are configured using ``SENTRY_<setting name>`
     SENTRY_KEY = 'my secret key'
     SENTRY_SERVERS = ['http://sentry.local/api/store/']
 
+You'll be referencing the client slightly differently in Django as well::
+
+    from raven.contrib.django.models import get_client
+
+    client = get_client()
+    client.capture(....)
+
 Integration with ``logging``
 ----------------------------
 
