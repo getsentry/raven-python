@@ -23,9 +23,6 @@ from raven.utils.wsgi import get_headers, get_environ
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
 
-    def __init__(self, servers=None, **kwargs):
-        super(DjangoClient, self).__init__(servers=servers, **kwargs)
-
     def get_user_info(self, request):
         if request.user.is_authenticated():
             user_info = {
