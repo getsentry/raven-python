@@ -37,7 +37,7 @@ def main():
         sys.exit(1)
 
     print 'Sending a test message...',
-    ident = client.get_ident(client.message('This is a test message generated using ``raven test``'))
+    ident = client.get_ident(client.captureMessage('This is a test message generated using ``raven test``'))
     print 'success!'
     print
     print 'The test message can be viewed at the following URL:'

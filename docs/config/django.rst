@@ -20,7 +20,7 @@ You'll be referencing the client slightly differently in Django as well::
     from raven.contrib.django.models import get_client
 
     client = get_client()
-    client.capture(....)
+    client.captureException()
 
 Integration with ``logging``
 ----------------------------

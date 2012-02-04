@@ -68,7 +68,7 @@ class Client(object):
     >>> try:
     >>>     1/0
     >>> except ZeroDivisionError:
-    >>>     ident = client.get_ident(client.capture('Exception'))
+    >>>     ident = client.get_ident(client.captureException())
     >>>     print "Exception caught; reference is %%s" %% ident
     """
     logger = logging.getLogger('raven')
@@ -369,28 +369,30 @@ class Client(object):
         return json.loads(base64.b64decode(data).decode('zlib'))
 
     def create_from_text(self, *args, **kwargs):
-        warnings.warn("create_from_text is deprecated. Use message() instead.", DeprecationWarning)
-        return self.message(*args, **kwargs)
+        warnings.warn("create_from_text is deprecated. Use captureMessage() instead.", DeprecationWarning)
+        return self.captureMessage(*args, **kwargs)
+    message = create_from_text
 
     def create_from_exception(self, *args, **kwargs):
-        warnings.warn("create_from_exception is deprecated. Use exception() instead.", DeprecationWarning)
-        return self.exception(*args, **kwargs)
+        warnings.warn("create_from_exception is deprecated. Use captureException() instead.", DeprecationWarning)
+        return self.captureException(*args, **kwargs)
+    exception = create_from_exception
 
-    def message(self, message, **kwargs):
+    def captureMessage(self, message, **kwargs):
         """
-        Creates an event for from ``message``.
+        Creates an event from ``message``.
 
-        >>> client.message('My event just happened!')
+        >>> client.captureMessage('My event just happened!')
         """
         return self.capture('Message', message=message, **kwargs)
 
-    def exception(self, exc_info=None, **kwargs):
+    def captureException(self, exc_info=None, **kwargs):
         """
         Creates an event from an exception.
 
         >>> try:
         >>>     exc_info = sys.exc_info()
-        >>>     client.exception(exc_info)
+        >>>     client.captureException(exc_info)
         >>> finally:
         >>>     del exc_info
 
@@ -399,6 +401,14 @@ class Client(object):
         for you.
         """
         return self.capture('Exception', exc_info=exc_info, **kwargs)
+
+    def captureQuery(self, query, params=(), engine=None, **kwargs):
+        """
+        Creates an event for a SQL query.
+
+        >>> client.catureQuery('SELECT * FROM foo')
+        """
+        return self.capture('Query', query=query, params=params, engine=engine, **kwargs)
 
 
 class DummyClient(Client):
