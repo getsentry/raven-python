@@ -72,6 +72,7 @@ class Client(object):
     >>>     print "Exception caught; reference is %%s" %% ident
     """
     logger = logging.getLogger('raven')
+    protocol_version = '2.0'
 
     def __init__(self, servers=None, include_paths=None, exclude_paths=None, timeout=None,
                  name=None, auto_log_stacks=None, key=None, string_max_length=None,
@@ -350,7 +351,13 @@ class Client(object):
             timestamp = time.time()
             signature = get_signature(message, timestamp, self.secret_key or self.key)
             headers = {
-                'X-Sentry-Auth': get_auth_header(signature, timestamp, 'raven/%s' % (raven.VERSION,), self.public_key),
+                'X-Sentry-Auth': get_auth_header(
+                    protocol=self.protocol_version,
+                    signature=signature,
+                    timestamp=timestamp,
+                    client='raven/%s' % (raven.VERSION,),
+                    api_key=self.public_key
+                ),
                 'Content-Type': 'application/octet-stream',
             }
 

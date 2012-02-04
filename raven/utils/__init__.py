@@ -92,12 +92,12 @@ def get_signature(message, timestamp, key):
     return hmac.new(str(key), '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
 
 
-def get_auth_header(signature, timestamp, client, api_key=None):
+def get_auth_header(protocol, signature, timestamp, client, api_key=None):
     header = [
         ('sentry_timestamp', timestamp),
         ('sentry_signature', signature),
         ('sentry_client', client),
-        ('sentry_version', '2.0'),
+        ('sentry_version', protocol),
     ]
     if api_key:
         header.append(('sentry_key', api_key))
