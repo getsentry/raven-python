@@ -8,6 +8,7 @@ raven.scripts.runner
 
 from __future__ import absolute_import
 
+import logging
 import os
 import sys
 
@@ -15,6 +16,10 @@ from raven import Client
 
 
 def main():
+    root = logging.getLogger('sentry.errors')
+    root.setLevel(logging.DEBUG)
+    root.addHandler(logging.StreamHandler())
+
     dsn = ' '.join(sys.argv[2:])
     if not (dsn or os.environ.get('SENTRY_DSN')):
         print "Error: No configuration detected!"
