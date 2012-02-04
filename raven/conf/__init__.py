@@ -50,7 +50,7 @@ def load(dsn, scope=None):
     return scope
 
 
-def setup_logging(handler, exclude=['raven', 'sentry.errors']):
+def setup_logging(handler, exclude=['raven', 'gunicorn', 'sentry.errors']):
     """
     Configures logging to pipe to Sentry.
 
