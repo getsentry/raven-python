@@ -11,6 +11,7 @@ from __future__ import absolute_import
 import logging
 
 from django.conf import settings
+from django.contrib.auth.models import User, AnonymousUser
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
@@ -61,7 +62,7 @@ class DjangoClient(Client):
             }
         }
 
-        if hasattr(request, 'user'):
+        if hasattr(request, 'user') and isinstance(request.user, (User, AnonymousUser)):
             result['sentry.interfaces.User'] = self.get_user_info(request)
 
         return result
