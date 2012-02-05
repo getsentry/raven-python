@@ -39,6 +39,37 @@ class ModuleProxyCache(dict):
         return handler
 
 
+class ClientState(object):
+    ONLINE = 1
+    ERROR = 0
+
+    def __init__(self):
+        self.status = self.ONLINE
+        self.last_check = None
+        self.retry_number = 0
+
+    def should_try(self):
+        if self.status == self.ONLINE:
+            return True
+
+        interval = min(self.retry_number, 6)**2
+
+        if time.time() - self.last_check > interval:
+            return True
+
+        return False
+
+    def set_fail(self):
+        self.status = self.ERROR
+        self.retry_number += 1
+        self.last_check = time.time()
+
+    def set_success(self):
+        self.status = self.ONLINE
+        self.last_check = None
+        self.retry_number = 0
+
+
 class Client(object):
     """
     The base Raven client, which handles both local direct communication with Sentry (through
@@ -80,6 +111,7 @@ class Client(object):
                  processors=None, project=None, dsn=None, **kwargs):
         # configure loggers first
         cls = self.__class__
+        self.state = ClientState()
         self.logger = logging.getLogger('%s.%s' % (cls.__module__, cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
 
@@ -287,7 +319,22 @@ class Client(object):
             return self.send_udp(parsed.netloc, data, headers.get('X-Sentry-Auth'))
         return self.send_http(url, data, headers)
 
+    def _get_log_message(self, data):
+        # decode message so we can show the actual event
+        try:
+            data = self.decode(data)
+        except:
+            message = '<failed decoding data>'
+        else:
+            message = data.pop('message', '<no message value>')
+        return message
+
     def send_remote(self, url, data, headers={}):
+        if not self.state.should_try():
+            message = self._get_log_message(data)
+            self.error_logger.error(message)
+            return
+
         try:
             self._send_remote(url=url, data=data, headers=headers)
         except Exception, e:
@@ -299,14 +346,11 @@ class Client(object):
                 self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
                     exc_info=True, extra={'data': {'remote_url': url}})
 
-            # decode message so we can show the actual event
-            try:
-                data = self.decode(data)
-            except:
-                message = '<failed decoding data>'
-            else:
-                message = data.pop('message', '<no message value>')
+            message = self._get_log_message(data)
             self.error_logger.error('Failed to submit message: %r', message)
+            self.state.set_fail()
+        else:
+            self.state.set_success()
 
     def send_udp(self, netloc, data, auth_header):
         if auth_header is None:

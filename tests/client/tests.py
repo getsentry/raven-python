@@ -3,9 +3,10 @@
 import inspect
 import mock
 import raven
+import time
 from socket import socket, AF_INET, SOCK_DGRAM
 from unittest2 import TestCase
-from raven.base import Client
+from raven.base import Client, ClientState
 from raven.utils.stacks import iter_stack_frames
 
 
@@ -18,9 +19,68 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
+class ClientStateTest(TestCase):
+    def test_should_try_online(self):
+        state = ClientState()
+        self.assertEquals(state.should_try(), True)
+
+    def test_should_try_new_error(self):
+        state = ClientState()
+        state.status = state.ERROR
+        state.last_check = time.time()
+        state.retry_number = 1
+        self.assertEquals(state.should_try(), False)
+
+    def test_should_try_time_passed_error(self):
+        state = ClientState()
+        state.status = state.ERROR
+        state.last_check = time.time() - 10
+        state.retry_number = 1
+        self.assertEquals(state.should_try(), True)
+
+    def test_set_fail(self):
+        state = ClientState()
+        state.set_fail()
+        self.assertEquals(state.status, state.ERROR)
+        self.assertNotEquals(state.last_check, None)
+        self.assertEquals(state.retry_number, 1)
+
+    def test_set_success(self):
+        state = ClientState()
+        state.status = state.ERROR
+        state.last_check = 'foo'
+        state.retry_number = 0
+        state.set_success()
+        self.assertEquals(state.status, state.ONLINE)
+        self.assertEquals(state.last_check, None)
+        self.assertEquals(state.retry_number, 0)
+
+
 class ClientTest(TestCase):
     def setUp(self):
         self.client = TempStoreClient()
+
+    @mock.patch('raven.base.Client._send_remote')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_send_remote_failover(self, should_try, send_remote):
+        should_try.return_value = True
+
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+
+        # test error
+        send_remote.side_effect = Exception()
+        client.send_remote('http://example.com/api/store', 'foo')
+        self.assertEquals(client.state.status, client.state.ERROR)
+
+        # test recovery
+        send_remote.side_effect = None
+        client.send_remote('http://example.com/api/store', 'foo')
+        self.assertEquals(client.state.status, client.state.ONLINE)
 
     @mock.patch('raven.base.Client.send_remote')
     @mock.patch('raven.base.get_signature')
