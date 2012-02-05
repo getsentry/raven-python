@@ -116,7 +116,7 @@ class DjangoClient(Client):
             try:
                 return self.send_integrated(kwargs)
             except Exception, e:
-                self.error_logger.error('Unable to record event: %s', e)
+                self.error_logger.error('Unable to record event: %s', e, exc_info=True)
         else:
             self.error_logger.error('No servers configured, and sentry not installed. Cannot send message')
             return None
