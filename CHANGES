@@ -1,3 +1,9 @@
+1.4.0
+
+* Raven now tracks the state of the Sentry server. If it receives an error, it will slow down
+  requests to the server (by passing them into a named logger, sentry.errors), and increasingly
+  delay the next try with repeated failures, up to about a minute.
+
 1.3.6
 
 * gunicorn is now disabled in default logging configuration
