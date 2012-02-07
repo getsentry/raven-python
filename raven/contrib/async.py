@@ -19,13 +19,13 @@ class AsyncWorker(object):
     _terminator = object()
 
     def __init__(self):
-        self.queue = Queue(-1)
+        self._queue = Queue(-1)
         self._lock = Lock()
         self._thread = None
         self.start()
 
     def main_thread_terminated(self):
-        size = self.queue.qsize()
+        size = self._queue.qsize()
         if size:
             print "Sentry attempts to send %s error messages" % size
             print "Waiting up to %s seconds" % SENTRY_WAIT_SECONDS
@@ -56,18 +56,18 @@ class AsyncWorker(object):
         self._lock.acquire()
         try:
             if self._thread:
-                self.queue.put_nowait(self._terminator)
+                self._queue.put_nowait(self._terminator)
                 self._thread.join(timeout=timeout)
                 self._thread = None
         finally:
             self._lock.release()
 
     def queue(self, callback, kwargs):
-        self.queue.put_nowait((callback, kwargs))
+        self._queue.put_nowait((callback, kwargs))
 
     def _target(self):
         while 1:
-            record = self.queue.get()
+            record = self._queue.get()
             if record is self._terminator:
                 break
             callback, kwargs = record
