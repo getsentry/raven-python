@@ -283,12 +283,19 @@ class Client(object):
             data['culprit'] = culprit
 
         if 'checksum' not in data:
-            checksum = hashlib.md5()
-            for bit in handler.get_hash(data):
-                checksum.update(to_unicode(bit) or '')
-            data['checksum'] = checksum = checksum.hexdigest()
+            checksum_bits = handler.get_hash(data)
         else:
-            checksum = data['checksum']
+            checksum_bits = data['checksum']
+
+        if isinstance(checksum_bits, (list, tuple)):
+            checksum = hashlib.md5()
+            for bit in checksum:
+                checksum.update(to_unicode(bit) or '')
+            checksum = checksum.hexdigest()
+        else:
+            checksum = checksum_bits
+
+        data['checksum'] = checksum
 
         # create ID client-side so that it can be passed to application
         event_id = uuid.uuid4().hex
