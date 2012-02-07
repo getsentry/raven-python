@@ -104,6 +104,7 @@ class SentryHandler(logging.Handler, object):
             handler = self.client.get_handler('raven.events.Exception')
 
             data.update(handler.capture(exc_info=record.exc_info))
+            data['checksum'] = handler.get_hash(data)
 
         data['level'] = record.levelno
         data['logger'] = record.name
