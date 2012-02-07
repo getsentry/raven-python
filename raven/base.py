@@ -289,7 +289,7 @@ class Client(object):
 
         if isinstance(checksum_bits, (list, tuple)):
             checksum = hashlib.md5()
-            for bit in checksum:
+            for bit in checksum_bits:
                 checksum.update(to_unicode(bit) or '')
             checksum = checksum.hexdigest()
         else:
