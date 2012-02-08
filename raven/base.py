@@ -299,7 +299,6 @@ class Client(object):
 
         # create ID client-side so that it can be passed to application
         event_id = uuid.uuid4().hex
-        data['event_id'] = event_id
 
         # Run the data through processors
         for processor in self.get_processors():
