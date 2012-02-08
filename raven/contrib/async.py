@@ -78,8 +78,8 @@ class AsyncClient(Client):
     """
     This client uses a single background thread to dispatch errors.
     """
-    def __init__(self, *args, **kwargs):
-        self.worker = AsyncWorker()
+    def __init__(self, worker=None, *args, **kwargs):
+        self.worker = worker or AsyncWorker()
         super(AsyncClient, self).__init__(*args, **kwargs)
 
     def send_sync(self, **kwargs):
