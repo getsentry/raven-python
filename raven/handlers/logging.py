@@ -95,6 +95,11 @@ class SentryHandler(logging.Handler, object):
             stack = frames
 
         extra = getattr(record, 'data', {})
+        # Add in all of the data from the record that we aren't already capturing
+        for k in record.__dict__.keys():
+            if k in ('stack', 'name', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated'):
+                continue
+            extra[k] = record.__dict__[k]
 
         date = datetime.datetime.utcfromtimestamp(record.created)
 
