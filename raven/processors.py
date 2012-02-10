@@ -51,7 +51,7 @@ class SanitizePasswordsProcessor(Processor):
             frame['vars'] = varmap(self.sanitize, frame['vars'])
 
     def filter_http(self, data):
-        for n in ('data', 'cookies', 'headers', 'env'):
+        for n in ('body', 'cookies', 'headers', 'env'):
             if n not in data:
                 continue
 
