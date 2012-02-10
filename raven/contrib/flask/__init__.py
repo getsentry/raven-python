@@ -34,7 +34,7 @@ class Sentry(object):
     """
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
                  logging=False):
-        self.app = app
+        #self.app = app
         self.client_cls = client_cls
         self.dsn = dsn
         self.logging = logging
@@ -74,6 +74,7 @@ class Sentry(object):
         return _handle_exception
 
     def init_app(self, app):
+        self.app = app
         if self.logging:
             setup_logging(SentryHandler(self.client))
         got_request_exception.connect(self.handle_exception(self.client), sender=app, weak=False)
