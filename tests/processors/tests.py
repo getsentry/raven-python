@@ -44,7 +44,7 @@ class SantizePasswordsProcessorTest(TestCase):
     def test_http(self):
         data = {
             'sentry.interfaces.Http': {
-                'data': {
+                'body': {
                     'foo': 'bar',
                     'password': 'hello',
                     'the_secret': 'hello',
@@ -76,7 +76,7 @@ class SantizePasswordsProcessorTest(TestCase):
 
         self.assertTrue('sentry.interfaces.Http' in result)
         http = result['sentry.interfaces.Http']
-        for n in ('data', 'env', 'headers', 'cookies'):
+        for n in ('body', 'env', 'headers', 'cookies'):
             self.assertTrue(n in http)
             vars = http[n]
             self.assertTrue('foo' in vars)
