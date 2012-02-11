@@ -106,12 +106,12 @@ class Message(BaseEvent):
     def to_string(self, data):
         msg = data['sentry.interfaces.Message']
         if msg.get('params'):
-            return msg['message'] % tuple(msg['params'])
+            return msg['message'] % msg['params']
         return msg['message']
 
     def get_hash(self, data):
         msg = data['sentry.interfaces.Message']
-        return [msg['message']] + list(msg['params'])
+        return [msg['message']]
 
     def capture(self, message, params=(), **kwargs):
         data = {
