@@ -6,4 +6,4 @@ raven.contrib.django
 :license: BSD, see LICENSE for more details.
 """
 
-from .client import *
+from raven.contrib.django.client import *
