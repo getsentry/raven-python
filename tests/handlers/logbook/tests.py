@@ -116,4 +116,4 @@ class LogbookHandlerTest(TestCase):
         self.assertRaises(ValueError, SentryHandler, object)
 
     def test_missing_client_arg(self):
-        self.assertRaises(ValueError, SentryHandler)
+        self.assertRaises(TypeError, SentryHandler)
