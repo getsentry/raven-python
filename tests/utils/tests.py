@@ -9,7 +9,6 @@ from unittest2 import TestCase
 from raven.utils import json
 from raven.utils.encoding import transform, shorten
 from raven.utils.stacks import get_culprit, get_stack_info
-from raven.utils.wsgi import get_headers
 
 logger = logging.getLogger('sentry.tests')
 
@@ -212,14 +211,6 @@ class StackTest(TestCase):
         self.assertEquals(vars['foo'], 'bar')
         self.assertTrue('biz' in vars)
         self.assertEquals(vars['biz'], 'baz')
-
-
-class WsgiTest(TestCase):
-    def test_get_headers_retarded_key(self):
-        result = dict(get_headers({
-            ('wtf', 'is', 'wrong', 'with', 'people'): 'foo',
-        }))
-        self.assertEquals(result, {})
 
 
 class JSONTest(TestCase):
