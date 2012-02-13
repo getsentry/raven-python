@@ -307,7 +307,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(http['url'], u'http://testserver/non-existant-page')
             self.assertEquals(http['method'], 'GET')
             self.assertEquals(http['query_string'], '')
-            self.assertEquals(http['data'], {})
+            self.assertEquals(http['data'], None)
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
