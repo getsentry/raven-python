@@ -42,14 +42,14 @@ class DjangoClient(Client):
     def get_data_from_request(self, request):
         from django.contrib.auth.models import User, AnonymousUser
 
-        if request.method == 'POST':
+        if request.method != 'GET':
             try:
                 data = request.raw_post_data and request.raw_post_data or request.POST
             except Exception:
                 # assume we had a partial read:
                 data = '<unavailable>'
         else:
-            data = dict(request.REQUEST.items())
+            data = None
 
         environ = request.META
 
