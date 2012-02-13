@@ -113,6 +113,16 @@ class TransformTest(TestCase):
         result = transform(x)
         self.assertEquals(result, ['<...>'])
 
+    def test_custom_repr(self):
+        class Foo(object):
+            def __sentry__(self):
+                return 'example'
+
+        x = Foo()
+
+        result = transform(x)
+        self.assertEquals(result, 'example')
+
 
 class ShortenTest(TestCase):
     def test_shorten_string(self):
