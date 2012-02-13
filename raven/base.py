@@ -408,7 +408,7 @@ class Client(object):
                     protocol=self.protocol_version,
                     signature=signature,
                     timestamp=timestamp,
-                    client='raven/%s' % (raven.VERSION,),
+                    client='raven-python/%s' % (raven.VERSION,),
                     api_key=self.public_key
                 ),
                 'Content-Type': 'application/octet-stream',

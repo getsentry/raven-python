@@ -102,7 +102,8 @@ class ClientTest(TestCase):
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
                 'Content-Type': 'application/octet-stream',
-                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, sentry_signature=signature, sentry_client=raven/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
+                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, sentry_signature=signature, '
+                'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
             },
         )
 
