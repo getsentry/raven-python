@@ -123,6 +123,16 @@ class TransformTest(TestCase):
         result = transform(x)
         self.assertEquals(result, 'example')
 
+    def test_broken_repr(self):
+        class Foo(object):
+            def __repr__(self):
+                raise ValueError
+
+        x = Foo()
+
+        result = transform(x)
+        self.assertEquals(result, u"<BadRepr: <class 'tests.utils.encoding.tests.Foo'>>")
+
 
 class ShortenTest(TestCase):
     def test_shorten_string(self):
