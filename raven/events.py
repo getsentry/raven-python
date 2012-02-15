@@ -60,6 +60,9 @@ class Exception(BaseEvent):
             new_exc_info = True
             exc_info = sys.exc_info()
 
+        if not exc_info:
+            raise ValueError('No exception found')
+
         try:
             exc_type, exc_value, exc_traceback = exc_info
 
