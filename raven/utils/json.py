@@ -7,11 +7,15 @@ raven.utils.json
 """
 
 import datetime
-import simplejson
 import uuid
 
+try:
+    from __future__ import absolute_import
+    import json
+except ImportError:
+    import simplejson as json
 
-class BetterJSONEncoder(simplejson.JSONEncoder):
+class BetterJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, uuid.UUID):
             return obj.hex
@@ -27,8 +31,8 @@ def better_decoder(data):
 
 
 def dumps(value, **kwargs):
-    return simplejson.dumps(value, cls=BetterJSONEncoder, **kwargs)
+    return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
 
 
 def loads(value, **kwargs):
-    return simplejson.loads(value, object_hook=better_decoder)
+    return json.loads(value, object_hook=better_decoder)
