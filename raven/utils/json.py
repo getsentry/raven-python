@@ -5,12 +5,12 @@ raven.utils.json
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import datetime
 import uuid
 
 try:
-    from __future__ import absolute_import
     import json
 except ImportError:
     import simplejson as json
