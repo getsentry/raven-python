@@ -8,6 +8,7 @@ raven.scripts.runner
 
 from __future__ import absolute_import
 
+import getpass
 import logging
 import os
 import sys
@@ -30,7 +31,7 @@ def main():
     print " ", dsn
     print
 
-    client = Client(dsn)
+    client = Client(dsn, include_paths=['raven'])
 
     print "Client configuration:"
     for k in ('servers', 'project', 'public_key', 'secret_key'):
@@ -42,7 +43,18 @@ def main():
         sys.exit(1)
 
     print 'Sending a test message...',
-    ident = client.get_ident(client.captureMessage('This is a test message generated using ``raven test``'))
+    ident = client.get_ident(client.captureMessage(
+        message='This is a test message generated using ``raven test``',
+        data={
+            'culprit': 'raven.scripts.runner',
+            'logger': 'raven.test',
+        },
+        stack=True,
+        extra={
+            'user': os.getlogin(),
+            'loadavg': os.getloadavg(),
+        }
+    ))
     print 'success!'
     print
     print 'The test message can be viewed at the following URL:'
