@@ -9,7 +9,6 @@ This document describes configuration options available to Sentry.
 .. toctree::
    :maxdepth: 2
 
-   celery
    django
    flask
    pylons
@@ -19,7 +18,7 @@ This document describes configuration options available to Sentry.
 
 
 Configuring the Client
----------------------
+----------------------
 
 Settings are specified as part of the intialization of the client.
 
