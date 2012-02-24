@@ -48,6 +48,10 @@ def main():
         data={
             'culprit': 'raven.scripts.runner',
             'logger': 'raven.test',
+            'sentry.interfaces.Http': {
+                'method': 'GET',
+                'url': 'http://example.com',
+            }
         },
         stack=True,
         extra={
