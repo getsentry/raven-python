@@ -215,7 +215,6 @@ class Client(object):
 
         :param event_type: the module path to the Event class. Builtins can use shorthand class
                            notation and exclude the full module path.
-        :param tags: a list of tuples (key, value) specifying additional tags for event
         :param data: the data base, useful for specifying structured data interfaces. Any key which contains a '.'
                      will be assumed to be a data interface.
         :param date: the datetime of this event
