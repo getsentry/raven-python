@@ -23,7 +23,7 @@ from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 import raven
 from raven.conf import defaults
 from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
-from raven.utils.encoding import transform, shorten, to_unicode
+from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
 
@@ -291,7 +291,7 @@ class Client(object):
         if isinstance(checksum_bits, (list, tuple)):
             checksum = hashlib.md5()
             for bit in checksum_bits:
-                checksum.update(to_unicode(bit) or '')
+                checksum.update(to_string(bit))
             checksum = checksum.hexdigest()
         else:
             checksum = checksum_bits
