@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import
 
+import django
 import mock
 import datetime
 import logging
@@ -328,8 +329,10 @@ class DjangoClientTest(TestCase):
         self.assertEquals(get_client('%s.%s' % (self.raven.__class__.__module__, self.raven.__class__.__name__)), self.raven)
         self.assertEquals(get_client(), self.raven)
 
+    # This test only applies to Django 1.3+
     def test_raw_post_data_partial_read(self):
-        # This test only applies to Django 1.3+
+        if django.VERSION[0:1] < [1, 3]:
+            return
         v = '{"foo": "bar"}'
         request = WSGIRequest(environ={
             'wsgi.input': StringIO(v + '\r\n\r\n'),
@@ -352,7 +355,10 @@ class DjangoClientTest(TestCase):
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
 
+    # This test only applies to Django 1.3+
     def test_request_capture(self):
+        if django.VERSION[0:1] < [1, 3]:
+            return
         request = WSGIRequest(environ={
             'wsgi.input': StringIO(),
             'REQUEST_METHOD': 'POST',
