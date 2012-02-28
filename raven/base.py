@@ -248,8 +248,6 @@ class Client(object):
         for k, v in result.iteritems():
             if k not in data:
                 data[k] = v
-            else:
-                data[k].update(v)
 
         if stack and 'sentry.interfaces.Stacktrace' not in data:
             if stack is True:
