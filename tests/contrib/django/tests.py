@@ -331,7 +331,7 @@ class DjangoClientTest(TestCase):
 
     # This test only applies to Django 1.3+
     def test_raw_post_data_partial_read(self):
-        if django.VERSION[0:1] < [1, 3]:
+        if django.VERSION[:2] < (1, 3):
             return
         v = '{"foo": "bar"}'
         request = WSGIRequest(environ={
@@ -357,7 +357,7 @@ class DjangoClientTest(TestCase):
 
     # This test only applies to Django 1.3+
     def test_request_capture(self):
-        if django.VERSION[0:1] < [1, 3]:
+        if django.VERSION[:2] < (1, 3):
             return
         request = WSGIRequest(environ={
             'wsgi.input': StringIO(),
