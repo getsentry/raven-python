@@ -210,7 +210,7 @@ def get_stack_info(frames):
 
         frame_result = {
             'abs_path': abs_path,
-            'filename': filename or abs_path,
+            'filename': filename,
             'module': module_name,
             'function': function,
             'lineno': lineno + 1,
