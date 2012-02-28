@@ -197,24 +197,31 @@ def get_stack_info(frames):
         except:
             filename = abs_path
 
+        if not filename:
+            filename = abs_path
+
+        if f_locals is not None and not isinstance(f_locals, dict):
+            # XXX: Genshi (and maybe others) have broken implementations of
+            # f_locals that are not actually dictionaries
+            try:
+                f_locals = to_dict(f_locals)
+            except Exception:
+                f_locals = '<invalid local scope>'
+
+        frame_result = {
+            'abs_path': abs_path,
+            'filename': filename or abs_path,
+            'module': module_name,
+            'function': function,
+            'lineno': lineno + 1,
+            'vars': transform(f_locals),
+        }
         if context_line:
-            if f_locals is not None and not isinstance(f_locals, dict):
-                # XXX: Genshi (and maybe others) have broken implementations of
-                # f_locals that are not actually dictionaries
-                try:
-                    f_locals = to_dict(f_locals)
-                except Exception:
-                    f_locals = '<invalid local scope>'
-            results.append({
-                'abs_path': abs_path,
-                'filename': filename or abs_path,
-                'module': module_name,
-                'function': function,
-                'lineno': lineno + 1,
-                # TODO: vars need to be references
-                'vars': transform(f_locals),
+            frame_result.update({
                 'pre_context': pre_context,
                 'context_line': context_line,
                 'post_context': post_context,
             })
+
+        results.append(frame_result)
     return results
