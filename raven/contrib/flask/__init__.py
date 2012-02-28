@@ -8,6 +8,8 @@ raven.contrib.flask
 
 from __future__ import absolute_import
 
+import os
+
 from flask import request
 from flask.signals import got_request_exception
 from raven.conf import setup_logging
@@ -59,7 +61,7 @@ class Sentry(object):
                 secret_key=app.config.get('SENTRY_SECRET_KEY'),
                 project=app.config.get('SENTRY_PROJECT'),
                 site=app.config.get('SENTRY_SITE_NAME'),
-                dsn=self.dsn or app.config.get('SENTRY_DSN'),
+                dsn=self.dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
             )
         return self._client
 
