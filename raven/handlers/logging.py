@@ -83,7 +83,7 @@ class SentryHandler(logging.Handler, object):
             frames = []
             started = False
             last_mod = ''
-            for frame in iter_stack_frames():
+            for frame in stack:
                 if not started:
                     f_globals = getattr(frame, 'f_globals', {})
                     module_name = f_globals.get('__name__', '')
