@@ -8,7 +8,6 @@ raven.scripts.runner
 
 from __future__ import absolute_import
 
-import getpass
 import logging
 import os
 import sys
@@ -53,6 +52,7 @@ def main():
                 'url': 'http://example.com',
             }
         },
+        level=logging.INFO,
         stack=True,
         extra={
             'user': os.getlogin(),
