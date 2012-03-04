@@ -12,7 +12,7 @@ The first thing you'll need to do is to initialize Raven under your application:
 If you don't specify the ``dsn`` value, we will attempt to read it from your environment under
 the ``SENTRY_DSN`` key.
 
-If you're using multiple apps, you may alternatively rely on Raven's ``init_app`` hook::
+Building applications on the fly? You can use Raven's ``init_app`` hook::
 
     sentry = Sentry(dsn='http://public_key:secret_key@example.com/1')
 
@@ -29,3 +29,20 @@ Additional settings for the client can be configured using ``SENTRY_<setting nam
     class MyConfig(object):
         SENTRY_DSN = 'http://public_key:secret_key@example.com/1'
         SENTRY_INCLUDE_PATHS = ['myproject']
+
+Usage
+-----
+
+Once you've configured the Sentry application it will automatically capture uncaught exceptions within Flask. If you
+want to send additional events, a couple of shortcuts are provided on the Sentry Flask middleware object.
+
+Capture an arbitrary exception by calling ``captureException``::
+
+    >>> try:
+    >>>     1 / 0
+    >>> except ZeroDivisionError:
+    >>>     sentry.captureException()
+
+Log a generic message with ``captureMessage``::
+
+    >>> sentry.captureMessage('hello, world!')

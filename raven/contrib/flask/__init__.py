@@ -18,65 +18,87 @@ from raven.contrib.flask.utils import get_data_from_request
 from raven.handlers.logging import SentryHandler
 
 
+def make_client(client_cls, app, dsn=None):
+    return client_cls(
+        include_paths=set(app.config.get('SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
+        exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
+        servers=app.config.get('SENTRY_SERVERS'),
+        name=app.config.get('SENTRY_NAME'),
+        key=app.config.get('SENTRY_KEY'),
+        public_key=app.config.get('SENTRY_PUBLIC_KEY'),
+        secret_key=app.config.get('SENTRY_SECRET_KEY'),
+        project=app.config.get('SENTRY_PROJECT'),
+        site=app.config.get('SENTRY_SITE_NAME'),
+        dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
+    )
+
+
 class Sentry(object):
     """
     Flask application for Sentry.
 
-    >>> # Look up configuration from ``os.environ['SENTRY_DSN']``
+    Look up configuration from ``os.environ['SENTRY_DSN']``::
+
     >>> sentry = Sentry(app)
 
-    >>> # Pass an arbitrary dsn
+    Pass an arbitrary DSN::
+
     >>> sentry = Sentry(app, dsn='http://public:secret@example.com/1')
 
-    >>> # Pass an explicit client
+    Pass an explicit client::
+
     >>> sentry = Sentry(app, client=client)
 
-    >>> # Automatically configure logging
+    Automatically configure logging::
+
     >>> sentry = Sentry(app, logging=True)
+
+    Capture an exception::
+
+    >>> try:
+    >>>     1 / 0
+    >>> except ZeroDivisionError:
+    >>>     sentry.captureException()
+
+    Capture a message::
+
+    >>> sentry.captureMessage('hello, world!')
     """
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
                  logging=False):
-        #self.app = app
-        self.client_cls = client_cls
         self.dsn = dsn
         self.logging = logging
-        self._client = client
+        self.client_cls = client_cls
+        self.client = client
 
         if app:
             self.init_app(app)
 
-    @property
-    def client(self):
-        app = self.app
-        if app is None:
-            return None
-        if self._client is None:
-            self._client = self.client_cls(
-                include_paths=set(app.config.get('SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
-                exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
-                servers=app.config.get('SENTRY_SERVERS'),
-                name=app.config.get('SENTRY_NAME'),
-                key=app.config.get('SENTRY_KEY'),
-                public_key=app.config.get('SENTRY_PUBLIC_KEY'),
-                secret_key=app.config.get('SENTRY_SECRET_KEY'),
-                project=app.config.get('SENTRY_PROJECT'),
-                site=app.config.get('SENTRY_SITE_NAME'),
-                dsn=self.dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
-            )
-        return self._client
+    def handle_exception(self, *args, **kwargs):
+        if not self.client:
+            return
 
-    def handle_exception(self, client):
-        def _handle_exception(*args, **kwargs):
-            client.capture('Exception', exc_info=kwargs.get('exc_info'),
-                data=get_data_from_request(request),
-                extra={
-                    'app': self.app,
-                },
-            )
-        return _handle_exception
+        self.client.capture('Exception', exc_info=kwargs.get('exc_info'),
+            data=get_data_from_request(request),
+            extra={
+                'app': self.app,
+            },
+        )
 
     def init_app(self, app):
         self.app = app
+        if not self.client:
+            self.client = make_client(self.client_cls, app, self.dsn)
+
         if self.logging:
             setup_logging(SentryHandler(self.client))
-        got_request_exception.connect(self.handle_exception(self.client), sender=app, weak=False)
+
+        got_request_exception.connect(self.handle_exception, sender=app, weak=False)
+
+    def captureException(self, *args, **kwargs):
+        assert self.client, 'captureException called before application configured'
+        return self.client.captureException(*args, **kwargs)
+
+    def captureMessage(self, *args, **kwargs):
+        assert self.client, 'captureMessage called before application configured'
+        return self.client.captureMessage(*args, **kwargs)
