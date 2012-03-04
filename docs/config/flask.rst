@@ -12,7 +12,14 @@ The first thing you'll need to do is to initialize Raven under your application:
 If you don't specify the ``dsn`` value, we will attempt to read it from your environment under
 the ``SENTRY_DSN`` key.
 
-.. note:: You may alternatively rely on Raven's ``init_app`` hook as well.
+If you're using multiple apps, you may alternatively rely on Raven's ``init_app`` hook::
+
+    sentry = Sentry(dsn='http://public_key:secret_key@example.com/1')
+
+    def create_app():
+        app = Flask(__name__)
+        sentry.init_app(app)
+        return app
 
 Settings
 --------
