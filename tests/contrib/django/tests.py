@@ -173,6 +173,8 @@ class DjangoClientTest(TestCase):
             self.assertEquals(event['culprit'], 'tests.contrib.django.middleware.process_request')
 
     def test_response_middlware_exception(self):
+        if django.VERSION[:2] < (1, 3):
+            return
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenResponseMiddleware']):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-no-error'))
 
