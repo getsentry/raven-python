@@ -9,6 +9,9 @@ The first thing you'll need to do is to initialize Raven under your application:
     from raven.contrib.flask import Sentry
     sentry = Sentry(app, dsn='http://public_key:secret_key@example.com/1')
 
+If you don't specify the ``dsn`` value, we will attempt to read it from your environment under
+the ``SENTRY_DSN`` key.
+
 .. note:: You may alternatively rely on Raven's ``init_app`` hook as well.
 
 Settings
