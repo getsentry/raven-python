@@ -465,7 +465,7 @@ class Client(object):
         """
         Creates an event for a SQL query.
 
-        >>> client.catureQuery('SELECT * FROM foo')
+        >>> client.captureQuery('SELECT * FROM foo')
         """
         return self.capture('Query', query=query, params=params, engine=engine, **kwargs)
 
