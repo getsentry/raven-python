@@ -148,6 +148,26 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['culprit'], 'foo.bar')
 
+    def test_logger_exception(self):
+        try:
+            raise ValueError('This is a test ValueError')
+        except ValueError:
+            self.logger.exception('This is a test with an exception')
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+
+        self.assertEquals(event['message'], 'This is a test with an exception')
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('sentry.interfaces.Exception' in event)
+        exc = event['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'ValueError')
+        self.assertEquals(exc['value'], 'This is a test ValueError')
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEquals(msg['message'], 'This is a test with an exception')
+        self.assertEquals(msg['params'], ())
+
 
 class LoggingHandlerTest(TestCase):
     def test_client_arg(self):
