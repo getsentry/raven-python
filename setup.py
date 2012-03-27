@@ -21,7 +21,7 @@ tests_require = [
     'logbook',
     'nose',
     'mock',
-    'sentry>=2.0.0',
+    'sentry>=3.7.1',
     'unittest2',
     'webob',
 ]
