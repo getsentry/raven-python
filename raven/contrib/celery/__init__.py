@@ -6,7 +6,10 @@ raven.contrib.celery
 :license: BSD, see LICENSE for more details.
 """
 
-from celery.decorators import task
+try:
+    from celery.task import task
+except ImportError:
+    from celery.decorators import task
 from raven.base import Client
 
 
