@@ -128,7 +128,8 @@ class Client(object):
 
         if dsn:
             # TODO: should we validate other options werent sent?
-            self.logger.info("Configuring Raven from DSN: %r", dsn)
+            urlparts = urlparse(dsn)
+            self.logger.info("Configuring Raven for host: %s://%s:%s", urlparts.scheme, urlparts.netloc, urlparts.path)
             options = raven.load(dsn)
             servers = options['SENTRY_SERVERS']
             project = options['SENTRY_PROJECT']
