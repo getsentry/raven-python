@@ -15,8 +15,8 @@ logging.getLogger('sentry').addHandler(logging.StreamHandler())
 files = listdir(where_am_i)
 
 for file in files:
-     name, extension = splitext(file)
-     if extension == ".egg":
+    name, extension = splitext(file)
+    if extension == ".egg":
         sys.path.insert(0, file)
 
 
@@ -43,9 +43,9 @@ if not settings.configured:
             # Included to fix Disqus' test Django which solves IntegrityMessage case
             'django.contrib.contenttypes',
 
-            'djcelery', # celery client
+            'djcelery',  # celery client
 
-            'sentry', # server
+            'sentry',  # server
             'raven.contrib.django',
         ],
         ROOT_URLCONF='',
@@ -65,6 +65,7 @@ if not settings.configured:
 
 from django_nose import NoseTestSuiteRunner
 
+
 def runtests(*test_args, **kwargs):
     if not test_args:
         test_args = ['tests']
@@ -80,4 +81,4 @@ if __name__ == '__main__':
     parser.add_options(NoseTestSuiteRunner.options)
     (options, args) = parser.parse_args()
 
-    runtests(noinput=True, *args, **options.__dict__)
+    runtests(interactive=False, *args, **options.__dict__)
