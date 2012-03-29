@@ -10,6 +10,9 @@ import logging
 import urlparse
 
 
+__all__ = ('load', 'setup_logging')
+
+
 def load(dsn, scope=None):
     """
     Parses a Sentry compatible DSN and loads it

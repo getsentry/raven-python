@@ -25,4 +25,3 @@ class CeleryMixin(object):
 
 class CeleryClient(CeleryMixin, Client):
     pass
-

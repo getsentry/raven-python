@@ -14,5 +14,5 @@ try:
 except Exception, e:
     VERSION = 'unknown'
 
-from base import Client
-from conf import load
+from base import *
+from conf import *

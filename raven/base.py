@@ -27,6 +27,8 @@ from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
 
+__all__ = ('Client',)
+
 
 class ModuleProxyCache(dict):
     def __missing__(self, key):
