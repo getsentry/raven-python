@@ -67,9 +67,13 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     lower_bound = max(0, lineno - context_lines)
     upper_bound = lineno + context_lines
 
-    pre_context = [line.strip('\n') for line in source[lower_bound:lineno]]
-    context_line = source[lineno].strip('\n')
-    post_context = [line.strip('\n') for line in source[(lineno + 1):upper_bound]]
+    try:
+        pre_context = [line.strip('\n') for line in source[lower_bound:lineno]]
+        context_line = source[lineno].strip('\n')
+        post_context = [line.strip('\n') for line in source[(lineno + 1):upper_bound]]
+    except IndexError:
+        # the file may have changed since it was loaded into memory
+        return None, [], None
 
     return pre_context, context_line, post_context
 
