@@ -70,6 +70,8 @@ def runtests(*test_args, **kwargs):
     if not test_args:
         test_args = ['tests']
 
+    kwargs.setdefault('interactive', False)
+
     test_runner = NoseTestSuiteRunner(**kwargs)
 
     failures = test_runner.run_tests(test_args)
@@ -81,4 +83,4 @@ if __name__ == '__main__':
     parser.add_options(NoseTestSuiteRunner.options)
     (options, args) = parser.parse_args()
 
-    runtests(interactive=False, *args, **options.__dict__)
+    runtests(*args, **options.__dict__)
