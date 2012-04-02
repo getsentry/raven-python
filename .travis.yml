@@ -14,7 +14,7 @@ install:
 script:
   - "pep8 --ignore=E501,E225 raven"
   - pyflakes -x W raven
-  - REUSE_DB=1 python setup.py test
+  - python setup.py test
 notifications:
   irc:
     channels: "irc.freenode.org#sentry"
