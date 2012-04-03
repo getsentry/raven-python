@@ -20,8 +20,8 @@ def main():
     root.setLevel(logging.DEBUG)
     root.addHandler(logging.StreamHandler())
 
-    dsn = ' '.join(sys.argv[2:])
-    if not (dsn or os.environ.get('SENTRY_DSN')):
+    dsn = ' '.join(sys.argv[2:]) or os.environ.get('SENTRY_DSN')
+    if not dsn:
         print "Error: No configuration detected!"
         print "You must either pass a DSN to the command, or set the SENTRY_DSN environment variable."
         sys.exit(1)
