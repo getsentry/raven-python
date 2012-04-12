@@ -11,6 +11,7 @@ from __future__ import absolute_import
 import logging
 import os
 import sys
+import pwd
 
 from raven import Client
 
@@ -55,7 +56,7 @@ def main():
         level=logging.INFO,
         stack=True,
         extra={
-            'user': os.getlogin(),
+            'user': pwd.getpwuid(os.geteuid())[0],
             'loadavg': os.getloadavg(),
         }
     ))
