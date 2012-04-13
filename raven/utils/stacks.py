@@ -137,7 +137,7 @@ def iter_traceback_frames(tb):
         # to hide internal frames.
         f_locals = getattr(tb.tb_frame, 'f_locals', {})
         if not _getitem_from_frame(f_locals, '__traceback_hide__'):
-            yield tb, tb.tb_frame
+            yield tb.tb_frame, getattr(tb, 'tb_lineno', None)
         tb = tb.tb_next
 
 
@@ -149,11 +149,11 @@ def iter_stack_frames(frames=None):
     """
     if not frames:
         frames = inspect.stack()[1:]
-    for frame in (f[0] for f in frames):
+    for frame, lineno in ((f[0], f[2]) for f in frames):
         f_locals = getattr(frame, 'f_locals', {})
         if _getitem_from_frame(f_locals, '__traceback_hide__'):
             continue
-        yield frame
+        yield frame, lineno
 
 
 def get_stack_info(frames):
@@ -166,7 +166,7 @@ def get_stack_info(frames):
     of the information we want.
     """
     results = []
-    for tb, frame in frames:
+    for frame, lineno in frames:
         # Support hidden frames
         f_locals = getattr(frame, 'f_locals', {})
         if _getitem_from_frame(f_locals, '__traceback_hide__'):
@@ -184,7 +184,6 @@ def get_stack_info(frames):
             abs_path = None
             function = None
 
-        lineno = getattr(tb, 'tb_lineno', None)
         if lineno:
             lineno -= 1
 

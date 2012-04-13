@@ -83,7 +83,7 @@ class SentryHandler(logging.Handler, object):
             frames = []
             started = False
             last_mod = ''
-            for frame in stack:
+            for frame, lineno in stack:
                 if not started:
                     f_globals = getattr(frame, 'f_globals', {})
                     module_name = f_globals.get('__name__', '')
@@ -92,7 +92,7 @@ class SentryHandler(logging.Handler, object):
                     else:
                         last_mod = module_name
                         continue
-                frames.append(frame)
+                frames.append((frame, lineno))
             stack = frames
 
         extra = getattr(record, 'data', {})

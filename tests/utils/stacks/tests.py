@@ -44,7 +44,7 @@ class StackTest(TestCase):
         frame.f_code.co_filename = __file__
         frame.f_code.co_name = __name__
 
-        frames = [frame]
+        frames = [(frame, 1)]
         results = get_stack_info(frames)
         self.assertEquals(len(results), 1)
         result = results[0]
