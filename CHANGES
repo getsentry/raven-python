@@ -1,3 +1,10 @@
+1.6.0
+
+* Stacks must now be passed as a list of tuples (frame, lineno) rather than a list of frames. This
+  includes calls to logging (extra={'stack': []}), as well as explicit client calls (capture(stack=[])).
+
+  This corrects some issues (mostly in tracebacks) with the wrong lineno being reported for a frame.
+
 1.4.0
 
 * Raven now tracks the state of the Sentry server. If it receives an error, it will slow down

@@ -32,7 +32,7 @@ install_requires = [
 
 setup(
     name='raven',
-    version='1.5.0',
+    version='1.6.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',
