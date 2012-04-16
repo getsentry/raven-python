@@ -157,7 +157,7 @@ class Client(object):
             self.site = None
         self.public_key = public_key
         self.secret_key = secret_key
-        self.project = int(project or defaults.PROJECT)
+        self.project = project or defaults.PROJECT
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
