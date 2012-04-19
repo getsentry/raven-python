@@ -24,6 +24,29 @@ class Processor(object):
         return data
 
 
+class RemovePostDataProcessor(Processor):
+    """
+    Removes HTTP post data.
+    """
+    def process(self, data, **kwargs):
+        if 'sentry.interfaces.Http' in data:
+            data['sentry.interfaces.Http'].pop('body', None)
+
+        return data
+
+
+class RemoveStackLocalsProcessor(Processor):
+    """
+    Removes local context variables from stacktraces.
+    """
+    def process(self, data, **kwargs):
+        if 'sentry.interfaces.Stacktrace' in data:
+            for frame in data['sentry.interfaces.Stacktrace'].get('frames', []):
+                frame.pop('vars', None)
+
+        return data
+
+
 class SanitizePasswordsProcessor(Processor):
     """
     Asterisk out passwords from password fields in frames, http,

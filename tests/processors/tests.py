@@ -2,7 +2,8 @@
 
 from mock import Mock
 from unittest2 import TestCase
-from raven.processors import SanitizePasswordsProcessor
+from raven.processors import SanitizePasswordsProcessor, RemovePostDataProcessor, \
+  RemoveStackLocalsProcessor
 
 
 class SantizePasswordsProcessorTest(TestCase):
@@ -101,3 +102,44 @@ class SantizePasswordsProcessorTest(TestCase):
         self.assertTrue('sentry.interfaces.Http' in result)
         http = result['sentry.interfaces.Http']
         self.assertEquals(http['querystring'], 'foo=bar&password=%(m)s&the_secret=%(m)s&a_password_here=%(m)s' % dict(m=proc.MASK))
+
+
+class RemovePostDataProcessorTest(TestCase):
+    def test_does_remove_body(self):
+        data = {
+            'sentry.interfaces.Http': {
+                'body': 'foo',
+            }
+        }
+
+        proc = RemovePostDataProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('sentry.interfaces.Http' in result)
+        http = result['sentry.interfaces.Http']
+        self.assertFalse('body' in http)
+
+
+class RemoveStackLocalsProcessorTest(TestCase):
+    def test_does_remove_body(self):
+        data = {
+            'sentry.interfaces.Stacktrace': {
+                'frames': [
+                    {
+                        'vars': {
+                            'foo': 'bar',
+                            'password': 'hello',
+                            'the_secret': 'hello',
+                            'a_password_here': 'hello',
+                        },
+                    }
+                ]
+            }
+        }
+        proc = RemoveStackLocalsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('sentry.interfaces.Stacktrace' in result)
+        stack = result['sentry.interfaces.Stacktrace']
+        for frame in stack['frames']:
+            self.assertFalse('vars' in frame)
