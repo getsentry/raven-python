@@ -83,7 +83,12 @@ class SentryHandler(logging.Handler, object):
             frames = []
             started = False
             last_mod = ''
-            for frame, lineno in stack:
+            for item in stack:
+                if isinstance(item, (list, tuple)):
+                    frame, lineno = item
+                else:
+                    frame, lineno = item, item.f_lineno
+
                 if not started:
                     f_globals = getattr(frame, 'f_globals', {})
                     module_name = f_globals.get('__name__', '')
