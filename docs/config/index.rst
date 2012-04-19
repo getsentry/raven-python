@@ -201,6 +201,38 @@ If supported, the timeout value for sending messages to remote.
 
     timeout = 5
 
+processors
+~~~~~~~~~~
+
+A list of processors to apply to events before sending them to the Sentry server. Useful for sending
+additional global state data or sanitizing data that you want to keep off of the server.
+
+::
+
+    processors = (
+        'raven.processors.SanitizePasswordsProcessor',
+    )
+
+Sanitizing Data
+---------------
+
+Several processors are included with Raven to assist in data sanitiziation. These are configured with the
+``processors`` value.
+
+.. data:: raven.processors.SanitizePasswordsProcessor
+
+   Removes all keys which resemble ``password`` or ``secret`` within stacktrace contexts, and HTTP
+   bits (such as cookies, POST data, the querystring, and environment).
+
+.. data:: raven.processors.RemoveStackLocalsProcessor
+
+   Removes all stacktrace context variables. This will cripple the functionality of Sentry, as you'll only
+   get raw tracebacks, but it will ensure no local scoped information is available to the server.
+
+.. data:: raven.processors.RemovePostDataProcessor
+
+   Removes the ``body`` of all HTTP data.
+
 Testing the Client
 ------------------
 
