@@ -1,3 +1,8 @@
+1.7.0
+
+* The password sanitizer will now attempt to sanitize key=value pairs within strings (such as the querystring).
+* Two new santiziers were added: RemoveStackLocalsProcessor and RemovePostDataProcessor
+
 1.6.0
 
 * Stacks must now be passed as a list of tuples (frame, lineno) rather than a list of frames. This
