@@ -29,7 +29,7 @@ class SanitizePasswordsProcessor(Processor):
     Asterisk out passwords from password fields in frames, http,
     and basic extra data.
     """
-    MASK = '*' * 16
+    MASK = '*' * 8
 
     def sanitize(self, key, value):
         if not key:  # key can be a NoneType
