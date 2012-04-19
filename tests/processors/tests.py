@@ -87,3 +87,17 @@ class SantizePasswordsProcessorTest(TestCase):
             self.assertEquals(vars['the_secret'], proc.MASK)
             self.assertTrue('a_password_here' in vars)
             self.assertEquals(vars['a_password_here'], proc.MASK)
+
+    def test_querystring_as_string(self):
+        data = {
+            'sentry.interfaces.Http': {
+                'querystring': 'foo=bar&password=hello&the_secret=hello&a_password_here=hello',
+            }
+        }
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('sentry.interfaces.Http' in result)
+        http = result['sentry.interfaces.Http']
+        self.assertEquals(http['querystring'], 'foo=bar&password=%(m)s&the_secret=%(m)s&a_password_here=%(m)s' % dict(m=proc.MASK))

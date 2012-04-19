@@ -51,11 +51,17 @@ class SanitizePasswordsProcessor(Processor):
             frame['vars'] = varmap(self.sanitize, frame['vars'])
 
     def filter_http(self, data):
-        for n in ('body', 'cookies', 'headers', 'env'):
+        for n in ('body', 'cookies', 'headers', 'env', 'querystring'):
             if n not in data:
                 continue
 
-            data[n] = varmap(self.sanitize, data[n])
+            if isinstance(data[n], basestring) and '=' in data[n]:
+                # at this point we've assumed it's a standard HTTP query
+                querystring = [c.split('=') for c in data[n].split('&')]
+                querystring = [(k, self.sanitize(k, v)) for k, v in querystring]
+                data[n] = '&'.join('='.join(k) for k in querystring)
+            else:
+                data[n] = varmap(self.sanitize, data[n])
 
     def process(self, data, **kwargs):
         if 'sentry.interfaces.Stacktrace' in data:
