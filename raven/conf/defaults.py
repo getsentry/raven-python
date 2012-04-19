@@ -53,7 +53,7 @@ INCLUDE_PATHS = []
 MAX_LENGTH_LIST = 50
 
 # The maximum length to store of a string-like structure.
-MAX_LENGTH_STRING = 200
+MAX_LENGTH_STRING = 400
 
 # Automatically log frame stacks from all ``logging`` messages.
 AUTO_LOG_STACKS = False
