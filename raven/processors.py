@@ -53,15 +53,17 @@ class SanitizePasswordsProcessor(Processor):
     and basic extra data.
     """
     MASK = '*' * 8
+    FIELDS = frozenset(['password', 'secret'])
 
     def sanitize(self, key, value):
         if not key:  # key can be a NoneType
             return value
 
         key = key.lower()
-        if 'password' in key or 'secret' in key:
-            # store mask as a fixed length for security
-            return self.MASK
+        for field in self.FIELDS:
+            if field in key:
+                # store mask as a fixed length for security
+                return self.MASK
 
         return value
 
