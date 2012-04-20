@@ -6,6 +6,7 @@ raven.core.processors
 :license: BSD, see LICENSE for more details.
 """
 
+import re
 
 from raven.utils import varmap
 
@@ -53,7 +54,8 @@ class SanitizePasswordsProcessor(Processor):
     and basic extra data.
     """
     MASK = '*' * 8
-    FIELDS = frozenset(['password', 'secret'])
+    FIELDS = frozenset(['password', 'secret', 'passwd'])
+    VALUES_RE = re.compile('^\d{16}$')
 
     def sanitize(self, key, value):
         if not key:  # key can be a NoneType
@@ -64,6 +66,9 @@ class SanitizePasswordsProcessor(Processor):
             if field in key:
                 # store mask as a fixed length for security
                 return self.MASK
+
+        if self.VALUES_RE.match(str(value)):
+            return self.MASK
 
         return value
 

@@ -103,6 +103,11 @@ class SantizePasswordsProcessorTest(TestCase):
         http = result['sentry.interfaces.Http']
         self.assertEquals(http['querystring'], 'foo=bar&password=%(m)s&the_secret=%(m)s&a_password_here=%(m)s' % dict(m=proc.MASK))
 
+    def test_sanitize_credit_card(self):
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('foo', '4242424242424242')
+        self.assertEquals(result, proc.MASK)
+
 
 class RemovePostDataProcessorTest(TestCase):
     def test_does_remove_body(self):
