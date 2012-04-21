@@ -58,6 +58,12 @@ class SanitizePasswordsProcessor(Processor):
     VALUES_RE = re.compile('^\d{16}$')
 
     def sanitize(self, key, value):
+        if value is None:
+            return
+
+        if self.VALUES_RE.match(str(value)):
+            return self.MASK
+
         if not key:  # key can be a NoneType
             return value
 
@@ -66,10 +72,6 @@ class SanitizePasswordsProcessor(Processor):
             if field in key:
                 # store mask as a fixed length for security
                 return self.MASK
-
-        if self.VALUES_RE.match(str(value)):
-            return self.MASK
-
         return value
 
     def filter_stacktrace(self, data):
