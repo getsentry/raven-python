@@ -186,6 +186,8 @@ To work around this, you can either disable your error handling middleware, or a
             got_request_exception.send(sender=self, request=request)
             return HttpResponse('foo')
 
+Note that this technique may break unit tests using the Django test client (``django.test.client.Client``) if a view under test generates a ``Http404`` or ``PermissionDenied`` exception, because the exceptions won't be translated into the expected 404 or 403 response codes.
+
 Or, alternatively, you can just enable Sentry responses::
 
     from raven.contrib.django.models import sentry_exception_handler
