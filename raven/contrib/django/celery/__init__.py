@@ -13,6 +13,7 @@ try:
 except ImportError:
     from celery.decorators import task
 
+
 class CeleryClient(CeleryMixin, DjangoClient):
     def send_integrated(self, kwargs):
         self.send_raw_integrated.delay(kwargs)
