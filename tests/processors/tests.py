@@ -45,7 +45,7 @@ class SantizePasswordsProcessorTest(TestCase):
     def test_http(self):
         data = {
             'sentry.interfaces.Http': {
-                'body': {
+                'data': {
                     'foo': 'bar',
                     'password': 'hello',
                     'the_secret': 'hello',
@@ -77,7 +77,7 @@ class SantizePasswordsProcessorTest(TestCase):
 
         self.assertTrue('sentry.interfaces.Http' in result)
         http = result['sentry.interfaces.Http']
-        for n in ('body', 'env', 'headers', 'cookies'):
+        for n in ('data', 'env', 'headers', 'cookies'):
             self.assertTrue(n in http)
             vars = http[n]
             self.assertTrue('foo' in vars)
@@ -110,10 +110,10 @@ class SantizePasswordsProcessorTest(TestCase):
 
 
 class RemovePostDataProcessorTest(TestCase):
-    def test_does_remove_body(self):
+    def test_does_remove_data(self):
         data = {
             'sentry.interfaces.Http': {
-                'body': 'foo',
+                'data': 'foo',
             }
         }
 
@@ -122,11 +122,11 @@ class RemovePostDataProcessorTest(TestCase):
 
         self.assertTrue('sentry.interfaces.Http' in result)
         http = result['sentry.interfaces.Http']
-        self.assertFalse('body' in http)
+        self.assertFalse('data' in http)
 
 
 class RemoveStackLocalsProcessorTest(TestCase):
-    def test_does_remove_body(self):
+    def test_does_remove_data(self):
         data = {
             'sentry.interfaces.Stacktrace': {
                 'frames': [

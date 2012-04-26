@@ -31,7 +31,7 @@ class RemovePostDataProcessor(Processor):
     """
     def process(self, data, **kwargs):
         if 'sentry.interfaces.Http' in data:
-            data['sentry.interfaces.Http'].pop('body', None)
+            data['sentry.interfaces.Http'].pop('data', None)
 
         return data
 
@@ -83,7 +83,7 @@ class SanitizePasswordsProcessor(Processor):
             frame['vars'] = varmap(self.sanitize, frame['vars'])
 
     def filter_http(self, data):
-        for n in ('body', 'cookies', 'headers', 'env', 'query_string'):
+        for n in ('data', 'cookies', 'headers', 'env', 'query_string'):
             if n not in data:
                 continue
 
