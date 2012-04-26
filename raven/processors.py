@@ -55,13 +55,13 @@ class SanitizePasswordsProcessor(Processor):
     """
     MASK = '*' * 8
     FIELDS = frozenset(['password', 'secret', 'passwd'])
-    VALUES_RE = re.compile('^\d{16}$')
+    VALUES_RE = re.compile(r'^\d{16}$')
 
     def sanitize(self, key, value):
         if value is None:
             return
 
-        if self.VALUES_RE.match(str(value)):
+        if isinstance(value, basestring) and self.VALUES_RE.match(value):
             return self.MASK
 
         if not key:  # key can be a NoneType
