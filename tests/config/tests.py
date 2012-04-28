@@ -27,6 +27,17 @@ class LoadTest(TestCase):
             'SENTRY_SECRET_KEY': 'bar',
         })
 
+    def test_port(self):
+        dsn = 'https://foo:bar@sentry.local:9000/app/1'
+        res = {}
+        load(dsn, res)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['https://sentry.local:9000/app/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
+
     def test_scope_is_optional(self):
         dsn = 'https://foo:bar@sentry.local/1'
         res = load(dsn)
