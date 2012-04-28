@@ -32,7 +32,7 @@ def load(dsn, scope=None):
     if url.scheme not in ('http', 'https', 'udp'):
         raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)
     netloc = url.hostname
-    if url.port and url.port != 80:
+    if (url.scheme == 'http' and url.port and url.port != 80) or (url.scheme == 'https' and url.port and url.port != 443):
         netloc += ':%s' % url.port
     path_bits = url.path.rsplit('/', 1)
     if len(path_bits) > 1:
