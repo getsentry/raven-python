@@ -48,6 +48,39 @@ class LoadTest(TestCase):
             'SENTRY_SECRET_KEY': 'bar',
         })
 
+    def test_http(self):
+        dsn = 'http://foo:bar@sentry.local/app/1'
+        res = {}
+        load(dsn, res)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['http://sentry.local/app/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
+
+    def test_http_with_port(self):
+        dsn = 'http://foo:bar@sentry.local:9000/app/1'
+        res = {}
+        load(dsn, res)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['http://sentry.local:9000/app/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
+
+    def test_https_port_443(self):
+        dsn = 'https://foo:bar@sentry.local:443/app/1'
+        res = {}
+        load(dsn, res)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['https://sentry.local/app/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
+
     def test_missing_netloc(self):
         dsn = 'https://foo:bar@/1'
         self.assertRaises(ValueError, load, dsn)
