@@ -73,4 +73,4 @@ class ServerTest(TestCase):
         self.assertEquals(frame['function'], 'test_exception')
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['filename'], 'tests/integration/tests.py')
-        self.assertEquals(frame['abs_path'], __file__)
+        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))

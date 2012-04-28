@@ -174,7 +174,7 @@ class ClientTest(TestCase):
         frames = event['sentry.interfaces.Stacktrace']
         self.assertEquals(len(frames['frames']), 1)
         frame = frames['frames'][0]
-        self.assertEquals(frame['abs_path'], __file__)
+        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
         self.assertEquals(frame['filename'], 'tests/client/tests.py')
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test_exception_event')
