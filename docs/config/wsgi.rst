@@ -10,10 +10,7 @@ Raven includes a simple to use WSGI middleware.
 
     application = Sentry(
         application,
-        Client(
-            servers=['http://sentry.local/api/store/'],
-            key='my secret key'
-        )
+        Client('http://public:secret@example.com/1')
     )
 
 .. note:: Many frameworks will not propagate exceptions to the underlying WSGI middleware by default.
