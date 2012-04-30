@@ -4,7 +4,7 @@ Configuring Pylons
 WSGI Middleware
 ---------------
 
-A pylons-specific middleware exists to enable easy configuration from settings::
+A Pylons-specific middleware exists to enable easy configuration from settings:
 
 ::
 
@@ -12,7 +12,7 @@ A pylons-specific middleware exists to enable easy configuration from settings::
 
     application = Sentry(application, config)
 
-Configuration is handled via the sentry namespace::
+Configuration is handled via the sentry namespace:
 
 .. code-block:: ini
 
