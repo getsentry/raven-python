@@ -1,7 +1,7 @@
 Raven
 =====
 
-Raven is a standalone (and the official) Python client for Sentry (django-sentry).
+Raven is a standalone (and the official) Python client for `Sentry <http://www.getsentry.com/>`_.
 
 .. toctree::
    :maxdepth: 2
@@ -18,7 +18,7 @@ Sentry provides you with a generic interface to view and interact with your erro
 it allows you to interact and view near real-time information to discover issues and more
 easily trace them in your application.
 
-More information about Sentry can be found at http://aboutsentry.com
+More information about Sentry can be found at http://www.getsentry.com/
 
 Resources
 ---------
