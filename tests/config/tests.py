@@ -92,6 +92,14 @@ class LoadTest(TestCase):
             'SENTRY_SECRET_KEY': 'bar',
         })
 
+    def test_udp(self):
+        dsn = 'udp://foo:bar@sentry.local:9001/1'
+        res = {}
+        load(dsn, res)
+        self.assertEqual('1', res['SENTRY_PROJECT'])
+        self.assertEqual('foo', res['SENTRY_PUBLIC_KEY'])
+        self.assertEqual('bar', res['SENTRY_SECRET_KEY'])
+
     def test_missing_netloc(self):
         dsn = 'https://foo:bar@/1'
         self.assertRaises(ValueError, load, dsn)
