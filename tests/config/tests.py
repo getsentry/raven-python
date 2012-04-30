@@ -116,6 +116,10 @@ class LoadTest(TestCase):
         dsn = 'https://bar@example.com'
         self.assertRaises(ValueError, load, dsn)
 
+    def test_invalid_scheme(self):
+        dsn = 'ftp://foo:bar@sentry.local/1'
+        self.assertRaises(ValueError, load, dsn)
+
 
 class SetupLoggingTest(TestCase):
     def test_basic_not_configured(self):
