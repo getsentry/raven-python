@@ -1,7 +1,8 @@
 Configuring ``logbook``
 =======================
 
-Raven provides a logbook handler which will pipe messages to Sentry.
+Raven provides a `logbook <http://logbook.pocoo.org>`_ handler which will pipe
+messages to Sentry.
 
 First you'll need to configure a handler::
 
@@ -22,5 +23,6 @@ Finally, bind your handler to your context::
 
     client = Client(...)
     sentry_handler = SentryHandler(client)
-    with my_handler.applicationbound():
+    with sentry_handler.applicationbound():
         # everything logged here will go to sentry.
+        ...
