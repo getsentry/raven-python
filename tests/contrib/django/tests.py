@@ -21,7 +21,7 @@ from raven.base import Client
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
-from raven.contrib.django.models import get_client
+from raven.contrib.django.models import client, get_client
 from raven.contrib.django.middleware.wsgi import Sentry
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
@@ -75,6 +75,16 @@ class Settings(object):
                 delattr(settings, k)
             else:
                 setattr(settings, k, v)
+
+
+class ClientProxyTest(TestCase):
+    def test_proxy_responds_as_client(self):
+        self.assertEquals(get_client(), client)
+
+    def test_basic(self):
+        client.capture('Message', message='foo')
+        self.assertEquals(len(client.events), 1)
+        client.events.pop(0)
 
 
 class DjangoClientTest(TestCase):

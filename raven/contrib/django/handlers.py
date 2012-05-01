@@ -17,9 +17,9 @@ class SentryHandler(BaseSentryHandler):
         logging.Handler.__init__(self)
 
     def _get_client(self):
-        from raven.contrib.django.models import get_client
+        from raven.contrib.django.models import client
 
-        return get_client()
+        return client
 
     client = property(_get_client)
 

@@ -22,5 +22,5 @@ class Sentry(Sentry):
 
     @property
     def client(self):
-        from raven.contrib.django.models import get_client
-        return get_client()
+        from raven.contrib.django.models import client
+        return client

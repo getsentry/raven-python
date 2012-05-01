@@ -9,7 +9,7 @@ raven.contrib.django.middleware
 from __future__ import absolute_import
 
 from django.middleware.common import _is_ignorable_404
-from raven.contrib.django.models import get_client
+from raven.contrib.django.models import client
 import threading
 import logging
 
@@ -18,7 +18,6 @@ class Sentry404CatchMiddleware(object):
     def process_response(self, request, response):
         if response.status_code != 404 or _is_ignorable_404(request.get_full_path()):
             return response
-        client = get_client()
         data = client.get_data_from_request(request)
         data.update({
             'level': logging.INFO,

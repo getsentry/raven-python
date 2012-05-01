@@ -17,9 +17,8 @@ Additional settings for the client are configured using ``SENTRY_<setting name>`
 
 You'll be referencing the client slightly differently in Django as well::
 
-    from raven.contrib.django.models import get_client
+    from raven.contrib.django.models import client
 
-    client = get_client()
     client.captureException()
 
 
