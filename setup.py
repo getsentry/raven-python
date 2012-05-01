@@ -14,14 +14,14 @@ from setuptools import setup, find_packages
 tests_require = [
     'blinker>=1.1',
     'celery',
-    'Django>=1.2,<1.5',
+    'Django>=1.2,<1.4',
     'django-celery',
     'django-nose',
     'Flask>=0.8',
     'logbook',
     'nose',
     'mock',
-    'sentry>=4.0.7',
+    'sentry>=4.0.17',
     'unittest2',
     'webob',
 ]
