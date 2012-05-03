@@ -96,9 +96,12 @@ class LoadTest(TestCase):
         dsn = 'udp://foo:bar@sentry.local:9001/1'
         res = {}
         load(dsn, res)
-        self.assertEqual('1', res['SENTRY_PROJECT'])
-        self.assertEqual('foo', res['SENTRY_PUBLIC_KEY'])
-        self.assertEqual('bar', res['SENTRY_SECRET_KEY'])
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['udp://sentry.local:9001/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
 
     def test_missing_netloc(self):
         dsn = 'https://foo:bar@/1'
