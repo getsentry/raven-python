@@ -18,7 +18,6 @@ import urllib2
 import uuid
 import warnings
 from urlparse import urlparse
-from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 
 import raven
 from raven.conf import defaults
@@ -161,7 +160,6 @@ class Client(object):
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
-        self.udp_socket = None
 
     def get_processors(self):
         for processor in self.processors:
@@ -320,15 +318,18 @@ class Client(object):
         data.setdefault('project', self.project)
         data.setdefault('site', self.site)
 
+        #TODO (vng): this  needs to be separate from the actual
+        # construction of the message for the wire
         self.send(**data)
 
         return (event_id, checksum)
 
     def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
-        if parsed.scheme == 'udp':
-            return self.send_udp(parsed.netloc, data, headers.get('X-Sentry-Auth'))
-        return self.send_http(url, data, headers)
+
+        SenderClass = get_protocol(parsed.scheme)
+        obj = SenderClass(parsed, data, headers)
+        return obj.send()
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event
@@ -363,38 +364,13 @@ class Client(object):
         else:
             self.state.set_success()
 
-    def send_udp(self, netloc, data, auth_header):
-        if auth_header is None:
-            # silently ignore attempts to send messages without an auth header
-            return
-        host, port = netloc.split(':')
-        if self.udp_socket is None:
-            self.udp_socket = socket(AF_INET, SOCK_DGRAM)
-            self.udp_socket.setblocking(False)
-        try:
-            self.udp_socket.sendto(auth_header + '\n\n' + data, (host, int(port)))
-        except socket_error:
-            # as far as I understand things this simply can't happen, but still, it can't hurt
-            self.udp_socket.close()
-            self.udp_socket = None
-
-    def send_http(self, url, data, headers={}):
-        """
-        Sends a request to a remote webserver using HTTP POST.
-        """
-        req = urllib2.Request(url, headers=headers)
-        try:
-            response = urllib2.urlopen(req, data, self.timeout).read()
-        except:
-            response = urllib2.urlopen(req, data).read()
-        return response
-
     def send(self, **data):
         """
         Serializes the message and passes the payload onto ``send_encoded``.
         """
         message = self.encode(data)
 
+        # TODO: 
         return self.send_encoded(message)
 
     def send_encoded(self, message):
@@ -471,6 +447,24 @@ class Client(object):
         >>> client.captureQuery('SELECT * FROM foo')
         """
         return self.capture('Query', query=query, params=params, engine=engine, **kwargs)
+
+def get_protocol(network_scheme):
+    """
+    :param network_scheme: a network scheme that will be used to
+    transmit
+    """
+
+    # Pull in protocol handlers
+    # TODO (vng): write a smarter import hook here
+    # Maybe use the scheme name and build the classname by convention?
+    # TODO (vng): add a simple 0mq pub/sub here
+    from raven.transport import UDPSender, HTTPSender
+
+    protocol_map = {'udp': UDPSender,
+                    'http': HTTPSender}
+
+    return protocol_map[network_scheme]
+
 
 
 class DummyClient(Client):
