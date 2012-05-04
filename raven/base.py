@@ -177,54 +177,15 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
-    def capture(self, event_type, data=None, date=None, time_spent=None, event_id=None,
-                extra=None, stack=None, **kwargs):
+    def build_msg(self, event_type, data, date, time_spent,
+                extra, stack, **kwargs):
         """
-        Captures and processes an event and pipes it off to SentryClient.send.
-
-        To use structured data (interfaces) with capture:
-
-        >>> capture('Message', message='foo', data={
-        >>>     'sentry.interfaces.Http': {
-        >>>         'url': '...',
-        >>>         'data': {},
-        >>>         'query_string': '...',
-        >>>         'method': 'POST',
-        >>>     },
-        >>>     'logger': 'logger.name',
-        >>>     'site': 'site.name',
-        >>> }, extra={
-        >>>     'key': 'value',
-        >>> })
-
-        The finalized ``data`` structure contains the following (some optional) builtin values:
-
-        >>> {
-        >>>     # the culprit and version information
-        >>>     'culprit': 'full.module.name', # or /arbitrary/path
-        >>>
-        >>>     # all detectable installed modules
-        >>>     'modules': {
-        >>>         'full.module.name': 'version string',
-        >>>     },
-        >>>
-        >>>     # arbitrary data provided by user
-        >>>     'extra': {
-        >>>         'key': 'value',
-        >>>     }
-        >>> }
-
-        :param event_type: the module path to the Event class. Builtins can use shorthand class
-                           notation and exclude the full module path.
-        :param data: the data base, useful for specifying structured data interfaces. Any key which contains a '.'
-                     will be assumed to be a data interface.
-        :param date: the datetime of this event
-        :param time_spent: a float value representing the duration of the event
-        :param event_id: a 32-length unique string identifying this event
-        :param extra: a dictionary of additional standard metadata
-        :param culprit: a string representing the cause of this event (generally a path to a function)
-        :return: a 32-length string identifying this event
+        Captures, processes and serializes an event into a dict object
         """
+
+        # create ID client-side so that it can be passed to application
+        event_id = uuid.uuid4().hex
+
         if data is None:
             data = {}
         if extra is None:
@@ -297,8 +258,6 @@ class Client(object):
 
         data['checksum'] = checksum
 
-        # create ID client-side so that it can be passed to application
-        event_id = uuid.uuid4().hex
 
         # Run the data through processors
         for processor in self.get_processors():
@@ -318,11 +277,63 @@ class Client(object):
         data.setdefault('project', self.project)
         data.setdefault('site', self.site)
 
-        #TODO (vng): this  needs to be separate from the actual
-        # construction of the message for the wire
+        return data
+
+    def capture(self, event_type, data=None, date=None, time_spent=None,
+                extra=None, stack=None, **kwargs):
+        """
+        Captures and processes an event and pipes it off to SentryClient.send.
+
+        To use structured data (interfaces) with capture:
+
+        >>> capture('Message', message='foo', data={
+        >>>     'sentry.interfaces.Http': {
+        >>>         'url': '...',
+        >>>         'data': {},
+        >>>         'query_string': '...',
+        >>>         'method': 'POST',
+        >>>     },
+        >>>     'logger': 'logger.name',
+        >>>     'site': 'site.name',
+        >>> }, extra={
+        >>>     'key': 'value',
+        >>> })
+
+        The finalized ``data`` structure contains the following (some optional) builtin values:
+
+        >>> {
+        >>>     # the culprit and version information
+        >>>     'culprit': 'full.module.name', # or /arbitrary/path
+        >>>
+        >>>     # all detectable installed modules
+        >>>     'modules': {
+        >>>         'full.module.name': 'version string',
+        >>>     },
+        >>>
+        >>>     # arbitrary data provided by user
+        >>>     'extra': {
+        >>>         'key': 'value',
+        >>>     }
+        >>> }
+
+        :param event_type: the module path to the Event class. Builtins can use shorthand class
+                           notation and exclude the full module path.
+        :param data: the data base, useful for specifying structured data interfaces. Any key which contains a '.'
+                     will be assumed to be a data interface.
+        :param date: the datetime of this event
+        :param time_spent: a float value representing the duration of the event
+        :param event_id: a 32-length unique string identifying this event
+        :param extra: a dictionary of additional standard metadata
+        :param culprit: a string representing the cause of this event (generally a path to a function)
+        :return: a 32-length string identifying this event
+        """
+
+        data = self.build_msg(event_type, data, date, time_spent,
+                extra, stack, **kwargs)
+
         self.send(**data)
 
-        return (event_id, checksum)
+        return (data['event_id'], data['checksum'])
 
     def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
@@ -370,7 +381,6 @@ class Client(object):
         """
         message = self.encode(data)
 
-        # TODO: 
         return self.send_encoded(message)
 
     def send_encoded(self, message):
@@ -460,8 +470,8 @@ def get_protocol(network_scheme):
     # TODO (vng): add a simple 0mq pub/sub here
     from raven.transport import UDPSender, HTTPSender
 
-    protocol_map = {'udp': UDPSender,
-                    'http': HTTPSender}
+    protocol_map = { 'udp': UDPSender,
+                     'http': HTTPSender }
 
     return protocol_map[network_scheme]
 
