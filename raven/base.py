@@ -21,7 +21,12 @@ from urlparse import urlparse
 
 import raven
 from raven.conf import defaults
-from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
+from raven.utils import json
+from raven.utils import varmap
+from raven.utils import get_versions
+from raven.utils import get_signature
+from raven.utils import get_auth_header
+
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
@@ -33,7 +38,8 @@ class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
 
-        handler = getattr(__import__(module, {}, {}, [class_name], -1), class_name)
+        handler = getattr(__import__(module, {}, \
+                {}, [class_name], -1), class_name)
 
         self[key] = handler
 
@@ -53,7 +59,7 @@ class ClientState(object):
         if self.status == self.ONLINE:
             return True
 
-        interval = min(self.retry_number, 6)**2
+        interval = min(self.retry_number, 6) ** 2
 
         if time.time() - self.last_check > interval:
             return True
@@ -73,11 +79,12 @@ class ClientState(object):
 
 class Client(object):
     """
-    The base Raven client, which handles both local direct communication with Sentry (through
-    the GroupedMessage API), as well as communicating over the HTTP API to multiple servers.
+    The base Raven client, which handles both local direct
+    communication with Sentry (through the GroupedMessage API), as
+    well as communicating over the HTTP API to multiple servers.
 
-    Will read default configuration from the environment variable ``SENTRY_DSN``
-    if available.
+    Will read default configuration from the environment variable
+    ``SENTRY_DSN`` if available.
 
     >>> from raven import Client
 
@@ -85,7 +92,8 @@ class Client(object):
     >>> client = Client()
 
     >>> # Specify a DSN explicitly
-    >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
+    >>> client =
+    >>> Client(dsn='https://public_key:secret_key@sentry.local/project_id')  # NOQA
 
     >>> # Configure the client manually
     >>> client = Client(
@@ -106,31 +114,40 @@ class Client(object):
     logger = logging.getLogger('raven')
     protocol_version = '2.0'
 
-    def __init__(self, servers=None, include_paths=None, exclude_paths=None, timeout=None,
-                 name=None, auto_log_stacks=None, key=None, string_max_length=None,
-                 list_max_length=None, site=None, public_key=None, secret_key=None,
-                 processors=None, project=None, dsn=None, **kwargs):
+    def __init__(self, servers=None, include_paths=None, exclude_paths=None,
+            timeout=None, name=None, auto_log_stacks=None, key=None,
+            string_max_length=None, list_max_length=None, site=None,
+            public_key=None, secret_key=None, processors=None, project=None,
+            dsn=None, **kwargs):
         # configure loggers first
         cls = self.__class__
         self.state = ClientState()
-        self.logger = logging.getLogger('%s.%s' % (cls.__module__, cls.__name__))
+        self.logger = logging.getLogger('%s.%s' % (cls.__module__,
+            cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
 
         if isinstance(servers, basestring):
             # must be a DSN:
             if dsn:
-                raise ValueError("You seem to be incorrectly instantiating the raven Client class.")
+                # TODO: this should indicate what the caller can do to correct
+                # the constructor
+                msg = "You seem to be incorrectly instantiating the " + \
+                      "raven Client class"
+                raise ValueError(msg)
             dsn = servers
             servers = None
 
         if dsn is None and os.environ.get('SENTRY_DSN'):
-            self.logger.info("Configuring Raven from environment variable 'SENTRY_DSN'")
+            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+            self.logger.info(msg)
             dsn = os.environ['SENTRY_DSN']
 
         if dsn:
             # TODO: should we validate other options werent sent?
             urlparts = urlparse(dsn)
-            self.logger.info("Configuring Raven for host: %s://%s:%s", urlparts.scheme, urlparts.netloc, urlparts.path)
+            msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
+                    urlparts.netloc, urlparts.path)
+            self.logger.info(msg)
             options = raven.load(dsn)
             servers = options['SENTRY_SERVERS']
             project = options['SENTRY_PROJECT']
@@ -139,16 +156,19 @@ class Client(object):
 
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
-            raise TypeError('Missing configuration for client. Please see documentation.')
+            msg = 'Missing configuration for client. Please see documentation.'
+            raise TypeError(msg)
 
         self.servers = servers
         self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
         self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
         self.timeout = int(timeout or defaults.TIMEOUT)
         self.name = unicode(name or defaults.NAME)
-        self.auto_log_stacks = bool(auto_log_stacks or defaults.AUTO_LOG_STACKS)
+        self.auto_log_stacks = bool(auto_log_stacks or \
+                defaults.AUTO_LOG_STACKS)
         self.key = str(key or defaults.KEY)
-        self.string_max_length = int(string_max_length or defaults.MAX_LENGTH_STRING)
+        self.string_max_length = int(string_max_length or \
+                defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(list_max_length or defaults.MAX_LENGTH_LIST)
         if (site or defaults.SITE):
             self.site = unicode(site or defaults.SITE)
@@ -177,8 +197,7 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
-    def build_msg(self, event_type, data, date, time_spent,
-                extra, stack, **kwargs):
+    def build_msg(self, event_type, data, date, time_spent, extra, stack, **kwargs):   # NOQA
         """
         Captures, processes and serializes an event into a dict object
         """
@@ -221,13 +240,16 @@ class Client(object):
             data.update({
                 'sentry.interfaces.Stacktrace': {
                     'frames': varmap(lambda k, v: shorten(v,
-                        string_length=self.string_max_length, list_length=self.list_max_length),
+                        string_length=self.string_max_length,
+                        list_length=self.list_max_length),
                     get_stack_info(frames))
                 },
             })
 
         if 'sentry.interfaces.Stacktrace' in data and not culprit:
-            culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'], self.include_paths, self.exclude_paths)
+            culprit = get_culprit(\
+                        data['sentry.interfaces.Stacktrace']['frames'],
+                        self.include_paths, self.exclude_paths)
 
         if not data.get('level'):
             data['level'] = logging.ERROR
@@ -238,7 +260,8 @@ class Client(object):
 
         # Shorten lists/strings
         for k, v in extra.iteritems():
-            data['extra'][k] = shorten(v, string_length=self.string_max_length, list_length=self.list_max_length)
+            data['extra'][k] = shorten(v, string_length=self.string_max_length,
+                    list_length=self.list_max_length)
 
         if culprit:
             data['culprit'] = culprit
@@ -257,7 +280,6 @@ class Client(object):
             checksum = checksum_bits
 
         data['checksum'] = checksum
-
 
         # Run the data through processors
         for processor in self.get_processors():
@@ -299,7 +321,8 @@ class Client(object):
         >>>     'key': 'value',
         >>> })
 
-        The finalized ``data`` structure contains the following (some optional) builtin values:
+        The finalized ``data`` structure contains the following (some optional)
+        builtin values:
 
         >>> {
         >>>     # the culprit and version information
@@ -316,15 +339,18 @@ class Client(object):
         >>>     }
         >>> }
 
-        :param event_type: the module path to the Event class. Builtins can use shorthand class
-                           notation and exclude the full module path.
-        :param data: the data base, useful for specifying structured data interfaces. Any key which contains a '.'
-                     will be assumed to be a data interface.
+        :param event_type: the module path to the Event class. Builtins can use
+                           shorthand class notation and exclude the full module
+                           path.
+        :param data: the data base, useful for specifying structured data
+                           interfaces. Any key which contains a '.' will be
+                           assumed to be a data interface.
         :param date: the datetime of this event
         :param time_spent: a float value representing the duration of the event
         :param event_id: a 32-length unique string identifying this event
         :param extra: a dictionary of additional standard metadata
-        :param culprit: a string representing the cause of this event (generally a path to a function)
+        :param culprit: a string representing the cause of this event
+                        (generally a path to a function)
         :return: a 32-length string identifying this event
         """
 
@@ -363,11 +389,12 @@ class Client(object):
         except Exception, e:
             if isinstance(e, urllib2.HTTPError):
                 body = e.read()
-                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
-                    exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
+                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,  # NOQA
+                    exc_info=True, extra={'data': {'body': body, 'remote_url': url}})  # NOQA
             else:
-                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
-                    exc_info=True, extra={'data': {'remote_url': url}})
+                tmpl = 'Unable to reach Sentry log server: %s (url: %%s)'
+                self.error_logger.error(tmpl % (e,), url, exc_info=True,
+                        extra={'data': {'remote_url': url}})
 
             message = self._get_log_message(data)
             self.error_logger.error('Failed to submit message: %r', message)
@@ -385,12 +412,14 @@ class Client(object):
 
     def send_encoded(self, message):
         """
-        Given an already serialized message, signs the message and passes the payload
-        off to ``send_remote`` for each server specified in the servers configuration.
+        Given an already serialized message, signs the message and passes the
+        payload off to ``send_remote`` for each server specified in the servers
+        configuration.
         """
         for url in self.servers:
             timestamp = time.time()
-            signature = get_signature(message, timestamp, self.secret_key or self.key)
+            signature = get_signature(message, timestamp, self.secret_key or
+                    self.key)
             headers = {
                 'X-Sentry-Auth': get_auth_header(
                     protocol=self.protocol_version,
@@ -417,12 +446,14 @@ class Client(object):
         return json.loads(base64.b64decode(data).decode('zlib'))
 
     def create_from_text(self, *args, **kwargs):
-        warnings.warn("create_from_text is deprecated. Use captureMessage() instead.", DeprecationWarning)
+        msg = "create_from_text is deprecated. Use captureMessage() instead."
+        warnings.warn(msg, DeprecationWarning)
         return self.captureMessage(*args, **kwargs)
     message = create_from_text
 
     def create_from_exception(self, *args, **kwargs):
-        warnings.warn("create_from_exception is deprecated. Use captureException() instead.", DeprecationWarning)
+        msg = "create_from_exception is deprecated. Use captureException() instead."  # NOQA
+        warnings.warn(msg, DeprecationWarning)
         return self.captureException(*args, **kwargs)
     exception = create_from_exception
 
@@ -456,7 +487,9 @@ class Client(object):
 
         >>> client.captureQuery('SELECT * FROM foo')
         """
-        return self.capture('Query', query=query, params=params, engine=engine, **kwargs)
+        return self.capture('Query', query=query, params=params, engine=engine,
+                **kwargs)
+
 
 def get_protocol(network_scheme):
     """
@@ -470,11 +503,10 @@ def get_protocol(network_scheme):
     # TODO (vng): add a simple 0mq pub/sub here
     from raven.transport import UDPSender, HTTPSender
 
-    protocol_map = { 'udp': UDPSender,
-                     'http': HTTPSender }
+    protocol_map = {'udp': UDPSender,
+                    'http': HTTPSender}
 
     return protocol_map[network_scheme]
-
 
 
 class DummyClient(Client):
