@@ -30,6 +30,7 @@ from raven.utils import get_auth_header
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
+from raven.transport import TransportRegistry
 
 __all__ = ('Client',)
 
@@ -180,6 +181,11 @@ class Client(object):
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
+
+        self._transport_reg = TransportRegistry()
+
+    def register_scheme(self, scheme, cls):
+        self._transport_reg.register_scheme(scheme, cls)
 
     def get_processors(self):
         for processor in self.processors:
@@ -365,7 +371,7 @@ class Client(object):
     def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
 
-        SenderClass = get_protocol(parsed.scheme)
+        SenderClass = self._transport_reg.get_transport(parsed.scheme)
         obj = SenderClass(parsed)
         return obj.send(data, headers)
 
@@ -490,24 +496,6 @@ class Client(object):
         """
         return self.capture('Query', query=query, params=params, engine=engine,
                 **kwargs)
-
-
-def get_protocol(network_scheme):
-    """
-    :param network_scheme: a network scheme that will be used to
-    transmit
-    """
-
-    # Pull in protocol handlers
-    # TODO (vng): write a smarter import hook here
-    # Maybe use the scheme name and build the classname by convention?
-    # TODO (vng): add a simple 0mq pub/sub here
-    from raven.transport import UDPSender, HTTPSender
-
-    protocol_map = {'udp': UDPSender,
-                    'http': HTTPSender}
-
-    return protocol_map[network_scheme]
 
 
 class DummyClient(Client):

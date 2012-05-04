@@ -13,6 +13,7 @@ import urlparse
 __all__ = ('load', 'setup_logging')
 
 
+# TODO (vng): push this load method into the transport layer
 def load(dsn, scope=None):
     """
     Parses a Sentry compatible DSN and loads it
