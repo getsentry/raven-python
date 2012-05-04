@@ -1,6 +1,13 @@
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
-from zope import interface 
+from zope import interface
+
+
+class InvalidScheme(ValueError):
+    """
+    Raised when a transport is constructed using a URI which is not
+    handled by the transport
+    """
 
 
 class DuplicateScheme(StandardError):
@@ -37,13 +44,21 @@ class ITransport(interface.Interface):
         """
 
 
-class UDPTransport(object):
+class Transport(object):
+    def check_scheme(self, url):
+        if url.scheme != self.scheme:
+            raise InvalidScheme()
+
+
+class UDPTransport(Transport):
     interface.implements(ITransport)
     interface.classProvides(ITransportFactory)
 
     scheme = 'udp'
 
     def __init__(self, parsed_url):
+        self.check_scheme(parsed_url)
+
         self._parsed_url = parsed_url
 
     def send(self, data, headers):
@@ -71,13 +86,15 @@ class UDPTransport(object):
                 udp_socket = None
 
 
-class HTTPTransport(object):
+class HTTPTransport(Transport):
     interface.implements(ITransport)
     interface.classProvides(ITransportFactory)
 
     scheme = 'udp'
 
     def __init__(self, parsed_url):
+        self.check_scheme(parsed_url)
+
         self._parsed_url = parsed_url
         self._url = parsed_url.geturl()
 
