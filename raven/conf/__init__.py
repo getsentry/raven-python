@@ -13,7 +13,8 @@ import urlparse
 __all__ = ('load', 'setup_logging')
 
 
-# TODO (vng): push this load method into the transport layer
+# TODO (vng): push this load method into the transport layer?
+# Not quite sure what to do with this
 def load(dsn, scope=None):
     """
     Parses a Sentry compatible DSN and loads it
@@ -23,7 +24,7 @@ def load(dsn, scope=None):
 
     >>> dsn = 'https://public_key:secret_key@sentry.local/project_id'
 
-    >>> # Apply configuratio to local scope
+    >>> # Apply configuration to local scope
     >>> raven.load(dsn, locals())
 
     >>> # Return DSN configuration
@@ -33,7 +34,8 @@ def load(dsn, scope=None):
     if url.scheme not in ('http', 'https', 'udp'):
         raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)
     netloc = url.hostname
-    if (url.scheme == 'http' and url.port and url.port != 80) or (url.scheme == 'https' and url.port and url.port != 443):
+    if (url.scheme == 'http' and url.port and url.port != 80) or \
+            (url.scheme == 'https' and url.port and url.port != 443):
         netloc += ':%s' % url.port
     path_bits = url.path.rsplit('/', 1)
     if len(path_bits) > 1:
@@ -45,8 +47,10 @@ def load(dsn, scope=None):
         scope = {}
     if not all([netloc, project, url.username, url.password]):
         raise ValueError('Invalid Sentry DSN: %r' % dsn)
+
+    server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
     scope.update({
-        'SENTRY_SERVERS': ['%s://%s%s/api/store/' % (url.scheme, netloc, path)],
+        'SENTRY_SERVERS': [server],
         'SENTRY_PROJECT': project,
         'SENTRY_PUBLIC_KEY': url.username,
         'SENTRY_SECRET_KEY': url.password,
@@ -54,7 +58,10 @@ def load(dsn, scope=None):
     return scope
 
 
-def setup_logging(handler, exclude=['raven', 'gunicorn', 'south', 'sentry.errors']):
+def setup_logging(handler, exclude=['raven',
+                                    'gunicorn',
+                                    'south',
+                                    'sentry.errors']):
     """
     Configures logging to pipe to Sentry.
 
