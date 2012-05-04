@@ -366,8 +366,8 @@ class Client(object):
         parsed = urlparse(url)
 
         SenderClass = get_protocol(parsed.scheme)
-        obj = SenderClass(parsed, data, headers)
-        return obj.send()
+        obj = SenderClass(parsed)
+        return obj.send(data, headers)
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event
