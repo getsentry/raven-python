@@ -197,7 +197,8 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
-    def build_msg(self, event_type, data, date, time_spent, extra, stack, **kwargs):   # NOQA
+    def build_msg(self, event_type, data=None, date=None,
+            time_spent=None, extra=None, stack=None, **kwargs):   # NOQA
         """
         Captures, processes and serializes an event into a dict object
         """
