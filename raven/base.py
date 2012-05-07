@@ -184,8 +184,9 @@ class Client(object):
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
 
-    def register_scheme(self, scheme, cls):
-        self._registry.register_scheme(scheme, cls)
+    @classmethod
+    def register_scheme(cls, scheme, transport_class):
+        cls._registry.register_scheme(scheme, transport_class)
 
     def get_processors(self):
         for processor in self.processors:
