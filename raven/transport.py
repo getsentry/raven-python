@@ -181,6 +181,7 @@ class TransportRegistry(object):
         if scheme in self._schemes:
             raise DuplicateScheme()
 
+        # TODO (vng): verify the interface of the new class
         self._schemes[scheme] = cls
 
     def supported_scheme(self, scheme):

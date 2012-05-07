@@ -115,6 +115,8 @@ class Client(object):
     logger = logging.getLogger('raven')
     protocol_version = '2.0'
 
+    _registry = TransportRegistry()
+
     def __init__(self, servers=None, include_paths=None, exclude_paths=None,
             timeout=None, name=None, auto_log_stacks=None, key=None,
             string_max_length=None, list_max_length=None, site=None,
@@ -149,7 +151,7 @@ class Client(object):
             msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
                     urlparts.netloc, urlparts.path)
             self.logger.info(msg)
-            options = raven.load(dsn)
+            options = raven.load(dsn, transport_registry=self._registry)
             servers = options['SENTRY_SERVERS']
             project = options['SENTRY_PROJECT']
             public_key = options['SENTRY_PUBLIC_KEY']
@@ -182,10 +184,8 @@ class Client(object):
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
 
-        self._transport_reg = TransportRegistry()
-
     def register_scheme(self, scheme, cls):
-        self._transport_reg.register_scheme(scheme, cls)
+        self._registry.register_scheme(scheme, cls)
 
     def get_processors(self):
         for processor in self.processors:
@@ -371,7 +371,7 @@ class Client(object):
     def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
 
-        SenderClass = self._transport_reg.get_transport(parsed.scheme)
+        SenderClass = self._registry.get_transport(parsed.scheme)
         obj = SenderClass(parsed)
         return obj.send(data, headers)
 
