@@ -13,9 +13,10 @@ import urlparse
 __all__ = ('load', 'setup_logging')
 
 
-# TODO (vng): push this load method into the transport layer?
+# TODO (vng): this seems weirdly located in raven.conf.  Seems like
+# it's really a part of raven.transport.TransportRegistry
 # Not quite sure what to do with this
-def load(dsn, scope=None):
+def load(dsn, scope=None, transport_registry=None):
     """
     Parses a Sentry compatible DSN and loads it
     into the given scope.
@@ -30,31 +31,21 @@ def load(dsn, scope=None):
     >>> # Return DSN configuration
     >>> options = raven.load(dsn)
     """
+
+    if not transport_registry:
+        from raven.transport import TransportRegistry
+        transport_registry = TransportRegistry()
+
     url = urlparse.urlparse(dsn)
-    if url.scheme not in ('http', 'https', 'udp'):
+
+    if not transport_registry.supported_scheme(url.scheme):
         raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)
-    netloc = url.hostname
-    if (url.scheme == 'http' and url.port and url.port != 80) or \
-            (url.scheme == 'https' and url.port and url.port != 443):
-        netloc += ':%s' % url.port
-    path_bits = url.path.rsplit('/', 1)
-    if len(path_bits) > 1:
-        path = path_bits[0]
-    else:
-        path = ''
-    project = path_bits[-1]
+
     if scope is None:
         scope = {}
-    if not all([netloc, project, url.username, url.password]):
-        raise ValueError('Invalid Sentry DSN: %r' % dsn)
+    scope_extras = transport_registry.compute_scope(url, scope)
+    scope.update(scope_extras)
 
-    server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
-    scope.update({
-        'SENTRY_SERVERS': [server],
-        'SENTRY_PROJECT': project,
-        'SENTRY_PUBLIC_KEY': url.username,
-        'SENTRY_SECRET_KEY': url.password,
-    })
     return scope
 
 
