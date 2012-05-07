@@ -3,25 +3,35 @@
 Raven
 ======
 
-Raven is a Python client for `Sentry <http://aboutsentry.com/>`_. It provides
+Raven is a Python client for `Sentry <http://getsentry.com/>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
-Django, and Flask. Raven also includes drop-in support for any WSGI-compatible
-web application.
+`Django <djangoproject.com>`_, `Flask <http://flask.pocoo.org/>`_, and `Pylons
+<http://www.pylonsproject.org/>`_. Raven also includes drop-in support for any
+`WSGI <http://wsgi.readthedocs.org/>`_-compatible web application.
 """
+
+# Hack to prevent stupid "TypeError: 'NoneType' object is not callable" error
+# in multiprocessing/util.py _exit_function when running `python
+# setup.py test` (see
+# http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
+try:
+    import multiprocessing
+except ImportError:
+    pass
 
 from setuptools import setup, find_packages
 
 tests_require = [
     'blinker>=1.1',
     'celery',
-    'Django>=1.2,<1.5',
+    'Django>=1.2,<1.4',
     'django-celery',
     'django-nose',
     'Flask>=0.8',
     'logbook',
     'nose',
     'mock',
-    'sentry>=4.0.7',
+    'sentry>=4.0.17',
     'unittest2',
     'webob',
 ]
