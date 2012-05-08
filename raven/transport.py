@@ -1,6 +1,5 @@
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
-from zope import interface
 
 
 class InvalidScheme(ValueError):
@@ -18,51 +17,31 @@ class DuplicateScheme(StandardError):
     pass
 
 
-class ITransportFactory(interface.Interface):
-    def __call__(uri):
-        """
-        :param uri: the server url to that an instance of ITransport
-                    will actually use
-        """
-        pass
-
-
-class ITransport(interface.Interface):
-    scheme = interface.Attribute("Scheme that this transport handles")
-
-    def send(data, headers):
-        """
-        :param data: data to be sent to the server as the
-                     payload
-        :type data: string
-
-        :param headers: headers that a transport may use when sending
-                        to the server
-        :type headers: dictionary
-        :returns: int - result code from the transmission or None if
-                  no result code is available
-        """
-
-    def compute_scope(url, scope):
-        """
-        Update or create a new scope with the following keys:
-
-        * SENTRY_SERVERS
-        * SENTRY_PROJECT
-        * SENTRY_PUBLIC_KEY
-        * SENTRY_SECRET_KEY
-        """
-
-
 class Transport(object):
+    """
+    Implementations of transport need to implement
+    """
     def check_scheme(self, url):
         if url.scheme not in self.scheme:
             raise InvalidScheme()
 
+    def send(self, data, headers):
+        """
+        You need to override this to do something with the actual
+        data. Usually - this is sending to a server
+        """
+        raise NotImplementedError
+
+    def compute_scope(self, url, scope):
+        """
+        You need to override this to compute the SENTRY specific
+        additions to the variable scope.  See the HTTPTransport for an
+        example.
+        """
+        raise NotImplementedError
+
 
 class UDPTransport(Transport):
-    interface.implements(ITransport)
-    interface.classProvides(ITransportFactory)
 
     scheme = ['udp']
 
@@ -120,8 +99,6 @@ class UDPTransport(Transport):
 
 
 class HTTPTransport(Transport):
-    interface.implements(ITransport)
-    interface.classProvides(ITransportFactory)
 
     scheme = ['http', 'https']
 
@@ -193,7 +170,6 @@ class TransportRegistry(object):
         if parsed_url.scheme not in self._transports:
             self._transports[parsed_url.scheme] = self._schemes[parsed_url.scheme](parsed_url)
         return self._transports[parsed_url.scheme]
-
 
     def compute_scope(self, url, scope):
         """
