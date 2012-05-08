@@ -372,9 +372,8 @@ class Client(object):
     def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
 
-        SenderClass = self._registry.get_transport(parsed.scheme)
-        obj = SenderClass(parsed)
-        return obj.send(data, headers)
+        transport = self._registry.get_transport(parsed)
+        return transport.send(data, headers)
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event

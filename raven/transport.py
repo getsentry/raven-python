@@ -97,10 +97,7 @@ class UDPTransport(Transport):
 
     def compute_scope(self, url, scope):
         netloc = url.hostname
-        if url.port and (url.scheme, url.port) not in \
-                (('http', 80), ('https', 443)):
-            netloc += ':%s' % url.port
-
+        netloc += ':%s' % url.port
 
         path_bits = url.path.rsplit('/', 1)
         if len(path_bits) > 1:
@@ -177,6 +174,7 @@ class TransportRegistry(object):
         self._schemes = {'http': HTTPTransport,
                          'https': HTTPTransport,
                          'udp': UDPTransport}
+        self._transports = {}
 
     def register_scheme(self, scheme, cls):
         """
@@ -191,8 +189,11 @@ class TransportRegistry(object):
     def supported_scheme(self, scheme):
         return scheme in self._schemes
 
-    def get_transport(self, scheme):
-        return self._schemes[scheme]
+    def get_transport(self, parsed_url):
+        if parsed_url.scheme not in self._transports:
+            self._transports[parsed_url.scheme] = self._schemes[parsed_url.scheme](parsed_url)
+        return self._transports[parsed_url.scheme]
+
 
     def compute_scope(self, url, scope):
         """
