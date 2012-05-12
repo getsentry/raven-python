@@ -158,7 +158,7 @@ def sentry_exception_handler(request=None, **kwargs):
     def actually_do_stuff(request=None, **kwargs):
         exc_info = sys.exc_info()
         try:
-            if (django_settings.DEBUG and not getattr(django_settings, 'SENTRY_DEBUG', False)) or getattr(exc_info[0], 'skip_sentry', False):
+            if (django_settings.DEBUG and not getattr(django_settings, 'SENTRY_DEBUG', False)) or getattr(exc_info[1], 'skip_sentry', False):
                 return
 
             if transaction.is_dirty():
