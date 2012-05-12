@@ -15,6 +15,7 @@ This document describes configuration options available to Sentry.
    logging
    logbook
    wsgi
+   zerorpc
 
 
 Configuring the Client
