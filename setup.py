@@ -27,6 +27,7 @@ tests_require = [
     'Django>=1.2,<1.4',
     'django-celery',
     'django-nose',
+    'gevent',
     'Flask>=0.8',
     'logbook',
     'nose',
