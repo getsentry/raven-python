@@ -27,6 +27,7 @@ tests_require = [
     'Django>=1.2,<1.4',
     'django-celery',
     'django-nose',
+    'gevent',
     'Flask>=0.8',
     'logbook',
     'nose',
@@ -34,6 +35,7 @@ tests_require = [
     'sentry>=4.0.17',
     'unittest2',
     'webob',
+    'zerorpc>=0.2.0'
 ]
 
 install_requires = [
