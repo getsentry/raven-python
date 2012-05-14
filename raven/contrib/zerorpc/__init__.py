@@ -11,6 +11,7 @@ import inspect
 from raven.base import Client
 from raven.utils.stacks import iter_traceback_frames
 
+
 class SentryMiddleware(object):
     """Sentry/Raven middleware for ZeroRPC.
 

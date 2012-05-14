@@ -9,6 +9,7 @@ import zerorpc
 from raven.base import Client
 from raven.contrib.zerorpc import SentryMiddleware
 
+
 class TempStoreClient(Client):
     def __init__(self, servers=None, **kwargs):
         self.events = []
@@ -16,6 +17,7 @@ class TempStoreClient(Client):
 
     def send(self, **kwargs):
         self.events.append(kwargs)
+
 
 class ZeroRPCTest(unittest2.TestCase):
 
