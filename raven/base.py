@@ -90,7 +90,7 @@ class Client(object):
 
     >>> # Specify a DSN explicitly
     >>> client =
-    >>> Client(dsn='https://public_key:secret_key@sentry.local/project_id')  # NOQA
+    >>> Client(dsn='https://public_key:secret_key@sentry.local/project_id')
 
     >>> # Configure the client manually
     >>> client = Client(
@@ -201,7 +201,7 @@ class Client(object):
         return self.module_cache[name](self)
 
     def build_msg(self, event_type, data=None, date=None,
-            time_spent=None, extra=None, stack=None, **kwargs):   # NOQA
+            time_spent=None, extra=None, stack=None, **kwargs):
         """
         Captures, processes and serializes an event into a dict object
         """
@@ -392,8 +392,8 @@ class Client(object):
         except Exception, e:
             if isinstance(e, urllib2.HTTPError):
                 body = e.read()
-                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,  # NOQA
-                    exc_info=True, extra={'data': {'body': body, 'remote_url': url}})  # NOQA
+                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
+                    exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
             else:
                 tmpl = 'Unable to reach Sentry log server: %s (url: %%s)'
                 self.error_logger.error(tmpl % (e,), url, exc_info=True,
@@ -455,7 +455,7 @@ class Client(object):
     message = create_from_text
 
     def create_from_exception(self, *args, **kwargs):
-        msg = "create_from_exception is deprecated. Use captureException() instead."  # NOQA
+        msg = "create_from_exception is deprecated. Use captureException() instead."
         warnings.warn(msg, DeprecationWarning)
         return self.captureException(*args, **kwargs)
     exception = create_from_exception
