@@ -19,7 +19,12 @@ class DuplicateScheme(StandardError):
 
 class Transport(object):
     """
-    Implementations of transport need to implement
+    All transport implementations need to subclass this class
+
+    You must implement a send method and the compute_scope method.
+
+    Please see the HTTPTransport class for an example of a
+    compute_scope implementation.
     """
     def check_scheme(self, url):
         if url.scheme not in self.scheme:
