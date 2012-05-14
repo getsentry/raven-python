@@ -40,7 +40,7 @@ tests_require = [
 ]
 
 install_requires = [
-    'simplejson',
+    'simplejson>=2.3.0,<2.5.0',
 ]
 
 setup(
@@ -49,7 +49,7 @@ setup(
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',
-    description='Raven is a client for Sentry',
+    description='Raven is a client for Sentry (https://www.getsentry.com)',
     long_description=__doc__,
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,

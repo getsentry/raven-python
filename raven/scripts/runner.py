@@ -60,6 +60,11 @@ def main():
             'loadavg': os.getloadavg(),
         }
     ))
+
+    if client.state.did_fail():
+        print 'error!'
+        return False
+
     print 'success!'
     print
     print 'The test message can be viewed at the following URL:'
