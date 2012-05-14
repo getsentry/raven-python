@@ -21,11 +21,7 @@ from urlparse import urlparse
 
 import raven
 from raven.conf import defaults
-from raven.utils import json
-from raven.utils import varmap
-from raven.utils import get_versions
-from raven.utils import get_signature
-from raven.utils import get_auth_header
+from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
 
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
