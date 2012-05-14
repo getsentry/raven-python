@@ -18,14 +18,15 @@ import urllib2
 import uuid
 import warnings
 from urlparse import urlparse
-from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 
 import raven
 from raven.conf import defaults
 from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
+
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
+from raven.transport import TransportRegistry
 
 __all__ = ('Client',)
 
@@ -34,7 +35,8 @@ class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
 
-        handler = getattr(__import__(module, {}, {}, [class_name], -1), class_name)
+        handler = getattr(__import__(module, {}, \
+                {}, [class_name], -1), class_name)
 
         self[key] = handler
 
@@ -54,7 +56,7 @@ class ClientState(object):
         if self.status == self.ONLINE:
             return True
 
-        interval = min(self.retry_number, 6)**2
+        interval = min(self.retry_number, 6) ** 2
 
         if time.time() - self.last_check > interval:
             return True
@@ -74,11 +76,12 @@ class ClientState(object):
 
 class Client(object):
     """
-    The base Raven client, which handles both local direct communication with Sentry (through
-    the GroupedMessage API), as well as communicating over the HTTP API to multiple servers.
+    The base Raven client, which handles both local direct
+    communication with Sentry (through the GroupedMessage API), as
+    well as communicating over the HTTP API to multiple servers.
 
-    Will read default configuration from the environment variable ``SENTRY_DSN``
-    if available.
+    Will read default configuration from the environment variable
+    ``SENTRY_DSN`` if available.
 
     >>> from raven import Client
 
@@ -86,7 +89,8 @@ class Client(object):
     >>> client = Client()
 
     >>> # Specify a DSN explicitly
-    >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
+    >>> client =
+    >>> Client(dsn='https://public_key:secret_key@sentry.local/project_id')
 
     >>> # Configure the client manually
     >>> client = Client(
@@ -107,32 +111,43 @@ class Client(object):
     logger = logging.getLogger('raven')
     protocol_version = '2.0'
 
-    def __init__(self, servers=None, include_paths=None, exclude_paths=None, timeout=None,
-                 name=None, auto_log_stacks=None, key=None, string_max_length=None,
-                 list_max_length=None, site=None, public_key=None, secret_key=None,
-                 processors=None, project=None, dsn=None, **kwargs):
+    _registry = TransportRegistry()
+
+    def __init__(self, servers=None, include_paths=None, exclude_paths=None,
+            timeout=None, name=None, auto_log_stacks=None, key=None,
+            string_max_length=None, list_max_length=None, site=None,
+            public_key=None, secret_key=None, processors=None, project=None,
+            dsn=None, **kwargs):
         # configure loggers first
         cls = self.__class__
         self.state = ClientState()
-        self.logger = logging.getLogger('%s.%s' % (cls.__module__, cls.__name__))
+        self.logger = logging.getLogger('%s.%s' % (cls.__module__,
+            cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
 
         if isinstance(servers, basestring):
             # must be a DSN:
             if dsn:
-                raise ValueError("You seem to be incorrectly instantiating the raven Client class.")
+                # TODO: this should indicate what the caller can do to correct
+                # the constructor
+                msg = "You seem to be incorrectly instantiating the " + \
+                      "raven Client class"
+                raise ValueError(msg)
             dsn = servers
             servers = None
 
         if dsn is None and os.environ.get('SENTRY_DSN'):
-            self.logger.info("Configuring Raven from environment variable 'SENTRY_DSN'")
+            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+            self.logger.info(msg)
             dsn = os.environ['SENTRY_DSN']
 
         if dsn:
             # TODO: should we validate other options werent sent?
             urlparts = urlparse(dsn)
-            self.logger.info("Configuring Raven for host: %s://%s:%s", urlparts.scheme, urlparts.netloc, urlparts.path)
-            options = raven.load(dsn)
+            msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
+                    urlparts.netloc, urlparts.path)
+            self.logger.info(msg)
+            options = raven.load(dsn, transport_registry=self._registry)
             servers = options['SENTRY_SERVERS']
             project = options['SENTRY_PROJECT']
             public_key = options['SENTRY_PUBLIC_KEY']
@@ -140,16 +155,19 @@ class Client(object):
 
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
-            raise TypeError('Missing configuration for client. Please see documentation.')
+            msg = 'Missing configuration for client. Please see documentation.'
+            raise TypeError(msg)
 
         self.servers = servers
         self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
         self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
         self.timeout = int(timeout or defaults.TIMEOUT)
         self.name = unicode(name or defaults.NAME)
-        self.auto_log_stacks = bool(auto_log_stacks or defaults.AUTO_LOG_STACKS)
+        self.auto_log_stacks = bool(auto_log_stacks or \
+                defaults.AUTO_LOG_STACKS)
         self.key = str(key or defaults.KEY)
-        self.string_max_length = int(string_max_length or defaults.MAX_LENGTH_STRING)
+        self.string_max_length = int(string_max_length or \
+                defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(list_max_length or defaults.MAX_LENGTH_LIST)
         if (site or defaults.SITE):
             self.site = unicode(site or defaults.SITE)
@@ -161,7 +179,10 @@ class Client(object):
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
-        self.udp_socket = None
+
+    @classmethod
+    def register_scheme(cls, scheme, transport_class):
+        cls._registry.register_scheme(scheme, transport_class)
 
     def get_processors(self):
         for processor in self.processors:
@@ -179,54 +200,15 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
-    def capture(self, event_type, data=None, date=None, time_spent=None, event_id=None,
-                extra=None, stack=None, **kwargs):
+    def build_msg(self, event_type, data=None, date=None,
+            time_spent=None, extra=None, stack=None, **kwargs):
         """
-        Captures and processes an event and pipes it off to SentryClient.send.
-
-        To use structured data (interfaces) with capture:
-
-        >>> capture('Message', message='foo', data={
-        >>>     'sentry.interfaces.Http': {
-        >>>         'url': '...',
-        >>>         'data': {},
-        >>>         'query_string': '...',
-        >>>         'method': 'POST',
-        >>>     },
-        >>>     'logger': 'logger.name',
-        >>>     'site': 'site.name',
-        >>> }, extra={
-        >>>     'key': 'value',
-        >>> })
-
-        The finalized ``data`` structure contains the following (some optional) builtin values:
-
-        >>> {
-        >>>     # the culprit and version information
-        >>>     'culprit': 'full.module.name', # or /arbitrary/path
-        >>>
-        >>>     # all detectable installed modules
-        >>>     'modules': {
-        >>>         'full.module.name': 'version string',
-        >>>     },
-        >>>
-        >>>     # arbitrary data provided by user
-        >>>     'extra': {
-        >>>         'key': 'value',
-        >>>     }
-        >>> }
-
-        :param event_type: the module path to the Event class. Builtins can use shorthand class
-                           notation and exclude the full module path.
-        :param data: the data base, useful for specifying structured data interfaces. Any key which contains a '.'
-                     will be assumed to be a data interface.
-        :param date: the datetime of this event
-        :param time_spent: a float value representing the duration of the event
-        :param event_id: a 32-length unique string identifying this event
-        :param extra: a dictionary of additional standard metadata
-        :param culprit: a string representing the cause of this event (generally a path to a function)
-        :return: a 32-length string identifying this event
+        Captures, processes and serializes an event into a dict object
         """
+
+        # create ID client-side so that it can be passed to application
+        event_id = uuid.uuid4().hex
+
         if data is None:
             data = {}
         if extra is None:
@@ -262,13 +244,16 @@ class Client(object):
             data.update({
                 'sentry.interfaces.Stacktrace': {
                     'frames': varmap(lambda k, v: shorten(v,
-                        string_length=self.string_max_length, list_length=self.list_max_length),
+                        string_length=self.string_max_length,
+                        list_length=self.list_max_length),
                     get_stack_info(frames))
                 },
             })
 
         if 'sentry.interfaces.Stacktrace' in data and not culprit:
-            culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'], self.include_paths, self.exclude_paths)
+            culprit = get_culprit(\
+                        data['sentry.interfaces.Stacktrace']['frames'],
+                        self.include_paths, self.exclude_paths)
 
         if not data.get('level'):
             data['level'] = logging.ERROR
@@ -279,7 +264,8 @@ class Client(object):
 
         # Shorten lists/strings
         for k, v in extra.iteritems():
-            data['extra'][k] = shorten(v, string_length=self.string_max_length, list_length=self.list_max_length)
+            data['extra'][k] = shorten(v, string_length=self.string_max_length,
+                    list_length=self.list_max_length)
 
         if culprit:
             data['culprit'] = culprit
@@ -299,9 +285,6 @@ class Client(object):
 
         data['checksum'] = checksum
 
-        # create ID client-side so that it can be passed to application
-        event_id = uuid.uuid4().hex
-
         # Run the data through processors
         for processor in self.get_processors():
             data.update(processor.process(data))
@@ -320,15 +303,73 @@ class Client(object):
         data.setdefault('project', self.project)
         data.setdefault('site', self.site)
 
+        return data
+
+    def capture(self, event_type, data=None, date=None, time_spent=None,
+                extra=None, stack=None, **kwargs):
+        """
+        Captures and processes an event and pipes it off to SentryClient.send.
+
+        To use structured data (interfaces) with capture:
+
+        >>> capture('Message', message='foo', data={
+        >>>     'sentry.interfaces.Http': {
+        >>>         'url': '...',
+        >>>         'data': {},
+        >>>         'query_string': '...',
+        >>>         'method': 'POST',
+        >>>     },
+        >>>     'logger': 'logger.name',
+        >>>     'site': 'site.name',
+        >>> }, extra={
+        >>>     'key': 'value',
+        >>> })
+
+        The finalized ``data`` structure contains the following (some optional)
+        builtin values:
+
+        >>> {
+        >>>     # the culprit and version information
+        >>>     'culprit': 'full.module.name', # or /arbitrary/path
+        >>>
+        >>>     # all detectable installed modules
+        >>>     'modules': {
+        >>>         'full.module.name': 'version string',
+        >>>     },
+        >>>
+        >>>     # arbitrary data provided by user
+        >>>     'extra': {
+        >>>         'key': 'value',
+        >>>     }
+        >>> }
+
+        :param event_type: the module path to the Event class. Builtins can use
+                           shorthand class notation and exclude the full module
+                           path.
+        :param data: the data base, useful for specifying structured data
+                           interfaces. Any key which contains a '.' will be
+                           assumed to be a data interface.
+        :param date: the datetime of this event
+        :param time_spent: a float value representing the duration of the event
+        :param event_id: a 32-length unique string identifying this event
+        :param extra: a dictionary of additional standard metadata
+        :param culprit: a string representing the cause of this event
+                        (generally a path to a function)
+        :return: a 32-length string identifying this event
+        """
+
+        data = self.build_msg(event_type, data, date, time_spent,
+                extra, stack, **kwargs)
+
         self.send(**data)
 
-        return (event_id, checksum)
+        return (data['event_id'], data['checksum'])
 
     def _send_remote(self, url, data, headers={}):
         parsed = urlparse(url)
-        if parsed.scheme == 'udp':
-            return self.send_udp(parsed.netloc, data, headers.get('X-Sentry-Auth'))
-        return self.send_http(url, data, headers)
+
+        transport = self._registry.get_transport(parsed)
+        return transport.send(data, headers)
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event
@@ -354,40 +395,15 @@ class Client(object):
                 self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
                     exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
             else:
-                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s)' % (e,), url,
-                    exc_info=True, extra={'data': {'remote_url': url}})
+                tmpl = 'Unable to reach Sentry log server: %s (url: %%s)'
+                self.error_logger.error(tmpl % (e,), url, exc_info=True,
+                        extra={'data': {'remote_url': url}})
 
             message = self._get_log_message(data)
             self.error_logger.error('Failed to submit message: %r', message)
             self.state.set_fail()
         else:
             self.state.set_success()
-
-    def send_udp(self, netloc, data, auth_header):
-        if auth_header is None:
-            # silently ignore attempts to send messages without an auth header
-            return
-        host, port = netloc.split(':')
-        if self.udp_socket is None:
-            self.udp_socket = socket(AF_INET, SOCK_DGRAM)
-            self.udp_socket.setblocking(False)
-        try:
-            self.udp_socket.sendto(auth_header + '\n\n' + data, (host, int(port)))
-        except socket_error:
-            # as far as I understand things this simply can't happen, but still, it can't hurt
-            self.udp_socket.close()
-            self.udp_socket = None
-
-    def send_http(self, url, data, headers={}):
-        """
-        Sends a request to a remote webserver using HTTP POST.
-        """
-        req = urllib2.Request(url, headers=headers)
-        try:
-            response = urllib2.urlopen(req, data, self.timeout).read()
-        except:
-            response = urllib2.urlopen(req, data).read()
-        return response
 
     def send(self, **data):
         """
@@ -399,12 +415,14 @@ class Client(object):
 
     def send_encoded(self, message):
         """
-        Given an already serialized message, signs the message and passes the payload
-        off to ``send_remote`` for each server specified in the servers configuration.
+        Given an already serialized message, signs the message and passes the
+        payload off to ``send_remote`` for each server specified in the servers
+        configuration.
         """
         for url in self.servers:
             timestamp = time.time()
-            signature = get_signature(message, timestamp, self.secret_key or self.key)
+            signature = get_signature(message, timestamp, self.secret_key or
+                    self.key)
             headers = {
                 'X-Sentry-Auth': get_auth_header(
                     protocol=self.protocol_version,
@@ -431,12 +449,14 @@ class Client(object):
         return json.loads(base64.b64decode(data).decode('zlib'))
 
     def create_from_text(self, *args, **kwargs):
-        warnings.warn("create_from_text is deprecated. Use captureMessage() instead.", DeprecationWarning)
+        msg = "create_from_text is deprecated. Use captureMessage() instead."
+        warnings.warn(msg, DeprecationWarning)
         return self.captureMessage(*args, **kwargs)
     message = create_from_text
 
     def create_from_exception(self, *args, **kwargs):
-        warnings.warn("create_from_exception is deprecated. Use captureException() instead.", DeprecationWarning)
+        msg = "create_from_exception is deprecated. Use captureException() instead."
+        warnings.warn(msg, DeprecationWarning)
         return self.captureException(*args, **kwargs)
     exception = create_from_exception
 
@@ -470,7 +490,8 @@ class Client(object):
 
         >>> client.captureQuery('SELECT * FROM foo')
         """
-        return self.capture('Query', query=query, params=params, engine=engine, **kwargs)
+        return self.capture('Query', query=query, params=params, engine=engine,
+                **kwargs)
 
 
 class DummyClient(Client):

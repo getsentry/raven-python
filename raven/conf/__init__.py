@@ -13,7 +13,10 @@ import urlparse
 __all__ = ('load', 'setup_logging')
 
 
-def load(dsn, scope=None):
+# TODO (vng): this seems weirdly located in raven.conf.  Seems like
+# it's really a part of raven.transport.TransportRegistry
+# Not quite sure what to do with this
+def load(dsn, scope=None, transport_registry=None):
     """
     Parses a Sentry compatible DSN and loads it
     into the given scope.
@@ -22,38 +25,34 @@ def load(dsn, scope=None):
 
     >>> dsn = 'https://public_key:secret_key@sentry.local/project_id'
 
-    >>> # Apply configuratio to local scope
+    >>> # Apply configuration to local scope
     >>> raven.load(dsn, locals())
 
     >>> # Return DSN configuration
     >>> options = raven.load(dsn)
     """
+
+    if not transport_registry:
+        from raven.transport import TransportRegistry
+        transport_registry = TransportRegistry()
+
     url = urlparse.urlparse(dsn)
-    if url.scheme not in ('http', 'https', 'udp'):
+
+    if not transport_registry.supported_scheme(url.scheme):
         raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)
-    netloc = url.hostname
-    if url.port and (url.scheme, url.port) not in (('http', 80), ('https', 443)):
-        netloc += ':%s' % url.port
-    path_bits = url.path.rsplit('/', 1)
-    if len(path_bits) > 1:
-        path = path_bits[0]
-    else:
-        path = ''
-    project = path_bits[-1]
+
     if scope is None:
         scope = {}
-    if not all([netloc, project, url.username, url.password]):
-        raise ValueError('Invalid Sentry DSN: %r' % dsn)
-    scope.update({
-        'SENTRY_SERVERS': ['%s://%s%s/api/store/' % (url.scheme, netloc, path)],
-        'SENTRY_PROJECT': project,
-        'SENTRY_PUBLIC_KEY': url.username,
-        'SENTRY_SECRET_KEY': url.password,
-    })
+    scope_extras = transport_registry.compute_scope(url, scope)
+    scope.update(scope_extras)
+
     return scope
 
 
-def setup_logging(handler, exclude=['raven', 'gunicorn', 'south', 'sentry.errors']):
+def setup_logging(handler, exclude=['raven',
+                                    'gunicorn',
+                                    'south',
+                                    'sentry.errors']):
     """
     Configures logging to pipe to Sentry.
 
