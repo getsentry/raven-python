@@ -9,6 +9,7 @@ from raven.transport import Transport
 import datetime
 import time
 
+
 class DummyScheme(Transport):
 
     scheme = ['mock']
@@ -65,29 +66,30 @@ class TransportTest(TestCase):
         expected_message = c.encode(data)
         mock_cls = Client._registry._transports['mock']
         assert mock_cls._data == expected_message
-    
+
     def test_build_then_send(self):
         try:
             Client.register_scheme('mock', DummyScheme)
         except:
             pass
-        c = Client(dsn="mock://some_username:some_password@localhost:8143/1")
+        c = Client(dsn="mock://some_username:some_password@localhost:8143/1",
+                name="test_server")
 
-        d = time.mktime(datetime.datetime(2012,5,4).timetuple())
+        d = time.mktime(datetime.datetime(2012, 5, 4).timetuple())
         msg = c.build_msg("Message", message='foo', date=d)
         expected = {'project': '1',
-            'sentry.interfaces.Message': {'message': 'foo', 'params': ()}, 
-            'server_name': u'Victors-MacBook-Air.local',
-            'level': 40, 
+            'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
+            'server_name': u'test_server',
+            'level': 40,
             'checksum': 'acbd18db4cc2f85cedef654fccc4a4d8',
-            'extra': {}, 
-            'modules': {}, 
-            'site': None, 
-            'time_spent': None, 
-            'timestamp': 1336104000.0, 
+            'extra': {},
+            'modules': {},
+            'site': None,
+            'time_spent': None,
+            'timestamp': 1336104000.0,
             'message': 'foo'}
 
-        # The event_id is always overridden 
+        # The event_id is always overridden
         del msg['event_id']
 
-        assert msg == expected
+        self.assertEquals(msg, expected)
