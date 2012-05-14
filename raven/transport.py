@@ -11,7 +11,7 @@ class InvalidScheme(ValueError):
 
 class DuplicateScheme(StandardError):
     """
-    Raised when registering a handlers for a particular scheme which
+    Raised when registering a handler for a particular scheme which
     is already registered
     """
     pass
