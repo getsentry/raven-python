@@ -32,6 +32,7 @@ tests_require = [
     'logbook',
     'nose',
     'mock',
+    'pep8',
     'sentry>=4.0.17',
     'unittest2',
     'webob',
