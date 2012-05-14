@@ -17,6 +17,9 @@ def django_exc(request):
 def raise_exc(request):
     raise Exception(request.GET.get('message', 'view exception'))
 
+def raise_ioerror(request):
+    raise IOError(request.GET.get('message', 'view exception'))
+
 def decorated_raise_exc(request):
     return raise_exc(request)
 
