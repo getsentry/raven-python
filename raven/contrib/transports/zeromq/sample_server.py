@@ -1,3 +1,6 @@
+"""
+TODO: This needs to be fleshed out as a Sentry service
+"""
 import zmq
 import json
 

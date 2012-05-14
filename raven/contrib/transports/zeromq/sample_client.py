@@ -1,7 +1,6 @@
 from raven import Client
-from raven.contrib.transports import ZmqPubTransport
+from raven.contrib.transports.zeromq import ZmqPubTransport
 import sys
-import time
 
 Client.register_scheme('zmq+tcp', ZmqPubTransport)
 
