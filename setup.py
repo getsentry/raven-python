@@ -36,7 +36,8 @@ tests_require = [
     'sentry>=4.0.17',
     'unittest2',
     'webob',
-    'zerorpc>=0.2.0'
+    'zerorpc>=0.2.0',
+    'pytz'
 ]
 
 install_requires = [
