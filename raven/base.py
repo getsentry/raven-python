@@ -73,6 +73,9 @@ class ClientState(object):
         self.last_check = None
         self.retry_number = 0
 
+    def did_fail(self):
+        return self.status == self.ERROR
+
 
 class Client(object):
     """
