@@ -89,9 +89,15 @@ class SanitizePasswordsProcessor(Processor):
 
             if isinstance(data[n], basestring) and '=' in data[n]:
                 # at this point we've assumed it's a standard HTTP query
-                querystring = [c.split('=') for c in data[n].split('&')]
-                querystring = [(k, self.sanitize(k, v)) for k, v in querystring]
-                data[n] = '&'.join('='.join(k) for k in querystring)
+                querybits = []
+                for bit in data[n].split('&'):
+                    chunk = bit.split('=')
+                    if len(chunk) == 2:
+                        querybits.append((chunk[0], self.sanitize(*chunk)))
+                    else:
+                        querybits.append(chunk)
+
+                data[n] = '&'.join('='.join(k) for k in querybits)
             else:
                 data[n] = varmap(self.sanitize, data[n])
 

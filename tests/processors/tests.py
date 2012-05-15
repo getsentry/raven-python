@@ -103,6 +103,20 @@ class SantizePasswordsProcessorTest(TestCase):
         http = result['sentry.interfaces.Http']
         self.assertEquals(http['query_string'], 'foo=bar&password=%(m)s&the_secret=%(m)s&a_password_here=%(m)s' % dict(m=proc.MASK))
 
+    def test_querystring_as_string_with_partials(self):
+        data = {
+            'sentry.interfaces.Http': {
+                'query_string': 'foo=bar&password&baz=bar',
+            }
+        }
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('sentry.interfaces.Http' in result)
+        http = result['sentry.interfaces.Http']
+        self.assertEquals(http['query_string'], 'foo=bar&password&baz=bar' % dict(m=proc.MASK))
+
     def test_sanitize_credit_card(self):
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.sanitize('foo', '4242424242424242')
