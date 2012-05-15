@@ -7,7 +7,7 @@ from raven.base import Client
 from raven.transport import Transport
 
 import datetime
-import time
+import calendar
 import pytz
 
 
@@ -76,7 +76,8 @@ class TransportTest(TestCase):
         c = Client(dsn="mock://some_username:some_password@localhost:8143/1",
                 name="test_server")
 
-        d = time.mktime(datetime.datetime(2012, 5, 4,tzinfo=pytz.utc).timetuple())
+        mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
+        d = calendar.timegm(mydate.timetuple())
         msg = c.build_msg("Message", message='foo', date=d)
         expected = {'project': '1',
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
@@ -87,7 +88,7 @@ class TransportTest(TestCase):
             'modules': {},
             'site': None,
             'time_spent': None,
-            'timestamp': 1336107600.0,
+            'timestamp': 1336089600,
             'message': 'foo'}
 
         # The event_id is always overridden
