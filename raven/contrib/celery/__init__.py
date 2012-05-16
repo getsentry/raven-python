@@ -29,15 +29,15 @@ class CeleryClient(CeleryMixin, Client):
 
 
 def register_signal(client):
-    def process_failure_signal(exception, traceback, sender, task_id,
-                               signal, args, kwargs, einfo, **kw):
-        exc_info = (type(exception), exception, traceback)
+    @task_failure.connect(weak=False)
+    def process_failure_signal(sender, task_id, exception, args, kwargs,
+                               traceback, einfo, **kw):
         client.captureException(
-            exc_info=exc_info,
+            exc_info=einfo.exc_info,
             extra={
                 'task_id': task_id,
-                'sender': sender,
+                'task': sender,
                 'args': args,
                 'kwargs': kwargs,
             })
-    task_failure.connect(process_failure_signal)
+
