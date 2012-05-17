@@ -105,6 +105,8 @@ class SentryHandler(logging.Handler, object):
         for k in record.__dict__.keys():
             if k in ('stack', 'name', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated'):
                 continue
+            if k.startswith('_'):
+                continue
             extra[k] = record.__dict__[k]
 
         date = datetime.datetime.utcfromtimestamp(record.created)
