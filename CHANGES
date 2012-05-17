@@ -1,3 +1,14 @@
+1.8.0
+
+* There is now a builtin view as part of the Django integration for sending events server-side
+  (from the client) to Sentry. The view is currently undocumented, but is available as ``{% url raven-report %}``
+  and will use your server side credentials. To use this view you'd simply swap out the servers configuration in
+  raven-js and point it to the given URL.
+* A new middleware for ZeroRPC now exists.
+* A new protocol for registering transports now exists.
+* Corrected some behavior in the UDP transport.
+* Celery signals are now connected by default within the Django integration.
+
 1.7.0
 
 * The password sanitizer will now attempt to sanitize key=value pairs within strings (such as the querystring).
