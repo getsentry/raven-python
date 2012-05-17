@@ -31,7 +31,7 @@ class CeleryClient(CeleryMixin, Client):
 
 class CeleryFilter(object):
     def filter(self, record):
-        if record.funcName in ('_log_error'):
+        if record.funcName in ('_log_error',):
             return 0
         else:
             return 1
