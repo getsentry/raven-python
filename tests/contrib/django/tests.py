@@ -23,6 +23,7 @@ from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import client, get_client
 from raven.contrib.django.middleware.wsgi import Sentry
+from raven.contrib.django.views import is_valid_origin
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 
@@ -505,3 +506,64 @@ class CeleryIntegratedClientTest(TestCase):
         self.client.capture('Message', message='test')
 
         self.assertEquals(send_encoded.call_count, 1)
+
+
+class IsValidOriginTestCase(TestCase):
+    def test_setting_empty(self):
+        with Settings(SENTRY_ALLOW_ORIGIN=None):
+            self.assertFalse(is_valid_origin('http://example.com'))
+
+    def test_setting_all(self):
+        with Settings(SENTRY_ALLOW_ORIGIN='*'):
+            self.assertTrue(is_valid_origin('http://example.com'))
+
+    def test_setting_uri(self):
+        with Settings(SENTRY_ALLOW_ORIGIN='http://example.com'):
+            self.assertTrue(is_valid_origin('http://example.com'))
+
+
+class ReportViewTest(TestCase):
+    urls = 'raven.contrib.django.urls'
+
+    def setUp(self):
+        self.path = reverse('raven-report')
+
+    def test_does_not_allow_get(self):
+        resp = self.client.get(self.path)
+        self.assertEquals(resp.status_code, 405)
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin')
+    def test_calls_is_valid_origin_with_header(self, is_valid_origin):
+        self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        is_valid_origin.assert_called_once_with('http://example.com')
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=False))
+    def test_fails_on_invalid_origin(self):
+        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        self.assertEquals(resp.status_code, 403)
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
+    def test_options_call_sends_headers(self):
+        resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp['Access-Control-Allow-Origin'], 'http://example.com')
+        self.assertEquals(resp['Access-Control-Allow-Methods'], 'POST, OPTIONS')
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
+    def test_missing_data(self):
+        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        self.assertEquals(resp.status_code, 400)
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
+    def test_invalid_data(self):
+        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+            data='[1', content_type='application/octet-stream')
+        self.assertEquals(resp.status_code, 400)
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
+    def test_sends_data(self):
+        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+            data='{}', content_type='application/octet-stream')
+        self.assertEquals(resp.status_code, 200)
+        event = client.events.pop(0)
+        self.assertEquals(event, {})

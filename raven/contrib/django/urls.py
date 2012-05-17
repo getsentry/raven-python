@@ -9,5 +9,5 @@ raven.contrib.django.urls
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('',
-    url(r'^report/', 'raven.contrib.django.views.report'),
+    url(r'^report/', 'raven.contrib.django.views.report', name='raven-report'),
 )

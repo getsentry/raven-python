@@ -6,42 +6,56 @@ raven.contrib.django.views
 :license: BSD, see LICENSE for more details.
 """
 
+import simplejson
+
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from raven.contrib.django.models import client
 
 
-def apply_access_control_headers(response):
-    """
-    Provides the Access-Control headers to enable cross-site HTTP requests. You
-    can find more information about these headers here:
-    https://developer.mozilla.org/En/HTTP_access_control#Simple_requests
-    """
-    origin = settings.SENTRY_ALLOW_ORIGIN or ''
-    if origin:
-        response['Access-Control-Allow-Origin'] = origin
-        response['Access-Control-Allow-Headers'] = 'X-Sentry-Auth, Authentication'
-        response['Access-Control-Allow-Methods'] = 'POST'
+def is_valid_origin(origin):
+    if not settings.SENTRY_ALLOW_ORIGIN:
+        return False
 
-    return response
+    if settings.SENTRY_ALLOW_ORIGIN == '*':
+        return True
+
+    origin = origin.lower()
+    for value in settings.SENTRY_ALLOW_ORIGIN.split(' '):
+        if value.lower() == origin:
+            return True
+
+    return False
 
 
 @csrf_exempt
 @require_http_methods(['POST', 'OPTIONS'])
 @never_cache
 def report(request):
-    data = request.POST.get('data')
+    origin = request.META.get('HTTP_ORIGIN')
+
+    if not is_valid_origin(origin):
+        return HttpResponseForbidden()
 
     if request.method == 'POST':
-        origin = request.META.get('HTTP_ORIGIN')
-        if not origin:
-            response = HttpResponseForbidden()
-        else:
-            client.send(data)
-    else:
-        # OPTIONS
+        data = request.raw_post_data
+        if not data:
+            return HttpResponseBadRequest()
+
+        try:
+            decoded = simplejson.loads(data)
+        except simplejson.JSONDecodeError:
+            return HttpResponseBadRequest()
+
         response = HttpResponse()
-    return apply_access_control_headers(response)
+        client.send(**decoded)
+
+    elif request.method == 'OPTIONS':
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = origin
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+
+    return response
