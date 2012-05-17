@@ -10,8 +10,9 @@ try:
     from celery.task import task
 except ImportError:
     from celery.decorators import task
-from celery.signals import task_failure
+from celery.signals import after_setup_logger,task_failure
 from raven.base import Client
+from raven.handlers.logging import SentryHandler
 
 
 class CeleryMixin(object):
@@ -28,6 +29,14 @@ class CeleryClient(CeleryMixin, Client):
     pass
 
 
+class CeleryFilter(object):
+    def filter(self, record):
+        if record.funcName in ('_log_error'):
+            return 0
+        else:
+            return 1
+
+
 def register_signal(client):
     @task_failure.connect(weak=False)
     def process_failure_signal(sender, task_id, exception, args, kwargs,
@@ -40,3 +49,15 @@ def register_signal(client):
                 'args': args,
                 'kwargs': kwargs,
             })
+
+    @after_setup_logger.connect(weak=False)
+    def process_logger_event(sender, logger, loglevel, logfile, format,
+                             colorize, **kw):
+        import logging
+        logger = logging.getLogger()
+        handler = SentryHandler(client)
+        if handler.__class__ in map(type, logger.handlers):
+            return False
+        handler.setLevel(logging.ERROR)
+        handler.addFilter(CeleryFilter())
+        logger.addHandler(handler)
