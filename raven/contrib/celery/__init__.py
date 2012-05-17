@@ -40,4 +40,3 @@ def register_signal(client):
                 'args': args,
                 'kwargs': kwargs,
             })
-
