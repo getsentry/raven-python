@@ -38,7 +38,6 @@ class CeleryFilter(object):
 
 
 def register_signal(client):
-    @task_failure.connect(weak=False)
     def process_failure_signal(sender, task_id, exception, args, kwargs,
                                traceback, einfo, **kw):
         client.captureException(
@@ -49,8 +48,8 @@ def register_signal(client):
                 'args': args,
                 'kwargs': kwargs,
             })
+    task_failure.connect(process_failure_signal, weak=False)
 
-    @after_setup_logger.connect(weak=False)
     def process_logger_event(sender, logger, loglevel, logfile, format,
                              colorize, **kw):
         import logging
@@ -61,3 +60,4 @@ def register_signal(client):
         handler.setLevel(logging.ERROR)
         handler.addFilter(CeleryFilter())
         logger.addHandler(handler)
+    after_setup_logger.connect(process_logger_event, weak=False)
