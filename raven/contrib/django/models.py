@@ -189,7 +189,10 @@ def register_handlers():
     if 'djcelery' in django_settings.INSTALLED_APPS:
         from raven.contrib.celery import register_signal
 
-        register_signal(client)
+        try:
+            register_signal(client)
+        except Exception, e:
+            logger.exception('Failed installing django-celery hook: %s' % e)
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
     register_handlers()
