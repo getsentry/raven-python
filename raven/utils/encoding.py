@@ -106,6 +106,8 @@ def transform(value, stack=[], context=None):
         ret = float(value)
     elif isinstance(value, int):
         ret = int(value)
+    elif isinstance(value, long):
+        ret = long(value)
     elif value is not None:
         try:
             ret = transform(repr(value))
