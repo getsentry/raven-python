@@ -13,6 +13,7 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequ
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from functools import wraps
 from raven.contrib.django.models import client
 
 
@@ -31,15 +32,27 @@ def is_valid_origin(origin):
     return False
 
 
+def with_origin(func):
+    @wraps(func)
+    def wrapped(request, *args, **kwargs):
+        origin = request.META.get('HTTP_ORIGIN')
+
+        if not is_valid_origin(origin):
+            return HttpResponseForbidden()
+
+        response = func(request, *args, **kwargs)
+        response['Access-Control-Allow-Origin'] = origin
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+
+        return response
+    return wrapped
+
+
 @csrf_exempt
 @require_http_methods(['POST', 'OPTIONS'])
 @never_cache
+@with_origin
 def report(request):
-    origin = request.META.get('HTTP_ORIGIN')
-
-    if not is_valid_origin(origin):
-        return HttpResponseForbidden()
-
     if request.method == 'POST':
         data = request.raw_post_data
         if not data:
@@ -55,7 +68,5 @@ def report(request):
 
     elif request.method == 'OPTIONS':
         response = HttpResponse()
-        response['Access-Control-Allow-Origin'] = origin
-        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
 
     return response
