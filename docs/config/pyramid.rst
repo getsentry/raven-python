@@ -58,8 +58,8 @@ Add the following lines to your project's `.ini` file to setup `SentryHandler`:
 
     [handler_sentry]
     class = raven.handlers.logging.SentryHandler
-    args = (['http://sentry.local/api/store/'], 'KEY')
-    level = NOTSET
+    args = ('http://public:secret@example.com/1',)
+    level = WARNING
     formatter = generic
 
     [formatter_generic]
