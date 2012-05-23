@@ -25,9 +25,13 @@ def is_valid_origin(origin):
         return True
 
     origin = origin.lower()
-    for value in settings.SENTRY_ALLOW_ORIGIN.split(' '):
-        if value.lower() == origin:
-            return True
+    for value in settings.SENTRY_ALLOW_ORIGIN:
+        if isinstance(value, basestring):
+            if value.lower() == origin:
+                return True
+        else:
+            if value.match(origin):
+                return True
 
     return False
 

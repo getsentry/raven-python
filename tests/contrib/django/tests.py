@@ -2,10 +2,11 @@
 
 from __future__ import absolute_import
 
-import django
-import mock
 import datetime
+import django
 import logging
+import mock
+import re
 from celery.tests.utils import with_eager_tasks
 from StringIO import StringIO
 
@@ -518,7 +519,11 @@ class IsValidOriginTestCase(TestCase):
             self.assertTrue(is_valid_origin('http://example.com'))
 
     def test_setting_uri(self):
-        with Settings(SENTRY_ALLOW_ORIGIN='http://example.com'):
+        with Settings(SENTRY_ALLOW_ORIGIN=['http://example.com']):
+            self.assertTrue(is_valid_origin('http://example.com'))
+
+    def test_setting_regexp(self):
+        with Settings(SENTRY_ALLOW_ORIGIN=[re.compile('https?\://(.*\.)?example\.com')]):
             self.assertTrue(is_valid_origin('http://example.com'))
 
 
