@@ -12,6 +12,7 @@ This document describes configuration options available to Sentry.
    django
    flask
    pylons
+   pyramid
    logging
    logbook
    wsgi
