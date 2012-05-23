@@ -24,6 +24,9 @@ def is_valid_origin(origin):
     if settings.SENTRY_ALLOW_ORIGIN == '*':
         return True
 
+    if not origin:
+        return False
+
     origin = origin.lower()
     for value in settings.SENTRY_ALLOW_ORIGIN:
         if isinstance(value, basestring):
