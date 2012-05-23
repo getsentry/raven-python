@@ -63,6 +63,9 @@ setup(
         'console_scripts': [
             'raven = raven.scripts.runner:main',
         ],
+        'paste.filter_app_factory': [
+            'raven = raven.contrib.paste:sentry_filter_factory',
+        ],
     },
     classifiers=[
         'Intended Audience :: Developers',
