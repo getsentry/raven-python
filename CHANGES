@@ -1,3 +1,10 @@
+1.9.0
+
+* Signatures are no longer sent with messages. This requires the server version to be at least 4.4.6.
+* Several fixes and additions were added to the Django report view.
+* ``long`` types are now handled in transform().
+* Improved integration with Celery (and django-celery) for capturing errors.
+
 1.8.0
 
 * There is now a builtin view as part of the Django integration for sending events server-side

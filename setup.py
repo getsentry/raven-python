@@ -33,7 +33,7 @@ tests_require = [
     'nose',
     'mock',
     'pep8',
-    'sentry>=4.0.17',
+    'sentry>=4.4.6',
     'unittest2',
     'webob',
     'zerorpc>=0.2.0',
@@ -46,7 +46,7 @@ install_requires = [
 
 setup(
     name='raven',
-    version='1.8.4',
+    version='1.9.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',

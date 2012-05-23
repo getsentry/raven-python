@@ -83,11 +83,9 @@ class ClientTest(TestCase):
         self.assertEquals(client.state.status, client.state.ONLINE)
 
     @mock.patch('raven.base.Client.send_remote')
-    @mock.patch('raven.base.get_signature')
     @mock.patch('raven.base.time.time')
-    def test_send(self, time, get_signature, send_remote):
+    def test_send(self, time, send_remote):
         time.return_value = 1328055286.51
-        get_signature.return_value = 'signature'
         client = Client(
             servers=['http://example.com'],
             public_key='public',
@@ -102,7 +100,7 @@ class ClientTest(TestCase):
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
                 'Content-Type': 'application/octet-stream',
-                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, sentry_signature=signature, '
+                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
                 'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
             },
         )
@@ -251,7 +249,7 @@ class ClientUDPTest(TestCase):
         data, address = self.server_socket.recvfrom(2**16)
         self.assertTrue("\n\n" in data)
         header, payload = data.split("\n\n")
-        for substring in ("sentry_timestamp=", "sentry_client=", "sentry_signature="):
+        for substring in ("sentry_timestamp=", "sentry_client="):
             self.assertTrue(substring in header)
 
     def tearDown(self):
