@@ -21,7 +21,7 @@ from urlparse import urlparse
 
 import raven
 from raven.conf import defaults
-from raven.utils import json, varmap, get_versions, get_signature, get_auth_header
+from raven.utils import json, varmap, get_versions, get_auth_header
 
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
@@ -424,12 +424,9 @@ class Client(object):
         """
         for url in self.servers:
             timestamp = time.time()
-            signature = get_signature(message, timestamp, self.secret_key or
-                    self.key)
             headers = {
                 'X-Sentry-Auth': get_auth_header(
                     protocol=self.protocol_version,
-                    signature=signature,
                     timestamp=timestamp,
                     client='raven-python/%s' % (raven.VERSION,),
                     api_key=self.public_key
