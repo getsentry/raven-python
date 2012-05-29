@@ -128,6 +128,28 @@ class ClientTest(TestCase):
             },
         )
 
+    @mock.patch('raven.base.Client.send_remote')
+    @mock.patch('raven.base.time.time')
+    def test_send_with_auth_header(self, time, send_remote):
+        time.return_value = 1328055286.51
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+        client.send(auth_header='foo', **{
+            'foo': 'bar',
+        })
+        send_remote.assert_called_once_with(
+            url='http://example.com',
+            data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
+            headers={
+                'Content-Type': 'application/octet-stream',
+                'X-Sentry-Auth': 'foo'
+            },
+        )
+
     def test_encode_decode(self):
         data = {'foo': 'bar'}
         encoded = self.client.encode(data)

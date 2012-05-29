@@ -204,7 +204,8 @@ class Client(object):
         return self.module_cache[name](self)
 
     def build_msg(self, event_type, data=None, date=None,
-            time_spent=None, extra=None, stack=None, **kwargs):
+            time_spent=None, extra=None, stack=None, public_key=None,
+            **kwargs):
         """
         Captures, processes and serializes an event into a dict object
         """
@@ -305,6 +306,7 @@ class Client(object):
         })
         data.setdefault('project', self.project)
         data.setdefault('site', self.site)
+        data.setdefault('public_key', self.public_key)
 
         return data
 
@@ -364,9 +366,9 @@ class Client(object):
         """
 
         data = self.build_msg(event_type, data, date, time_spent,
-                extra, stack, **kwargs)
+                extra, stack, public_key=public_key, **kwargs)
 
-        self.send(public_key=public_key, **data)
+        self.send(**data)
 
         return (data['event_id'], data['checksum'])
 
@@ -410,35 +412,38 @@ class Client(object):
         else:
             self.state.set_success()
 
-    def send(self, public_key=None, **data):
+    def send(self, public_key=None, auth_header=None, **data):
         """
         Serializes the message and passes the payload onto ``send_encoded``.
         """
         message = self.encode(data)
 
         try:
-            return self.send_encoded(message, public_key)
+            return self.send_encoded(message, public_key=public_key, auth_header=auth_header)
         except TypeError:
             # Make the assumption that public_key wasnt supported
-            warnings.warn('%s.send_encoded needs updated to support ``public_key``' % (type(self).__name__,),
+            warnings.warn('%s.send_encoded needs updated to support ``**kwargs``' % (type(self).__name__,),
                 DeprecationWarning)
             return self.send_encoded(message)
 
-    def send_encoded(self, message, public_key=None, **kwargs):
+    def send_encoded(self, message, public_key=None, auth_header=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
         payload off to ``send_remote`` for each server specified in the servers
         configuration.
         """
-        for url in self.servers:
+        if not auth_header:
             timestamp = time.time()
+            auth_header = get_auth_header(
+                protocol=self.protocol_version,
+                timestamp=timestamp,
+                client='raven-python/%s' % (raven.VERSION,),
+                api_key=public_key or self.public_key
+            )
+
+        for url in self.servers:
             headers = {
-                'X-Sentry-Auth': get_auth_header(
-                    protocol=self.protocol_version,
-                    timestamp=timestamp,
-                    client='raven-python/%s' % (raven.VERSION,),
-                    api_key=public_key or self.public_key
-                ),
+                'X-Sentry-Auth': auth_header,
                 'Content-Type': 'application/octet-stream',
             }
 

@@ -79,7 +79,9 @@ class TransportTest(TestCase):
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
         d = calendar.timegm(mydate.timetuple())
         msg = c.build_msg("Message", message='foo', date=d)
-        expected = {'project': '1',
+        expected = {
+            'project': '1',
+            'public_key': 'some_username',
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
             'server_name': u'test_server',
             'level': 40,
@@ -89,7 +91,8 @@ class TransportTest(TestCase):
             'site': None,
             'time_spent': None,
             'timestamp': 1336089600,
-            'message': 'foo'}
+            'message': 'foo',
+        }
 
         # The event_id is always overridden
         del msg['event_id']
