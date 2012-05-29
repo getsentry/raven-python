@@ -105,6 +105,29 @@ class ClientTest(TestCase):
             },
         )
 
+    @mock.patch('raven.base.Client.send_remote')
+    @mock.patch('raven.base.time.time')
+    def test_send_with_public_key(self, time, send_remote):
+        time.return_value = 1328055286.51
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+        client.send(public_key='foo', **{
+            'foo': 'bar',
+        })
+        send_remote.assert_called_once_with(
+            url='http://example.com',
+            data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
+            headers={
+                'Content-Type': 'application/octet-stream',
+                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
+                'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=foo' % (raven.VERSION,)
+            },
+        )
+
     def test_encode_decode(self):
         data = {'foo': 'bar'}
         encoded = self.client.encode(data)

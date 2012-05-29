@@ -1,6 +1,6 @@
 """
 raven.base
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -309,7 +309,7 @@ class Client(object):
         return data
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
-                extra=None, stack=None, **kwargs):
+                extra=None, stack=None, public_key=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -358,13 +358,15 @@ class Client(object):
         :param extra: a dictionary of additional standard metadata
         :param culprit: a string representing the cause of this event
                         (generally a path to a function)
+        :param public_key: the public key to use for this message
+                           (defaults to ``Client.public_key``)
         :return: a 32-length string identifying this event
         """
 
         data = self.build_msg(event_type, data, date, time_spent,
                 extra, stack, **kwargs)
 
-        self.send(**data)
+        self.send(public_key=public_key, **data)
 
         return (data['event_id'], data['checksum'])
 
@@ -408,15 +410,21 @@ class Client(object):
         else:
             self.state.set_success()
 
-    def send(self, **data):
+    def send(self, public_key=None, **data):
         """
         Serializes the message and passes the payload onto ``send_encoded``.
         """
         message = self.encode(data)
 
-        return self.send_encoded(message)
+        try:
+            return self.send_encoded(message, public_key)
+        except TypeError:
+            # Make the assumption that public_key wasnt supported
+            warnings.warn('%s.send_encoded needs updated to support ``public_key``' % (type(self).__name__,),
+                DeprecationWarning)
+            return self.send_encoded(message)
 
-    def send_encoded(self, message):
+    def send_encoded(self, message, public_key=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
         payload off to ``send_remote`` for each server specified in the servers
@@ -429,7 +437,7 @@ class Client(object):
                     protocol=self.protocol_version,
                     timestamp=timestamp,
                     client='raven-python/%s' % (raven.VERSION,),
-                    api_key=self.public_key
+                    api_key=public_key or self.public_key
                 ),
                 'Content-Type': 'application/octet-stream',
             }

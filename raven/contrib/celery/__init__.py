@@ -1,6 +1,6 @@
 """
 raven.contrib.celery
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -16,13 +16,13 @@ from raven.handlers.logging import SentryHandler
 
 
 class CeleryMixin(object):
-    def send_encoded(self, message):
+    def send_encoded(self, *args, **kwargs):
         "Errors through celery"
-        self.send_raw.delay(message)
+        self.send_raw.delay(*args, **kwargs)
 
     @task(routing_key='sentry')
-    def send_raw(self, message):
-        return super(CeleryMixin, self).send_encoded(message)
+    def send_raw(self, *args, **kwargs):
+        return super(CeleryMixin, self).send_encoded(*args, **kwargs)
 
 
 class CeleryClient(CeleryMixin, Client):
