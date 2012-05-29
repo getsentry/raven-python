@@ -72,7 +72,7 @@ def extract_auth_vars(request):
 @require_http_methods(['POST', 'OPTIONS'])
 @never_cache
 @with_origin
-def report(request):
+def report(request, project_id=None):
     if request.method == 'POST':
         data = request.raw_post_data
         if not data:
