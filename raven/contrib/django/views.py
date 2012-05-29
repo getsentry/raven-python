@@ -55,6 +55,19 @@ def with_origin(func):
     return wrapped
 
 
+def extract_auth_vars(request):
+    """
+    raven-js will pass both Authorization and X-Sentry-Auth depending on the browser
+    and server configurations.
+    """
+    if request.META.get('HTTP_X_SENTRY_AUTH', '').startswith('Sentry'):
+        return request.META['HTTP_X_SENTRY_AUTH']
+    elif request.META.get('HTTP_AUTHORIZATION', '').startswith('Sentry'):
+        return request.META['HTTP_AUTHORIZATION']
+    else:
+        return None
+
+
 @csrf_exempt
 @require_http_methods(['POST', 'OPTIONS'])
 @never_cache
@@ -71,7 +84,7 @@ def report(request):
             return HttpResponseBadRequest()
 
         response = HttpResponse()
-        client.send(**decoded)
+        client.send(auth_header=extract_auth_vars(request), **decoded)
 
     elif request.method == 'OPTIONS':
         response = HttpResponse()

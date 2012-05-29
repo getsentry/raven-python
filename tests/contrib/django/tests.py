@@ -571,4 +571,20 @@ class ReportViewTest(TestCase):
             data='{}', content_type='application/octet-stream')
         self.assertEquals(resp.status_code, 200)
         event = client.events.pop(0)
-        self.assertEquals(event, {})
+        self.assertEquals(event, {'auth_header': None})
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
+    def test_sends_authorization_header(self):
+        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+            HTTP_AUTHORIZATION='Sentry foo/bar', data='{}', content_type='application/octet-stream')
+        self.assertEquals(resp.status_code, 200)
+        event = client.events.pop(0)
+        self.assertEquals(event, {'auth_header': 'Sentry foo/bar'})
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
+    def test_sends_x_sentry_auth_header(self):
+        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+            HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}', content_type='application/octet-stream')
+        self.assertEquals(resp.status_code, 200)
+        event = client.events.pop(0)
+        self.assertEquals(event, {'auth_header': 'Sentry foo/bar'})
