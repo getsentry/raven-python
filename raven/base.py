@@ -432,6 +432,10 @@ class Client(object):
         payload off to ``send_remote`` for each server specified in the servers
         configuration.
         """
+        if not self.servers:
+            warnings.warn('Raven client has no remote servers configured')
+            return
+
         if not auth_header:
             timestamp = time.time()
             auth_header = get_auth_header(
