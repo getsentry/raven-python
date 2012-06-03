@@ -13,9 +13,7 @@ install:
   - sudo pip install https://github.com/dcramer/pyflakes/tarball/master
   - sudo pip install -e . --use-mirrors
 script:
-  - "sudo pep8 --ignore=E501,E225 raven"
-  - sudo pyflakes -x W raven
-  - sudo python setup.py test
+  - make test
 notifications:
   irc:
     channels: "irc.freenode.org#sentry"
