@@ -35,7 +35,7 @@ class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
 
-        handler = getattr(__import__(module, {}, \
+        handler = getattr(__import__(module, {},
                 {}, [class_name], -1), class_name)
 
         self[key] = handler
@@ -166,10 +166,10 @@ class Client(object):
         self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
         self.timeout = int(timeout or defaults.TIMEOUT)
         self.name = unicode(name or defaults.NAME)
-        self.auto_log_stacks = bool(auto_log_stacks or \
+        self.auto_log_stacks = bool(auto_log_stacks or
                 defaults.AUTO_LOG_STACKS)
         self.key = str(key or defaults.KEY)
-        self.string_max_length = int(string_max_length or \
+        self.string_max_length = int(string_max_length or
                 defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(list_max_length or defaults.MAX_LENGTH_LIST)
         if (site or defaults.SITE):
@@ -255,9 +255,10 @@ class Client(object):
             })
 
         if 'sentry.interfaces.Stacktrace' in data and not culprit:
-            culprit = get_culprit(\
-                        data['sentry.interfaces.Stacktrace']['frames'],
-                        self.include_paths, self.exclude_paths)
+            culprit = get_culprit(
+                data['sentry.interfaces.Stacktrace']['frames'],
+                self.include_paths, self.exclude_paths
+            )
 
         if not data.get('level'):
             data['level'] = logging.ERROR

@@ -84,7 +84,7 @@ class DjangoClient(Client):
             exc_value = kwargs['exc_info'][1]
             # As of r16833 (Django) all exceptions may contain a ``django_template_source`` attribute (rather than the
             # legacy ``TemplateSyntaxError.source`` check) which describes template information.
-            if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and \
+            if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and
                isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], LoaderOrigin))):
                 source = getattr(exc_value, 'django_template_source', getattr(exc_value, 'source', None))
                 if source is None:

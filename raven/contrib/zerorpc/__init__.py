@@ -53,6 +53,6 @@ class SentryMiddleware(object):
                     break
 
         self._sentry_client.captureException(
-                exc_info,
-                extra=task_context
+            exc_info,
+            extra=task_context
         )

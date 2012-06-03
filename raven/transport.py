@@ -75,7 +75,7 @@ class UDPTransport(Transport):
             pass
         finally:
             # Always close up the socket when we're done
-            if udp_socket != None:
+            if udp_socket is not None:
                 udp_socket.close()
                 udp_socket = None
 
