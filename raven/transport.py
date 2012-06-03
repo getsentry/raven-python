@@ -80,9 +80,6 @@ class UDPTransport(Transport):
                 udp_socket = None
 
     def compute_scope(self, url, scope):
-        netloc = url.hostname
-        netloc += ':%s' % url.port
-
         path_bits = url.path.rsplit('/', 1)
         if len(path_bits) > 1:
             path = path_bits[0]
@@ -90,8 +87,11 @@ class UDPTransport(Transport):
             path = ''
         project = path_bits[-1]
 
-        if not all([netloc, project, url.username, url.password]):
+        if not all([url.port, project, url.username, url.password]):
             raise ValueError('Invalid Sentry DSN: %r' % url.geturl())
+
+        netloc = url.hostname
+        netloc += ':%s' % url.port
 
         server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
         scope.update({
