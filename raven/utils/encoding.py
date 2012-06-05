@@ -82,7 +82,7 @@ def transform(value, stack=[], context=None):
             # We may be dealing with a namedtuple
             class value_type(list):
                 __name__ = type(value).__name__
-            ret = value_type(transform_rec(o) for o in value[:])
+            ret = value_type(transform_rec(o) for o in value)
     elif isinstance(value, uuid.UUID):
         ret = repr(value)
     elif isinstance(value, dict):
