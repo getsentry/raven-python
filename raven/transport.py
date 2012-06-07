@@ -1,5 +1,13 @@
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
+from collections import Iterable
+
+try:
+    from gevent import spawn
+    from gevent.coros import Semaphore
+    gevented = True
+except:
+    gevented = None
 
 
 class InvalidScheme(ValueError):
@@ -150,13 +158,49 @@ class HTTPTransport(Transport):
         return scope
 
 
+class GeventedHTTPTransport(HTTPTransport):
+
+    scheme = ['gevent+http', 'gevent+https']
+
+    def __init__(self, parsed_url, maximum_outstanding_requests=100):
+        if not gevented:
+            raise ImportError('GeventedHTTPTransport requires gevent.')
+        self._lock = Semaphore(maximum_outstanding_requests)
+
+        super(GeventedHTTPTransport, self).__init__(parsed_url)
+
+        # remove the gevent+ from the protocol, as it is not a real protocol
+        self._url = self._url.split('+', 1)[-1]
+
+    def send(self, data, headers):
+        """
+        Spawn an async request to a remote webserver.
+        """
+        # this can be optimized by making a custom self.send that does not
+        # read the response since we don't use it.
+        self._lock.acquire()
+        return spawn(super(GeventedHTTPTransport, self).send, data, headers).link(self._done, self)
+
+    def _done(self, *args):
+        self._lock.release()
+
+
 class TransportRegistry(object):
-    def __init__(self):
+    def __init__(self, transports=None):
         # setup a default list of senders
-        self._schemes = {'http': HTTPTransport,
-                         'https': HTTPTransport,
-                         'udp': UDPTransport}
+        self._schemes = {}
         self._transports = {}
+
+        if transports:
+            for transport in transports:
+                self.register_transport(transport)
+
+    def register_transport(self, transport):
+        if not hasattr(transport, 'scheme') and not isinstance(transport.scheme, Iterable):
+            raise AttributeError('Transport %s must have a scheme list', transport.__class__.__name__)
+
+        for scheme in transport.scheme:
+            self.register_scheme(scheme, transport)
 
     def register_scheme(self, scheme, cls):
         """
@@ -183,3 +227,9 @@ class TransportRegistry(object):
         """
         transport = self._schemes[url.scheme](url)
         return transport.compute_scope(url, scope)
+
+default_transports = [
+    HTTPTransport,
+    GeventedHTTPTransport,
+    UDPTransport,
+]
