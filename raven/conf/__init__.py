@@ -33,8 +33,8 @@ def load(dsn, scope=None, transport_registry=None):
     """
 
     if not transport_registry:
-        from raven.transport import TransportRegistry
-        transport_registry = TransportRegistry()
+        from raven.transport import TransportRegistry, default_transports
+        transport_registry = TransportRegistry(default_transports)
 
     url = urlparse.urlparse(dsn)
 
