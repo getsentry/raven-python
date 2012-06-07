@@ -15,7 +15,7 @@ A filter factory for `PasteDeploy <http://pythonpaste.org/deploy/>`_ exists to a
         MyApp
 
     [filter:raven]
-    use = egg:raven#paste_filter
+    use = egg:raven#raven
     dsn = http://public:secret@example.com/1
     include_paths = my.package, my.other.package
     exclude_paths = my.package.crud
