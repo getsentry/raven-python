@@ -26,7 +26,7 @@ from raven.utils import json, varmap, get_versions, get_auth_header
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
-from raven.transport import TransportRegistry
+from raven.transport import TransportRegistry, default_transports
 
 __all__ = ('Client',)
 
@@ -114,7 +114,7 @@ class Client(object):
     logger = logging.getLogger('raven')
     protocol_version = '2.0'
 
-    _registry = TransportRegistry()
+    _registry = TransportRegistry(transports=default_transports)
 
     def __init__(self, servers=None, include_paths=None, exclude_paths=None,
             timeout=None, name=None, auto_log_stacks=None, key=None,
