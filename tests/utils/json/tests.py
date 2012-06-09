@@ -14,7 +14,7 @@ class JSONTest(TestCase):
 
     def test_datetime(self):
         res = datetime.datetime(day=1, month=1, year=2011, hour=1, minute=1, second=1)
-        self.assertEquals(json.dumps(res), '"2011-01-01T01:01:01.000000Z"')
+        self.assertEquals(json.dumps(res), '"2011-01-01T01:01:01Z"')
 
     def test_set(self):
         res = set(['foo', 'bar'])
