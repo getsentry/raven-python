@@ -22,6 +22,8 @@ You'll be referencing the client slightly differently in Django as well::
     client.captureException()
 
 
+.. note:: If you are running ``DEBUG = True`` Raven will not automatically collect any exceptions.
+
 Integration with :mod:`logging`
 -------------------------------
 
