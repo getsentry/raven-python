@@ -9,6 +9,12 @@ try:
 except:
     gevented = None
 
+try:
+    from twisted.web.client import getPage
+    twisted = True
+except:
+    twisted = False
+
 
 class InvalidScheme(ValueError):
     """
@@ -185,6 +191,23 @@ class GeventedHTTPTransport(HTTPTransport):
         self._lock.release()
 
 
+class TwistedHTTPTransport(HTTPTransport):
+
+    scheme = ['twisted+http']
+
+    def __init__(self, parsed_url):
+        if not twisted:
+            raise ImportError('TwistedHTTPTransport requires twisted.web.')
+
+        super(TwistedHTTPTransport, self).__init__(parsed_url)
+
+        # remove the twisted+ from the protocol, as it is not a real protocol
+        self._url = self._url.split('+', 1)[-1]
+
+    def send(self, data, headers):
+        d = getPage(self._url, method='POST', postdata=data, headers=headers)
+
+
 class TransportRegistry(object):
     def __init__(self, transports=None):
         # setup a default list of senders
@@ -231,5 +254,6 @@ class TransportRegistry(object):
 default_transports = [
     HTTPTransport,
     GeventedHTTPTransport,
+    TwistedHTTPTransport,
     UDPTransport,
 ]
