@@ -66,7 +66,7 @@ def setup_logging(handler, exclude=['raven',
 
     Within Django:
 
-    >>> from raven.contrib.django.logging import SentryHandler
+    >>> from raven.contrib.django.handlers import SentryHandler
     >>> setup_logging(SentryHandler())
 
     Returns a boolean based on if logging was configured or not.
