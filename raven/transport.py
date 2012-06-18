@@ -15,6 +15,12 @@ try:
 except:
     twisted = False
 
+try:
+    from tornado.httpclient import AsyncHTTPClient
+    tornado = True
+except:
+    tornado = False
+
 
 class InvalidScheme(ValueError):
     """
@@ -208,6 +214,25 @@ class TwistedHTTPTransport(HTTPTransport):
         d = getPage(self._url, method='POST', postdata=data, headers=headers)
 
 
+class TornadoHTTPTransport(HTTPTransport):
+
+    scheme = ['tornado+http']
+
+    def __init__(self, parsed_url):
+        if not tornado:
+            raise ImportError('TornadoHTTPTransport requires tornado.')
+
+        super(TornadoHTTPTransport, self).__init__(parsed_url)
+
+        # remove the tornado+ from the protocol, as it is not a real protocol
+        self._url = self._url.split('+', 1)[-1]
+
+    def send(self, data, headers):
+        client = AsyncHTTPClient()
+        client.fetch(self._url, callback=None,
+                     method='POST', headers=headers, body=data)
+
+
 class TransportRegistry(object):
     def __init__(self, transports=None):
         # setup a default list of senders
@@ -255,5 +280,6 @@ default_transports = [
     HTTPTransport,
     GeventedHTTPTransport,
     TwistedHTTPTransport,
+    TornadoHTTPTransport,
     UDPTransport,
 ]
