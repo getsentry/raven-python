@@ -8,10 +8,10 @@ env:
   - DJANGO=1.3.1
 install:
   - sudo apt-get install libevent-dev
-  - sudo pip install Django==$DJANGO --use-mirrors
-  - sudo pip install pep8 --use-mirrors
-  - sudo pip install https://github.com/dcramer/pyflakes/tarball/master
-  - sudo pip install -e . --use-mirrors
+  - pip install Django==$DJANGO --use-mirrors
+  - pip install pep8 --use-mirrors
+  - pip install https://github.com/dcramer/pyflakes/tarball/master
+  - pip install -e . --use-mirrors
 script:
   - make test
 notifications:
