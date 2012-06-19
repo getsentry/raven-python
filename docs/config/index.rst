@@ -9,14 +9,16 @@ This document describes configuration options available to Sentry.
 .. toctree::
    :maxdepth: 2
 
+   celery
    django
    flask
+   logbook
+   logging
    pylons
    pyramid
-   logging
-   logbook
    wsgi
    zerorpc
+   zope
 
 
 Configuring the Client
