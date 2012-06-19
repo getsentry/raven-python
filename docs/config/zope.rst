@@ -12,7 +12,7 @@ A basic setup for logging looks like that:
   <eventlog>
     level INFO
     <logfile>
-     path ${buildout:site}/var/instance.log
+     path ${buildout:directory}/var/{:_buildout_section_name_}.log
      level INFO
     </logfile>
 
