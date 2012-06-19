@@ -8,6 +8,8 @@ import logging
 
 from raven.utils.stacks import iter_stack_frames
 
+logger = logging.getLogger(__name__)
+
 
 class ZopeSentryHandlerFactory(Factory):
 
@@ -23,12 +25,13 @@ class ZopeSentryHandlerFactory(Factory):
 
 
 class ZopeSentryHandler(SentryHandler):
-    """
+
+    '''
     Zope unfortunately eats the stack trace information.
     To get the stack trace information and other useful information
     from the request object, this class looks into the different stack
     frames when the emit method is invoked.
-    """
+    '''
 
     def __init__(self, *args, **kw):
         super(ZopeSentryHandler, self).__init__(*args, **kw)
@@ -41,10 +44,18 @@ class ZopeSentryHandler(SentryHandler):
             exc_info = None
             for frame_info in getouterframes(currentframe()):
                 frame = frame_info[0]
-                request = frame.f_locals.get('request', None)
-                exc_info = frame.f_locals.get('exc_info', None)
+                if not request:
+                    request = frame.f_locals.get('request', None)
+                    if not request:
+                        view = frame.f_locals.get('self', None)
+                        request = getattr(view, 'request', None)
+                if not exc_info:
+                    exc_info = frame.f_locals.get('exc_info', None)
+                    if not hasattr(exc_info, '__getitem__'):
+                        exc_info = None
                 if request and exc_info:
                     break
+
             if exc_info:
                 record.exc_info = exc_info
                 record.stack = \
@@ -55,19 +66,25 @@ class ZopeSentryHandler(SentryHandler):
                     request.stdin.seek(0)
                     body = request.stdin.read()
                     request.stdin.seek(body_pos)
-                    data = dict(headers=request.environ,
+                    http = dict(headers=request.environ,
                                 url=request.getURL(),
                                 method=request.method,
                                 host=request.environ.get('REMOTE_ADDR',
                                 ''), data=body)
-                    if not hasattr(record, 'data'):
-                        record.data = {}
-                    record.data['sentry.interfaces.Http'] = data
+                    if 'HTTP_USER_AGENT' in http['headers']:
+                        if 'User-Agent' not in http['headers']:
+                            http['headers']['User-Agent'] = \
+                                http['headers']['HTTP_USER_AGENT']
+                    if 'QUERY_STRING' in http['headers']:
+                        http['query_string'] = http['headers'
+                                ]['QUERY_STRING']
+                    setattr(record, 'sentry.interfaces.Http', http)
                     user = request.AUTHENTICATED_USER
                     user_dict = dict(id=user.getId(),
                             is_authenticated=user.has_role('Authenticated'
-                            ), email='todo')
-                    record.data['sentry.interfaces.User'] = user_dict
+                            ), email=user.getProperty('email'))
+                    setattr(record, 'sentry.interfaces.User', user_dict)
                 except (AttributeError, KeyError):
-                    pass
+                    logger.warning('Could not extract data from request'
+                                   , exc_info=True)
         return super(ZopeSentryHandler, self).emit(record)
