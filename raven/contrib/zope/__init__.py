@@ -25,7 +25,6 @@ class ZopeSentryHandlerFactory(Factory):
 
 
 class ZopeSentryHandler(SentryHandler):
-
     '''
     Zope unfortunately eats the stack trace information.
     To get the stack trace information and other useful information
