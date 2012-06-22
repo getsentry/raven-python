@@ -1,6 +1,5 @@
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
-from collections import Iterable
 
 try:
     from gevent import spawn
@@ -244,7 +243,7 @@ class TransportRegistry(object):
                 self.register_transport(transport)
 
     def register_transport(self, transport):
-        if not hasattr(transport, 'scheme') and not isinstance(transport.scheme, Iterable):
+        if not hasattr(transport, 'scheme') and not hasattr(transport.scheme, '__iter__'):
             raise AttributeError('Transport %s must have a scheme list', transport.__class__.__name__)
 
         for scheme in transport.scheme:
