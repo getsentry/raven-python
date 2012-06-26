@@ -127,7 +127,7 @@ class AsyncSentryClient(Client):
             headers = {}
 
         return AsyncHTTPClient().fetch(
-            url, callback, method="POST", body=data, **headers
+            url, callback, method="POST", body=data, headers=headers
         )
 
 
