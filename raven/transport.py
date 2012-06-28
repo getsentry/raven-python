@@ -15,7 +15,8 @@ except:
     twisted = False
 
 try:
-    from tornado.httpclient import AsyncHTTPClient
+    from tornado import ioloop
+    from tornado.httpclient import AsyncHTTPClient, HTTPClient
     tornado = True
 except:
     tornado = False
@@ -227,9 +228,16 @@ class TornadoHTTPTransport(HTTPTransport):
         self._url = self._url.split('+', 1)[-1]
 
     def send(self, data, headers):
-        client = AsyncHTTPClient()
-        client.fetch(self._url, callback=None,
-                     method='POST', headers=headers, body=data)
+        kwargs = dict(method='POST', headers=headers, body=data)
+
+        # only use async if ioloop is running, otherwise it will never send
+        if ioloop.IOLoop.initialized():
+            client = AsyncHTTPClient()
+            kwargs['callback'] = None
+        else:
+            client = HTTPClient()
+
+        client.fetch(self._url, **kwargs)
 
 
 class TransportRegistry(object):
