@@ -89,6 +89,7 @@ class TransportTest(TestCase):
             'extra': {},
             'modules': {},
             'site': None,
+            'tags': None,
             'time_spent': None,
             'timestamp': 1336089600,
             'message': 'foo',
