@@ -97,11 +97,10 @@ class SentryWorker(object):
     >>> from raven.base import Client
     >>> application = SentryWorker(application)
     """
-    def __init__(self, application):
+    def __init__(self, application, worker=None):
         self.application = application
-        self.worker = AsyncWorker()
+        self.worker = worker or AsyncWorker()
 
     def __call__(self, environ, start_response):
         environ['raven.worker'] = self.worker
-        for event in self.application(environ, start_response):
-            yield event
+        return iter(self.application(environ, start_response))
