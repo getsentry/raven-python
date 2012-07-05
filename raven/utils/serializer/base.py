@@ -26,12 +26,23 @@ class Serializer(object):
         self.manager = manager
 
     def can(self, value):
+        """
+        Given ``value``, return a boolean describing whether this
+        serializer can operate on the given type
+        """
         return isinstance(value, self.types)
 
     def serialize(self, value):
+        """
+        Given ``value``, coerce into a JSON-safe type.
+        """
         return value
 
     def recurse(self, value):
+        """
+        Given ``value``, recurse (using the parent serializer) to handle
+        coercing of newly defined values.
+        """
         return self.manager.transform(value)
 
 
