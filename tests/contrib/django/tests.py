@@ -25,8 +25,10 @@ from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import client, get_client
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.views import is_valid_origin
+from raven.utils.serializer import transform
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
+from .models import TestModel
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
@@ -588,3 +590,21 @@ class ReportViewTest(TestCase):
         self.assertEquals(resp.status_code, 200)
         event = client.events.pop(0)
         self.assertEquals(event, {'auth_header': 'Sentry foo/bar'})
+
+
+class PromiseSerializerTestCase(TestCase):
+    def test_basic(self):
+        from django.utils.functional import lazy
+
+        obj = lazy(lambda: 'bar', str)()
+        res = transform(obj)
+        self.assertEquals(res, 'bar')
+
+
+class QuerySetSerializerTestCase(TestCase):
+    def test_basic(self):
+        from django.db.models.query import QuerySet
+        obj = QuerySet(model=TestModel)
+
+        res = transform(obj)
+        self.assertEquals(res, '<QuerySet: model=TestModel>')

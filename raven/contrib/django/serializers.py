@@ -6,6 +6,7 @@ raven.contrib.django.serializers
 :license: BSD, see LICENSE for more details.
 """
 
+from django.db.models.query import QuerySet
 from django.utils.functional import Promise
 from raven.utils.serializer import Serializer, register
 
@@ -22,3 +23,14 @@ class PromiseSerializer(Serializer):
         pre = value.__class__.__name__[1:]
         value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
         return self.recurse(value)
+
+
+@register
+class QuerySetSerializer(Serializer):
+    types = (QuerySet,)
+
+    def serialize(self, value):
+        qs_name = type(value).__name__
+        if value.model:
+            return u'<%s: model=%s>' % (qs_name, value.model.__name__)
+        return u'<%s: (Unbound)>' % (qs_name,)
