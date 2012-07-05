@@ -296,7 +296,7 @@ class Client(object):
             data.update(processor.process(data))
 
         # Make sure all data is coerced
-        data = transform(data)
+        data = self.transform(data)
 
         if 'message' not in data:
             data['message'] = handler.to_string(data)
@@ -311,6 +311,9 @@ class Client(object):
         data.setdefault('public_key', self.public_key)
 
         return data
+
+    def transform(self, data):
+        return transform(data)
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
                 extra=None, stack=None, public_key=None, tags=None, **kwargs):

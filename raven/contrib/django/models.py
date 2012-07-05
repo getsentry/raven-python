@@ -194,5 +194,10 @@ def register_handlers():
         except Exception, e:
             logger.exception('Failed installing django-celery hook: %s' % e)
 
+
+def register_serializers():
+    import raven.contrib.django.serializers  # force import so serializers can call register
+
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
     register_handlers()
+    register_serializers()
