@@ -84,6 +84,5 @@ class ZopeSentryHandler(SentryHandler):
                             ), email=user.getProperty('email'))
                     setattr(record, 'sentry.interfaces.User', user_dict)
                 except (AttributeError, KeyError):
-                    logger.warning('Could not extract data from request'
-                                   , exc_info=True)
+                    logger.warning('Could not extract data from request', exc_info=True)
         return super(ZopeSentryHandler, self).emit(record)

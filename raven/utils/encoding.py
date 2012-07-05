@@ -6,8 +6,7 @@ raven.utils.encoding
 :license: BSD, see LICENSE for more details.
 """
 
-import uuid
-from types import ClassType, TypeType
+import warnings
 
 
 def force_unicode(s, encoding='utf-8', errors='strict'):
@@ -54,71 +53,12 @@ def force_unicode(s, encoding='utf-8', errors='strict'):
     return s
 
 
-def _has_sentry_metadata(value):
-    try:
-        return callable(value.__getattribute__("__sentry__"))
-    except:
-        return False
+def transform(value):
+    from raven.utils.serializer import transform
 
+    warnings.warn('You should switch to raven.utils.serializers.transform', DeprecationWarning)
 
-def transform(value, stack=[], context=None):
-    # TODO: make this extendable
-    if context is None:
-        context = {}
-
-    objid = id(value)
-    if objid in context:
-        return '<...>'
-
-    context[objid] = 1
-    transform_rec = lambda o: transform(o, stack + [value], context)
-
-    if any(value is s for s in stack):
-        ret = 'cycle'
-    elif isinstance(value, (tuple, list, set, frozenset)):
-        try:
-            ret = type(value)(transform_rec(o) for o in value)
-        except Exception:
-            # We may be dealing with a namedtuple
-            class value_type(list):
-                __name__ = type(value).__name__
-            ret = value_type(transform_rec(o) for o in value)
-    elif isinstance(value, uuid.UUID):
-        ret = repr(value)
-    elif isinstance(value, dict):
-        ret = dict((to_string(k), transform_rec(v)) for k, v in value.iteritems())
-    elif isinstance(value, unicode):
-        ret = to_unicode(value)
-    elif isinstance(value, str):
-        ret = to_string(value)
-    elif not isinstance(value, (ClassType, TypeType)) and \
-            _has_sentry_metadata(value):
-        ret = transform_rec(value.__sentry__())
-    # elif isinstance(value, Promise):
-    #     # EPIC HACK
-    #     # handles lazy model instances (which are proxy values that dont easily give you the actual function)
-    #     pre = value.__class__.__name__[1:]
-    #     value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
-    #     return transform(value)
-    elif isinstance(value, bool):
-        ret = bool(value)
-    elif isinstance(value, float):
-        ret = float(value)
-    elif isinstance(value, int):
-        ret = int(value)
-    elif isinstance(value, long):
-        ret = long(value)
-    elif value is not None:
-        try:
-            ret = transform(repr(value))
-        except:
-            # It's common case that a model's __unicode__ definition may try to query the database
-            # which if it was not cleaned up correctly, would hit a transaction aborted exception
-            ret = u'<BadRepr: %s>' % type(value)
-    else:
-        ret = None
-    del context[objid]
-    return ret
+    return transform(value)
 
 
 def to_unicode(value):

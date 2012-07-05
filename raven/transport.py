@@ -1,6 +1,5 @@
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
-from collections import Iterable
 
 try:
     from gevent import spawn
@@ -16,7 +15,8 @@ except:
     twisted = False
 
 try:
-    from tornado.httpclient import AsyncHTTPClient
+    from tornado import ioloop
+    from tornado.httpclient import AsyncHTTPClient, HTTPClient
     tornado = True
 except:
     tornado = False
@@ -228,9 +228,16 @@ class TornadoHTTPTransport(HTTPTransport):
         self._url = self._url.split('+', 1)[-1]
 
     def send(self, data, headers):
-        client = AsyncHTTPClient()
-        client.fetch(self._url, callback=None,
-                     method='POST', headers=headers, body=data)
+        kwargs = dict(method='POST', headers=headers, body=data)
+
+        # only use async if ioloop is running, otherwise it will never send
+        if ioloop.IOLoop.initialized():
+            client = AsyncHTTPClient()
+            kwargs['callback'] = None
+        else:
+            client = HTTPClient()
+
+        client.fetch(self._url, **kwargs)
 
 
 class TransportRegistry(object):
@@ -244,7 +251,7 @@ class TransportRegistry(object):
                 self.register_transport(transport)
 
     def register_transport(self, transport):
-        if not hasattr(transport, 'scheme') and not isinstance(transport.scheme, Iterable):
+        if not hasattr(transport, 'scheme') and not hasattr(transport.scheme, '__iter__'):
             raise AttributeError('Transport %s must have a scheme list', transport.__class__.__name__)
 
         for scheme in transport.scheme:

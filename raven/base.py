@@ -205,7 +205,7 @@ class Client(object):
 
     def build_msg(self, event_type, data=None, date=None,
             time_spent=None, extra=None, stack=None, public_key=None,
-            **kwargs):
+            tags=None, **kwargs):
         """
         Captures, processes and serializes an event into a dict object
         """
@@ -264,6 +264,7 @@ class Client(object):
             data['level'] = logging.ERROR
         data['modules'] = get_versions(self.include_paths)
         data['server_name'] = self.name
+        data['tags'] = tags
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
 
@@ -295,7 +296,7 @@ class Client(object):
             data.update(processor.process(data))
 
         # Make sure all data is coerced
-        data = transform(data)
+        data = self.transform(data)
 
         if 'message' not in data:
             data['message'] = handler.to_string(data)
@@ -311,8 +312,11 @@ class Client(object):
 
         return data
 
+    def transform(self, data):
+        return transform(data)
+
     def capture(self, event_type, data=None, date=None, time_spent=None,
-                extra=None, stack=None, public_key=None, **kwargs):
+                extra=None, stack=None, public_key=None, tags=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -367,7 +371,7 @@ class Client(object):
         """
 
         data = self.build_msg(event_type, data, date, time_spent,
-                extra, stack, public_key=public_key, **kwargs)
+                extra, stack, public_key=public_key, tags=tags, **kwargs)
 
         self.send(**data)
 

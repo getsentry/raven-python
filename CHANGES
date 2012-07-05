@@ -1,3 +1,15 @@
+2.0.0
+
+* New serializers exist (and can be registered) against Raven. See ``raven.utils.serializer`` for more information.
+* You can now pass ``tags`` to the ``capture`` method. This will require a Sentry server compatible with the new
+  tags protocol.
+* A new gevent+http transport exists.
+* A new tornado+http transport exists.
+* A new twisted+http transport exists.
+* Zope integration has been added. See docs for more information.
+* PasteDeploy integration has been added. See docs for more information.
+* A Django endpoint now exists for proxying requests to Sentry. See ``raven.contrib.django.views`` for more information.
+
 1.9.0
 
 * Signatures are no longer sent with messages. This requires the server version to be at least 4.4.6.
