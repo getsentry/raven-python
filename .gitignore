@@ -15,7 +15,7 @@ pip-log.txt
 /docs/doctrees
 /sentry_index/
 /sentry_test_index
-/example_project/*.db# On branch master
+/example_project/*.db
 bin/
 include/
 lib/
