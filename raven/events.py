@@ -72,12 +72,8 @@ class Exception(BaseEvent):
 
             culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
 
-            if hasattr(exc_type, '__module__'):
-                exc_module = exc_type.__module__
-                exc_type = exc_type.__name__
-            else:
-                exc_module = None
-                exc_type = exc_type.__name__
+            exc_module = getattr(exc_type, '__module__', None)
+            exc_type = getattr(exc_type, '__name__', '<unknown>')
         finally:
             if new_exc_info:
                 try:
