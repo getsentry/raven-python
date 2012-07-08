@@ -10,9 +10,11 @@ Using the Django integration is as simple as adding :mod:`raven.contrib.django` 
         'raven.contrib.django',
     )
 
-Additional settings for the client are configured using ``SENTRY_<setting name>``::
+Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::::
 
-    SENTRY_DSN = 'http://public:secret@example.com/1'
+    RAVEN_CONFIG = {
+        'dsn': 'http://public:secret@example.com/1',
+    }
 
 
 You'll be referencing the client slightly differently in Django as well::
@@ -22,7 +24,12 @@ You'll be referencing the client slightly differently in Django as well::
     client.captureException()
 
 
-.. note:: If you are running ``DEBUG = True`` Raven will not automatically collect any exceptions.
+If you are running ``DEBUG = True`` Raven will not automatically collect any exceptions unless
+you explicit set the ``register_signals`` flag in your configuration::
+
+    RAVEN_CONFIG = {
+        'register_signals': True,
+    }
 
 Integration with :mod:`logging`
 -------------------------------

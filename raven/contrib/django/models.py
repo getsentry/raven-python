@@ -108,24 +108,29 @@ def get_client(client=None):
         client = getattr(django_settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
 
     if _client[0] != client:
+        ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
+
         module, class_name = client.rsplit('.', 1)
-        instance = getattr(__import__(module, {}, {}, class_name), class_name)(
-            servers=getattr(django_settings, 'SENTRY_SERVERS', None),
-            include_paths=set(getattr(django_settings, 'SENTRY_INCLUDE_PATHS', [])) | get_installed_apps(),
-            exclude_paths=getattr(django_settings, 'SENTRY_EXCLUDE_PATHS', None),
-            timeout=getattr(django_settings, 'SENTRY_TIMEOUT', None),
-            name=getattr(django_settings, 'SENTRY_NAME', None),
-            auto_log_stacks=getattr(django_settings, 'SENTRY_AUTO_LOG_STACKS', None),
-            key=getattr(django_settings, 'SENTRY_KEY', md5_constructor(django_settings.SECRET_KEY).hexdigest()),
-            string_max_length=getattr(django_settings, 'SENTRY_MAX_LENGTH_STRING', None),
-            list_max_length=getattr(django_settings, 'SENTRY_MAX_LENGTH_LIST', None),
-            site=getattr(django_settings, 'SENTRY_SITE', None),
-            public_key=getattr(django_settings, 'SENTRY_PUBLIC_KEY', None),
-            secret_key=getattr(django_settings, 'SENTRY_SECRET_KEY', None),
-            project=getattr(django_settings, 'SENTRY_PROJECT', None),
-            processors=getattr(django_settings, 'SENTRY_PROCESSORS', None),
-            dsn=getattr(django_settings, 'SENTRY_DSN', None),
-        )
+
+        options = getattr(django_settings, 'RAVEN_CONFIG', {})
+        options.setdefault('servers', ga('SERVERS'))
+        options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
+        options['include_paths'] = set(options['include_paths']) | get_installed_apps()
+        options.setdefault('exclude_paths', ga('EXCLUDE_PATHS'))
+        options.setdefault('timeout', ga('TIMEOUT'))
+        options.setdefault('name', ga('NAME'))
+        options.setdefault('auto_log_stacks', ga('AUTO_LOG_STACKS'))
+        options.setdefault('key', ga('KEY', md5_constructor(django_settings.SECRET_KEY).hexdigest()))
+        options.setdefault('string_max_length', ga('MAX_LENGTH_STRING'))
+        options.setdefault('list_max_length', ga('MAX_LENGTH_LIST'))
+        options.setdefault('site', ga('SITE'))
+        options.setdefault('public_key', ga('PUBLIC_KEY'))
+        options.setdefault('secret_key', ga('SECRET_KEY'))
+        options.setdefault('project', ga('PROJECT'))
+        options.setdefault('processors', ga('PROCESSORS'))
+        options.setdefault('dsn', ga('DSN'))
+
+        instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
         if not tmp_client:
             _client = (client, instance)
         return instance
@@ -199,5 +204,7 @@ def register_serializers():
     import raven.contrib.django.serializers  # force import so serializers can call register
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
-    register_handlers()
+    # If we've explicitly enabled signals, or we're not running DEBUG, register handlers
+    if getattr(django_settings, 'RAVEN_CONFIG', {}).get('register_signals', not django_settings.DEBUG):
+        register_handlers()
     register_serializers()
