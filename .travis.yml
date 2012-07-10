@@ -8,8 +8,7 @@ env:
 install:
   - sudo apt-get install libevent-dev
   - pip install Django==$DJANGO --use-mirrors
-  - pip install pep8 --use-mirrors
-  - pip install https://github.com/dcramer/pyflakes/tarball/master
+  - pip install flake8 --use-mirrors
   - pip install -e . --use-mirrors
 script:
   - make test
