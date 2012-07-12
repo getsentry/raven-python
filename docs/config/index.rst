@@ -185,7 +185,7 @@ If a string is longer than the given length, it will be truncated down to the sp
 
 ::
 
-    list_max_length = 200
+    string_max_length = 200
 
 auto_log_stacks
 ~~~~~~~~~~~~~~~
