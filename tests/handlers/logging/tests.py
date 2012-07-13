@@ -196,3 +196,11 @@ class LoggingHandlerTest(TestCase):
 
     def test_invalid_first_arg_type(self):
         self.assertRaises(ValueError, SentryHandler, object)
+
+    def test_logging_level_set(self):
+        handler = SentryHandler('http://public:secret@example.com/1', level="ERROR")
+        self.assertEquals(handler.level, logging.ERROR)
+
+    def test_logging_level_set(self):
+        handler = SentryHandler('http://public:secret@example.com/1')
+        self.assertEquals(handler.level, logging.NOTSET)
