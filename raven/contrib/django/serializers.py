@@ -21,6 +21,9 @@ class PromiseSerializer(Serializer):
         # EPIC HACK
         # handles lazy model instances (which are proxy values that dont easily give you the actual function)
         pre = value.__class__.__name__[1:]
+        if not hasattr(value, '%s__func' % pre):
+            return value
+
         value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
         return self.recurse(value)
 
