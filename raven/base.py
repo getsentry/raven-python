@@ -109,7 +109,7 @@ class Client(object):
     >>>     1/0
     >>> except ZeroDivisionError:
     >>>     ident = client.get_ident(client.captureException())
-    >>>     print "Exception caught; reference is %%s" %% ident
+    >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
     protocol_version = '2.0'
