@@ -93,7 +93,7 @@ class Sentry(object):
         if self.logging:
             setup_logging(SentryHandler(self.client))
 
-        got_request_exception.connect(self.handle_exception, sender=app, weak=False)
+        got_request_exception.connect(self.handle_exception, sender=app)
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
