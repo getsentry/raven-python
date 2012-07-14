@@ -40,7 +40,7 @@ class SentryHandler(logging.Handler, object):
         else:
             self.client = client(*args, **kwargs)
 
-        logging.Handler.__init__(self)
+        logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
     def emit(self, record):
         # from sentry.client.middleware import SentryLogMiddleware
