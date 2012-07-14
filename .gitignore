@@ -16,3 +16,6 @@ pip-log.txt
 /sentry_index/
 /sentry_test_index
 /example_project/*.db
+bin/
+include/
+lib/

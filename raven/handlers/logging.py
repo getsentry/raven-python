@@ -40,7 +40,7 @@ class SentryHandler(logging.Handler, object):
         else:
             self.client = client(*args, **kwargs)
 
-        logging.Handler.__init__(self)
+        logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
     def emit(self, record):
         # from sentry.client.middleware import SentryLogMiddleware
@@ -92,7 +92,8 @@ class SentryHandler(logging.Handler, object):
                 if not started:
                     f_globals = getattr(frame, 'f_globals', {})
                     module_name = f_globals.get('__name__', '')
-                    if last_mod.startswith('logging') and not module_name.startswith('logging'):
+                    if (last_mod and last_mod.startswith('logging')) \
+                        and not module_name.startswith('logging'):
                         started = True
                     else:
                         last_mod = module_name
