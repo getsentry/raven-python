@@ -51,7 +51,7 @@ Another option is to use :mod:`logging.config.dictConfig`::
 
         'loggers': {
             '': {
-                'handlers': ['console', 'file', 'sentry'],
+                'handlers': ['console', 'sentry'],
                 'level': 'DEBUG',
                 'propagate': False,
                 },
