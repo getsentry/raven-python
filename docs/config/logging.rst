@@ -45,7 +45,7 @@ Another option is to use :mod:`logging.config.dictConfig`::
             'sentry': {
                 'level': 'ERROR',
                 'class': 'raven.handlers.logging.SentryHandler',
-                'dsn': 'http://public:secret@sentry.aurumsocial.com:9000/9',
+                'dsn': 'http://public:secret@example.com/1',
                 },
             },
 
