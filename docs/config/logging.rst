@@ -23,6 +23,45 @@ Finally, call the :func:`setup_logging` helper function::
 
     setup_logging(handler)
 
+Another option is to use :mod:`logging.config.dictConfig`::
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+
+        'formatters': {
+            'console': {
+                'format': '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s',
+                'datefmt': '%H:%M:%S',
+                },
+            },
+
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'console'
+                },
+            'sentry': {
+                'level': 'ERROR',
+                'class': 'raven.handlers.logging.SentryHandler',
+                'dsn': 'http://public:secret@sentry.aurumsocial.com:9000/9',
+                },
+            },
+
+        'loggers': {
+            '': {
+                'handlers': ['console', 'file', 'sentry'],
+                'level': 'DEBUG',
+                'propagate': False,
+                },
+            'your_app': {
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+        }
+    }
+
 Usage
 ~~~~~
 
