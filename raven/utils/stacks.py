@@ -149,6 +149,7 @@ def iter_stack_frames(frames=None):
     """
     if not frames:
         frames = inspect.stack()[1:]
+
     for frame, lineno in ((f[0], f[2]) for f in frames):
         f_locals = getattr(frame, 'f_locals', {})
         if _getitem_from_frame(f_locals, '__traceback_hide__'):
@@ -166,15 +167,23 @@ def get_stack_info(frames):
     of the information we want.
     """
     results = []
-    for frame, lineno in frames:
+    for frame_info in frames:
+        # Old, terrible API
+        if isinstance(frame_info, (list, tuple)):
+            frame, lineno = frame_info
+
+        else:
+            frame = frame_info
+            lineno = frame_info.f_lineno
+
         # Support hidden frames
         f_locals = getattr(frame, 'f_locals', {})
         if _getitem_from_frame(f_locals, '__traceback_hide__'):
             continue
 
         f_globals = getattr(frame, 'f_globals', {})
-        loader = f_globals.get('__loader__')
-        module_name = f_globals.get('__name__')
+        loader = _getitem_from_frame(f_globals, '__loader__')
+        module_name = _getitem_from_frame(f_globals, '__name__')
 
         f_code = getattr(frame, 'f_code', None)
         if f_code:
