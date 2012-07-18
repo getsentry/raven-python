@@ -1,3 +1,4 @@
+import sys
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 
@@ -138,10 +139,11 @@ class HTTPTransport(Transport):
         Sends a request to a remote webserver using HTTP POST.
         """
         req = urllib2.Request(self._url, headers=headers)
-        try:
-            response = urllib2.urlopen(req, data, self.timeout).read()
-        except:
+
+        if sys.version_info < (2, 6):
             response = urllib2.urlopen(req, data).read()
+        else:
+            response = urllib2.urlopen(req, data, self.timeout).read()
         return response
 
     def compute_scope(self, url, scope):
