@@ -143,7 +143,7 @@ class HTTPTransport(Transport):
         if sys.version_info < (2, 6):
             response = urllib2.urlopen(req, data).read()
         else:
-            response = urllib2.urlopen(req, data, self.timeout).read()
+            response = urllib2.urlopen(req, data, getattr(self, 'timeout', None)).read()
         return response
 
     def compute_scope(self, url, scope):
