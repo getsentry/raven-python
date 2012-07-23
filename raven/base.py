@@ -26,7 +26,7 @@ from raven.utils import json, varmap, get_versions, get_auth_header
 from raven.utils.encoding import transform, shorten, to_string
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
-from raven.transport import TransportRegistry, default_transports
+from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
 
@@ -117,7 +117,7 @@ class Client(object):
     _registry = TransportRegistry(transports=default_transports)
 
     def __init__(self, servers=None, include_paths=None, exclude_paths=None,
-            timeout=None, name=None, auto_log_stacks=None, key=None,
+            name=None, auto_log_stacks=None, key=None,
             string_max_length=None, list_max_length=None, site=None,
             public_key=None, secret_key=None, processors=None, project=None,
             dsn=None, **kwargs):
@@ -161,10 +161,12 @@ class Client(object):
             msg = 'Missing configuration for client. Please see documentation.'
             raise TypeError(msg)
 
+        if 'timeout' in kwargs:
+            warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
+
         self.servers = servers
         self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
         self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
-        self.timeout = int(timeout or defaults.TIMEOUT)
         self.name = unicode(name or defaults.NAME)
         self.auto_log_stacks = bool(auto_log_stacks or
                 defaults.AUTO_LOG_STACKS)
