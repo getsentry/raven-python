@@ -23,9 +23,9 @@ from setuptools import setup, find_packages
 
 tests_require = [
     'blinker>=1.1',
-    'celery>=2.5,<3.0',
+    'celery>=2.5',
     'Django>=1.2,<1.4',
-    'django-celery>=2.5,<3.0',
+    'django-celery>=2.5',
     'django-nose',
     'gevent',
     'Flask>=0.8',
@@ -33,7 +33,7 @@ tests_require = [
     'nose',
     'mock',
     'pep8',
-    'sentry>=4.7.9',
+    'sentry>=4.8.2',
     'unittest2',
     'webob',
     'zerorpc>=0.2.0',
@@ -46,7 +46,7 @@ install_requires = [
 
 setup(
     name='raven',
-    version='2.0.2',
+    version='2.0.3',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/dcramer/raven',
