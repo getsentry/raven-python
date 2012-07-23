@@ -1,3 +1,4 @@
+import logging
 import sys
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
@@ -208,12 +209,15 @@ class TwistedHTTPTransport(HTTPTransport):
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
         super(TwistedHTTPTransport, self).__init__(parsed_url)
+        self.logger = logging.getLogger('sentry.errors')
 
         # remove the twisted+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
     def send(self, data, headers):
         d = getPage(self._url, method='POST', postdata=data, headers=headers)
+        d.addErrback(lambda f: self.logger.error(
+            'Cannot send error to sentry: %s', f.getTraceback()))
 
 
 class TornadoHTTPTransport(HTTPTransport):
