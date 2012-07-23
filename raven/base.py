@@ -161,7 +161,7 @@ class Client(object):
             msg = 'Missing configuration for client. Please see documentation.'
             raise TypeError(msg)
 
-        if 'timeout' in kwargs:
+        if kwargs.get('timeout') is not None:
             warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
 
         self.servers = servers
