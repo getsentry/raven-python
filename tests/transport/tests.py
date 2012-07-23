@@ -54,25 +54,24 @@ class DummyScheme(Transport):
 
 
 class TransportTest(TestCase):
-    def test_custom_transport(self):
+    def setUp(self):
         try:
             Client.register_scheme('mock', DummyScheme)
         except:
             pass
+
+    def test_custom_transport(self):
         c = Client(dsn="mock://some_username:some_password@localhost:8143/1")
 
         data = dict(a=42, b=55, c=range(50))
         c.send(**data)
 
         expected_message = c.encode(data)
-        mock_cls = Client._registry._transports['mock']
+        self.assertIn('mock://localhost:8143/api/store/', Client._registry._transports)
+        mock_cls = Client._registry._transports['mock://localhost:8143/api/store/']
         assert mock_cls._data == expected_message
 
     def test_build_then_send(self):
-        try:
-            Client.register_scheme('mock', DummyScheme)
-        except:
-            pass
         c = Client(dsn="mock://some_username:some_password@localhost:8143/1",
                 name="test_server")
 
