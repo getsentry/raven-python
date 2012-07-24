@@ -297,9 +297,6 @@ class Client(object):
         for processor in self.get_processors():
             data.update(processor.process(data))
 
-        # Make sure all data is coerced
-        data = self.transform(data)
-
         if 'message' not in data:
             data['message'] = handler.to_string(data)
 
@@ -311,6 +308,9 @@ class Client(object):
         data.setdefault('project', self.project)
         data.setdefault('site', self.site)
         data.setdefault('public_key', self.public_key)
+
+        # Make sure all data is coerced
+        data = self.transform(data)
 
         return data
 
