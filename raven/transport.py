@@ -22,6 +22,8 @@ try:
 except:
     tornado = False
 
+from raven.conf import defaults
+
 
 class InvalidScheme(ValueError):
     """
@@ -127,6 +129,7 @@ class UDPTransport(Transport):
 class HTTPTransport(Transport):
 
     scheme = ['http', 'https']
+    timeout = defaults.TIMEOUT
 
     def __init__(self, parsed_url):
         self.check_scheme(parsed_url)
