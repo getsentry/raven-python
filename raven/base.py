@@ -297,20 +297,22 @@ class Client(object):
         for processor in self.get_processors():
             data.update(processor.process(data))
 
-        # Make sure all data is coerced
-        data = self.transform(data)
-
         if 'message' not in data:
             data['message'] = handler.to_string(data)
 
+        data.setdefault('project', self.project)
+        data.setdefault('site', self.site)
+        data.setdefault('public_key', self.public_key)
+
+        # Make sure all data is coerced
+        data = self.transform(data)
+
+        # It's important date is added **after** we serialize
         data.update({
             'timestamp': date,
             'time_spent': time_spent,
             'event_id': event_id,
         })
-        data.setdefault('project', self.project)
-        data.setdefault('site', self.site)
-        data.setdefault('public_key', self.public_key)
 
         return data
 
