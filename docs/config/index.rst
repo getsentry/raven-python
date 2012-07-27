@@ -68,6 +68,7 @@ It is composed of six important pieces:
 
 * The project ID which the authenticated user is bound to.
 
+.. note:: Protocol may also contain transporter type: gevent+http, gevent+https, twisted+http, tornado+http
 
 Client Arguments
 ----------------
