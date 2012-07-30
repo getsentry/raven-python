@@ -12,7 +12,7 @@ import logging
 import os
 import sys
 import pwd
-import json
+import simplejson as json
 from optparse import OptionParser
 
 from raven import Client
