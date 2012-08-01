@@ -4,7 +4,8 @@ import uuid
 
 from unittest2 import TestCase
 
-from raven.utils.encoding import transform, shorten
+from raven.utils.encoding import shorten
+from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
@@ -52,24 +53,6 @@ class TransformTest(TestCase):
 
     #     result = transform(x)
     #     self.assertEquals(result, '(Error decoding value)')
-
-    # def test_model_instance(self):
-    #     instance = DuplicateKeyModel(foo='foo')
-
-    #     result = transform(instance)
-    #     self.assertEquals(result, '<DuplicateKeyModel: foo>')
-
-    # def test_handles_gettext_lazy(self):
-    #     from django.utils.functional import lazy
-    #     def fake_gettext(to_translate):
-    #         return u'Igpay Atinlay'
-
-    #     fake_gettext_lazy = lazy(fake_gettext, str)
-
-    #     self.assertEquals(
-    #         pickle.loads(pickle.dumps(
-    #                 transform(fake_gettext_lazy("something")))),
-    #         u'Igpay Atinlay')
 
     def test_dict_keys(self):
         x = {u'foo': 'bar'}

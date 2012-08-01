@@ -1,40 +1,38 @@
+"""
+raven.transport.builtins
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2010 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+
+import logging
+import sys
 import urllib2
 from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 
 try:
-    from gevent import spawn
-    from gevent.coros import Semaphore
-    gevented = True
+    import gevent
+    import gevent.coros
+    has_gevent = True
 except:
-    gevented = None
+    has_gevent = None
 
 try:
-    from twisted.web.client import getPage
-    twisted = True
+    import twisted.web.client
+    has_twisted = True
 except:
-    twisted = False
+    has_twisted = False
 
 try:
     from tornado import ioloop
     from tornado.httpclient import AsyncHTTPClient, HTTPClient
-    tornado = True
+    has_tornado = True
 except:
-    tornado = False
+    has_tornado = False
 
-
-class InvalidScheme(ValueError):
-    """
-    Raised when a transport is constructed using a URI which is not
-    handled by the transport
-    """
-
-
-class DuplicateScheme(StandardError):
-    """
-    Raised when registering a handler for a particular scheme which
-    is already registered
-    """
-    pass
+from raven.conf import defaults
+from raven.transport.exceptions import InvalidScheme
 
 
 class Transport(object):
@@ -127,21 +125,23 @@ class HTTPTransport(Transport):
 
     scheme = ['http', 'https']
 
-    def __init__(self, parsed_url):
+    def __init__(self, parsed_url, timeout=defaults.TIMEOUT):
         self.check_scheme(parsed_url)
 
         self._parsed_url = parsed_url
         self._url = parsed_url.geturl()
+        self.timeout = timeout
 
     def send(self, data, headers):
         """
         Sends a request to a remote webserver using HTTP POST.
         """
         req = urllib2.Request(self._url, headers=headers)
-        try:
-            response = urllib2.urlopen(req, data, self.timeout).read()
-        except:
+
+        if sys.version_info < (2, 6):
             response = urllib2.urlopen(req, data).read()
+        else:
+            response = urllib2.urlopen(req, data, self.timeout).read()
         return response
 
     def compute_scope(self, url, scope):
@@ -175,9 +175,9 @@ class GeventedHTTPTransport(HTTPTransport):
     scheme = ['gevent+http', 'gevent+https']
 
     def __init__(self, parsed_url, maximum_outstanding_requests=100):
-        if not gevented:
+        if not has_gevent:
             raise ImportError('GeventedHTTPTransport requires gevent.')
-        self._lock = Semaphore(maximum_outstanding_requests)
+        self._lock = gevent.coros.Semaphore(maximum_outstanding_requests)
 
         super(GeventedHTTPTransport, self).__init__(parsed_url)
 
@@ -191,7 +191,7 @@ class GeventedHTTPTransport(HTTPTransport):
         # this can be optimized by making a custom self.send that does not
         # read the response since we don't use it.
         self._lock.acquire()
-        return spawn(super(GeventedHTTPTransport, self).send, data, headers).link(self._done, self)
+        return gevent.spawn(super(GeventedHTTPTransport, self).send, data, headers).link(self._done, self)
 
     def _done(self, *args):
         self._lock.release()
@@ -202,16 +202,19 @@ class TwistedHTTPTransport(HTTPTransport):
     scheme = ['twisted+http']
 
     def __init__(self, parsed_url):
-        if not twisted:
+        if not has_twisted:
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
         super(TwistedHTTPTransport, self).__init__(parsed_url)
+        self.logger = logging.getLogger('sentry.errors')
 
         # remove the twisted+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
     def send(self, data, headers):
-        d = getPage(self._url, method='POST', postdata=data, headers=headers)
+        d = twisted.web.client.getPage(self._url, method='POST', postdata=data, headers=headers)
+        d.addErrback(lambda f: self.logger.error(
+            'Cannot send error to sentry: %s', f.getTraceback()))
 
 
 class TornadoHTTPTransport(HTTPTransport):
@@ -219,7 +222,7 @@ class TornadoHTTPTransport(HTTPTransport):
     scheme = ['tornado+http']
 
     def __init__(self, parsed_url):
-        if not tornado:
+        if not has_tornado:
             raise ImportError('TornadoHTTPTransport requires tornado.')
 
         super(TornadoHTTPTransport, self).__init__(parsed_url)
@@ -238,55 +241,3 @@ class TornadoHTTPTransport(HTTPTransport):
             client = HTTPClient()
 
         client.fetch(self._url, **kwargs)
-
-
-class TransportRegistry(object):
-    def __init__(self, transports=None):
-        # setup a default list of senders
-        self._schemes = {}
-        self._transports = {}
-
-        if transports:
-            for transport in transports:
-                self.register_transport(transport)
-
-    def register_transport(self, transport):
-        if not hasattr(transport, 'scheme') and not hasattr(transport.scheme, '__iter__'):
-            raise AttributeError('Transport %s must have a scheme list', transport.__class__.__name__)
-
-        for scheme in transport.scheme:
-            self.register_scheme(scheme, transport)
-
-    def register_scheme(self, scheme, cls):
-        """
-        It is possible to inject new schemes at runtime
-        """
-        if scheme in self._schemes:
-            raise DuplicateScheme()
-
-        # TODO (vng): verify the interface of the new class
-        self._schemes[scheme] = cls
-
-    def supported_scheme(self, scheme):
-        return scheme in self._schemes
-
-    def get_transport(self, parsed_url):
-        if parsed_url.scheme not in self._transports:
-            self._transports[parsed_url.scheme] = self._schemes[parsed_url.scheme](parsed_url)
-        return self._transports[parsed_url.scheme]
-
-    def compute_scope(self, url, scope):
-        """
-        Compute a scope dictionary.  This may be overridden by custom
-        transports
-        """
-        transport = self._schemes[url.scheme](url)
-        return transport.compute_scope(url, scope)
-
-default_transports = [
-    HTTPTransport,
-    GeventedHTTPTransport,
-    TwistedHTTPTransport,
-    TornadoHTTPTransport,
-    UDPTransport,
-]

@@ -9,10 +9,3 @@ class TestModel(models.Model):
 
     def __unicode__(self):
         return unicode(self.data)
-
-
-class DuplicateKeyModel(models.Model):
-    foo = models.IntegerField(unique=True, default=1)
-
-    def __unicode__(self):
-        return unicode(self.foo)
