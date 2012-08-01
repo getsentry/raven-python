@@ -4,7 +4,8 @@ import uuid
 
 from unittest2 import TestCase
 
-from raven.utils.encoding import transform, shorten
+from raven.utils.encoding import shorten
+from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
