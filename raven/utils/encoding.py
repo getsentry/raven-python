@@ -56,7 +56,7 @@ def force_unicode(s, encoding='utf-8', errors='strict'):
 def transform(value):
     from raven.utils.serializer import transform
 
-    warnings.warn('You should switch to raven.utils.serializers.transform', DeprecationWarning)
+    warnings.warn('You should switch to raven.utils.serializer.transform', DeprecationWarning)
 
     return transform(value)
 
