@@ -23,7 +23,8 @@ import raven
 from raven.conf import defaults
 from raven.utils import json, varmap, get_versions, get_auth_header
 
-from raven.utils.encoding import transform, shorten, to_string
+from raven.utils.encoding import shorten, to_string
+from raven.utils.serializers import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
 from raven.transport.registry import TransportRegistry, default_transports
