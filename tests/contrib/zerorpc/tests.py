@@ -1,3 +1,9 @@
+import sys
+# XXX: zeropc does not work under Python < 2.6 or pypy
+if (sys.version_info < (2, 6, 0) or '__pypy__' in sys.builtin_module_names):
+    from nose.plugins.skip import SkipTest
+    raise SkipTest
+
 import gevent
 import os
 import random
@@ -42,7 +48,7 @@ class ZeroRPCTest(unittest2.TestCase):
     def test_zerorpc_middleware(self):
         try:
             self._client.choice([])
-        except zerorpc.exceptions.RemoteError as ex:
+        except zerorpc.exceptions.RemoteError, ex:
             self.assertEqual(ex.name, 'IndexError')
             self.assertEqual(len(self._sentry.events), 1)
             exc = self._sentry.events[0]['sentry.interfaces.Exception']
