@@ -13,7 +13,6 @@ from raven.utils.serializer import Serializer, register
 __all__ = ('PromiseSerializer',)
 
 
-@register
 class PromiseSerializer(Serializer):
     types = (Promise,)
 
@@ -28,7 +27,6 @@ class PromiseSerializer(Serializer):
         return self.recurse(value)
 
 
-@register
 class QuerySetSerializer(Serializer):
     types = (QuerySet,)
 
@@ -37,3 +35,7 @@ class QuerySetSerializer(Serializer):
         if value.model:
             return u'<%s: model=%s>' % (qs_name, value.model.__name__)
         return u'<%s: (Unbound)>' % (qs_name,)
+
+
+register(PromiseSerializer)
+register(QuerySetSerializer)
