@@ -174,8 +174,7 @@ class Client(object):
 
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
-            msg = 'Missing configuration for client. Please see documentation.'
-            raise TypeError(msg)
+            self.logger.info('Raven is not configured (disabled). Please see documentation for more information.')
 
         if kwargs.get('timeout') is not None:
             warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
@@ -390,6 +389,9 @@ class Client(object):
         :return: a 32-length string identifying this event
         """
 
+        if not self.is_enabled():
+            return
+
         data = self.build_msg(event_type, data, date, time_spent,
                 extra, stack, public_key=public_key, tags=tags, **kwargs)
 
@@ -412,6 +414,13 @@ class Client(object):
         else:
             message = data.pop('message', '<no message value>')
         return message
+
+    def is_enabled(self):
+        """
+        Return a boolean describing whether the client should attempt to send
+        events.
+        """
+        return bool(self.servers)
 
     def send_remote(self, url, data, headers={}):
         if not self.state.should_try():

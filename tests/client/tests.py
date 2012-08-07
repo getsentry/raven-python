@@ -15,6 +15,9 @@ class TempStoreClient(Client):
         self.events = []
         super(TempStoreClient, self).__init__(servers=servers, **kwargs)
 
+    def is_enabled(self):
+        return True
+
     def send(self, **kwargs):
         self.events.append(kwargs)
 
