@@ -43,19 +43,14 @@ class SentryHandler(logging.Handler, object):
         logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
     def emit(self, record):
-        # from sentry.client.middleware import SentryLogMiddleware
-
-        # # Fetch the request from a threadlocal variable, if available
-        # request = getattr(SentryLogMiddleware.thread, 'request', None)
-
-        self.format(record)
-
-        # Avoid typical config issues by overriding loggers behavior
-        if record.name.startswith('sentry.errors'):
-            print >> sys.stderr, to_string(record.message)
-            return
-
         try:
+            self.format(record)
+
+            # Avoid typical config issues by overriding loggers behavior
+            if record.name.startswith('sentry.errors'):
+                print >> sys.stderr, to_string(record.message)
+                return
+
             return self._emit(record)
         except Exception:
             print >> sys.stderr, "Top level Sentry exception caught - failed creating log record"
