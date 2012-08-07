@@ -78,6 +78,21 @@ class ClientState(object):
         return self.status == self.ERROR
 
 
+class ExceptionContextManager(object):
+    def __init__(self, client, **kwargs):
+        self.client = client
+        self.kwargs = kwargs
+        self.result = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        if not exc_info or not all(exc_info):
+            return
+        self.result = self.client.captureException(exc_info=exc_info, **self.kwargs)
+
+
 class Client(object):
     """
     The base Raven client, which handles both local direct
@@ -519,6 +534,15 @@ class Client(object):
         """
         return self.capture('Query', query=query, params=params, engine=engine,
                 **kwargs)
+
+    def captureExceptions(self, **kwargs):
+        """
+        Captures any exceptions within the executed scope.
+
+        >>> with client.captureExceptions(tags={'foo': 'bar'})
+        >>>     1 / 0
+        """
+        return ExceptionContextManager(self, **kwargs)
 
 
 class DummyClient(Client):
