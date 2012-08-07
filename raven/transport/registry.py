@@ -4,6 +4,7 @@ from raven.transport.exceptions import DuplicateScheme
 from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils import urlparse
 
+
 class TransportRegistry(object):
     def __init__(self, transports=None):
         # setup a default list of senders
