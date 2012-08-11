@@ -24,8 +24,8 @@ Resources
 ---------
 
 * `Documentation <http://raven.readthedocs.org/>`_
-* `Bug Tracker <http://github.com/dcramer/raven/issues>`_
-* `Code <http://github.com/dcramer/raven>`_
+* `Bug Tracker <http://github.com/getsentry/raven-python/issues>`_
+* `Code <http://github.com/getsentry/raven-python>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_
 * `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)
 

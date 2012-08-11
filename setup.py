@@ -49,7 +49,7 @@ setup(
     version='2.0.3',
     author='David Cramer',
     author_email='dcramer@gmail.com',
-    url='http://github.com/dcramer/raven',
+    url='http://github.com/getsentry/raven-python',
     description='Raven is a client for Sentry (https://www.getsentry.com)',
     long_description=__doc__,
     packages=find_packages(exclude=("tests",)),
