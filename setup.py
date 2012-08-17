@@ -24,7 +24,7 @@ from setuptools import setup, find_packages
 tests_require = [
     'blinker>=1.1',
     'celery>=2.5',
-    'Django>=1.2,<1.4',
+    'Django>=1.2,<=1.4.1',
     'django-celery>=2.5',
     'django-nose',
     'gevent',
