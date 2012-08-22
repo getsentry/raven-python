@@ -7,7 +7,7 @@ raven.conf
 """
 
 import logging
-import urlparse
+from raven.utils.urlparse import urlparse
 
 
 __all__ = ('load', 'setup_logging')
@@ -36,7 +36,7 @@ def load(dsn, scope=None, transport_registry=None):
         from raven.transport import TransportRegistry, default_transports
         transport_registry = TransportRegistry(default_transports)
 
-    url = urlparse.urlparse(dsn)
+    url = urlparse(dsn)
 
     if not transport_registry.supported_scheme(url.scheme):
         raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)

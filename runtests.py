@@ -7,17 +7,7 @@ from optparse import OptionParser
 
 where_am_i = dirname(abspath(__file__))
 
-sys.path.insert(0, where_am_i)
-
 logging.getLogger('sentry').addHandler(logging.StreamHandler())
-
-# adding eggs to path
-files = listdir(where_am_i)
-
-for file in files:
-    name, extension = splitext(file)
-    if extension == ".egg":
-        sys.path.insert(0, file)
 
 
 from django.conf import settings
