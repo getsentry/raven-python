@@ -2,6 +2,7 @@ from raven.transport.base import HTTPTransport, GeventedHTTPTransport, TwistedHT
   TornadoHTTPTransport, UDPTransport
 from raven.transport.exceptions import DuplicateScheme
 from raven.transport.threaded import ThreadedHTTPTransport
+from raven.utils import urlparse
 
 
 class TransportRegistry(object):
@@ -28,6 +29,7 @@ class TransportRegistry(object):
         if scheme in self._schemes:
             raise DuplicateScheme()
 
+        urlparse.register_scheme(scheme)
         # TODO (vng): verify the interface of the new class
         self._schemes[scheme] = cls
 
