@@ -14,7 +14,7 @@ from raven.utils.encoding import shorten, to_unicode
 from raven.utils.stacks import get_stack_info, iter_traceback_frames, \
                                get_culprit
 
-__all__ = ('BaseEvent', 'Exception', 'Message', 'Query')
+__all__ = ('BaseEvent', 'Exception', 'Message', 'Query', 'ExplicitException')
 
 
 class BaseEvent(object):
@@ -95,6 +95,30 @@ class Exception(BaseEvent):
             },
         }
 
+class ExplicitException(Exception):
+    """
+    ExplicitExceptions are similar to Exceptions but expect errors in dict form rather than exc_info.
+
+    ExplicitExceptions ensure the data is valid.
+
+    """
+    def capture(self, error, **kwargs):
+        if (
+                error.has_key('message') and
+                error.has_key('culprit') and
+                error.has_key('server_name') and
+                error.has_key('sentry.interfaces.Stacktrace') and
+                error['sentry.interfaces.Stacktrace'].__class__ == dict and
+                error['sentry.interfaces.Stacktrace'].has_key('frames') and
+                error['sentry.interfaces.Stacktrace']['frames'].__class__ == list and
+                error.has_key('sentry.interfaces.Exception') and
+                error['sentry.interfaces.Exception'].__class__ == dict and
+                error.has_key('site') and
+                error.has_key('timestamp')
+            ):
+            return error
+        else:
+            raise ValueError('Malformed exception')
 
 class Message(BaseEvent):
     """

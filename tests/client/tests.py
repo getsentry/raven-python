@@ -226,6 +226,36 @@ class ClientTest(TestCase):
         self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
 
+    def test_explicit_exception_event(self):
+        error = {
+                "message": "ZeroDivisionError: integer division or modulo by zero",
+                "culprit": "__main__.err",
+                "server_name": "leap.local",
+                "sentry.interfaces.Stacktrace": {
+                    "frames": [{
+                        "function": "err",
+                        "abs_path": "<ipython-input-4-3cbe8b3c426f>",
+                        "vars": {},
+                        "module": "__main__",
+                        "filename": "ipython-input-4-3cbe8b3c426f>", "lineno": 3
+                    }]
+                },
+                "sentry.interfaces.Exception": {
+                    "type": "ZeroDivisionError",
+                    "value": "integer division or modulo by zero",
+                    "module": "exceptions"
+                },
+                "site": None,
+                "timestamp": "2012-06-19T17:01:25Z",
+        }
+
+        self.client.capture('ExplicitException', error=error)
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'ZeroDivisionError: integer division or modulo by zero')
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('timestamp' in event)
+
     def test_message_event(self):
         self.client.capture('Message', message='test')
 
