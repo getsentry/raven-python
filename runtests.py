@@ -35,7 +35,6 @@ if not settings.configured:
 
             'djcelery',  # celery client
 
-            'sentry',  # server
             'raven.contrib.django',
         ],
         ROOT_URLCONF='',

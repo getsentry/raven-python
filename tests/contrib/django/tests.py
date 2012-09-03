@@ -54,6 +54,9 @@ class TempStoreClient(DjangoClient):
     def send(self, **kwargs):
         self.events.append(kwargs)
 
+    def is_enabled(self, **kwargs):
+        return True
+
 
 class Settings(object):
     """
@@ -86,10 +89,10 @@ class ClientProxyTest(TestCase):
     def test_proxy_responds_as_client(self):
         self.assertEquals(get_client(), client)
 
-    def test_basic(self):
+    @mock.patch.object(TempStoreClient, 'capture')
+    def test_basic(self, capture):
         client.capture('Message', message='foo')
-        self.assertEquals(len(client.events), 1)
-        client.events.pop(0)
+        capture.assert_called_once_with('Message', message='foo')
 
 
 class DjangoClientTest(TestCase):
@@ -486,9 +489,10 @@ class CeleryIntegratedClientTest(TestCase):
 
     @mock.patch('raven.contrib.django.celery.send_raw_integrated')
     def test_send_encoded(self, send_raw):
-        self.client.send_integrated('foo')
+        with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
+            self.client.send_integrated('foo')
 
-        send_raw.delay.assert_called_once_with('foo')
+            send_raw.delay.assert_called_once_with('foo')
 
     @mock.patch('raven.contrib.django.celery.send_raw_integrated')
     def test_without_eager(self, send_raw):
@@ -496,9 +500,10 @@ class CeleryIntegratedClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls delay on the task.
         """
-        self.client.capture('Message', message='test')
+        with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
+            self.client.capture('Message', message='test')
 
-        self.assertEquals(send_raw.delay.call_count, 1)
+            self.assertEquals(send_raw.delay.call_count, 1)
 
     @with_eager_tasks
     @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
