@@ -14,10 +14,11 @@ full out-of-the-box support for many of the popular frameworks, including
 # in multiprocessing/util.py _exit_function when running `python
 # setup.py test` (see
 # http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
-try:
-    import multiprocessing  # NOQA
-except ImportError:
-    pass
+for m in ('multiprocessing', 'billiard'):
+    try:
+        __import__(m)
+    except ImportError:
+        pass
 
 from setuptools import setup, find_packages
 
