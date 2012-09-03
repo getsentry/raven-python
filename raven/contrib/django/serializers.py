@@ -16,14 +16,24 @@ __all__ = ('PromiseSerializer',)
 class PromiseSerializer(Serializer):
     types = (Promise,)
 
+    def can(self, value):
+        if not super(PromiseSerializer, self).can(value):
+            return False
+
+        pre = value.__class__.__name__[1:]
+        if not (hasattr(value, '%s__func' % pre) or hasattr(value, '%s__unicode_cast' % pre)):
+            return False
+
+        return True
+
     def serialize(self, value):
         # EPIC HACK
         # handles lazy model instances (which are proxy values that dont easily give you the actual function)
         pre = value.__class__.__name__[1:]
-        if not hasattr(value, '%s__func' % pre):
-            return value
-
-        value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
+        if hasattr(value, '%s__func' % pre):
+            value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
+        else:
+            return unicode(value)
         return self.recurse(value)
 
 

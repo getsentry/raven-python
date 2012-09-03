@@ -607,7 +607,6 @@ class PromiseSerializerTestCase(TestCase):
         self.assertEquals(res, 'bar')
 
     def test_handles_gettext_lazy(self):
-        import pickle
         from django.utils.functional import lazy
 
         def fake_gettext(to_translate):
@@ -615,10 +614,9 @@ class PromiseSerializerTestCase(TestCase):
 
         fake_gettext_lazy = lazy(fake_gettext, str)
 
-        self.assertEquals(
-            pickle.loads(pickle.dumps(
-                    transform(fake_gettext_lazy("something")))),
-            u'Igpay Atinlay')
+        result = transform(fake_gettext_lazy("something"))
+        self.assertTrue(isinstance(result, basestring))
+        self.assertEquals(result, u'Igpay Atinlay')
 
 
 class QuerySetSerializerTestCase(TestCase):
@@ -626,11 +624,13 @@ class QuerySetSerializerTestCase(TestCase):
         instance = TestModel()
 
         result = transform(instance)
-        self.assertEquals(result, '<TestModel: TestModel object>')
+        self.assertTrue(isinstance(result, basestring))
+        self.assertEquals(result, u'<TestModel: TestModel object>')
 
     def test_basic(self):
         from django.db.models.query import QuerySet
         obj = QuerySet(model=TestModel)
 
-        res = transform(obj)
-        self.assertEquals(res, '<QuerySet: model=TestModel>')
+        result = transform(obj)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertEquals(result, u'<QuerySet: model=TestModel>')
