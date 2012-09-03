@@ -617,11 +617,11 @@ class PromiseSerializerTestCase(TestCase):
 
 
 class QuerySetSerializerTestCase(TestCase):
-    # def test_model_instance(self):
-    #     instance = TestModel(data='{}')
+    def test_model_instance(self):
+        instance = TestModel()
 
-    #     result = transform(instance)
-    #     self.assertEquals(result, '<TestModel: {}>')
+        result = transform(instance)
+        self.assertEquals(result, '<TestModel: TestModel object>')
 
     def test_basic(self):
         from django.db.models.query import QuerySet
