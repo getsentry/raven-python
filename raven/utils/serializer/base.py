@@ -11,6 +11,8 @@ from raven.utils.serializer.manager import register
 from types import ClassType, TypeType
 from uuid import UUID
 
+__all__ = ('Serializer',)
+
 
 def has_sentry_metadata(value):
     try:
