@@ -470,17 +470,20 @@ class Client(object):
             warnings.warn('Raven client has no remote servers configured')
             return
 
+        client_string = 'raven-python/%s' % (raven.VERSION,)
+
         if not auth_header:
             timestamp = time.time()
             auth_header = get_auth_header(
                 protocol=self.protocol_version,
                 timestamp=timestamp,
-                client='raven-python/%s' % (raven.VERSION,),
+                client=client_string,
                 api_key=public_key or self.public_key
             )
 
         for url in self.servers:
             headers = {
+                'User-Agent': client_string,
                 'X-Sentry-Auth': auth_header,
                 'Content-Type': 'application/octet-stream',
             }

@@ -102,6 +102,7 @@ class ClientTest(TestCase):
             url='http://example.com',
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
+                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
                 'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
@@ -125,6 +126,7 @@ class ClientTest(TestCase):
             url='http://example.com',
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
+                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
                 'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=foo' % (raven.VERSION,)
@@ -148,6 +150,7 @@ class ClientTest(TestCase):
             url='http://example.com',
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
+                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'foo'
             },
