@@ -55,7 +55,6 @@ def force_unicode(s, encoding='utf-8', errors='strict'):
 
 def transform(value):
     from raven.utils.serializer import transform
-
     warnings.warn('You should switch to raven.utils.serializer.transform', DeprecationWarning)
 
     return transform(value)
@@ -82,6 +81,8 @@ def to_string(value):
 
 
 def shorten(var, list_length=50, string_length=200):
+    from raven.utils.serializer import transform
+
     var = transform(var)
     if isinstance(var, basestring) and len(var) > string_length:
         var = var[:string_length] + '...'
