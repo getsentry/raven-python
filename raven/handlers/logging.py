@@ -96,7 +96,13 @@ class SentryHandler(logging.Handler, object):
                 frames.append((frame, lineno))
             stack = frames
 
-        extra = getattr(record, 'data', {})
+        extra = getattr(record, 'data', None)
+        if not isinstance(extra, dict):
+            if extra:
+                extra = {'data': extra}
+            else:
+                extra = {}
+
         # Add in all of the data from the record that we aren't already capturing
         for k in record.__dict__.keys():
             if k in ('stack', 'name', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated'):

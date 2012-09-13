@@ -173,6 +173,14 @@ class LoggingIntegrationTest(TestCase):
         self.assertEquals(msg['message'], 'This is a test with an exception')
         self.assertEquals(msg['params'], ())
 
+    def test_extra_data_as_string(self):
+        self.logger.info('This is a test info with a url', extra=dict(
+            data='foo',
+        ))
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['extra']['data'], 'foo')
+
 
 class LoggingHandlerTest(TestCase):
     def test_client_arg(self):
