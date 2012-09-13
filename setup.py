@@ -14,17 +14,18 @@ full out-of-the-box support for many of the popular frameworks, including
 # in multiprocessing/util.py _exit_function when running `python
 # setup.py test` (see
 # http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
-try:
-    import multiprocessing
-except ImportError:
-    pass
+for m in ('multiprocessing', 'billiard'):
+    try:
+        __import__(m)
+    except ImportError:
+        pass
 
 from setuptools import setup, find_packages
 
 tests_require = [
     'blinker>=1.1',
     'celery>=2.5',
-    'Django>=1.2,<1.4',
+    'Django>=1.2,<1.5',
     'django-celery>=2.5',
     'django-nose',
     'gevent',
@@ -33,7 +34,6 @@ tests_require = [
     'nose',
     'mock',
     'pep8',
-    'sentry>=4.8.2',
     'unittest2',
     'webob',
     'zerorpc>=0.2.0',
@@ -41,15 +41,15 @@ tests_require = [
 ]
 
 install_requires = [
-    'simplejson>=2.1.6,<2.5.0',
+    'simplejson',
 ]
 
 setup(
     name='raven',
-    version='2.0.3',
+    version='2.0.5',
     author='David Cramer',
     author_email='dcramer@gmail.com',
-    url='http://github.com/dcramer/raven',
+    url='http://github.com/getsentry/raven-python',
     description='Raven is a client for Sentry (https://www.getsentry.com)',
     long_description=__doc__,
     packages=find_packages(exclude=("tests",)),

@@ -1,10 +1,10 @@
 Raven
 ======
 
-.. image:: https://secure.travis-ci.org/dcramer/raven.png?branch=master
-   :target: http://travis-ci.org/dcramer/raven
+.. image:: https://secure.travis-ci.org/getsentry/raven-python.png?branch=master
+   :target: http://travis-ci.org/getsentry/raven-python
 
-Raven is a Python client for `Sentry <http://aboutsentry.com/>`_. It provides
+Raven is a Python client for `Sentry <http://www.getsentry.com/>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
 Django, and Flask. Raven also includes drop-in support for any WSGI-compatible
 web application.
@@ -18,7 +18,7 @@ Resources
 ---------
 
 * `Documentation <http://raven.readthedocs.org/>`_
-* `Bug Tracker <http://github.com/dcramer/raven/issues>`_
-* `Code <http://github.com/dcramer/raven>`_
+* `Bug Tracker <http://github.com/getsentry/raven-python/issues>`_
+* `Code <http://github.com/getsentry/raven-python>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_
 * `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)

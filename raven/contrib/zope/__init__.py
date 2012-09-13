@@ -79,9 +79,11 @@ class ZopeSentryHandler(SentryHandler):
                                 ]['QUERY_STRING']
                     setattr(record, 'sentry.interfaces.Http', http)
                     user = request.AUTHENTICATED_USER
+                    is_authenticated=user.has_role('Authenticated')
                     user_dict = dict(id=user.getId(),
-                            is_authenticated=user.has_role('Authenticated'
-                            ), email=user.getProperty('email'))
+                                     is_authenticated=is_authenticated,
+                                     email=(is_authenticated and
+                                            user.getProperty('email') or ''))
                     setattr(record, 'sentry.interfaces.User', user_dict)
                 except (AttributeError, KeyError):
                     logger.warning('Could not extract data from request', exc_info=True)

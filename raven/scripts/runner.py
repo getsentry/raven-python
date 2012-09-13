@@ -17,13 +17,15 @@ from optparse import OptionParser
 
 from raven import Client
 
+
 def store_json(option, opt_str, value, parser):
     try:
         value = json.loads(value)
     except ValueError:
-        print "Invalid was used for option %s.  Received: %s" % (opt_str, value)
+        print "Invalid JSON was used for option %s.  Received: %s" % (opt_str, value)
         sys.exit(1)
     setattr(parser.values, option.dest, value)
+
 
 def main():
     root = logging.getLogger('sentry.errors')

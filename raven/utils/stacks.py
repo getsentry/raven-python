@@ -65,7 +65,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     source = [unicode(sline, encoding, 'replace') for sline in source]
 
     lower_bound = max(0, lineno - context_lines)
-    upper_bound = lineno + context_lines
+    upper_bound = min(lineno + context_lines, len(source))
 
     try:
         pre_context = [line.strip('\n') for line in source[lower_bound:lineno]]

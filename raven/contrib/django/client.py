@@ -25,6 +25,9 @@ __all__ = ('DjangoClient',)
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
 
+    def is_enabled(self):
+        return self.servers or 'sentry' in settings.INSTALLED_APPS
+
     def get_user_info(self, request):
         if request.user.is_authenticated():
             user_info = {
@@ -117,9 +120,6 @@ class DjangoClient(Client):
                 return self.send_integrated(kwargs)
             except Exception, e:
                 self.error_logger.error('Unable to record event: %s', e, exc_info=True)
-        else:
-            self.error_logger.error('No servers configured, and sentry not installed. Cannot send message')
-            return None
 
     def send_integrated(self, kwargs):
         from sentry.models import Group

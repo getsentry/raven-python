@@ -17,7 +17,6 @@ import time
 import urllib2
 import uuid
 import warnings
-from urlparse import urlparse
 
 import raven
 from raven.conf import defaults
@@ -27,6 +26,7 @@ from raven.utils.encoding import shorten, to_string
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
+from raven.utils.urlparse import urlparse
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -76,6 +76,21 @@ class ClientState(object):
 
     def did_fail(self):
         return self.status == self.ERROR
+
+
+class ExceptionContextManager(object):
+    def __init__(self, client, **kwargs):
+        self.client = client
+        self.kwargs = kwargs
+        self.result = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        if not exc_info or not all(exc_info):
+            return
+        self.result = self.client.captureException(exc_info=exc_info, **self.kwargs)
 
 
 class Client(object):
@@ -159,8 +174,7 @@ class Client(object):
 
         # servers may be set to a NoneType (for Django)
         if servers and not (key or (secret_key and public_key)):
-            msg = 'Missing configuration for client. Please see documentation.'
-            raise TypeError(msg)
+            self.logger.info('Raven is not configured (disabled). Please see documentation for more information.')
 
         if kwargs.get('timeout') is not None:
             warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
@@ -264,7 +278,7 @@ class Client(object):
             )
 
         if not data.get('level'):
-            data['level'] = logging.ERROR
+            data['level'] = kwargs.get('level') or logging.ERROR
         data['modules'] = get_versions(self.include_paths)
         data['server_name'] = self.name
         data['tags'] = tags
@@ -375,6 +389,9 @@ class Client(object):
         :return: a 32-length string identifying this event
         """
 
+        if not self.is_enabled():
+            return
+
         data = self.build_msg(event_type, data, date, time_spent,
                 extra, stack, public_key=public_key, tags=tags, **kwargs)
 
@@ -397,6 +414,13 @@ class Client(object):
         else:
             message = data.pop('message', '<no message value>')
         return message
+
+    def is_enabled(self):
+        """
+        Return a boolean describing whether the client should attempt to send
+        events.
+        """
+        return bool(self.servers)
 
     def send_remote(self, url, data, headers={}):
         if not self.state.should_try():
@@ -446,17 +470,20 @@ class Client(object):
             warnings.warn('Raven client has no remote servers configured')
             return
 
+        client_string = 'raven-python/%s' % (raven.VERSION,)
+
         if not auth_header:
             timestamp = time.time()
             auth_header = get_auth_header(
                 protocol=self.protocol_version,
                 timestamp=timestamp,
-                client='raven-python/%s' % (raven.VERSION,),
+                client=client_string,
                 api_key=public_key or self.public_key
             )
 
         for url in self.servers:
             headers = {
+                'User-Agent': client_string,
                 'X-Sentry-Auth': auth_header,
                 'Content-Type': 'application/octet-stream',
             }
@@ -519,6 +546,15 @@ class Client(object):
         """
         return self.capture('Query', query=query, params=params, engine=engine,
                 **kwargs)
+
+    def captureExceptions(self, **kwargs):
+        """
+        Captures any exceptions within the executed scope.
+
+        >>> with client.captureExceptions(tags={'foo': 'bar'})
+        >>>     1 / 0
+        """
+        return ExceptionContextManager(self, **kwargs)
 
 
 class DummyClient(Client):

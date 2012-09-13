@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import with_statement
 
 import datetime
 import django
@@ -53,6 +54,9 @@ class TempStoreClient(DjangoClient):
     def send(self, **kwargs):
         self.events.append(kwargs)
 
+    def is_enabled(self, **kwargs):
+        return True
+
 
 class Settings(object):
     """
@@ -85,10 +89,10 @@ class ClientProxyTest(TestCase):
     def test_proxy_responds_as_client(self):
         self.assertEquals(get_client(), client)
 
-    def test_basic(self):
+    @mock.patch.object(TempStoreClient, 'capture')
+    def test_basic(self, capture):
         client.capture('Message', message='foo')
-        self.assertEquals(len(client.events), 1)
-        client.events.pop(0)
+        capture.assert_called_once_with('Message', message='foo')
 
 
 class DjangoClientTest(TestCase):
@@ -485,9 +489,10 @@ class CeleryIntegratedClientTest(TestCase):
 
     @mock.patch('raven.contrib.django.celery.send_raw_integrated')
     def test_send_encoded(self, send_raw):
-        self.client.send_integrated('foo')
+        with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
+            self.client.send_integrated('foo')
 
-        send_raw.delay.assert_called_once_with('foo')
+            send_raw.delay.assert_called_once_with('foo')
 
     @mock.patch('raven.contrib.django.celery.send_raw_integrated')
     def test_without_eager(self, send_raw):
@@ -495,9 +500,10 @@ class CeleryIntegratedClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls delay on the task.
         """
-        self.client.capture('Message', message='test')
+        with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
+            self.client.capture('Message', message='test')
 
-        self.assertEquals(send_raw.delay.call_count, 1)
+            self.assertEquals(send_raw.delay.call_count, 1)
 
     @with_eager_tasks
     @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
@@ -601,7 +607,6 @@ class PromiseSerializerTestCase(TestCase):
         self.assertEquals(res, 'bar')
 
     def test_handles_gettext_lazy(self):
-        import pickle
         from django.utils.functional import lazy
 
         def fake_gettext(to_translate):
@@ -609,22 +614,23 @@ class PromiseSerializerTestCase(TestCase):
 
         fake_gettext_lazy = lazy(fake_gettext, str)
 
-        self.assertEquals(
-            pickle.loads(pickle.dumps(
-                    transform(fake_gettext_lazy("something")))),
-            u'Igpay Atinlay')
+        result = transform(fake_gettext_lazy("something"))
+        self.assertTrue(isinstance(result, basestring))
+        self.assertEquals(result, u'Igpay Atinlay')
 
 
 class QuerySetSerializerTestCase(TestCase):
-    # def test_model_instance(self):
-    #     instance = TestModel(data='{}')
+    def test_model_instance(self):
+        instance = TestModel()
 
-    #     result = transform(instance)
-    #     self.assertEquals(result, '<TestModel: {}>')
+        result = transform(instance)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertEquals(result, u'<TestModel: TestModel object>')
 
     def test_basic(self):
         from django.db.models.query import QuerySet
         obj = QuerySet(model=TestModel)
 
-        res = transform(obj)
-        self.assertEquals(res, '<QuerySet: model=TestModel>')
+        result = transform(obj)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertEquals(result, u'<QuerySet: model=TestModel>')

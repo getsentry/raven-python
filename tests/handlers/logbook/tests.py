@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import logbook
 from unittest2 import TestCase
 from raven.base import Client
@@ -8,6 +9,9 @@ class TempStoreClient(Client):
     def __init__(self, servers=None, **kwargs):
         self.events = []
         super(TempStoreClient, self).__init__(servers=servers, **kwargs)
+
+    def is_enabled(self):
+        return True
 
     def send(self, **kwargs):
         self.events.append(kwargs)

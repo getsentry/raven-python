@@ -15,6 +15,9 @@ class TempStoreClient(Client):
         self.events = []
         super(TempStoreClient, self).__init__(servers=servers, **kwargs)
 
+    def is_enabled(self):
+        return True
+
     def send(self, **kwargs):
         self.events.append(kwargs)
 
@@ -99,6 +102,7 @@ class ClientTest(TestCase):
             url='http://example.com',
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
+                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
                 'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
@@ -122,6 +126,7 @@ class ClientTest(TestCase):
             url='http://example.com',
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
+                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
                 'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=foo' % (raven.VERSION,)
@@ -145,6 +150,7 @@ class ClientTest(TestCase):
             url='http://example.com',
             data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
             headers={
+                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'foo'
             },
@@ -230,6 +236,36 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('timestamp' in event)
+
+    def test_exception_context_manager(self):
+        try:
+            cm = self.client.captureExceptions(tags={'foo': 'bar'})
+            with cm:
+                raise ValueError('foo')
+        except:
+            pass
+        else:
+            self.fail('Exception should have been raised')
+
+        self.assertNotEquals(cm.result, None)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'ValueError: foo')
+        self.assertTrue('sentry.interfaces.Exception' in event)
+        exc = event['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'ValueError')
+        self.assertEquals(exc['value'], 'foo')
+        self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
+        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        frames = event['sentry.interfaces.Stacktrace']
+        self.assertEquals(len(frames['frames']), 1)
+        frame = frames['frames'][0]
+        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
+        self.assertEquals(frame['filename'], 'tests/client/tests.py')
+        self.assertEquals(frame['module'], __name__)
+        self.assertEquals(frame['function'], 'test_exception_context_manager')
         self.assertTrue('timestamp' in event)
 
     def test_stack_explicit_frames(self):

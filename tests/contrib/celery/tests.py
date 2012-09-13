@@ -8,7 +8,7 @@ from raven.contrib.celery import CeleryClient
 
 class ClientTest(TestCase):
     def setUp(self):
-        self.client = CeleryClient()
+        self.client = CeleryClient(servers=['http://example.com'])
 
     @mock.patch('raven.contrib.celery.CeleryClient.send_raw')
     def test_send_encoded(self, send_raw):

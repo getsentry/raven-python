@@ -1,8 +1,13 @@
+from __future__ import with_statement
 import logging
+import sys
 from unittest2 import TestCase
 from raven.base import Client
 from raven.middleware import Sentry
-
+# XXX: webob does not work under Python < 2.6
+if (sys.version_info < (2, 6, 0)):
+    from nose.plugins.skip import SkipTest
+    raise SkipTest
 import webob
 
 
@@ -10,6 +15,9 @@ class TempStoreClient(Client):
     def __init__(self, servers=None, **kwargs):
         self.events = []
         super(TempStoreClient, self).__init__(servers=servers, **kwargs)
+
+    def is_enabled(self):
+        return True
 
     def send(self, **kwargs):
         self.events.append(kwargs)

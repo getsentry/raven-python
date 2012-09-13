@@ -8,11 +8,14 @@ raven.utils
 
 import hashlib
 import hmac
+import logging
 try:
     import pkg_resources
 except ImportError:
     pkg_resources = None
 import sys
+
+logger = logging.getLogger('raven.errors')
 
 
 def varmap(func, var, context=None, name=None):
@@ -41,6 +44,32 @@ def varmap(func, var, context=None, name=None):
 _VERSION_CACHE = {}
 
 
+def get_version_from_app(module_name, app):
+    if hasattr(app, 'get_version'):
+        get_version = app.get_version
+        if callable(get_version):
+            version = get_version()
+        else:
+            version = get_version
+    elif hasattr(app, 'VERSION'):
+        version = app.VERSION
+    elif hasattr(app, '__version__'):
+        version = app.__version__
+    elif pkg_resources:
+        # pull version from pkg_resources if distro exists
+        try:
+            version = pkg_resources.get_distribution(module_name).version
+        except pkg_resources.DistributionNotFound:
+            return None
+    else:
+        return None
+
+    if isinstance(version, (list, tuple)):
+        version = '.'.join(str(o) for o in version)
+
+    return version
+
+
 def get_versions(module_list=None):
     if not module_list:
         return {}
@@ -57,28 +86,18 @@ def get_versions(module_list=None):
                 __import__(module_name)
             except ImportError:
                 continue
-            app = sys.modules[module_name]
-            if hasattr(app, 'get_version'):
-                get_version = app.get_version
-                if callable(get_version):
-                    version = get_version()
-                else:
-                    version = get_version
-            elif hasattr(app, 'VERSION'):
-                version = app.VERSION
-            elif hasattr(app, '__version__'):
-                version = app.__version__
-            elif pkg_resources:
-                # pull version from pkg_resources if distro exists
-                try:
-                    version = pkg_resources.get_distribution(module_name).version
-                except pkg_resources.DistributionNotFound:
-                    version = None
-            else:
+
+            try:
+                app = sys.modules[module_name]
+            except KeyError:
+                continue
+
+            try:
+                version = get_version_from_app(module_name, app)
+            except Exception, e:
+                logger.exception(e)
                 version = None
 
-            if isinstance(version, (list, tuple)):
-                version = '.'.join(str(o) for o in version)
             _VERSION_CACHE[module_name] = version
         else:
             version = _VERSION_CACHE[module_name]

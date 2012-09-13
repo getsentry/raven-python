@@ -11,6 +11,8 @@ from raven.utils.serializer.manager import register
 from types import ClassType, TypeType
 from uuid import UUID
 
+__all__ = ('Serializer',)
+
 
 def has_sentry_metadata(value):
     try:
@@ -46,7 +48,6 @@ class Serializer(object):
         return self.manager.transform(value)
 
 
-@register
 class IterableSerializer(Serializer):
     types = (tuple, list, set, frozenset)
 
@@ -60,7 +61,6 @@ class IterableSerializer(Serializer):
             return value_type(self.recurse(o) for o in value)
 
 
-@register
 class UUIDSerializer(Serializer):
     types = (UUID,)
 
@@ -68,7 +68,6 @@ class UUIDSerializer(Serializer):
         return repr(value)
 
 
-@register
 class DictSerializer(Serializer):
     types = (dict,)
 
@@ -76,7 +75,6 @@ class DictSerializer(Serializer):
         return dict((to_string(k), self.recurse(v)) for k, v in value.iteritems())
 
 
-@register
 class UnicodeSerializer(Serializer):
     types = (unicode,)
 
@@ -84,7 +82,6 @@ class UnicodeSerializer(Serializer):
         return to_unicode(value)
 
 
-@register
 class StringSerializer(Serializer):
     types = (str,)
 
@@ -92,7 +89,6 @@ class StringSerializer(Serializer):
         return to_string(value)
 
 
-@register
 class TypeSerializer(Serializer):
     types = (ClassType, TypeType,)
 
@@ -103,7 +99,6 @@ class TypeSerializer(Serializer):
         return self.recurse(value.__sentry__())
 
 
-@register
 class BooleanSerializer(Serializer):
     types = (bool,)
 
@@ -111,7 +106,6 @@ class BooleanSerializer(Serializer):
         return bool(value)
 
 
-@register
 class FloatSerializer(Serializer):
     types = (float,)
 
@@ -119,7 +113,6 @@ class FloatSerializer(Serializer):
         return float(value)
 
 
-@register
 class IntegerSerializer(Serializer):
     types = (int,)
 
@@ -127,9 +120,20 @@ class IntegerSerializer(Serializer):
         return int(value)
 
 
-@register
 class LongSerializer(Serializer):
     types = (long,)
 
     def serialize(self, value):
         return long(value)
+
+
+register(IterableSerializer)
+register(UUIDSerializer)
+register(DictSerializer)
+register(UnicodeSerializer)
+register(StringSerializer)
+register(TypeSerializer)
+register(BooleanSerializer)
+register(FloatSerializer)
+register(IntegerSerializer)
+register(LongSerializer)
