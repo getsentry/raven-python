@@ -13,7 +13,11 @@ from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
 
 try:
     import gevent
-    import gevent.coros
+    # gevent 1.0bN renamed coros to lock
+    try:
+      import gevent.lock as gevent_lock
+    except:
+      import gevent.coros as gevent_lock
     has_gevent = True
 except:
     has_gevent = None
@@ -177,7 +181,7 @@ class GeventedHTTPTransport(HTTPTransport):
     def __init__(self, parsed_url, maximum_outstanding_requests=100):
         if not has_gevent:
             raise ImportError('GeventedHTTPTransport requires gevent.')
-        self._lock = gevent.coros.Semaphore(maximum_outstanding_requests)
+        self._lock = gevent_lock.Semaphore(maximum_outstanding_requests)
 
         super(GeventedHTTPTransport, self).__init__(parsed_url)
 
