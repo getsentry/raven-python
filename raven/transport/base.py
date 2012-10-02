@@ -203,7 +203,7 @@ class GeventedHTTPTransport(HTTPTransport):
 
 class TwistedHTTPTransport(HTTPTransport):
 
-    scheme = ['twisted+http']
+    scheme = ['twisted+http', 'twisted+https']
 
     def __init__(self, parsed_url):
         if not has_twisted:
