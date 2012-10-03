@@ -95,6 +95,10 @@ class Sentry(object):
 
         got_request_exception.connect(self.handle_exception, sender=app)
 
+        if not hasattr(app, 'extensions'):
+            app.extensions = {}
+        app.extensions['sentry'] = self
+
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
         return self.client.captureException(*args, **kwargs)

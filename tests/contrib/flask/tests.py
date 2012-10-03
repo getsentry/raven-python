@@ -32,6 +32,12 @@ class FlaskTest(TestCase):
         self.app = create_app()
         self.client = self.app.test_client()
 
+    def test_does_add_to_extensions(self):
+        client = TempStoreClient()
+        sentry = Sentry(self.app, client=client)
+        self.assertIn('sentry', self.app.extensions)
+        self.assertEquals(self.app.extensions['sentry'], sentry)
+
     def test_error_handler(self):
         client = TempStoreClient()
         sentry = Sentry(self.app, client=client)
