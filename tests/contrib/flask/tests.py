@@ -1,5 +1,5 @@
 import logging
-from flask import Flask
+from flask import Flask, current_app
 from raven.base import Client
 from raven.contrib.flask import Sentry
 from unittest2 import TestCase
@@ -24,6 +24,18 @@ def create_app():
     def an_error():
         raise ValueError('hello world')
 
+    @app.route('/capture/', methods=['GET', 'POST'])
+    def capture_exception():
+        try:
+            raise ValueError('Boom')
+        except:
+            current_app.sentry.captureException()
+        return 'Hello'
+
+    @app.route('/message/', methods=['GET', 'POST'])
+    def capture_message():
+        current_app.sentry.captureMessage('Interesting')
+        return 'World'
     return app
 
 
@@ -112,3 +124,27 @@ class FlaskTest(TestCase):
         self.assertEquals(env['SERVER_NAME'], 'localhost')
         self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
+
+    def test_captureException_captures_http(self):
+        client = TempStoreClient()
+        sentry = self.app.sentry = Sentry(self.app, client=client)
+        response = self.client.get('/capture/?foo=bar')
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(client.events), 1)
+
+        event = client.events.pop(0)
+
+        self.assertTrue('sentry.interfaces.Exception' in event)
+        self.assertTrue('sentry.interfaces.Http' in event)
+
+    def test_captureMessage_captures_http(self):
+        client = TempStoreClient()
+        sentry = self.app.sentry = Sentry(self.app, client=client)
+        response = self.client.get('/message/?foo=bar')
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(client.events), 1)
+
+        event = client.events.pop(0)
+
+        self.assertTrue('sentry.interfaces.Message' in event)
+        self.assertTrue('sentry.interfaces.Http' in event)
