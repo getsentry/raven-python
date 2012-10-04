@@ -7,6 +7,6 @@ raven.transport
 """
 
 from raven.transport.base import Transport, HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport, \
-  TornadoHTTPTransport, UDPTransport  # NOQA
+  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport  # NOQA
 from raven.transport.exceptions import InvalidScheme, DuplicateScheme  # NOQA
 from raven.transport.registry import TransportRegistry, default_transports  # NOQA
