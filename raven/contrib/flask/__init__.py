@@ -101,8 +101,14 @@ class Sentry(object):
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
+        data = kwargs.get('data')
+        if data is None:
+            kwargs['data'] = get_data_from_request(request)
         return self.client.captureException(*args, **kwargs)
 
     def captureMessage(self, *args, **kwargs):
         assert self.client, 'captureMessage called before application configured'
+        data = kwargs.get('data')
+        if data is None:
+            kwargs['data'] = get_data_from_request(request)
         return self.client.captureMessage(*args, **kwargs)
