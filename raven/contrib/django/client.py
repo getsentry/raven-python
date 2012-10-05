@@ -96,7 +96,7 @@ class DjangoClient(Client):
 
         result = super(DjangoClient, self).capture(event_type, **kwargs)
 
-        if is_http_request:
+        if is_http_request and result:
             # attach the sentry object to the request
             request.sentry = {
                 'project_id': data.get('project', self.project),
