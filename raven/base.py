@@ -172,10 +172,6 @@ class Client(object):
             public_key = options['SENTRY_PUBLIC_KEY']
             secret_key = options['SENTRY_SECRET_KEY']
 
-        # servers may be set to a NoneType (for Django)
-        if servers and not (key or (secret_key and public_key)):
-            self.logger.info('Raven is not configured (disabled). Please see documentation for more information.')
-
         if kwargs.get('timeout') is not None:
             warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
 
@@ -199,6 +195,10 @@ class Client(object):
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
+
+        # servers may be set to a NoneType (for Django)
+        if not self.is_enabled():
+            self.logger.info('Raven is not configured (disabled). Please see documentation for more information.')
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
