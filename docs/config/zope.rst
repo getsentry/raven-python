@@ -38,7 +38,7 @@ To add the equivalent configuration, you would do this:
     event-log-custom = 
         %import raven.contrib.zope
         <logfile>
-          path ${buildout:site}/var/instance.log
+          path ${buildout:directory}/var/instance.log
           level INFO
         </logfile>
         <sentry>
