@@ -4,6 +4,7 @@ import sys
 from unittest2 import TestCase
 from raven.base import Client
 from raven.middleware import Sentry
+from raven.utils.tests import fixture
 # XXX: webob does not work under Python < 2.6
 if (sys.version_info < (2, 6, 0)):
     from nose.plugins.skip import SkipTest
@@ -23,26 +24,49 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
-def example_app(environ, start_response):
-    raise ValueError('hello world')
+class ErroringIterable(object):
+    def __init__(self):
+        self.closed = False
+
+    def __iter__(self):
+        raise ValueError('hello world')
+
+    def close(self):
+        self.closed = True
 
 
-class MiddlewareTest(TestCase):
-    def setUp(self):
-        self.app = example_app
+class ExampleApp(object):
+    def __init__(self, iterable):
+        self.iterable = iterable
 
-    def test_error_handler(self):
-        client = TempStoreClient()
-        middleware = Sentry(self.app, client=client)
+    def __call__(self, environ, start_response):
+        return self.iterable
 
-        request = webob.Request.blank('/an-error?foo=bar')
-        response = middleware(request.environ, lambda *args: None)
+
+class MiddlewareTestCase(TestCase):
+    @fixture
+    def client(self):
+        return TempStoreClient()
+
+    @fixture
+    def request(self):
+        return webob.Request.blank('/an-error?foo=bar')
+
+    def test_captures_error_in_iteration(self):
+        iterable = ErroringIterable()
+        app = ExampleApp(iterable)
+        middleware = Sentry(app, client=self.client)
+
+        response = middleware(self.request.environ, lambda *args: None)
 
         with self.assertRaises(ValueError):
             response = list(response)
 
-        self.assertEquals(len(client.events), 1)
-        event = client.events.pop(0)
+        # TODO: this should be a separate test
+        self.assertTrue(iterable.closed, True)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
 
         self.assertTrue('sentry.interfaces.Exception' in event)
         exc = event['sentry.interfaces.Exception']
