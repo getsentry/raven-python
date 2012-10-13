@@ -80,16 +80,11 @@ class ZopeSentryHandler(SentryHandler):
                     setattr(record, 'sentry.interfaces.Http', http)
                     user = request.get('AUTHENTICATED_USER', None)
                     if user is not None:
-                        userid = user.getId()
-                        is_authenticated = user.has_role('Authenticated')
-                        email = user.getProperty('email') or ''
+                        user_dict = dict(id=user.getId(),
+                                         is_authenticated=user.has_role('Authenticated'),
+                                         email=user.getProperty('email') or '')
                     else:
-                        userid = 'Anonymous User'
-                        is_authenticated = False
-                        email = ''
-                    user_dict = dict(id=userid,
-                                     is_authenticated=is_authenticated,
-                                     email=email)
+                        user_dict = {'is_authenticated': False}
                     setattr(record, 'sentry.interfaces.User', user_dict)
                 except (AttributeError, KeyError):
                     logger.warning('Could not extract data from request', exc_info=True)
