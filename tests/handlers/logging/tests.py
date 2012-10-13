@@ -209,7 +209,7 @@ class LoggingHandlerTest(TestCase):
         self.assertRaises(ValueError, SentryHandler, object)
 
     def test_logging_level_set(self):
-        handler = SentryHandler('http://public:secret@example.com/1', level="ERROR")
+        handler = SentryHandler('http://public:secret@example.com/1', level=logging.ERROR)
         self.assertEquals(handler.level, logging.ERROR)
 
     def test_logging_level_not_set(self):
