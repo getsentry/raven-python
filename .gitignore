@@ -6,6 +6,7 @@
 .coverage
 .DS_Store
 pip-log.txt
+/.tox
 /*.egg-info
 /build
 /cover
