@@ -9,8 +9,15 @@ raven.conf
 import logging
 from raven.utils.urlparse import urlparse
 
-
 __all__ = ('load', 'setup_logging')
+
+EXCLUDE_LOGGER_DEFAULTS = (
+    'raven',
+    'gunicorn',
+    'south',
+    'sentry.errors',
+    'django.request',
+)
 
 
 # TODO (vng): this seems weirdly located in raven.conf.  Seems like
@@ -49,10 +56,7 @@ def load(dsn, scope=None, transport_registry=None):
     return scope
 
 
-def setup_logging(handler, exclude=['raven',
-                                    'gunicorn',
-                                    'south',
-                                    'sentry.errors']):
+def setup_logging(handler, exclude=EXCLUDE_LOGGER_DEFAULTS):
     """
     Configures logging to pipe to Sentry.
 
