@@ -14,11 +14,10 @@ import unittest2
 try:
     import zerorpc
 except ImportError:
-    zerorpc = None
+    raise SkipTest('zerorpc module is not available')
 
 from raven.base import Client
 from raven.contrib.zerorpc import SentryMiddleware
-from raven.utils.tests import requires
 
 
 class TempStoreClient(Client):
@@ -34,7 +33,6 @@ class TempStoreClient(Client):
 
 
 class ZeroRPCTest(unittest2.TestCase):
-    @requires(lambda: zerorpc is not None, 'zerorpc module is not available')
     def setUp(self):
         self._socket_dir = tempfile.mkdtemp(prefix='ravenzerorpcunittest')
         self._server_endpoint = 'ipc://{0}'.format(os.path.join(
