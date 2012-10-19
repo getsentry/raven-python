@@ -122,6 +122,12 @@ class SantizePasswordsProcessorTest(TestCase):
         result = proc.sanitize('foo', '4242424242424242')
         self.assertEquals(result, proc.MASK)
 
+    def test_sanitize_credit_card_amex(self):
+        # AMEX numbers are 15 digits, not 16
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('foo', '424242424242424')
+        self.assertEquals(result, proc.MASK)
+
 
 class RemovePostDataProcessorTest(TestCase):
     def test_does_remove_data(self):
