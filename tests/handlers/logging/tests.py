@@ -123,7 +123,7 @@ class LoggingIntegrationTest(TestCase):
         self.logger.info('This is a test of no stacks', extra={'stack': False})
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event.get('culprit'), None)
+        self.assertEquals(event.get('culprit'), 'tests.handlers.logging.tests.test_no_record_stack')
         self.assertEquals(event['message'], 'This is a test of no stacks')
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
         self.assertFalse('sentry.interfaces.Exception' in event)

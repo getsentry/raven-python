@@ -17,6 +17,8 @@ from raven.base import Client
 from raven.utils.encoding import to_string
 from raven.utils.stacks import iter_stack_frames
 
+RESERVED = ('stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated')
+
 
 class SentryHandler(logging.Handler, object):
     def __init__(self, *args, **kwargs):
@@ -105,7 +107,7 @@ class SentryHandler(logging.Handler, object):
 
         # Add in all of the data from the record that we aren't already capturing
         for k in record.__dict__.keys():
-            if k in ('stack', 'name', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated'):
+            if k in RESERVED:
                 continue
             if k.startswith('_'):
                 continue
@@ -120,6 +122,10 @@ class SentryHandler(logging.Handler, object):
 
             data.update(handler.capture(exc_info=record.exc_info))
             data['checksum'] = handler.get_hash(data)
+
+        # HACK: discover a culprit when we normally couldn't
+        elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
+            data['culprit'] = '%s.%s' % (record.name or '<unknown>', record.funcName or '<unknown>')
 
         data['level'] = record.levelno
         data['logger'] = record.name
