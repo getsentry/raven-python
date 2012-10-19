@@ -50,12 +50,12 @@ class RemoveStackLocalsProcessor(Processor):
 
 class SanitizePasswordsProcessor(Processor):
     """
-    Asterisk out passwords from password fields in frames, http,
-    and basic extra data.
+    Asterisk out things that look like passwords and credit
+    card numbers in frames, http, and basic extra data.
     """
     MASK = '*' * 8
     FIELDS = frozenset(['password', 'secret', 'passwd'])
-    VALUES_RE = re.compile(r'^\d{16}$')
+    VALUES_RE = re.compile(r'^\d{15,16}$')
 
     def sanitize(self, key, value):
         if value is None:
