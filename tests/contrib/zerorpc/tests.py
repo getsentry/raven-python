@@ -5,7 +5,6 @@ import sys
 if (sys.version_info < (2, 6, 0) or '__pypy__' in sys.builtin_module_names):
     raise SkipTest('zerorpc does not work on pypy or python < 2.6')
 
-import gevent
 import os
 import random
 import shutil
@@ -15,6 +14,10 @@ try:
     import zerorpc
 except ImportError:
     raise SkipTest('zerorpc module is not available')
+try:
+    import gevent
+except ImportError:
+    raise SkipTest('gevent module is not available')
 
 from raven.base import Client
 from raven.contrib.zerorpc import SentryMiddleware
