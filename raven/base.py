@@ -178,12 +178,6 @@ class Client(object):
         self.servers = servers
         self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
         self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
-
-        # It's possible on frameworks such as GAE that the name option will not be set.
-        if not name:
-            raise ValueError('The ``name`` option is required, you will need to pass it '
-                             'in when initializing the ``Client``.')
-
         self.name = unicode(name or defaults.NAME)
         self.auto_log_stacks = bool(auto_log_stacks or
                 defaults.AUTO_LOG_STACKS)
