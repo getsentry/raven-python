@@ -20,3 +20,4 @@ pip-log.txt
 bin/
 include/
 lib/
+.idea

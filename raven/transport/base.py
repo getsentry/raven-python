@@ -9,7 +9,14 @@ raven.transport.builtins
 import logging
 import sys
 import urllib2
-from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
+
+try:
+    # Google App Engine blacklists parts of the socket module, this will prevent
+    # it from blowing up.
+    from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
+    has_socket = True
+except:
+    has_socket = False
 
 try:
     import gevent
@@ -80,6 +87,8 @@ class UDPTransport(Transport):
     scheme = ['udp']
 
     def __init__(self, parsed_url):
+        if not has_socket:
+            raise ImportError('UDPTransport requires the socket module')
         self.check_scheme(parsed_url)
 
         self._parsed_url = parsed_url
