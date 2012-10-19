@@ -11,6 +11,14 @@ Raven is a standalone (and the official) Python client for `Sentry <http://www.g
    usage
    contributing/index
 
+Supported Platforms
+-------------------
+
+- Python 2.6
+- Python 2.7
+- PyPy
+- Google App Engine
+
 About Sentry
 ------------
 
