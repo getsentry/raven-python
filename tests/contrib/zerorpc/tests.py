@@ -1,7 +1,8 @@
+from nose.plugins.skip import SkipTest
+
 import sys
 # XXX: zeropc does not work under Python < 2.6 or pypy
 if (sys.version_info < (2, 6, 0) or '__pypy__' in sys.builtin_module_names):
-    from nose.plugins.skip import SkipTest
     raise SkipTest
 
 import gevent
@@ -10,7 +11,10 @@ import random
 import shutil
 import tempfile
 import unittest2
-import zerorpc
+try:
+    import zerorpc
+except ImportError:
+    zerorpc = None
 
 from raven.base import Client
 from raven.contrib.zerorpc import SentryMiddleware
@@ -29,8 +33,9 @@ class TempStoreClient(Client):
 
 
 class ZeroRPCTest(unittest2.TestCase):
-
     def setUp(self):
+        if zerorpc is None:
+            raise SkipTest('zerorpc module is not available')
         self._socket_dir = tempfile.mkdtemp(prefix='ravenzerorpcunittest')
         self._server_endpoint = 'ipc://{0}'.format(os.path.join(
                     self._socket_dir, 'random_zeroserver'

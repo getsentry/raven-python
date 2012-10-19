@@ -36,7 +36,8 @@ tests_require = [
     'pep8',
     'unittest2',
     'webob',
-    'zerorpc>=0.2.0',
+    # zerorpc is messing up travis
+    # 'zerorpc>=0.2.0',
     'pytz'
 ]
 
