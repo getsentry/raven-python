@@ -28,7 +28,6 @@ tests_require = [
     'Django>=1.2,<1.5',
     'django-celery>=2.5',
     'django-nose',
-    'gevent',
     'Flask>=0.8',
     'logbook',
     'nose',
@@ -36,6 +35,8 @@ tests_require = [
     'pep8',
     'unittest2',
     'webob',
+    # pypy does not support gevent
+    # 'gevent',
     # zerorpc is messing up travis
     # 'zerorpc>=0.2.0',
     'pytz'
