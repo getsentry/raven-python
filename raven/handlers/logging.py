@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """
 raven.handlers.logging
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -43,6 +44,7 @@ class SentryHandler(logging.Handler, object):
             self.client = client(*args, **kwargs)
 
         logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
+        self.formatter = logging.Formatter(fmt=u'%(message)s')
 
     def emit(self, record):
         try:
