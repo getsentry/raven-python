@@ -26,7 +26,6 @@ class Sentry(object):
         try:
             iterable = self.application(environ, start_response)
         except Exception:
-            print "here"
             self.handle_exception(environ)
             raise
 
