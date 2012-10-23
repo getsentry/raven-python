@@ -229,3 +229,15 @@ Or, alternatively, you can just enable Sentry responses::
             # Make sure the exception signal is fired for Sentry
             sentry_exception_handler(request=request)
             return HttpResponse('foo')
+
+
+Gunicorn
+~~~~~~~~
+
+If you are running Django with `gunicorn <http://gunicorn.org/>`_ and using the
+``gunicorn`` executable, instead of the ``run_gunicorn`` management command, you
+will need to add a hook to gunicorn to activate Raven::
+
+    def when_ready(server):
+        from django.core.management import call_command
+        call_command('validate')
