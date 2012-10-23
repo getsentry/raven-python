@@ -318,6 +318,13 @@ class ClientTest(TestCase):
         self.assertEquals(event['logger'], 'test')
         self.assertTrue('timestamp' in event)
 
+    def test_tags(self):
+        self.client.capture('Message', message='test', tags={'logger': 'test'})
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['tags'], {'logger': 'test'})
+
 
 class ClientUDPTest(TestCase):
     def setUp(self):
