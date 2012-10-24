@@ -3,6 +3,7 @@ from flask import Flask, current_app
 from raven.base import Client
 from raven.contrib.flask import Sentry
 from unittest2 import TestCase
+from mock import patch
 
 
 class TempStoreClient(Client):
@@ -148,3 +149,17 @@ class FlaskTest(TestCase):
 
         self.assertTrue('sentry.interfaces.Message' in event)
         self.assertTrue('sentry.interfaces.Http' in event)
+
+    @patch('flask.wrappers.RequestBase._load_form_data')
+    def test_get_data_handles_disconnected_client(self, lfd):
+        from werkzeug.exceptions import ClientDisconnected
+        lfd.side_effect = ClientDisconnected
+        client = TempStoreClient()
+        sentry = self.app.sentry = Sentry(self.app, client=client)
+        response = self.client.post('/capture/?foo=bar', data={'baz': 'foo'})
+
+        event = client.events.pop(0)
+
+        self.assertTrue('sentry.interfaces.Http' in event)
+        http = event['sentry.interfaces.Http']
+        self.assertEqual({}, http.get('data'))
