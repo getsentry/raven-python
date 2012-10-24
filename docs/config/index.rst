@@ -115,7 +115,7 @@ within Sentry.
 
 ::
 
-    public_key = '6e968b3d8ba240fcb50072ad9cba0810'
+    secret_key = '6e968b3d8ba240fcb50072ad9cba0810'
 
 site
 ~~~~
