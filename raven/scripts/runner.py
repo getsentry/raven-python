@@ -12,10 +12,10 @@ import logging
 import os
 import sys
 import pwd
-import simplejson as json
 from optparse import OptionParser
 
 from raven import Client
+from raven.utils.json import json
 
 
 def store_json(option, opt_str, value, parser):

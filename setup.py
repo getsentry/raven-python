@@ -42,10 +42,6 @@ tests_require = [
     'pytz'
 ]
 
-install_requires = [
-    'simplejson',
-]
-
 setup(
     name='raven',
     version='2.0.7.1',
@@ -56,7 +52,6 @@ setup(
     long_description=__doc__,
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,
-    install_requires=install_requires,
     tests_require=tests_require,
     extras_require={'test': tests_require},
     test_suite='runtests.runtests',
