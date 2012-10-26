@@ -6,15 +6,18 @@ raven.contrib.django.views
 :license: BSD, see LICENSE for more details.
 """
 
-import simplejson
+from __future__ import absolute_import
+
+from functools import wraps
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from functools import wraps
+
 from raven.contrib.django.models import client
+from raven.utils import json
 
 
 def is_valid_origin(origin):
@@ -79,8 +82,8 @@ def report(request, project_id=None):
             return HttpResponseBadRequest()
 
         try:
-            decoded = simplejson.loads(data)
-        except simplejson.JSONDecodeError:
+            decoded = json.loads(data)
+        except json.JSONDecodeError:
             return HttpResponseBadRequest()
 
         response = HttpResponse()
