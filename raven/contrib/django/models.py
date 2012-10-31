@@ -10,12 +10,12 @@ Acts as an implicit hook for Django installs.
 
 from __future__ import absolute_import
 
+from hashlib import md5
 import sys
 import logging
 import warnings
 
 from django.conf import settings as django_settings
-from django.utils.hashcompat import md5_constructor
 
 logger = logging.getLogger('sentry.errors.client')
 
@@ -120,7 +120,7 @@ def get_client(client=None):
         options.setdefault('timeout', ga('TIMEOUT'))
         options.setdefault('name', ga('NAME'))
         options.setdefault('auto_log_stacks', ga('AUTO_LOG_STACKS'))
-        options.setdefault('key', ga('KEY', md5_constructor(django_settings.SECRET_KEY).hexdigest()))
+        options.setdefault('key', ga('KEY', md5(django_settings.SECRET_KEY).hexdigest()))
         options.setdefault('string_max_length', ga('MAX_LENGTH_STRING'))
         options.setdefault('list_max_length', ga('MAX_LENGTH_LIST'))
         options.setdefault('site', ga('SITE'))
