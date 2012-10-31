@@ -26,7 +26,7 @@ class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
 
     def is_enabled(self):
-        return self.servers or 'sentry' in settings.INSTALLED_APPS
+        return bool(self.servers or 'sentry' in settings.INSTALLED_APPS)
 
     def get_user_info(self, request):
         if request.user.is_authenticated():
