@@ -1,3 +1,14 @@
+"""
+raven.contrib.django.utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Acts as an implicit hook for Django installs.
+
+:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+
+
 def linebreak_iter(template_source):
     yield 0
     p = template_source.find('\n')
