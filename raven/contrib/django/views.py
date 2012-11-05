@@ -7,8 +7,6 @@ raven.contrib.django.views
 """
 from __future__ import absolute_import
 
-from __future__ import absolute_import
-
 from functools import wraps
 
 from django.conf import settings
