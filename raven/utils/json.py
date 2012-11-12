@@ -13,9 +13,12 @@ import uuid
 
 try:
     import simplejson as json
-    JSONDecodeError = json.JSONDecodeError
 except ImportError:
     import json
+
+try:
+    JSONDecodeError = json.JSONDecodeError
+except AttributeError:
     JSONDecodeError = ValueError
 
 
