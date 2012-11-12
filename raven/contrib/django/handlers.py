@@ -9,6 +9,8 @@ raven.contrib.django.handlers
 from __future__ import absolute_import
 
 import logging
+
+from django.conf import settings as django_settings
 from raven.handlers.logging import SentryHandler as BaseSentryHandler
 
 
@@ -26,7 +28,10 @@ class SentryHandler(BaseSentryHandler):
     def _emit(self, record):
         from raven.contrib.django.middleware import SentryLogMiddleware
 
-        # Fetch the request from a threadlocal variable, if available
-        request = getattr(record, 'request', getattr(SentryLogMiddleware.thread, 'request', None))
+        # If we've explicitly enabled signals, or we're not running DEBUG, emit the record
+        if getattr(django_settings, 'RAVEN_CONFIG', {}).get('register_signals', not django_settings.DEBUG):
 
-        return super(SentryHandler, self)._emit(record, request=request)
+            # Fetch the request from a threadlocal variable, if available
+            request = getattr(record, 'request', getattr(SentryLogMiddleware.thread, 'request', None))
+
+            return super(SentryHandler, self)._emit(record, request=request)
