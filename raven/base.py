@@ -158,7 +158,7 @@ class Client(object):
 
         if dsn is None and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
-            self.logger.info(msg)
+            self.logger.debug(msg)
             dsn = os.environ['SENTRY_DSN']
 
         if dsn:
@@ -166,7 +166,7 @@ class Client(object):
             urlparts = urlparse(dsn)
             msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
                     urlparts.netloc, urlparts.path)
-            self.logger.info(msg)
+            self.logger.debug(msg)
             options = raven.load(dsn, transport_registry=self._registry)
             servers = options['SENTRY_SERVERS']
             project = options['SENTRY_PROJECT']
