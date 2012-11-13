@@ -325,6 +325,17 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['tags'], {'logger': 'test'})
 
+    def test_client_context(self):
+        self.client.context = {
+            'foo': 'bar',
+            'logger': 'baz',
+        }
+        self.client.capture('Message', message='test', extra={'logger': 'test'})
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['extra'], {'logger': 'test', 'foo': 'bar'})
+
 
 class ClientUDPTest(TestCase):
     def setUp(self):
@@ -334,7 +345,7 @@ class ClientUDPTest(TestCase):
 
     def test_delivery(self):
         self.client.create_from_text('test')
-        data, address = self.server_socket.recvfrom(2**16)
+        data, address = self.server_socket.recvfrom(2 ** 16)
         self.assertTrue("\n\n" in data)
         header, payload = data.split("\n\n")
         for substring in ("sentry_timestamp=", "sentry_client="):

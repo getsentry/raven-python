@@ -136,7 +136,7 @@ class Client(object):
             name=None, auto_log_stacks=None, key=None,
             string_max_length=None, list_max_length=None, site=None,
             public_key=None, secret_key=None, processors=None, project=None,
-            dsn=None, **kwargs):
+            dsn=None, context=None, **kwargs):
         # configure loggers first
         cls = self.__class__
         self.state = ClientState()
@@ -192,6 +192,7 @@ class Client(object):
         self.public_key = public_key
         self.secret_key = secret_key
         self.project = project or defaults.PROJECT
+        self.context = context
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
@@ -285,7 +286,12 @@ class Client(object):
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
 
-        # Shorten lists/strings
+        # Add extra context
+        if self.context:
+            for k, v in self.context.iteritems():
+                data['extra'].setdefault(k, shorten(v, string_length=self.string_max_length,
+                    list_length=self.list_max_length))
+
         for k, v in extra.iteritems():
             data['extra'][k] = shorten(v, string_length=self.string_max_length,
                     list_length=self.list_max_length)
