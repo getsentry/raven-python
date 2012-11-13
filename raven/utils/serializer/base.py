@@ -59,13 +59,8 @@ class IterableSerializer(Serializer):
     types = (tuple, list, set, frozenset)
 
     def serialize(self, value, **kwargs):
-        try:
-            return type(value)(self.recurse(o, **kwargs) for o in value)
-        except Exception:
-            # We may be dealing with something like a namedtuple
-            class value_type(list):
-                __name__ = type(value).__name__
-            return value_type(self.recurse(o, **kwargs) for o in value)
+        list_max_length = kwargs.get('list_max_length', float('inf'))
+        return tuple(self.recurse(o, **kwargs) for n, o in enumerate(value) if n < list_max_length)
 
 
 class UUIDSerializer(Serializer):
@@ -79,21 +74,28 @@ class DictSerializer(Serializer):
     types = (dict,)
 
     def serialize(self, value, **kwargs):
-        return dict((to_string(k), self.recurse(v, **kwargs)) for k, v in value.iteritems())
+        list_max_length = kwargs.get('list_max_length', float('inf'))
+        return dict(
+            (to_string(k), self.recurse(v, **kwargs))
+            for n, (k, v) in enumerate(value.iteritems())
+            if n < list_max_length
+        )
 
 
 class UnicodeSerializer(Serializer):
     types = (unicode,)
 
     def serialize(self, value, **kwargs):
-        return to_unicode(value)
+        string_max_length = kwargs.get('string_max_length', None)
+        return to_unicode(value)[:string_max_length]
 
 
 class StringSerializer(Serializer):
     types = (str,)
 
     def serialize(self, value, **kwargs):
-        return to_string(value)
+        string_max_length = kwargs.get('string_max_length', None)
+        return to_string(value)[:string_max_length]
 
 
 class TypeSerializer(Serializer):

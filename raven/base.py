@@ -21,9 +21,9 @@ import warnings
 
 import raven
 from raven.conf import defaults
-from raven.utils import json, varmap, get_versions, get_auth_header
+from raven.utils import json, get_versions, get_auth_header
 
-from raven.utils.encoding import shorten, to_string
+from raven.utils.encoding import to_string
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
   get_culprit
@@ -268,10 +268,7 @@ class Client(object):
 
             data.update({
                 'sentry.interfaces.Stacktrace': {
-                    'frames': varmap(lambda k, v: shorten(v,
-                        string_length=self.string_max_length,
-                        list_length=self.list_max_length),
-                    get_stack_info(frames))
+                    'frames': get_stack_info(frames)
                 },
             })
 
@@ -292,12 +289,10 @@ class Client(object):
         # Add extra context
         if self.context:
             for k, v in self.context.iteritems():
-                data['extra'].setdefault(k, shorten(v, string_length=self.string_max_length,
-                    list_length=self.list_max_length))
+                data['extra'].setdefault(k, v)
 
         for k, v in extra.iteritems():
-            data['extra'][k] = shorten(v, string_length=self.string_max_length,
-                    list_length=self.list_max_length)
+            data['extra'][k] = v
 
         if culprit:
             data['culprit'] = culprit
@@ -341,7 +336,8 @@ class Client(object):
         return data
 
     def transform(self, data):
-        return transform(data)
+        return transform(data, list_max_length=self.list_max_length,
+            string_max_length=self.string_max_length)
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
                 extra=None, stack=None, public_key=None, tags=None, **kwargs):

@@ -94,7 +94,7 @@ class TransformTest(TestCase):
         x.append(x)
 
         result = transform(x)
-        self.assertEquals(result, ['<...>'])
+        self.assertEquals(result, ('<...>',))
 
     def test_custom_repr(self):
         class Foo(object):
@@ -119,7 +119,23 @@ class TransformTest(TestCase):
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
         result = transform(x, max_depth=3)
-        self.assertEquals(result, [[['[1]']]])
+        self.assertEquals(result, ((('[1]',),),))
+
+    def test_list_max_length(self):
+        x = range(10)
+        result = transform(x, list_max_length=3)
+        self.assertEquals(result, (0, 1, 2))
+
+    def test_dict_max_length(self):
+        x = dict((x, x) for x in xrange(10))
+        result = transform(x, list_max_length=3)
+        self.assertEquals(type(x), dict)
+        self.assertEquals(len(result), 3)
+
+    def test_string_max_length(self):
+        x = '1234'
+        result = transform(x, string_max_length=3)
+        self.assertEquals(result, '123')
 
 
 class ShortenTest(TestCase):
