@@ -193,7 +193,9 @@ class Client(object):
         self.public_key = public_key
         self.secret_key = secret_key
         self.project = project or defaults.PROJECT
-        self.context = context or {'sys.argv': sys.argv[:]}
+        if context is None:
+            context = {'sys.argv': sys.argv[:]}
+        self.context = context
 
         self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
