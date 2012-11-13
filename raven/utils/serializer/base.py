@@ -6,6 +6,7 @@ raven.utils.serializer.base
 :license: BSD, see LICENSE for more details.
 """
 
+import itertools
 from raven.utils.encoding import to_string, to_unicode
 from raven.utils.serializer.manager import register
 from types import ClassType, TypeType
@@ -60,7 +61,7 @@ class IterableSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         list_max_length = kwargs.get('list_max_length', float('inf'))
-        return tuple(self.recurse(o, **kwargs) for n, o in enumerate(value) if n < list_max_length)
+        return tuple(self.recurse(o, **kwargs) for n, o in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value)))
 
 
 class UUIDSerializer(Serializer):
@@ -77,8 +78,7 @@ class DictSerializer(Serializer):
         list_max_length = kwargs.get('list_max_length', float('inf'))
         return dict(
             (to_string(k), self.recurse(v, **kwargs))
-            for n, (k, v) in enumerate(value.iteritems())
-            if n < list_max_length
+            for n, (k, v) in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value.iteritems()))
         )
 
 
