@@ -27,7 +27,7 @@ class PromiseSerializer(Serializer):
 
         return True
 
-    def serialize(self, value):
+    def serialize(self, value, **kwargs):
         # EPIC HACK
         # handles lazy model instances (which are proxy values that dont easily give you the actual function)
         pre = value.__class__.__name__[1:]
@@ -35,13 +35,13 @@ class PromiseSerializer(Serializer):
             value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
         else:
             return unicode(value)
-        return self.recurse(value)
+        return self.recurse(value, **kwargs)
 
 
 class QuerySetSerializer(Serializer):
     types = (QuerySet,)
 
-    def serialize(self, value):
+    def serialize(self, value, **kwargs):
         qs_name = type(value).__name__
         if value.model:
             return u'<%s: model=%s>' % (qs_name, value.model.__name__)

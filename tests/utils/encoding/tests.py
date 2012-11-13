@@ -114,7 +114,12 @@ class TransformTest(TestCase):
         x = Foo()
 
         result = transform(x)
-        self.assertEquals(result, u"<BadRepr: <class 'tests.utils.encoding.tests.Foo'>>")
+        self.assertEquals(result, u"<class 'tests.utils.encoding.tests.Foo'>")
+
+    def test_recursion_max_depth(self):
+        x = [[[[1]]]]
+        result = transform(x, max_depth=3)
+        self.assertEquals(result, [[['[1]']]])
 
 
 class ShortenTest(TestCase):

@@ -13,6 +13,8 @@ logger = logging.getLogger('sentry.errors.serializer')
 
 
 class SerializationManager(object):
+    logger = logger
+
     def __init__(self):
         self.__registry = []
         self.__serializers = {}
@@ -30,6 +32,8 @@ class SerializationManager(object):
 
 
 class Serializer(object):
+    logger = logger
+
     def __init__(self, manager):
         self.manager = manager
         self.context = {}
@@ -37,7 +41,7 @@ class Serializer(object):
         for serializer in manager.serializers:
             self.serializers.append(serializer(self))
 
-    def transform(self, value):
+    def transform(self, value, max_depth=6, _depth=0):
         """
         Primary function which handles recursively transforming
         values via their serializers
@@ -59,19 +63,19 @@ class Serializer(object):
             for serializer in self.serializers:
                 if serializer.can(value):
                     try:
-                        return serializer.serialize(value)
+                        return serializer.serialize(value, max_depth=max_depth, _depth=_depth)
                     except Exception, e:
                         logger.exception(e)
-                        return u'<BadSerializable: %s>' % type(value)
+                        return unicode(type(value))
 
             # if all else fails, lets use the repr of the object
             try:
-                return self.transform(repr(value))
+                return self.transform(repr(value), max_depth=max_depth, _depth=_depth)
             except Exception, e:
                 logger.exception(e)
                 # It's common case that a model's __unicode__ definition may try to query the database
                 # which if it was not cleaned up correctly, would hit a transaction aborted exception
-                return u'<BadRepr: %s>' % type(value)
+                return unicode(type(value))
         finally:
             del self.context[objid]
 
@@ -80,6 +84,6 @@ manager = SerializationManager()
 register = manager.register
 
 
-def transform(value, manager=manager):
+def transform(value, manager=manager, max_depth=6):
     serializer = Serializer(manager)
-    return serializer.transform(value)
+    return serializer.transform(value, max_depth=max_depth)
