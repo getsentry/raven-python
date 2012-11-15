@@ -30,6 +30,13 @@ except:
     has_gevent = None
 
 try:
+    import metlog
+    from metlog.client import SEVERITY as METLOG_SEVERITY
+    has_metlog = True
+except:
+    has_metlog = False
+
+try:
     import twisted.web.client
     has_twisted = True
 except:
@@ -127,6 +134,42 @@ class UDPTransport(Transport):
 
         if not all([url.port, project, url.username, url.password]):
             raise ValueError('Invalid Sentry DSN: %r' % url.geturl())
+
+        netloc = url.hostname
+        netloc += ':%s' % url.port
+
+        server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
+        scope.update({
+            'SENTRY_SERVERS': [server],
+            'SENTRY_PROJECT': project,
+            'SENTRY_PUBLIC_KEY': url.username,
+            'SENTRY_SECRET_KEY': url.password,
+        })
+        return scope
+
+class DjangoMetlogTransport(Transport):
+
+    scheme = ['django+metlog']
+
+    def __init__(self, parsed_url):
+        # We don't really care about anything other than the scheme
+        self.check_scheme(parsed_url)
+        self._parsed_url = parsed_url
+
+    def send(self, data, headers):
+        from django.conf import settings
+        settings.METLOG.metlog(type='sentry', 
+                logger='raven-django',
+                payload=data,
+                severity=METLOG_SEVERITY.ERROR)
+
+    def compute_scope(self, url, scope):
+        path_bits = url.path.rsplit('/', 1)
+        if len(path_bits) > 1:
+            path = path_bits[0]
+        else:
+            path = ''
+        project = path_bits[-1]
 
         netloc = url.hostname
         netloc += ':%s' % url.port

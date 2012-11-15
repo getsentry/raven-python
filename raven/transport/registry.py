@@ -1,5 +1,5 @@
 from raven.transport.base import HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport, \
-  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport
+  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport, DjangoMetlogTransport
 from raven.transport.exceptions import DuplicateScheme
 from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils import urlparse
@@ -65,4 +65,5 @@ default_transports = [
     TornadoHTTPTransport,
     UDPTransport,
     EventletHTTPTransport,
+    DjangoMetlogTransport,
 ]

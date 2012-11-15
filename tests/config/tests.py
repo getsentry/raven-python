@@ -104,6 +104,17 @@ class LoadTest(TestCase):
             'SENTRY_SECRET_KEY': 'bar',
         })
 
+    def test_djangometlog(self):
+        dsn = 'django+metlog://foo:bar@sentry.local:9001/1'
+        res = {}
+        load(dsn, res)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['django+metlog://sentry.local:9001/api/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+        })
+
     def test_missing_netloc(self):
         dsn = 'https://foo:bar@/1'
         self.assertRaises(ValueError, load, dsn)
