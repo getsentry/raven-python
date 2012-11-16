@@ -655,18 +655,6 @@ class DjangoMetlogTransport(TestCase):
               For metlog integration, this *must* be
               'raven.contrib.django.metlog.MetlogDjangoClient'
 
-        settings.RAVEN_CONFIG  :
-            * used to setup parts of the raven client.  The only
-              unusual thing with django~metlog integration is that 
-              we *must* have a 'dsn' key or else raven won't populate
-              the SENTRY_SERVERS, SENTRY_PROJECT, SENTRY_PUBLIC_KEY
-              and SENTRY_SECRET_KEY 
-
-              Without a SENTRY_SERVERS key,
-              raven.base.Client::isEnabled() will return False
-
-              Just use the actual DSN for sentry here.
-
         settings.METLOG_CONF :
             * configuration for the metlog client instance
 
