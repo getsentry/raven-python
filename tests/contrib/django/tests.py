@@ -710,3 +710,30 @@ class DjangoMetlogTransport(TestCase):
             # *decoding* a serialized message - so instead of checking
             # for datetime, we expect a string
             self.assertEquals(type(event['timestamp']), str)
+
+    def test_signal_integration(self):
+        with Settings(METLOG_CONF=self.METLOG_CONF, \
+                      METLOG=self.METLOG, \
+                      SENTRY_CLIENT=self.SENTRY_CLIENT):
+
+            self.raven = get_client()
+
+            try:
+                int('hello')
+            except:
+                got_request_exception.send(sender=self.__class__, request=None)
+            else:
+                self.fail('Expected an exception.')
+
+            msgs = settings.METLOG.sender.msgs
+
+            self.assertEquals(len(msgs), 1)
+
+            event = self.raven.decode(json.loads(msgs[0])['payload'])
+            self.assertTrue('sentry.interfaces.Exception' in event)
+            exc = event['sentry.interfaces.Exception']
+            self.assertEquals(exc['type'], 'ValueError')
+            self.assertEquals(exc['value'], u"invalid literal for int() with base 10: 'hello'")
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], u"ValueError: invalid literal for int() with base 10: 'hello'")
+            self.assertEquals(event['culprit'], 'tests.contrib.django.tests.test_signal_integration')
