@@ -662,6 +662,9 @@ class DjangoMetlogTransport(TestCase):
               the SENTRY_SERVERS, SENTRY_PROJECT, SENTRY_PUBLIC_KEY
               and SENTRY_SECRET_KEY 
 
+              Without a SENTRY_SERVERS key,
+              raven.base.Client::isEnabled() will return False
+
               Just use the actual DSN for sentry here.
 
         settings.METLOG_CONF :
@@ -670,10 +673,6 @@ class DjangoMetlogTransport(TestCase):
         settings.METLOG :
             * This is the actual metlog client instance
         """
-
-        self.RAVEN_CONFIG = {
-                'dsn': 'udp://foo:bar@sentry.local:9001/1'
-                }
 
         self.METLOG_CONF = {
             'sender': {
@@ -690,7 +689,6 @@ class DjangoMetlogTransport(TestCase):
     def test_basic(self):
         with Settings(METLOG_CONF=self.METLOG_CONF, \
                       METLOG=self.METLOG, \
-                      RAVEN_CONFIG=self.RAVEN_CONFIG, \
                       SENTRY_CLIENT=self.SENTRY_CLIENT):
 
             self.raven = get_client()
