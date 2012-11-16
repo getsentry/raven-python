@@ -1,6 +1,9 @@
 """
-This is an alternate client to raven.contrib.django.DjangoClient
-which forces data to be routed through the settings.METLOG
+raven.contrib.django.client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import absolute_import
