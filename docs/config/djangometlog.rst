@@ -42,8 +42,3 @@ disable exception collection.
 All other integration with Django's middleware and the python standard
 library (in the context of running under Django) works the same as the
 standard raven.contrib.django.DjangoClient.
-
-Gunicorn
-~~~~~~~~
-
-TODO: need to look at this (vng)
