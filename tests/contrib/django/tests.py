@@ -30,6 +30,7 @@ from raven.utils.serializer import transform
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 from .models import TestModel
+import json
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
@@ -634,3 +635,80 @@ class QuerySetSerializerTestCase(TestCase):
         result = transform(obj)
         self.assertTrue(isinstance(result, basestring))
         self.assertEquals(result, u'<QuerySet: model=TestModel>')
+
+class DjangoMetlogTransport(TestCase):
+    ## Fixture setup/teardown
+    urls = 'tests.contrib.django.urls'
+    def setUp(self):
+        """
+        This is not entirely obvious.
+
+        settings.SENTRY_CLIENT :
+            * This is the classname of the object that
+              raven.contrib.django.models.get_client() will return.
+
+              The sentry client is a subclass of raven.base.Client.
+
+              This is the control point that all messages are going
+              to get routed through
+
+              For metlog integration, this *must* be
+              'raven.contrib.django.metlog.MetlogDjangoClient'
+
+        settings.RAVEN_CONFIG  :
+            * used to setup parts of the raven client.  The only
+              unusual thing with django~metlog integration is that 
+              we *must* have a 'dsn' key or else raven won't populate
+              the SENTRY_SERVERS, SENTRY_PROJECT, SENTRY_PUBLIC_KEY
+              and SENTRY_SECRET_KEY 
+
+              Just use the actual DSN for sentry here.
+
+        settings.METLOG_CONF :
+            * configuration for the metlog client instance
+
+        settings.METLOG :
+            * This is the actual metlog client instance
+        """
+
+        self.RAVEN_CONFIG = {
+                'dsn': 'udp://foo:bar@sentry.local:9001/1'
+                }
+
+        self.METLOG_CONF = {
+            'sender': {
+                'class': 'metlog.senders.DebugCaptureSender',
+            },
+        }
+
+        self.SENTRY_CLIENT = 'raven.contrib.django.metlog.MetlogDjangoClient'
+
+        from metlog.config import client_from_dict_config
+        self.METLOG = client_from_dict_config(self.METLOG_CONF)
+
+
+    def test_basic(self):
+        with Settings(METLOG_CONF=self.METLOG_CONF, \
+                      METLOG=self.METLOG, \
+                      RAVEN_CONFIG=self.RAVEN_CONFIG, \
+                      SENTRY_CLIENT=self.SENTRY_CLIENT):
+
+            self.raven = get_client()
+
+            self.raven.capture('Message', message='foo')
+
+            msgs = settings.METLOG.sender.msgs
+
+            self.assertEquals(len(msgs), 1)
+            event = self.raven.decode(json.loads(msgs[0])['payload'])
+
+            self.assertTrue('sentry.interfaces.Message' in event)
+            message = event['sentry.interfaces.Message']
+            self.assertEquals(message['message'], 'foo')
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], 'foo')
+
+            # This is different than the regular Django test as we are
+            # *decoding* a serialized message - so instead of checking
+            # for datetime, we expect a string
+            self.assertEquals(type(event['timestamp']), str)
