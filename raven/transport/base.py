@@ -29,7 +29,6 @@ try:
 except:
     has_gevent = None
 
-
 try:
     import twisted.web.client
     has_twisted = True
