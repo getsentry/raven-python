@@ -11,6 +11,7 @@ This document describes configuration options available to Sentry.
 
    celery
    django
+   djangometlog
    flask
    logbook
    logging
