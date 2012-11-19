@@ -162,7 +162,7 @@ class Client(object):
             dsn = os.environ['SENTRY_DSN']
 
         if dsn:
-            # TODO: should we validate other options werent sent?
+            # TODO: should we validate other options weren't sent?
             urlparts = urlparse(dsn)
             msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
                     urlparts.netloc, urlparts.path)

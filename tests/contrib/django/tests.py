@@ -30,6 +30,7 @@ from raven.utils.serializer import transform
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 from .models import TestModel
+import json
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
@@ -634,3 +635,94 @@ class QuerySetSerializerTestCase(TestCase):
         result = transform(obj)
         self.assertTrue(isinstance(result, basestring))
         self.assertEquals(result, u'<QuerySet: model=TestModel>')
+
+class DjangoMetlogTransport(TestCase):
+    ## Fixture setup/teardown
+    urls = 'tests.contrib.django.urls'
+    def setUp(self):
+        """
+        This is not entirely obvious.
+
+        settings.SENTRY_CLIENT :
+            * This is the classname of the object that
+              raven.contrib.django.models.get_client() will return.
+
+              The sentry client is a subclass of raven.base.Client.
+
+              This is the control point that all messages are going
+              to get routed through
+
+              For metlog integration, this *must* be
+              'raven.contrib.django.metlog.MetlogDjangoClient'
+
+        settings.METLOG_CONF :
+            * configuration for the metlog client instance
+
+        settings.METLOG :
+            * This is the actual metlog client instance
+        """
+
+        self.METLOG_CONF = {
+            'sender': {
+                'class': 'metlog.senders.DebugCaptureSender',
+            },
+        }
+
+        self.SENTRY_CLIENT = 'raven.contrib.django.metlog.MetlogDjangoClient'
+
+        from metlog.config import client_from_dict_config
+        self.METLOG = client_from_dict_config(self.METLOG_CONF)
+
+
+    def test_basic(self):
+        with Settings(METLOG_CONF=self.METLOG_CONF, \
+                      METLOG=self.METLOG, \
+                      SENTRY_CLIENT=self.SENTRY_CLIENT):
+
+            self.raven = get_client()
+
+            self.raven.capture('Message', message='foo')
+
+            msgs = settings.METLOG.sender.msgs
+
+            self.assertEquals(len(msgs), 1)
+            event = self.raven.decode(json.loads(msgs[0])['payload'])
+
+            self.assertTrue('sentry.interfaces.Message' in event)
+            message = event['sentry.interfaces.Message']
+            self.assertEquals(message['message'], 'foo')
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], 'foo')
+
+            # This is different than the regular Django test as we are
+            # *decoding* a serialized message - so instead of checking
+            # for datetime, we expect a string
+            self.assertTrue(isinstance(event['timestamp'], basestring))
+
+
+    def test_signal_integration(self):
+        with Settings(METLOG_CONF=self.METLOG_CONF, \
+                      METLOG=self.METLOG, \
+                      SENTRY_CLIENT=self.SENTRY_CLIENT):
+
+            self.raven = get_client()
+
+            try:
+                int('hello')
+            except:
+                got_request_exception.send(sender=self.__class__, request=None)
+            else:
+                self.fail('Expected an exception.')
+
+            msgs = settings.METLOG.sender.msgs
+
+            self.assertEquals(len(msgs), 1)
+
+            event = self.raven.decode(json.loads(msgs[0])['payload'])
+            self.assertTrue('sentry.interfaces.Exception' in event)
+            exc = event['sentry.interfaces.Exception']
+            self.assertEquals(exc['type'], 'ValueError')
+            self.assertEquals(exc['value'], u"invalid literal for int() with base 10: 'hello'")
+            self.assertEquals(event['level'], logging.ERROR)
+            self.assertEquals(event['message'], u"ValueError: invalid literal for int() with base 10: 'hello'")
+            self.assertEquals(event['culprit'], 'tests.contrib.django.tests.test_signal_integration')

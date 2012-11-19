@@ -31,6 +31,7 @@ tests_require = [
     'Flask>=0.8',
     'logbook',
     'nose',
+    'metlog-py',
     'mock',
     'pep8',
     'unittest2',

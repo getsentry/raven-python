@@ -20,9 +20,6 @@ EXCLUDE_LOGGER_DEFAULTS = (
 )
 
 
-# TODO (vng): this seems weirdly located in raven.conf.  Seems like
-# it's really a part of raven.transport.TransportRegistry
-# Not quite sure what to do with this
 def load(dsn, scope=None, transport_registry=None):
     """
     Parses a Sentry compatible DSN and loads it
