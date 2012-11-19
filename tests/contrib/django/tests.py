@@ -697,7 +697,7 @@ class DjangoMetlogTransport(TestCase):
             # This is different than the regular Django test as we are
             # *decoding* a serialized message - so instead of checking
             # for datetime, we expect a string
-            self.assertEquals(type(event['timestamp']), str)
+            self.assertTrue(isinstance(event['timestamp']), basestring)
 
     def test_signal_integration(self):
         with Settings(METLOG_CONF=self.METLOG_CONF, \
