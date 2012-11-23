@@ -6,8 +6,8 @@ from werkzeug.exceptions import ClientDisconnected
 
 def get_data_from_request(request):
     urlparts = urlparse.urlsplit(request.url)
-    
-    try: 
+
+    try:
         formdata = request.form
     except ClientDisconnected:
         formdata = {}

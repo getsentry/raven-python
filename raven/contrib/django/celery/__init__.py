@@ -12,7 +12,7 @@ from raven.contrib.django.models import get_client
 try:
     from celery.task import task
 except ImportError:
-    from celery.decorators import task
+    from celery.decorators import task  # NOQA
 
 
 class CeleryClient(CeleryMixin, DjangoClient):

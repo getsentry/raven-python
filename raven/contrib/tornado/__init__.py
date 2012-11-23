@@ -13,7 +13,6 @@ import warnings
 import raven
 from raven.base import Client
 from raven.utils import get_auth_header
-from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPError
 
 
@@ -131,7 +130,6 @@ class AsyncSentryClient(Client):
         )
 
 
-
 class SentryMixin(object):
     """
     A mixin class that extracts information from the Request in a Request
@@ -191,7 +189,7 @@ class SentryMixin(object):
         """
         return {
             'sentry.interfaces.Http': {
-                'url':  self.request.full_url(),
+                'url': self.request.full_url(),
                 'method': self.request.method,
                 'data': self.request.arguments,
                 'query_string': self.request.query,

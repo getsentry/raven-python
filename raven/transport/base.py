@@ -24,7 +24,7 @@ try:
     try:
         from gevent.lock import Semaphore
     except ImportError:
-        from gevent.coros import Semaphore
+        from gevent.coros import Semaphore  # NOQA
     has_gevent = True
 except:
     has_gevent = None

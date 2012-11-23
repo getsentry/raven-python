@@ -7,4 +7,4 @@ raven.contrib.django
 """
 from __future__ import absolute_import
 
-from raven.contrib.django.client import *
+from raven.contrib.django.client import *  # NOQA

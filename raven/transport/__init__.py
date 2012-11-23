@@ -6,7 +6,7 @@ raven.transport
 :license: BSD, see LICENSE for more details.
 """
 
-from raven.transport.base import Transport, HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport, \
-  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport  # NOQA
+from raven.transport.base import (Transport, HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport,  # NOQA
+  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport)  # NOQA
 from raven.transport.exceptions import InvalidScheme, DuplicateScheme  # NOQA
 from raven.transport.registry import TransportRegistry, default_transports  # NOQA

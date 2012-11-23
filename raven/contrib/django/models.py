@@ -201,7 +201,8 @@ def register_handlers():
 
 
 def register_serializers():
-    import raven.contrib.django.serializers  # force import so serializers can call register
+    # force import so serializers can call register
+    import raven.contrib.django.serializers  # NOQA
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
     # If we've explicitly enabled signals, or we're not running DEBUG, register handlers

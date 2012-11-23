@@ -12,7 +12,7 @@ import logging
 try:
     import pkg_resources
 except ImportError:
-    pkg_resources = None
+    pkg_resources = None  # NOQA
 import sys
 
 logger = logging.getLogger('raven.errors')

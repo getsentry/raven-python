@@ -9,7 +9,7 @@ raven.contrib.celery
 try:
     from celery.task import task
 except ImportError:
-    from celery.decorators import task
+    from celery.decorators import task  # NOQA
 from celery.signals import after_setup_logger, task_failure
 from raven.base import Client
 from raven.handlers.logging import SentryHandler

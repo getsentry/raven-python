@@ -8,4 +8,4 @@ raven.contrib.django.celery.tasks
 
 # TODO: need to educate myself on how this works
 
-from raven.contrib.django.models import client
+from raven.contrib.django.models import client  # NOQA
