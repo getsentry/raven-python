@@ -10,8 +10,8 @@ env:
 install:
   - sudo apt-get install libevent-dev
   - pip install Django==$DJANGO --use-mirrors
-  - pip install flake8 --use-mirrors
   - pip install -e . --use-mirrors
+  - make bootstrap-tests
 script:
   - make test
 notifications:

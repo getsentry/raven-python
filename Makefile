@@ -1,6 +1,15 @@
-test:
+bootstrap-tests:
+	pip install flake8>=1.6 --use-mirrors
+
+test: lint
+	@echo "Running Python tests"
+	python setup.py -q test || exit 1
+	@echo ""
+
+lint:
+	@echo "Linting Python files"
 	flake8 --exclude=migrations --ignore=E501,E225,E121,E123,E124,E125,E127,E128 --exit-zero raven || exit 1
-	python setup.py test
+	@echo ""
 
 coverage:
 	coverage run runtests.py --include=raven/* && \
