@@ -1,6 +1,6 @@
 """
 raven.contrib.django.models
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Acts as an implicit hook for Django installs.
 
