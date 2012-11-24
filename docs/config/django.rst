@@ -4,10 +4,10 @@ Configuring Django
 Setup
 -----
 
-Using the Django integration is as simple as adding :mod:`raven.contrib.django_compat` to your installed apps::
+Using the Django integration is as simple as adding :mod:`raven.contrib.django.raven_compat` to your installed apps::
 
     INSTALLED_APPS = (
-        'raven.contrib.django_compat',
+        'raven.contrib.django.raven_compat',
     )
 
 Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::::
@@ -19,7 +19,7 @@ Additional settings for the client are configured using the ``RAVEN_CONFIG`` dic
 
 You'll be referencing the client slightly differently in Django as well::
 
-    from raven.contrib.django_compat.models import client
+    from raven.contrib.django.raven_compat.models import client
 
     client.captureException()
 
@@ -56,7 +56,7 @@ Django 1.3
         'handlers': {
             'sentry': {
                 'level': 'ERROR',
-                'class': 'raven.contrib.django_compat.handlers.SentryHandler',
+                'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
             },
             'console': {
                 'level': 'DEBUG',
@@ -90,7 +90,7 @@ Older Versions
 ::
 
     from raven.conf import setup_logging
-    from raven.contrib.django_compat.handlers import SentryHandler
+    from raven.contrib.django.raven_compat.handlers import SentryHandler
 
     setup_logging(SentryHandler())
 
@@ -113,7 +113,7 @@ In certain conditions you may wish to log 404 events to the Sentry server. To
 do this, you simply need to enable a Django middleware::
 
     MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
-      'raven.contrib.django_compat.middleware.Sentry404CatchMiddleware',
+      'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
       ...,
     )
 
@@ -127,7 +127,7 @@ this is as simple as appending a middleware to your stack::
 
     MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
       # We recommend putting this as high in the chain as possible
-      'raven.contrib.django_compat.middleware.SentryResponseErrorIdMiddleware',
+      'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
       ...,
     )
 
@@ -174,7 +174,7 @@ If you are using a WSGI interface to serve your app, you can also apply a
 middleware which will ensure that you catch errors even at the fundamental
 level of your Django application::
 
-    from raven.contrib.django_compat.middleware.wsgi import Sentry
+    from raven.contrib.django.raven_compat.middleware.wsgi import Sentry
     application = Sentry(django.core.handlers.wsgi.WSGIHandler())
 
 Additional Settings
@@ -187,7 +187,7 @@ In some situations you may wish for a slightly different behavior to how Sentry
 communicates with your server. For this, Raven allows you to specify a custom
 client::
 
-    SENTRY_CLIENT = 'raven.contrib.django_compat.DjangoClient'
+    SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
 
 Caveats
 -------
@@ -223,7 +223,7 @@ response codes.
 
 Or, alternatively, you can just enable Sentry responses::
 
-    from raven.contrib.django_compat.models import sentry_exception_handler
+    from raven.contrib.django.raven_compat.models import sentry_exception_handler
     class MyMiddleware(object):
         def process_exception(self, request, exception):
             # Make sure the exception signal is fired for Sentry
