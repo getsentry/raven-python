@@ -29,6 +29,7 @@ def make_client(client_cls, app, dsn=None):
         secret_key=app.config.get('SENTRY_SECRET_KEY'),
         project=app.config.get('SENTRY_PROJECT'),
         site=app.config.get('SENTRY_SITE_NAME'),
+        processors=app.config.get('SENTRY_PROCESSORS'),
         dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
     )
 
