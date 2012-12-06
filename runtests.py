@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import logging
 import sys
-from os.path import dirname, abspath, join, splitext
-from os import listdir
+from os.path import dirname, abspath, join
 from optparse import OptionParser
 
 where_am_i = dirname(abspath(__file__))
@@ -17,13 +16,13 @@ if not settings.configured:
         DATABASE_ENGINE='sqlite3',
         DATABASES={
             'default': {
+                'NAME': ':memory:',
                 'ENGINE': 'django.db.backends.sqlite3',
-                'TEST_NAME': 'sentry_tests.db',
+                'TEST_NAME': ':memory:',
             },
         },
-        # HACK: this fixes our threaded runserver remote tests
-        # DATABASE_NAME='test_sentry',
-        TEST_DATABASE_NAME='sentry_tests.db',
+        DATABASE_NAME=':memory:',
+        TEST_DATABASE_NAME=':memory:',
         INSTALLED_APPS=[
             'django.contrib.auth',
             'django.contrib.admin',
