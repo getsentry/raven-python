@@ -33,6 +33,7 @@ tests_require = [
     'nose',
     'mock',
     'pep8',
+    'tornado',
     'unittest2',
     'webob',
     # pypy does not support gevent
