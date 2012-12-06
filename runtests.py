@@ -17,13 +17,13 @@ if not settings.configured:
         DATABASE_ENGINE='sqlite3',
         DATABASES={
             'default': {
+                'NAME': ':memory:',
                 'ENGINE': 'django.db.backends.sqlite3',
-                'TEST_NAME': 'sentry_tests.db',
+                'TEST_NAME': ':memory:',
             },
         },
-        # HACK: this fixes our threaded runserver remote tests
-        # DATABASE_NAME='test_sentry',
-        TEST_DATABASE_NAME='sentry_tests.db',
+        DATABASE_NAME=':memory:',
+        TEST_DATABASE_NAME=':memory:',
         INSTALLED_APPS=[
             'django.contrib.auth',
             'django.contrib.admin',
@@ -52,7 +52,7 @@ if not settings.configured:
     import djcelery
     djcelery.setup_loader()
 
-from django_nose import NoseTestSuiteRunner
+# from django_nose import NoseTestSuiteRunner
 
 
 def runtests(*test_args, **kwargs):
@@ -67,9 +67,11 @@ def runtests(*test_args, **kwargs):
     sys.exit(failures)
 
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option('--verbosity', dest='verbosity', action='store', default=1, type=int)
-    parser.add_options(NoseTestSuiteRunner.options)
-    (options, args) = parser.parse_args()
+    import pytest
+    pytest.main(sys.argv)
+    # parser = OptionParser()
+    # parser.add_option('--verbosity', dest='verbosity', action='store', default=1, type=int)
+    # parser.add_options(NoseTestSuiteRunner.options)
+    # (options, args) = parser.parse_args()
 
-    runtests(*args, **options.__dict__)
+    # runtests(*args, **options.__dict__)
