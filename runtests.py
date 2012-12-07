@@ -52,23 +52,14 @@ if not settings.configured:
     import djcelery
     djcelery.setup_loader()
 
-# from django_nose import NoseTestSuiteRunner
 
-
-def runtests(*test_args, **kwargs):
-    if not test_args:
-        test_args = ['tests']
-
-    kwargs.setdefault('interactive', False)
-
-    test_runner = NoseTestSuiteRunner(**kwargs)
-
-    failures = test_runner.run_tests(test_args)
-    sys.exit(failures)
-
-if __name__ == '__main__':
+def runtests():
     import pytest
     pytest.main(sys.argv)
+
+
+if __name__ == '__main__':
+    runtests()
     # parser = OptionParser()
     # parser.add_option('--verbosity', dest='verbosity', action='store', default=1, type=int)
     # parser.add_options(NoseTestSuiteRunner.options)
