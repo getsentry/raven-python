@@ -51,18 +51,3 @@ if not settings.configured:
     )
     import djcelery
     djcelery.setup_loader()
-
-
-def runtests():
-    import pytest
-    pytest.main(sys.argv)
-
-
-if __name__ == '__main__':
-    runtests()
-    # parser = OptionParser()
-    # parser.add_option('--verbosity', dest='verbosity', action='store', default=1, type=int)
-    # parser.add_options(NoseTestSuiteRunner.options)
-    # (options, args) = parser.parse_args()
-
-    # runtests(*args, **options.__dict__)
