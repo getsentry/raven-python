@@ -12,7 +12,6 @@ from celery.tests.utils import with_eager_tasks
 from StringIO import StringIO
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
@@ -145,6 +144,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(event['culprit'], 'tests.contrib.django.views.raise_exc')
 
     def test_user_info(self):
+        from django.contrib.auth.models import User
         user = User(username='admin', email='admin@example.com')
         user.set_password('admin')
         user.save()
@@ -214,7 +214,7 @@ class DjangoClientTest(TestCase):
 
             self.assertRaises(Exception, client.get, reverse('sentry-raise-exc'))
 
-            self.assertEquals(len(self.raven.events), 2)
+            assert len(self.raven.events) == 2
             event = self.raven.events.pop(0)
 
             self.assertTrue('sentry.interfaces.Exception' in event)
