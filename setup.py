@@ -31,7 +31,7 @@ tests_require = [
     'logbook',
     'mock',
     'pep8',
-    'pytz'
+    'pytz',
     'pytest',
     'pytest-django-lite',
     'tornado',
