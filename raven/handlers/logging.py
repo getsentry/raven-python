@@ -77,6 +77,8 @@ class SentryHandler(logging.Handler, object):
             stack = iter_stack_frames()
 
         if stack:
+            # we might need to traverse this multiple times, so coerce it to a list
+            stack = list(stack)
             frames = []
             started = False
             last_mod = ''
@@ -96,6 +98,11 @@ class SentryHandler(logging.Handler, object):
                         last_mod = module_name
                         continue
                 frames.append((frame, lineno))
+
+            # We must've not found a starting point
+            if not frames:
+                frames = stack
+
             stack = frames
 
         extra = getattr(record, 'data', None)
@@ -121,7 +128,6 @@ class SentryHandler(logging.Handler, object):
             handler = self.client.get_handler('raven.events.Exception')
 
             data.update(handler.capture(exc_info=record.exc_info))
-            data['checksum'] = handler.get_hash(data)
 
         # HACK: discover a culprit when we normally couldn't
         elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
