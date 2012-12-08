@@ -128,7 +128,6 @@ class SentryHandler(logging.Handler, object):
             handler = self.client.get_handler('raven.events.Exception')
 
             data.update(handler.capture(exc_info=record.exc_info))
-            # data['checksum'] = handler.get_hash(data)
 
         # HACK: discover a culprit when we normally couldn't
         elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
