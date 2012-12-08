@@ -30,9 +30,11 @@ tests_require = [
     'django-nose',
     'Flask>=0.8',
     'logbook',
-    'nose',
     'mock',
     'pep8',
+    'pytz'
+    'pytest',
+    'pytest-django-lite',
     'tornado',
     'unittest2',
     'webob',
@@ -40,7 +42,6 @@ tests_require = [
     # 'gevent',
     # zerorpc is messing up travis
     # 'zerorpc>=0.2.0',
-    'pytz'
 ]
 
 setup(
