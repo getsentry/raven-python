@@ -1,15 +1,12 @@
 from __future__ import with_statement
+
 import logging
-import sys
+import webob
+
 from unittest2 import TestCase
 from raven.base import Client
 from raven.middleware import Sentry
 from raven.utils.tests import fixture
-# XXX: webob does not work under Python < 2.6
-if (sys.version_info < (2, 6, 0)):
-    from nose.plugins.skip import SkipTest
-    raise SkipTest
-import webob
 
 
 class TempStoreClient(Client):

@@ -208,7 +208,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(event['culprit'], 'tests.contrib.django.middleware.process_response')
 
     def test_broken_500_handler_with_middleware(self):
-        with Settings(BREAK_THAT_500=True):
+        with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
             client = TestClient(REMOTE_ADDR='127.0.0.1')
             client.handler = MockSentryMiddleware(MockClientHandler())
 

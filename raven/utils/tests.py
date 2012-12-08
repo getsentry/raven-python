@@ -6,7 +6,6 @@ raven.utils.tests
 :license: BSD, see LICENSE for more details.
 """
 from functools import wraps
-from nose.plugins.skip import SkipTest
 
 NOTSET = object()
 
@@ -34,20 +33,3 @@ class fixture(object):
             obj.__dict__[self.__name__] = value
         return value
 
-
-def requires(condition, msg=None):
-    """
-    >>> class Foo(object):
-    >>>     @requires(lambda x: sys.version_info >= (2, 6, 0))
-    >>>     def foo(self):
-    >>>         # do something that doesnt work on py2.5
-    >>>         pass
-    """
-    def wrapped(func):
-        @wraps(func)
-        def inner(*args, **kwargs):
-            if not condition:
-                raise SkipTest(msg or '')
-            return func
-        return inner
-    return wrapped

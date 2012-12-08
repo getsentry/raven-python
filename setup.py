@@ -27,12 +27,13 @@ tests_require = [
     'celery>=2.5',
     'Django>=1.2,<1.5',
     'django-celery>=2.5',
-    'django-nose',
     'Flask>=0.8',
     'logbook',
-    'nose',
     'mock',
     'pep8',
+    'pytz'
+    'pytest',
+    'pytest-django-lite',
     'tornado',
     'unittest2',
     'webob',
@@ -40,7 +41,6 @@ tests_require = [
     # 'gevent',
     # zerorpc is messing up travis
     # 'zerorpc>=0.2.0',
-    'pytz'
 ]
 
 setup(
