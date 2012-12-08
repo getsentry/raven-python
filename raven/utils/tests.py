@@ -5,7 +5,6 @@ raven.utils.tests
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
-from functools import wraps
 
 NOTSET = object()
 
@@ -32,4 +31,3 @@ class fixture(object):
             value = self.func(obj)
             obj.__dict__[self.__name__] = value
         return value
-
