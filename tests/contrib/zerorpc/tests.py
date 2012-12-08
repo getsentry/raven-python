@@ -1,26 +1,15 @@
-from nose.plugins.skip import SkipTest
-
-import sys
-# XXX: zeropc does not work under Python < 2.6 or pypy
-if (sys.version_info < (2, 6, 0) or '__pypy__' in sys.builtin_module_names):
-    raise SkipTest('zerorpc does not work on pypy or python < 2.6')
-
 import os
+import pytest
 import random
 import shutil
 import tempfile
 import unittest2
-try:
-    import zerorpc
-except ImportError:
-    raise SkipTest('zerorpc module is not available')
-try:
-    import gevent
-except ImportError:
-    raise SkipTest('gevent module is not available')
 
 from raven.base import Client
 from raven.contrib.zerorpc import SentryMiddleware
+
+zerorpc = pytest.importorskip("zerorpc")
+gevent = pytest.importorskip("gevent")
 
 
 class TempStoreClient(Client):
