@@ -79,7 +79,8 @@ class DjangoClient(Client):
         stacktrace = data.get('sentry.interfaces.Stacktrace')
         if stacktrace:
             for frame in stacktrace['frames']:
-                frame['in_app'] = not frame.get('module', '').startswith('django.')
+                if frame.get('module', '').startswith('django.'):
+                    frame['in_app'] = False
 
         return data
 
