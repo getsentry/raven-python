@@ -10,7 +10,7 @@ Using the Django integration is as simple as adding :mod:`raven.contrib.django.r
         'raven.contrib.django.raven_compat',
     )
 
-Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::::
+Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::
 
     RAVEN_CONFIG = {
         'dsn': 'http://public:secret@example.com/1',
