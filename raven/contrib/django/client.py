@@ -73,6 +73,16 @@ class DjangoClient(Client):
 
         return result
 
+    def build_msg(self, *args, **kwargs):
+        data = super(DjangoClient, self).build_msg(*args, **kwargs)
+
+        stacktrace = data.get('sentry.interfaces.Stacktrace')
+        if stacktrace:
+            for frame in stacktrace['frames']:
+                frame['in_app'] = not frame.get('module', '').startswith('django.')
+
+        return data
+
     def capture(self, event_type, request=None, **kwargs):
         if 'data' not in kwargs:
             kwargs['data'] = data = {}

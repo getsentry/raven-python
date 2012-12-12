@@ -33,6 +33,17 @@ from .models import TestModel
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 
+def make_request():
+    return WSGIRequest(environ={
+        'wsgi.input': StringIO(),
+        'REQUEST_METHOD': 'POST',
+        'SERVER_NAME': 'testserver',
+        'SERVER_PORT': '80',
+        'CONTENT_TYPE': 'text/html',
+        'ACCEPT': 'text/html',
+    })
+
+
 class MockClientHandler(TestClientHandler):
     def __call__(self, environ, start_response=[]):
         # this pretends doesnt require start_response
@@ -379,14 +390,7 @@ class DjangoClientTest(TestCase):
     def test_request_capture(self):
         if django.VERSION[:2] < (1, 3):
             return
-        request = WSGIRequest(environ={
-            'wsgi.input': StringIO(),
-            'REQUEST_METHOD': 'POST',
-            'SERVER_NAME': 'testserver',
-            'SERVER_PORT': '80',
-            'CONTENT_TYPE': 'text/html',
-            'ACCEPT': 'text/html',
-        })
+        request = make_request()
         request.read(1)
 
         self.raven.capture('Message', message='foo', request=request)
@@ -415,6 +419,16 @@ class DjangoClientTest(TestCase):
             self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
             self.assertEquals(len(self.raven.events), 1)
             self.raven.events.pop(0)
+
+    def test_marks_django_frames_correctly(self):
+        self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
+
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+
+        frames = event['sentry.interfaces.Stacktrace']['frames']
+        for frame in frames:
+            self.assertEquals(frame.get('in_app'), not frame['module'].startswith('django.'))
 
 
 class DjangoLoggingTest(TestCase):
