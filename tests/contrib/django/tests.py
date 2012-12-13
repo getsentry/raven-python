@@ -428,7 +428,8 @@ class DjangoClientTest(TestCase):
 
         frames = event['sentry.interfaces.Stacktrace']['frames']
         for frame in frames:
-            self.assertEquals(frame.get('in_app'), not frame['module'].startswith('django.'))
+            if frame['module'].startswith('django.'):
+                assert frame.get('in_app') is False
 
 
 class DjangoLoggingTest(TestCase):
