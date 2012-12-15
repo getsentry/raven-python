@@ -272,11 +272,18 @@ class Client(object):
                 },
             })
 
-        if 'sentry.interfaces.Stacktrace' in data and not culprit:
-            culprit = get_culprit(
-                data['sentry.interfaces.Stacktrace']['frames'],
-                self.include_paths, self.exclude_paths
-            )
+        if 'sentry.interfaces.Stacktrace' in data:
+            if not culprit:
+                culprit = get_culprit(
+                    data['sentry.interfaces.Stacktrace']['frames'],
+                    self.include_paths, self.exclude_paths
+                )
+            if self.include_paths:
+                for frame in data['sentry.interfaces.Stacktrace']['frames']:
+                    if frame.get('in_app') is not None:
+                        continue
+                    frame['in_app'] = any(x.startswith(frame['module'])
+                        for x in self.include_paths)
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
