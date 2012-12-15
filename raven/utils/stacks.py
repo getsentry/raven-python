@@ -65,7 +65,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     source = [unicode(sline, encoding, 'replace') for sline in source]
 
     lower_bound = max(0, lineno - context_lines)
-    upper_bound = min(lineno + context_lines, len(source))
+    upper_bound = min(lineno + 1 + context_lines, len(source))
 
     try:
         pre_context = [line.strip('\n') for line in source[lower_bound:lineno]]
@@ -197,7 +197,7 @@ def get_stack_info(frames):
             lineno -= 1
 
         if lineno is not None and abs_path:
-            pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 3, loader, module_name)
+            pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 5, loader, module_name)
         else:
             pre_context, context_line, post_context = [], None, []
 
