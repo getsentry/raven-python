@@ -1,9 +1,13 @@
+bootstrap: bootstrap-tests
+	pip install -e . --use-mirrors
+
 bootstrap-tests:
-	pip install flake8>=1.6 --use-mirrors
+	pip install -r test-requirements.txt --use-mirrors
+	pip install "flake8>=1.6" --use-mirrors
 
 test: lint
 	@echo "Running Python tests"
-	python setup.py -q test || exit 1
+	python runtests.py -x
 	@echo ""
 
 lint:

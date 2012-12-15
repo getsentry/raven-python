@@ -22,26 +22,7 @@ for m in ('multiprocessing', 'billiard'):
 
 from setuptools import setup, find_packages
 
-tests_require = [
-    'blinker>=1.1',
-    'celery>=2.5',
-    'Django>=1.2,<1.5',
-    'django-celery>=2.5',
-    'Flask>=0.8',
-    'logbook',
-    'mock',
-    'pep8',
-    'pytz',
-    'pytest',
-    'pytest-django',
-    'tornado',
-    'unittest2',
-    'webob',
-    # pypy does not support gevent
-    # 'gevent',
-    # zerorpc is messing up travis
-    # 'zerorpc>=0.2.0',
-]
+tests_require = open('test-requirements.txt').splitlines()
 
 setup(
     name='raven',
