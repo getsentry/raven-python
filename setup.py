@@ -22,7 +22,7 @@ for m in ('multiprocessing', 'billiard'):
 
 from setuptools import setup, find_packages
 
-tests_require = open('test-requirements.txt').splitlines()
+tests_require = open('test-requirements.txt').read().splitlines()
 
 setup(
     name='raven',
