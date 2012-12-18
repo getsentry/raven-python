@@ -20,9 +20,14 @@ for m in ('multiprocessing', 'billiard'):
     except ImportError:
         pass
 
+import os.path
 from setuptools import setup, find_packages
 
-tests_require = open('test-requirements.txt').read().splitlines()
+tests_require = open(os.path.join(
+        os.path.dirname(__file__),
+        'test-requirements.txt'),
+    ).read().splitlines()
+
 
 setup(
     name='raven',
