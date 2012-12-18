@@ -287,8 +287,13 @@ class Client(object):
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
-        data['modules'] = get_versions(self.include_paths)
-        data['server_name'] = self.name
+
+        if not data.get('server_name'):
+            data['server_name'] = self.name
+
+        if not data.get('modules'):
+            data['modules'] = get_versions(self.include_paths)
+
         data['tags'] = tags
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
