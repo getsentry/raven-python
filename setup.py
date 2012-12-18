@@ -26,7 +26,7 @@ tests_require = open('test-requirements.txt').splitlines()
 
 setup(
     name='raven',
-    version='2.0.11',
+    version='2.0.12',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',
