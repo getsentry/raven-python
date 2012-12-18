@@ -24,9 +24,8 @@ import os.path
 from setuptools import setup, find_packages
 
 tests_require = open(os.path.join(
-        os.path.dirname(__file__),
-        'test-requirements.txt'),
-    ).read().splitlines()
+    os.path.dirname(__file__), 'test-requirements.txt'),
+).readlines()
 
 
 setup(
