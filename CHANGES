@@ -3,13 +3,30 @@
 Version 3.0 of Raven requires a Sentry server running at least version 5.1, as it implements
 version 3 of the protocol.
 
-* Client.create_from_text and Client.create_from_exception have been removed.
-* Client.message and Client.exception have been removed.
+Support includes:
+
+* Sending 'python' as the platform.
+* The 'tags' option (on all constructors that support options).
+* Updated authentication header.
+
+Additionally, the following has changed:
+
+* Configuring the client with an empty DSN value will disable sending of messages.
+* All clients should now check ``Client.is_enabled()`` to verify if they should send data.
+* ``Client.create_from_text`` and ``Client.create_from_exception`` have been removed.
+* ``Client.message`` and ``Client.exception`` have been removed.
 * The ``key`` setting has been removed.
 * The ``DEBUG`` setting in Django no longer disables Raven.
 * The ``register_signals`` option in RAVEN_CONFIG (Django) is no longer used.
-* A new helper, Client.context() is now available for scoping options.
-* Client.captureExceptions is now deprecated in favor of Client.context.
+* A new helper, ``Client.context()`` is now available for scoping options.
+* ``Client.captureExceptions`` is now deprecated in favor of ``Client.context``.
+* Credit card values will now be sanitized with the default processors.
+* A new eventlet+http transport exists.
+* A new threaded+http transport exists.
+* PyPy is now supported.
+* Django 1.5 should now be supported (experimental).
+* Gevent 1.0 should now be supported (experimental).
+* Python 2.5 is no longer supported.
 
 2.0.0
 
