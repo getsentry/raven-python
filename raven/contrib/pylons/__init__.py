@@ -22,7 +22,6 @@ class Sentry(Middleware):
             dsn=config.get('sentry.dsn'),
             servers=list_from_setting(config, 'sentry.servers'),
             name=config.get('sentry.name'),
-            key=config.get('sentry.key'),
             public_key=config.get('sentry.public_key'),
             secret_key=config.get('sentry.secret_key'),
             project=config.get('sentry.project'),

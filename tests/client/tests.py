@@ -183,9 +183,6 @@ class ClientTest(TestCase):
         self.assertEquals(client.public_key, 'public')
         self.assertEquals(client.secret_key, 'secret')
 
-    def test_invalid_servers_with_dsn(self):
-        self.assertRaises(ValueError, Client, 'foo', dsn='http://public:secret@example.com/1')
-
     def test_explicit_message_on_message_event(self):
         self.client.capture('Message', message='test', data={
             'message': 'foo'

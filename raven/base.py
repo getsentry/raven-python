@@ -133,28 +133,15 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, servers=None, include_paths=None, exclude_paths=None,
-            name=None, auto_log_stacks=None, key=None,
-            string_max_length=None, list_max_length=None, site=None,
-            public_key=None, secret_key=None, processors=None, project=None,
-            dsn=None, context=None, **kwargs):
+    def __init__(self, dsn=None, **options):
+        o = options
+
         # configure loggers first
         cls = self.__class__
         self.state = ClientState()
         self.logger = logging.getLogger('%s.%s' % (cls.__module__,
             cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
-
-        if isinstance(servers, basestring):
-            # must be a DSN:
-            if dsn:
-                # TODO: this should indicate what the caller can do to correct
-                # the constructor
-                msg = "You seem to be incorrectly instantiating the " + \
-                      "raven Client class"
-                raise ValueError(msg)
-            dsn = servers
-            servers = None
 
         if dsn is None and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
@@ -167,37 +154,40 @@ class Client(object):
             msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
                     urlparts.netloc, urlparts.path)
             self.logger.debug(msg)
-            options = raven.load(dsn, transport_registry=self._registry)
-            servers = options['SENTRY_SERVERS']
-            project = options['SENTRY_PROJECT']
-            public_key = options['SENTRY_PUBLIC_KEY']
-            secret_key = options['SENTRY_SECRET_KEY']
+            dsn_config = raven.load(dsn, transport_registry=self._registry)
+            servers = dsn_config['SENTRY_SERVERS']
+            project = dsn_config['SENTRY_PROJECT']
+            public_key = dsn_config['SENTRY_PUBLIC_KEY']
+            secret_key = dsn_config['SENTRY_SECRET_KEY']
+        else:
+            servers = o.get('servers')
+            project = o.get('project')
+            public_key = o.get('public_key')
+            secret_key = o.get('secret_key')
 
-        if kwargs.get('timeout') is not None:
+        if o.get('timeout') is not None:
             warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
 
         self.servers = servers
-        self.include_paths = set(include_paths or defaults.INCLUDE_PATHS)
-        self.exclude_paths = set(exclude_paths or defaults.EXCLUDE_PATHS)
-        self.name = unicode(name or defaults.NAME)
-        self.auto_log_stacks = bool(auto_log_stacks or
-                defaults.AUTO_LOG_STACKS)
-        self.key = str(key or defaults.KEY)
-        self.string_max_length = int(string_max_length or
-                defaults.MAX_LENGTH_STRING)
-        self.list_max_length = int(list_max_length or defaults.MAX_LENGTH_LIST)
-        if (site or defaults.SITE):
-            self.site = unicode(site or defaults.SITE)
-        else:
-            self.site = None
         self.public_key = public_key
         self.secret_key = secret_key
         self.project = project or defaults.PROJECT
-        if context is None:
+
+        self.include_paths = set(o.get('include_paths') or defaults.INCLUDE_PATHS)
+        self.exclude_paths = set(o.get('exclude_paths') or defaults.EXCLUDE_PATHS)
+        self.name = unicode(o.get('name') or defaults.NAME)
+        self.auto_log_stacks = bool(o.get('auto_log_stacks') or
+                defaults.AUTO_LOG_STACKS)
+        self.string_max_length = int(o.get('string_max_length') or
+                defaults.MAX_LENGTH_STRING)
+        self.list_max_length = int(o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
+        self.site = o.get('site') or defaults.SITE
+        self.processors = o.get('processors') or defaults.PROCESSORS
+
+        if o.get('context') is None:
             context = {'sys.argv': sys.argv[:]}
         self.context = context
 
-        self.processors = processors or defaults.PROCESSORS
         self.module_cache = ModuleProxyCache()
 
         # servers may be set to a NoneType (for Django)

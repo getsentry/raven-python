@@ -24,7 +24,6 @@ def make_client(client_cls, app, dsn=None):
         exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
         servers=app.config.get('SENTRY_SERVERS'),
         name=app.config.get('SENTRY_NAME'),
-        key=app.config.get('SENTRY_KEY'),
         public_key=app.config.get('SENTRY_PUBLIC_KEY'),
         secret_key=app.config.get('SENTRY_SECRET_KEY'),
         project=app.config.get('SENTRY_PROJECT'),
