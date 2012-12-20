@@ -6,8 +6,6 @@ raven.utils
 :license: BSD, see LICENSE for more details.
 """
 
-import hashlib
-import hmac
 import logging
 try:
     import pkg_resources
@@ -105,10 +103,6 @@ def get_versions(module_list=None):
             continue
         versions[module_name] = version
     return versions
-
-
-def get_signature(message, timestamp, key):
-    return hmac.new(str(key), '%s %s' % (timestamp, message), hashlib.sha1).hexdigest()
 
 
 def get_auth_header(protocol, timestamp, client, api_key, api_secret=None, **kwargs):
