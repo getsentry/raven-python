@@ -163,13 +163,11 @@ def sentry_exception_handler(request=None, **kwargs):
     def actually_do_stuff(request=None, **kwargs):
         exc_info = sys.exc_info()
         try:
-            if not getattr(django_settings, 'RAVEN_CONFIG', {}).get('register_signals', not django_settings.DEBUG) or getattr(exc_info[1], 'skip_sentry', False):
-                return
-
-            if transaction.is_dirty():
+            # HACK: this ensures Sentry can report its own errors
+            if 'sentry' in django_settings.INSTALLED_APPS and transaction.is_dirty():
                 transaction.rollback()
 
-            get_client().capture('Exception', exc_info=exc_info, request=request)
+            client.capture('Exception', exc_info=exc_info, request=request)
         except Exception, exc:
             try:
                 logger.exception(u'Unable to process log entry: %s' % (exc,))
@@ -205,7 +203,5 @@ def register_serializers():
     import raven.contrib.django.serializers  # NOQA
 
 if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
-    # If we've explicitly enabled signals, or we're not running DEBUG, register handlers
-    if getattr(django_settings, 'RAVEN_CONFIG', {}).get('register_signals', not django_settings.DEBUG):
-        register_handlers()
+    register_handlers()
     register_serializers()

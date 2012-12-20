@@ -24,13 +24,6 @@ You'll be referencing the client slightly differently in Django as well::
     client.captureException()
 
 
-If you are running ``DEBUG = True`` Raven will not automatically collect any exceptions unless
-you explicit set the ``register_signals`` flag in your configuration::
-
-    RAVEN_CONFIG = {
-        'register_signals': True,
-    }
-
 Integration with :mod:`logging`
 -------------------------------
 
