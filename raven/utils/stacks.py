@@ -166,6 +166,8 @@ def get_stack_info(frames):
     _Frame class do not contain the nescesary data to lookup all
     of the information we want.
     """
+    __traceback_hide__ = True
+
     results = []
     for frame_info in frames:
         # Old, terrible API
