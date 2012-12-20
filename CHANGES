@@ -1,3 +1,16 @@
+3.0.0
+
+Version 3.0 of Raven requires a Sentry server running at least version 5.1, as it implements
+version 3 of the protocol.
+
+* Client.create_from_text and Client.create_from_exception have been removed.
+* Client.message and Client.exception have been removed.
+* The ``key`` setting has been removed.
+* The ``DEBUG`` setting in Django no longer disables Raven.
+* The ``register_signals`` option in RAVEN_CONFIG (Django) is no longer used.
+* A new helper, Client.context() is now available for scoping options.
+* Client.captureExceptions is now deprecated in favor of Client.context.
+
 2.0.0
 
 * New serializers exist (and can be registered) against Raven. See ``raven.utils.serializer`` for more information.
