@@ -20,6 +20,7 @@ from raven.handlers.logging import SentryHandler
 
 def make_client(client_cls, app, dsn=None):
     return client_cls(
+        dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
         include_paths=set(app.config.get('SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
         exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
         servers=app.config.get('SENTRY_SERVERS'),
@@ -29,7 +30,6 @@ def make_client(client_cls, app, dsn=None):
         project=app.config.get('SENTRY_PROJECT'),
         site=app.config.get('SENTRY_SITE_NAME'),
         processors=app.config.get('SENTRY_PROCESSORS'),
-        dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
     )
 
 

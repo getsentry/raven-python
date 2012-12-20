@@ -105,31 +105,8 @@ class ClientTest(TestCase):
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
-                'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public' % (raven.VERSION,)
-            },
-        )
-
-    @mock.patch('raven.base.Client.send_remote')
-    @mock.patch('raven.base.time.time')
-    def test_send_with_public_key(self, time, send_remote):
-        time.return_value = 1328055286.51
-        client = Client(
-            servers=['http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
-        )
-        client.send(public_key='foo', **{
-            'foo': 'bar',
-        })
-        send_remote.assert_called_once_with(
-            url='http://example.com',
-            data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
-            headers={
-                'User-Agent': 'raven-python/%s' % (raven.VERSION,),
-                'Content-Type': 'application/octet-stream',
-                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
-                'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=foo' % (raven.VERSION,)
+                    'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public, '
+                    'sentry_secret=secret' % (raven.VERSION,)
             },
         )
 
@@ -271,7 +248,7 @@ class ClientTest(TestCase):
 
         frames = bar()
 
-        self.client.create_from_text('test', stack=iter_stack_frames(frames))
+        self.client.captureMessage('test', stack=iter_stack_frames(frames))
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -283,7 +260,7 @@ class ClientTest(TestCase):
             self.assertEquals(frame[0].f_code.co_name, frame_i['function'])
 
     def test_stack_auto_frames(self):
-        self.client.create_from_text('test', stack=True)
+        self.client.captureMessage('test', stack=True)
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -341,7 +318,7 @@ class ClientUDPTest(TestCase):
         self.client = Client(servers=["udp://%s:%s" % self.server_socket.getsockname()], key='BassOmatic')
 
     def test_delivery(self):
-        self.client.create_from_text('test')
+        self.client.captureMessage('test')
         data, address = self.server_socket.recvfrom(2 ** 16)
         self.assertTrue("\n\n" in data)
         header, payload = data.split("\n\n")

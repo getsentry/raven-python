@@ -17,7 +17,6 @@ import sys
 import time
 import urllib2
 import uuid
-import warnings
 
 import raven
 from raven.conf import defaults
@@ -164,9 +163,6 @@ class Client(object):
             project = o.get('project')
             public_key = o.get('public_key')
             secret_key = o.get('secret_key')
-
-        if o.get('timeout') is not None:
-            warnings.warn('The ``timeout`` option no longer does anything. Pass the option to your transport instead.')
 
         self.servers = servers
         self.public_key = public_key
@@ -323,7 +319,6 @@ class Client(object):
 
         data.setdefault('project', self.project)
         data.setdefault('site', self.site)
-        data.setdefault('public_key', self.public_key)
 
         # Make sure all data is coerced
         data = self.transform(data)
@@ -355,7 +350,7 @@ class Client(object):
         return Context(self, **kwargs)
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
-                extra=None, stack=None, public_key=None, tags=None, **kwargs):
+                extra=None, stack=None, tags=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -404,8 +399,6 @@ class Client(object):
         :param extra: a dictionary of additional standard metadata
         :param culprit: a string representing the cause of this event
                         (generally a path to a function)
-        :param public_key: the public key to use for this message
-                           (defaults to ``Client.public_key``)
         :return: a 32-length string identifying this event
         """
 
@@ -413,7 +406,7 @@ class Client(object):
             return
 
         data = self.build_msg(event_type, data, date, time_spent,
-                extra, stack, public_key=public_key, tags=tags, **kwargs)
+                extra, stack, tags=tags, **kwargs)
 
         self.send(**data)
 
@@ -466,30 +459,20 @@ class Client(object):
         else:
             self.state.set_success()
 
-    def send(self, public_key=None, auth_header=None, **data):
+    def send(self, auth_header=None, **data):
         """
         Serializes the message and passes the payload onto ``send_encoded``.
         """
         message = self.encode(data)
 
-        try:
-            return self.send_encoded(message, public_key=public_key, auth_header=auth_header)
-        except TypeError:
-            # Make the assumption that public_key wasnt supported
-            warnings.warn('%s.send_encoded needs updated to support ``**kwargs``' % (type(self).__name__,),
-                DeprecationWarning)
-            return self.send_encoded(message)
+        return self.send_encoded(message, auth_header=auth_header)
 
-    def send_encoded(self, message, public_key=None, auth_header=None, **kwargs):
+    def send_encoded(self, message, auth_header=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
         payload off to ``send_remote`` for each server specified in the servers
         configuration.
         """
-        if not self.servers:
-            warnings.warn('Raven client has no remote servers configured')
-            return
-
         client_string = 'raven-python/%s' % (raven.VERSION,)
 
         if not auth_header:
@@ -498,7 +481,8 @@ class Client(object):
                 protocol=self.protocol_version,
                 timestamp=timestamp,
                 client=client_string,
-                api_key=public_key or self.public_key
+                api_key=self.public_key,
+                api_secret=self.secret_key,
             )
 
         for url in self.servers:
@@ -521,18 +505,6 @@ class Client(object):
         Unserializes a string, ``data``.
         """
         return json.loads(base64.b64decode(data).decode('zlib'))
-
-    def create_from_text(self, *args, **kwargs):
-        msg = "create_from_text is deprecated. Use captureMessage() instead."
-        warnings.warn(msg, DeprecationWarning)
-        return self.captureMessage(*args, **kwargs)
-    message = create_from_text
-
-    def create_from_exception(self, *args, **kwargs):
-        msg = "create_from_exception is deprecated. Use captureException() instead."
-        warnings.warn(msg, DeprecationWarning)
-        return self.captureException(*args, **kwargs)
-    exception = create_from_exception
 
     def captureMessage(self, message, **kwargs):
         """

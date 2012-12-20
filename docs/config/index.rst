@@ -40,14 +40,6 @@ variable, as well as passed to all clients by using the ``dsn`` argument.
     # Manually specify a DSN
     client = Client('http://public:secret@example.com/1')
 
-    # Configure a client manually
-    client = Client(
-        servers=['http://sentry.local/api/store/'],
-        public_key='public_key',
-        secret_key='secret_key',
-        project=1,
-    )
-
 
 The Sentry DSN
 --------------

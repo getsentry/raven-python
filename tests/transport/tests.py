@@ -80,7 +80,6 @@ class TransportTest(TestCase):
         msg = c.build_msg("Message", message='foo', date=d)
         expected = {
             'project': '1',
-            'public_key': 'some_username',
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
             'server_name': u'test_server',
             'level': 40,

@@ -14,7 +14,7 @@ class AnErrorProneHandler(SentryMixin, web.RequestHandler):
     def get(self):
         try:
             raise Exception("Damn it!")
-        except Exception, e:
+        except Exception:
             self.captureException(True)
 
 
@@ -34,7 +34,7 @@ class AsyncMessageHandler(SentryMixin, web.RequestHandler):
     @gen.engine
     def get(self):
         # Compute something crazy
-        response = yield gen.Task(
+        yield gen.Task(
             self.captureMessage, "Something totally crazy was just done"
         )
         self.set_header('X-Sentry-ID', 'The ID')
@@ -66,7 +66,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertEqual(kwargs['public_key'], 'public_key')
         self.assertTrue(('sentry.interfaces.User' in kwargs))
         self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
@@ -90,7 +89,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertEqual(kwargs['public_key'], 'public_key')
         self.assertTrue(('sentry.interfaces.User' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Message' in kwargs))
@@ -111,7 +109,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertEqual(kwargs['public_key'], 'public_key')
         self.assertTrue(('sentry.interfaces.User' in kwargs))
         self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
@@ -133,7 +130,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertEqual(kwargs['public_key'], 'public_key')
         self.assertTrue(('sentry.interfaces.User' in kwargs))
         self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))

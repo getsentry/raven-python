@@ -8,7 +8,6 @@ raven.contrib.tornado
 from __future__ import absolute_import
 
 import time
-import warnings
 
 import raven
 from raven.base import Client
@@ -29,33 +28,24 @@ class AsyncSentryClient(Client):
 
         :return: a 32-length string identifying this event and checksum
         """
+        if not self.is_enabled():
+            return
+
         data = self.build_msg(*args, **kwargs)
 
         self.send(callback=kwargs.get('callback', None), **data)
 
         return (data['event_id'], data['checksum'])
 
-    def send(self, public_key=None, auth_header=None, callback=None, **data):
+    def send(self, auth_header=None, callback=None, **data):
         """
         Serializes the message and passes the payload onto ``send_encoded``.
         """
         message = self.encode(data)
 
-        try:
-            return self.send_encoded(
-                message, public_key=public_key, auth_header=auth_header,
-                callback=callback
-            )
-        except TypeError:
-            # Make the assumption that public_key wasnt supported
-            warnings.warn(
-                '%s.send_encoded needs updated to support ``**kwargs``' % (
-                    type(self).__name__,
-                ), DeprecationWarning
-            )
-            return self.send_encoded(message, callback=callback)
+        return self.send_encoded(message, auth_header=auth_header, callback=callback)
 
-    def send_encoded(self, message, public_key=None, auth_header=None, **kwargs):
+    def send_encoded(self, message, auth_header=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
         payload off to ``send_remote`` for each server specified in the servers
@@ -63,17 +53,14 @@ class AsyncSentryClient(Client):
 
         callback can be specified as a keyword argument
         """
-        if not self.servers:
-            warnings.warn('Raven client has no remote servers configured')
-            return
-
         if not auth_header:
             timestamp = time.time()
             auth_header = get_auth_header(
                 protocol=self.protocol_version,
                 timestamp=timestamp,
                 client='raven-python/%s' % (raven.VERSION,),
-                api_key=public_key or self.public_key
+                api_key=self.public_key,
+                api_secret=self.secret_key,
             )
 
         for url in self.servers:
