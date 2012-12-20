@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """
 raven.contrib.django.handlers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,6 +16,7 @@ from raven.handlers.logging import SentryHandler as BaseSentryHandler
 class SentryHandler(BaseSentryHandler):
     def __init__(self):
         logging.Handler.__init__(self)
+        self.formatter = logging.Formatter(fmt=u'%(message)s')
 
     def _get_client(self):
         from raven.contrib.django.models import client
