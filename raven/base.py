@@ -21,8 +21,8 @@ import warnings
 
 import raven
 from raven.conf import defaults
+from raven.context import Context
 from raven.utils import json, get_versions, get_auth_header
-
 from raven.utils.encoding import to_string
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
@@ -350,6 +350,19 @@ class Client(object):
     def transform(self, data):
         return transform(data, list_max_length=self.list_max_length,
             string_max_length=self.string_max_length)
+
+    def context(self, **kwargs):
+        """
+        Create default context around a block of code for exception management.
+
+        >>> with Context(client, tags={'key': 'value'}) as raven:
+        >>>     # use the context manager's client reference
+        >>>     raven.captureMessage('hello!')
+        >>>
+        >>>     # uncaught exceptions also contain the context
+        >>>     1 / 0
+        """
+        return Context(self, **kwargs)
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
                 extra=None, stack=None, public_key=None, tags=None, **kwargs):
