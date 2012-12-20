@@ -32,6 +32,8 @@ from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
 
+PLATFORM_NAME = 'python'
+
 
 class ModuleProxyCache(dict):
     def __missing__(self, key):
@@ -314,6 +316,7 @@ class Client(object):
             'timestamp': date,
             'time_spent': time_spent,
             'event_id': event_id,
+            'platform': PLATFORM_NAME,
         })
 
         return data
