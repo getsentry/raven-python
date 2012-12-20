@@ -21,13 +21,14 @@ class Context(object):
     def __init__(self, client, **defaults):
         self.client = client
         self.defaults = defaults
+        self.result = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, *exc_info):
         if all(exc_info):
-            self.captureException(exc_info)
+            self.result = self.captureException(exc_info)
 
     def __call(self, function, *args, **kwargs):
         for key, value in self.defaults.iteritems():
