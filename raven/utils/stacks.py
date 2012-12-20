@@ -78,7 +78,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     return pre_context, context_line, post_context
 
 
-def get_culprit(frames, include_paths=[], exclude_paths=[]):
+def get_culprit(frames, include_paths=(), exclude_paths=()):
     # We iterate through each frame looking for a deterministic culprit
     # When one is found, we mark it as last "best guess" (best_guess) and then
     # check it against ``exclude_paths``. If it isnt listed, then we
