@@ -87,7 +87,7 @@ def get_culprit(frames, include_paths=(), exclude_paths=()):
     culprit = None
     for frame in frames:
         try:
-            culprit = '%s.%s' % (frame.get('module') or '<unknown>', frame.get('function') or '<unknown>')
+            culprit = '%s.%s' % (frame['module'], frame['function'])
         except KeyError:
             continue
         if any((culprit.startswith(k) for k in include_paths)):
@@ -225,8 +225,8 @@ def get_stack_info(frames):
         frame_result = {
             'abs_path': abs_path,
             'filename': filename,
-            'module': module_name,
-            'function': function,
+            'module': module_name or '<unknown>',
+            'function': function or '<unknown>',
             'lineno': lineno + 1,
             'vars': transform(f_locals),
         }
