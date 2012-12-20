@@ -355,7 +355,7 @@ class Client(object):
         """
         Create default context around a block of code for exception management.
 
-        >>> with Context(client, tags={'key': 'value'}) as raven:
+        >>> with client.context(tags={'key': 'value'}) as raven:
         >>>     # use the context manager's client reference
         >>>     raven.captureMessage('hello!')
         >>>
