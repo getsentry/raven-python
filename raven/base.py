@@ -170,7 +170,7 @@ class Client(object):
 
         if o.get('context') is None:
             context = {'sys.argv': sys.argv[:]}
-        self.context = context
+        self.extra = context
 
         self.module_cache = ModuleProxyCache()
 
@@ -273,7 +273,7 @@ class Client(object):
         data.setdefault('level', logging.ERROR)
 
         # Add extra context
-        if self.context:
+        if self.extra:
             for k, v in self.context.iteritems():
                 data['extra'].setdefault(k, v)
 
