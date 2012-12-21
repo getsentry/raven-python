@@ -274,7 +274,7 @@ class Client(object):
 
         # Add extra context
         if self.extra:
-            for k, v in self.context.iteritems():
+            for k, v in self.extra.iteritems():
                 data['extra'].setdefault(k, v)
 
         for k, v in extra.iteritems():
