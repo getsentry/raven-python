@@ -299,8 +299,8 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['tags'], {'logger': 'test'})
 
-    def test_client_context(self):
-        self.client.context = {
+    def test_client_extra_context(self):
+        self.client.extra = {
             'foo': 'bar',
             'logger': 'baz',
         }
