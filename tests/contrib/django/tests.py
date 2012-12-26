@@ -656,6 +656,17 @@ class SentryExceptionHandlerTest(TestCase):
     @mock.patch('sys.exc_info')
     def test_does_capture_exception(self, exc_info, captureException):
         exc_info.return_value = self.exc_info
-        sentry_exception_handler(self.request)
+        sentry_exception_handler(request=self.request)
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
+
+    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch('sys.exc_info')
+    @mock.patch('raven.contrib.django.models.get_option')
+    def test_does_exclude_filtered_types(self, get_option, exc_info, captureException):
+        exc_info.return_value = self.exc_info
+        get_option.return_value = ['ValueError']
+
+        sentry_exception_handler(request=self.request)
+
+        assert not captureException.called

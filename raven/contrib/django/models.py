@@ -11,8 +11,8 @@ Acts as an implicit hook for Django installs.
 from __future__ import absolute_import
 
 from hashlib import md5
-import sys
 import logging
+import sys
 import warnings
 
 from django.conf import settings as django_settings
@@ -100,6 +100,12 @@ class ProxyClient(object):
 client = ProxyClient()
 
 
+def get_option(x, d=None):
+    options = getattr(django_settings, 'RAVEN_CONFIG', {})
+
+    return getattr(django_settings, 'SENTRY_%s' % x, options.get(x, d))
+
+
 def get_client(client=None):
     global _client
 
@@ -108,10 +114,9 @@ def get_client(client=None):
         client = getattr(django_settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
 
     if _client[0] != client:
-        ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-
         module, class_name = client.rsplit('.', 1)
 
+        ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
         options = getattr(django_settings, 'RAVEN_CONFIG', {})
         options.setdefault('servers', ga('SERVERS'))
         options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
@@ -162,22 +167,22 @@ def sentry_exception_handler(request=None, **kwargs):
     @transaction.commit_on_success
     def actually_do_stuff(request=None, **kwargs):
         exc_info = sys.exc_info()
-        try:
-            # HACK: this ensures Sentry can report its own errors
-            if 'sentry' in django_settings.INSTALLED_APPS and transaction.is_dirty():
-                transaction.rollback()
 
+        if exc_info[0].__name__ in get_option('IGNORE_EXCEPTIONS', tuple()):
+            logger.info('Not capturing exception due to filters: %s', exc_info[0], exc_info=exc_info)
+            return
+
+        # HACK: this ensures Sentry can report its own errors
+        if 'sentry' in django_settings.INSTALLED_APPS and transaction.is_dirty():
+            transaction.rollback()
+
+        try:
             client.captureException(exc_info=exc_info, request=request)
         except Exception, exc:
             try:
                 logger.exception(u'Unable to process log entry: %s' % (exc,))
             except Exception, exc:
                 warnings.warn(u'Unable to process log entry: %s' % (exc,))
-        finally:
-            try:
-                del exc_info
-            except Exception, e:
-                logger.exception(e)
 
     return actually_do_stuff(request, **kwargs)
 

@@ -28,7 +28,7 @@ Additionally, the following has changed:
 * Django 1.5 should now be supported (experimental).
 * Gevent 1.0 should now be supported (experimental).
 * Python 2.5 is no longer supported.
-* [Django] The ``skip_sentry`` attribute is no longer supported.
+* [Django] The ``skip_sentry`` attribute is no longer supported. A new option config option has replaced this: ``SENTRY_IGNORE_EXCEPTIONS``.
 
 Version 2.0.0
 -------------
