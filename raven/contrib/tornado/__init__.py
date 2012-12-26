@@ -209,9 +209,8 @@ class SentryMixin(object):
             }
         }
 
-    def capture(self, event_type, data=None, **kwargs):
-        if data is None:
-            data = {}
+    def get_default_context(self):
+        data = {}
 
         # Update request data
         data.update(self.get_sentry_data_from_request())
@@ -222,14 +221,23 @@ class SentryMixin(object):
         # Update extra data
         data.update(self.get_sentry_extra_info())
 
+        return data
+
+    def _capture(self, call_name, data=None, **kwargs):
+        if data is None:
+            data = self.get_default_context()
+        else:
+            data = dict(self.get_default_context(), data)
+
         client = self.get_sentry_client()
-        return client.capture(event_type, data=data, **kwargs)
+
+        return getattr(client, call_name)(data=data, **kwargs)
 
     def captureException(self, exc_info=None, **kwargs):
-        return self.capture('Exception', exc_info=exc_info, **kwargs)
+        return self._capture('captureException', exc_info=exc_info, **kwargs)
 
     def captureMessage(self, message, **kwargs):
-        return self.capture('Message', message=message, **kwargs)
+        return self._capture('captureMessage', message=message, **kwargs)
 
     def write_error(self, status_code, **kwargs):
         """Override implementation to report all exceptions to sentry.
