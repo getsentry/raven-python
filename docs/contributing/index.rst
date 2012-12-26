@@ -19,7 +19,7 @@ any base dependancies.
 
     virtualenv ~/.virtualenvs/raven
     source ~/.virtualenvs/raven/bin/activate
-    python setup.py develop
+    make
 
 Running the Test Suite
 ----------------------
@@ -30,22 +30,7 @@ any dependancies you're missing automatically.
 
 ::
 
-    python setup.py test
-
-If you've already installed the dependancies, or don't care about certain tests which will
-be skipped without them, you can also run tests in a more verbose way.
-
-::
-
-    python runtests.py
-
-The ``runtests.py`` command has several options, and if you're familiar w/ Django you should feel
-right at home.
-
-::
-
-    # Stop immediately on a failure
-    python runtests.py --failfast
+    make test
 
 
 Contributing Back Code
