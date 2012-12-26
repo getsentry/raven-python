@@ -167,7 +167,7 @@ def sentry_exception_handler(request=None, **kwargs):
             if 'sentry' in django_settings.INSTALLED_APPS and transaction.is_dirty():
                 transaction.rollback()
 
-            client.capture('Exception', exc_info=exc_info, request=request)
+            client.captureException(exc_info=exc_info, request=request)
         except Exception, exc:
             try:
                 logger.exception(u'Unable to process log entry: %s' % (exc,))

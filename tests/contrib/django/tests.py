@@ -8,6 +8,7 @@ import django
 import logging
 import mock
 import re
+from exam import fixture
 from celery.tests.utils import with_eager_tasks
 from StringIO import StringIO
 
@@ -22,7 +23,7 @@ from raven.base import Client
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
-from raven.contrib.django.models import client, get_client
+from raven.contrib.django.models import client, get_client, sentry_exception_handler
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.views import is_valid_origin
 from raven.utils.serializer import transform
@@ -99,10 +100,10 @@ class ClientProxyTest(TestCase):
     def test_proxy_responds_as_client(self):
         self.assertEquals(get_client(), client)
 
-    @mock.patch.object(TempStoreClient, 'capture')
-    def test_basic(self, capture):
-        client.capture('Message', message='foo')
-        capture.assert_called_once_with('Message', message='foo')
+    @mock.patch.object(TempStoreClient, 'captureMessage')
+    def test_basic(self, captureMessage):
+        client.captureMessage(message='foo')
+        captureMessage.assert_called_once_with(message='foo')
 
 
 class DjangoClientTest(TestCase):
@@ -113,7 +114,7 @@ class DjangoClientTest(TestCase):
         self.raven = get_client()
 
     def test_basic(self):
-        self.raven.capture('Message', message='foo')
+        self.raven.captureMessage(message='foo')
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
         self.assertTrue('sentry.interfaces.Message' in event)
@@ -343,7 +344,8 @@ class DjangoClientTest(TestCase):
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
-        with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.SentryResponseErrorIdMiddleware', 'raven.contrib.django.middleware.Sentry404CatchMiddleware']):
+        with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
+                'raven.contrib.django.middleware.Sentry404CatchMiddleware']):
             resp = self.client.get('/non-existant-page')
             self.assertEquals(resp.status_code, 404)
             headers = dict(resp.items())
@@ -357,7 +359,8 @@ class DjangoClientTest(TestCase):
         self.assertEquals(get_client('raven.base.Client').__class__, Client)
         self.assertEquals(get_client(), self.raven)
 
-        self.assertEquals(get_client('%s.%s' % (self.raven.__class__.__module__, self.raven.__class__.__name__)), self.raven)
+        self.assertEquals(get_client('%s.%s' % (self.raven.__class__.__module__, self.raven.__class__.__name__)),
+            self.raven)
         self.assertEquals(get_client(), self.raven)
 
     # This test only applies to Django 1.3+
@@ -365,18 +368,15 @@ class DjangoClientTest(TestCase):
         if django.VERSION[:2] < (1, 3):
             return
         v = '{"foo": "bar"}'
-        request = WSGIRequest(environ={
+        request = make_request()
+        request.environ.update({
             'wsgi.input': StringIO(v + '\r\n\r\n'),
-            'REQUEST_METHOD': 'POST',
-            'SERVER_NAME': 'testserver',
-            'SERVER_PORT': '80',
             'CONTENT_TYPE': 'application/octet-stream',
             'CONTENT_LENGTH': len(v),
-            'ACCEPT': 'application/json',
         })
         request.read(1)
 
-        self.raven.capture('Message', message='foo', request=request)
+        self.raven.captureMessage(message='foo', request=request)
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
@@ -393,7 +393,7 @@ class DjangoClientTest(TestCase):
         request = make_request()
         request.read(1)
 
-        self.raven.capture('Message', message='foo', request=request)
+        self.raven.captureMessage(message='foo', request=request)
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
@@ -474,7 +474,7 @@ class CeleryIsolatedClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls delay on the task.
         """
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
@@ -485,7 +485,7 @@ class CeleryIsolatedClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls the parent client's send_encoded method.
         """
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(send_encoded.call_count, 1)
 
@@ -508,7 +508,7 @@ class CeleryIntegratedClientTest(TestCase):
         and calls delay on the task.
         """
         with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
-            self.client.capture('Message', message='test')
+            self.client.captureMessage(message='test')
 
             self.assertEquals(send_raw.delay.call_count, 1)
 
@@ -519,7 +519,7 @@ class CeleryIntegratedClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls the parent client's send_encoded method.
         """
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(send_encoded.call_count, 1)
 
@@ -641,3 +641,21 @@ class QuerySetSerializerTestCase(TestCase):
         result = transform(obj)
         self.assertTrue(isinstance(result, basestring))
         self.assertEquals(result, u'<QuerySet: model=TestModel>')
+
+
+class SentryExceptionHandlerTest(TestCase):
+    @fixture
+    def request(self):
+        return make_request()
+
+    @fixture
+    def exc_info(self):
+        return (ValueError, ValueError('lol world'), None)
+
+    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch('sys.exc_info')
+    def test_does_capture_exception(self, exc_info, captureException):
+        exc_info.return_value = self.exc_info
+        sentry_exception_handler(self.request)
+
+        captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
