@@ -15,24 +15,27 @@ class Context(object):
     iterkeys = lambda s, *a: s.dict.iterkeys(*a)
 
 
-class StackTest(TestCase):
-    def test_get_culprit_bad_module(self):
+class GetCulpritTest(TestCase):
+    def test_empty_module(self):
         culprit = get_culprit([{
             'module': None,
             'function': 'foo',
         }])
-        self.assertEquals(culprit, '<unknown>.foo')
+        assert culprit == '<unknown>.foo'
 
+    def test_empty_function(self):
         culprit = get_culprit([{
             'module': 'foo',
             'function': None,
         }])
-        self.assertEquals(culprit, 'foo.<unknown>')
+        assert culprit == 'foo.<unknown>'
 
-        culprit = get_culprit([{
-        }])
-        self.assertEquals(culprit, '<unknown>.<unknown>')
+    def test_no_module_or_function(self):
+        culprit = get_culprit([{}])
+        assert culprit == '<unknown>.<unknown>'
 
+
+class GetStackInfoTest(TestCase):
     def test_bad_locals_in_frame(self):
         frame = Mock()
         frame.f_locals = Context({
