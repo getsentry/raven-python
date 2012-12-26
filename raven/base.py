@@ -345,7 +345,7 @@ class Client(object):
 
         To use structured data (interfaces) with capture:
 
-        >>> capture('Message', message='foo', data={
+        >>> capture('raven.events.Message', message='foo', data={
         >>>     'sentry.interfaces.Http': {
         >>>         'url': '...',
         >>>         'data': {},
@@ -501,7 +501,7 @@ class Client(object):
 
         >>> client.captureMessage('My event just happened!')
         """
-        return self.capture('Message', message=message, **kwargs)
+        return self.capture('raven.events.Message', message=message, **kwargs)
 
     def captureException(self, exc_info=None, **kwargs):
         """
@@ -517,7 +517,7 @@ class Client(object):
         perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
         for you.
         """
-        return self.capture('Exception', exc_info=exc_info, **kwargs)
+        return self.capture('raven.events.Exception', exc_info=exc_info, **kwargs)
 
     def captureQuery(self, query, params=(), engine=None, **kwargs):
         """
@@ -525,7 +525,7 @@ class Client(object):
 
         >>> client.captureQuery('SELECT * FROM foo')
         """
-        return self.capture('Query', query=query, params=params, engine=engine,
+        return self.capture('raven.events.Query', query=query, params=params, engine=engine,
                 **kwargs)
 
     def captureExceptions(self, **kwargs):
