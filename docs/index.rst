@@ -12,6 +12,8 @@ This version of Raven requires Sentry 5.1 or newer.
    config/index
    usage
    contributing/index
+   changelog/index
+
 
 Supported Platforms
 -------------------
