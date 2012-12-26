@@ -2,6 +2,7 @@ blinker>=1.1
 celery>=2.5
 Django>=1.2,<1.5
 django-celery>=2.5
+exam>=0.5.2
 Flask>=0.8
 logbook
 mock

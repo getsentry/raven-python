@@ -1,9 +1,9 @@
 import mock
 import sys
+from exam import fixture
 from unittest2 import TestCase
 
 from raven.context import Context
-from raven.utils.tests import fixture
 
 
 class ContextTest(TestCase):
