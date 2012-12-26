@@ -5,15 +5,31 @@ Raven is a standalone (and the official) Python client for `Sentry <http://www.g
 
 This version of Raven requires Sentry 5.1 or newer.
 
+Users Guide
+-----------
+
 .. toctree::
    :maxdepth: 2
 
    install/index
    config/index
    usage
-   contributing/index
-   changelog/index
 
+Developers
+----------
+
+.. toctree::
+   :maxdepth: 2
+
+   contributing/index
+
+Reference
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   changelog/index
 
 Supported Platforms
 -------------------
