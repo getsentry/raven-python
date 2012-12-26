@@ -412,14 +412,6 @@ class DjangoClientTest(TestCase):
         self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
 
-    def test_filtering_middleware(self):
-        with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.FilteringMiddleware']):
-            self.assertRaises(IOError, self.client.get, reverse('sentry-raise-ioerror'))
-            assert len(self.raven.events) == 0
-            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
-            assert len(self.raven.events) == 1
-            self.raven.events.pop(0)
-
     def test_marks_django_frames_correctly(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 

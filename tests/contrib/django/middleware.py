@@ -11,9 +11,3 @@ class BrokenResponseMiddleware(object):
 class BrokenViewMiddleware(object):
     def process_view(self, request, func, args, kwargs):
         raise ImportError('view')
-
-
-class FilteringMiddleware(object):
-    def process_exception(self, request, exception):
-        if isinstance(exception, IOError):
-            exception.skip_sentry = True
