@@ -415,9 +415,9 @@ class DjangoClientTest(TestCase):
     def test_filtering_middleware(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.FilteringMiddleware']):
             self.assertRaises(IOError, self.client.get, reverse('sentry-raise-ioerror'))
-            self.assertEquals(len(self.raven.events), 0)
+            assert len(self.raven.events) == 0
             self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
-            self.assertEquals(len(self.raven.events), 1)
+            assert len(self.raven.events) == 1
             self.raven.events.pop(0)
 
     def test_marks_django_frames_correctly(self):
