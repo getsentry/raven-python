@@ -161,7 +161,7 @@ class ClientTest(TestCase):
         self.assertEquals(client.secret_key, 'secret')
 
     def test_explicit_message_on_message_event(self):
-        self.client.capture('Message', message='test', data={
+        self.client.captureMessage(message='test', data={
             'message': 'foo'
         })
 
@@ -173,7 +173,7 @@ class ClientTest(TestCase):
         try:
             raise ValueError('foo')
         except:
-            self.client.capture('Exception', data={'message': 'foobar'})
+            self.client.captureException(data={'message': 'foobar'})
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -183,7 +183,7 @@ class ClientTest(TestCase):
         try:
             raise ValueError('foo')
         except:
-            self.client.capture('Exception')
+            self.client.captureException()
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -204,7 +204,7 @@ class ClientTest(TestCase):
         self.assertTrue('timestamp' in event)
 
     def test_message_event(self):
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -269,7 +269,7 @@ class ClientTest(TestCase):
         self.assertTrue('timestamp' in event)
 
     def test_site(self):
-        self.client.capture('Message', message='test', data={'site': 'test'})
+        self.client.captureMessage(message='test', data={'site': 'test'})
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -278,14 +278,14 @@ class ClientTest(TestCase):
 
     def test_implicit_site(self):
         self.client = TempStoreClient(site='foo')
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['site'], 'foo')
 
     def test_logger(self):
-        self.client.capture('Message', message='test', data={'logger': 'test'})
+        self.client.captureMessage(message='test', data={'logger': 'test'})
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -293,7 +293,7 @@ class ClientTest(TestCase):
         self.assertTrue('timestamp' in event)
 
     def test_tags(self):
-        self.client.capture('Message', message='test', tags={'logger': 'test'})
+        self.client.captureMessage(message='test', tags={'logger': 'test'})
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
@@ -304,7 +304,7 @@ class ClientTest(TestCase):
             'foo': 'bar',
             'logger': 'baz',
         }
-        self.client.capture('Message', message='test', extra={'logger': 'test'})
+        self.client.captureMessage(message='test', extra={'logger': 'test'})
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)

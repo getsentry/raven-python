@@ -78,7 +78,7 @@ class Sentry(object):
         if not self.client:
             return
 
-        self.client.capture('Exception', exc_info=kwargs.get('exc_info'),
+        self.client.captureException(exc_info=kwargs.get('exc_info'),
             data=get_data_from_request(request),
             extra={
                 'app': self.app,

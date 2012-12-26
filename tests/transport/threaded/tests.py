@@ -26,7 +26,7 @@ class ThreadedTransportTest(TestCase):
 
     @mock.patch('raven.transport.base.HTTPTransport.send')
     def test_does_send(self, send):
-        self.client.capture('Message', message='foo')
+        self.client.captureMessage(message='foo')
 
         time.sleep(0)
 

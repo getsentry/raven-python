@@ -45,7 +45,7 @@ class Sentry(object):
                     self.handle_exception(environ)
 
     def handle_exception(self, environ):
-        event_id = self.client.capture('Exception',
+        event_id = self.client.captureException(
             data={
                 'sentry.interfaces.Http': {
                     'method': environ.get('REQUEST_METHOD'),

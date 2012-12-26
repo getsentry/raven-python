@@ -22,7 +22,7 @@ class ClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls delay on the task.
         """
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
@@ -33,6 +33,6 @@ class ClientTest(TestCase):
         Integration test to ensure it propagates all the way down
         and calls the parent client's send_encoded method.
         """
-        self.client.capture('Message', message='test')
+        self.client.captureMessage(message='test')
 
         self.assertEquals(send_encoded.call_count, 1)

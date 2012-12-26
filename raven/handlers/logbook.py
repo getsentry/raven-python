@@ -53,7 +53,7 @@ class SentryHandler(logbook.Handler):
             print >> sys.stderr, to_string(traceback.format_exc())
 
             try:
-                self.client.capture('Exception')
+                self.client.captureException()
             except Exception:
                 pass
 

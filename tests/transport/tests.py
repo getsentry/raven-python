@@ -77,7 +77,7 @@ class TransportTest(TestCase):
 
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
         d = calendar.timegm(mydate.timetuple())
-        msg = c.build_msg("Message", message='foo', date=d)
+        msg = c.build_msg('raven.events.Message', message='foo', date=d)
         expected = {
             'project': '1',
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
