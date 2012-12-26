@@ -10,7 +10,7 @@ Setting up an Environment
 -------------------------
 
 Sentry is designed to run off of setuptools with minimal work. Because of this
-setting up a development environment for Sentry requires only a few steps.
+setting up a development environment requires only a few steps.
 
 The first thing you're going to want to do, is build a virtualenv and install
 any base dependancies.
@@ -21,12 +21,13 @@ any base dependancies.
     source ~/.virtualenvs/raven/bin/activate
     make
 
+That's it :)
+
 Running the Test Suite
 ----------------------
 
-The test suite is also powered off of setuptools, and can be run in two fashions. The
-easiest is to simply use setuptools and it's ``test`` command. This will handle installing
-any dependancies you're missing automatically.
+The test suite is also powered off of py.test, and can be run in a number of ways. Usually though,
+you'll just want to use our helper method to make things easy:
 
 ::
 
