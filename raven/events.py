@@ -11,8 +11,7 @@ import sys
 
 from raven.utils import varmap
 from raven.utils.encoding import shorten, to_unicode
-from raven.utils.stacks import get_stack_info, iter_traceback_frames, \
-                               get_culprit
+from raven.utils.stacks import get_stack_info, iter_traceback_frames
 
 __all__ = ('BaseEvent', 'Exception', 'Message', 'Query')
 
@@ -70,8 +69,6 @@ class Exception(BaseEvent):
                 string_length=self.client.string_max_length, list_length=self.client.list_max_length),
             get_stack_info(iter_traceback_frames(exc_traceback)))
 
-            culprit = get_culprit(frames, self.client.include_paths, self.client.exclude_paths)
-
             exc_module = getattr(exc_type, '__module__', None)
             exc_type = getattr(exc_type, '__name__', '<unknown>')
         finally:
@@ -84,7 +81,6 @@ class Exception(BaseEvent):
 
         return {
             'level': logging.ERROR,
-            'culprit': culprit,
             'sentry.interfaces.Exception': {
                 'value': to_unicode(exc_value),
                 'type': str(exc_type),
