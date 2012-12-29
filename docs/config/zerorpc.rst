@@ -21,6 +21,12 @@ submits exceptions to Sentry. This behavior can be disabled by passing the
 
     sentry = SentryMiddleware(hide_zerorpc_frames=False, dsn='udp://public_key:secret_key@example.com:4242/1')
 
+Compatibility
+-------------
+
+- ZeroRPC-Python < 0.4.0 is compatible with Raven <= 3.0.0;
+- ZeroRPC-Python >= 0.4.0 requires Raven > 3.0.0.
+
 Caveats
 -------
 

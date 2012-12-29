@@ -33,13 +33,12 @@ class SentryMiddleware(object):
         self._sentry_client = client or Client(**kwargs)
         self._hide_zerorpc_frames = hide_zerorpc_frames
 
-    def inspect_error(self, task_context, exc_info):
+    def server_inspect_exception(self, req_event, rep_event, task_ctx, exc_info):
         """Called when an exception has been raised in the code run by ZeroRPC"""
 
         # Hide the zerorpc internal frames for readability, frames to hide are:
         # - core.ServerBase._async_task
         # - core.Pattern*.process_call
-        # - context.Context.middleware_call_procedure
         # - core.DecoratorBase.__call__
         if self._hide_zerorpc_frames:
             exc_traceback = exc_info[2]
@@ -54,5 +53,5 @@ class SentryMiddleware(object):
 
         self._sentry_client.captureException(
             exc_info,
-            extra=task_context
+            extra=task_ctx
         )
