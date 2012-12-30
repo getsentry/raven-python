@@ -84,7 +84,6 @@ class TransportTest(TestCase):
             'server_name': u'test_server',
             'level': 40,
             'checksum': 'acbd18db4cc2f85cedef654fccc4a4d8',
-            'modules': {},
             'site': None,
             'tags': None,
             'time_spent': None,

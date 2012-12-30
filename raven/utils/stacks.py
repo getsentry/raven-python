@@ -162,6 +162,21 @@ def iter_stack_frames(frames=None):
         yield frame, lineno
 
 
+def guess_parent_module(stack=None):
+    """
+    Return the first frame's root module that is not part of Raven, or None.
+    """
+    if stack is None:
+        stack = inspect.stack()
+    for frame, _, _, _, _, _ in stack:
+        f_globals = getattr(frame, 'f_globals', {})
+        module_name = _getitem_from_frame(f_globals, '__name__')
+        if not module_name or module_name.startswith('raven'):
+            continue
+        return module_name.split('.', 1)[0]
+    return None
+
+
 def get_stack_info(frames):
     """
     Given a list of frames, returns a list of stack information

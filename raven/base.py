@@ -26,7 +26,7 @@ from raven.utils import json, get_versions, get_auth_header
 from raven.utils.encoding import to_string
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, \
-  get_culprit
+  get_culprit, guess_parent_module
 from raven.utils.urlparse import urlparse
 from raven.transport.registry import TransportRegistry, default_transports
 
@@ -173,6 +173,12 @@ class Client(object):
         self.extra = context
 
         self.module_cache = ModuleProxyCache()
+
+        # if no include_paths were provided, attempt to detect the calling module and add
+        # it's root namepsace as our include path.
+        if not self.include_paths:
+            parent_module = guess_parent_module()
+            self.include_paths.add(parent_module)
 
         # servers may be set to a NoneType (for Django)
         if not self.is_enabled():
