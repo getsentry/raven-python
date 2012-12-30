@@ -9,8 +9,6 @@ raven.contrib.zerorpc
 import inspect
 
 from raven.base import Client
-from raven.utils.stacks import iter_traceback_frames
-
 
 class SentryMiddleware(object):
     """Sentry/Raven middleware for ZeroRPC.
@@ -36,20 +34,27 @@ class SentryMiddleware(object):
     def server_inspect_exception(self, req_event, rep_event, task_ctx, exc_info):
         """Called when an exception has been raised in the code run by ZeroRPC"""
 
-        # Hide the zerorpc internal frames for readability, frames to hide are:
+        # Hide the zerorpc internal frames for readability, for a REQ/REP or
+        # REQ/STREAM server the frames to hide are:
         # - core.ServerBase._async_task
         # - core.Pattern*.process_call
         # - core.DecoratorBase.__call__
+        #
+        # For a PUSH/PULL or PUB/SUB server the frame to hide is:
+        # - core.Puller._receiver
         if self._hide_zerorpc_frames:
-            exc_traceback = exc_info[2]
-            for zerorpc_frame, tb_lineno in iter_traceback_frames(exc_traceback):
+            traceback = exc_info[2]
+            while traceback:
+                zerorpc_frame = traceback.tb_frame
                 zerorpc_frame.f_locals['__traceback_hide__'] = True
                 frame_info = inspect.getframeinfo(zerorpc_frame)
-                # Is there a better way than this (or looking up the filenames or
-                # hardcoding the number of frames to skip) to know when we are out
-                # of zerorpc?
-                if frame_info.function == '__call__':
+                # Is there a better way than this (or looking up the filenames
+                # or hardcoding the number of frames to skip) to know when we
+                # are out of zerorpc?
+                if frame_info.function == '__call__' \
+                    or frame_info.function == '_receiver':
                     break
+                traceback = traceback.tb_next
 
         self._sentry_client.captureException(
             exc_info,
