@@ -131,7 +131,7 @@ class SentryHandler(logging.Handler, object):
 
         # HACK: discover a culprit when we normally couldn't
         elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
-            data['culprit'] = '%s.%s' % (record.name or '<unknown>', record.funcName or '<unknown>')
+            data['culprit'] = '%s in %s' % (record.name or '<unknown module>', record.funcName or '<unknown function>')
 
         data['level'] = record.levelno
         data['logger'] = record.name

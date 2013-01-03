@@ -104,7 +104,7 @@ class LoggingIntegrationTest(TestCase):
         self.assertEquals(frame['module'], 'raven.handlers.logging')
         self.assertFalse('sentry.interfaces.Exception' in event)
         self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertEquals(event['culprit'], 'root.make_record')
+        self.assertEquals(event['culprit'], 'root in make_record')
         self.assertEquals(event['message'], 'This is a test of stacks')
 
     def test_no_record_stack(self):
@@ -124,7 +124,7 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
         assert 'sentry.interfaces.Stacktrace' in event
         assert 'culprit' in event
-        assert event['culprit'] == 'root.make_record'
+        assert event['culprit'] == 'root in make_record'
         self.assertTrue('message' in event, event)
         self.assertEquals(event['message'], 'This is a test of stacks')
         self.assertFalse('sentry.interfaces.Exception' in event)
@@ -134,12 +134,12 @@ class LoggingIntegrationTest(TestCase):
         self.assertEquals(msg['params'], ())
 
     def test_extra_culprit(self):
-        record = self.make_record('This is a test of stacks', extra={'culprit': 'foo.bar'})
+        record = self.make_record('This is a test of stacks', extra={'culprit': 'foo in bar'})
         self.handler.emit(record)
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['culprit'], 'foo.bar')
+        self.assertEquals(event['culprit'], 'foo in bar')
 
     def test_extra_data_as_string(self):
         record = self.make_record('Message', extra={'data': 'foo'})
