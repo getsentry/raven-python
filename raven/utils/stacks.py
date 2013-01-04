@@ -201,9 +201,6 @@ def get_stack_info(frames):
         loader = _getitem_from_frame(f_globals, '__loader__')
         module_name = _getitem_from_frame(f_globals, '__name__')
 
-        if _getitem_from_frame(f_globals, 'im_class') or _getitem_from_frame(f_globals, '__class__'):
-            raise
-
         if lineno:
             lineno -= 1
 
