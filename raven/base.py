@@ -285,7 +285,7 @@ class Client(object):
         if culprit:
             data['culprit'] = culprit
 
-        if 'checksum' not in data:
+        if not data.get('checksum'):
             checksum_bits = handler.get_hash(data)
         else:
             checksum_bits = data['checksum']
