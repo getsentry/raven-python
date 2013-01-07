@@ -21,18 +21,25 @@ class GetCulpritTest(TestCase):
             'module': None,
             'function': 'foo',
         }])
-        assert culprit == '<unknown>.foo'
+        assert culprit == '<unknown module> in foo'
 
     def test_empty_function(self):
         culprit = get_culprit([{
             'module': 'foo',
             'function': None,
         }])
-        assert culprit == 'foo.<unknown>'
+        assert culprit == 'foo in <unknown function>'
 
     def test_no_module_or_function(self):
         culprit = get_culprit([{}])
-        assert culprit == '<unknown>.<unknown>'
+        assert culprit == '<unknown module> in <unknown function>'
+
+    def test_all_params(self):
+        culprit = get_culprit([{
+            'module': 'package.name',
+            'function': 'foo',
+        }])
+        assert culprit == 'package.name in foo'
 
 
 class GetStackInfoTest(TestCase):

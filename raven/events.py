@@ -50,7 +50,7 @@ class Exception(BaseEvent):
         output = [exc['type']]
         for frame in data['sentry.interfaces.Stacktrace']['frames']:
             output.append(frame['module'])
-            output.append(frame['function'])
+            output.append(frame.get('context_line', frame['function']))
         return output
 
     def capture(self, exc_info=None, **kwargs):

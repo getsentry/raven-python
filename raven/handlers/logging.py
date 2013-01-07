@@ -121,21 +121,31 @@ class SentryHandler(logging.Handler, object):
             extra[k] = record.__dict__[k]
 
         date = datetime.datetime.utcfromtimestamp(record.created)
+        event_type = 'raven.events.Message'
+        handler_kwargs = {'message': record.msg, 'params': record.args}
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info and all(record.exc_info):
-            handler = self.client.get_handler('raven.events.Exception')
+            # capture the standard message first so that we ensure
+            # the event is recorded as an exception, in addition to having our
+            # message interface attached
+            handler = self.client.get_handler(event_type)
+            data.update(handler.capture(**handler_kwargs))
+            # ensure message is propagated, otherwise the exception will overwrite it
+            data['message'] = handler.to_string(data)
 
-            data.update(handler.capture(exc_info=record.exc_info))
+            event_type = 'raven.events.Exception'
+            handler_kwargs = {'exc_info': record.exc_info}
 
         # HACK: discover a culprit when we normally couldn't
         elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
-            data['culprit'] = '%s.%s' % (record.name or '<unknown>', record.funcName or '<unknown>')
+            data['culprit'] = '%s in %s' % (record.name or '<unknown module>', record.funcName or '<unknown function>')
 
         data['level'] = record.levelno
         data['logger'] = record.name
 
-        return self.client.capture('Message', message=record.msg, params=record.args,
-                            stack=stack, data=data, extra=extra,
-                            date=date, **kwargs)
+        kwargs.update(handler_kwargs)
+
+        return self.client.capture(event_type, stack=stack, data=data, extra=extra,
+            date=date, **kwargs)

@@ -91,8 +91,8 @@ def get_culprit(frames, *args, **kwargs):
     culprit = None
     for frame in frames:
         try:
-            culprit = '%s.%s' % (frame.get('module') or '<unknown>',
-                frame.get('function') or '<unknown>')
+            culprit = '%s in %s' % (frame.get('module') or '<unknown module>',
+                frame.get('function') or '<unknown function>')
         except KeyError:
             continue
 
@@ -189,8 +189,6 @@ def get_stack_info(frames):
             continue
 
         f_globals = getattr(frame, 'f_globals', {})
-        loader = _getitem_from_frame(f_globals, '__loader__')
-        module_name = _getitem_from_frame(f_globals, '__name__')
 
         f_code = getattr(frame, 'f_code', None)
         if f_code:
@@ -199,6 +197,9 @@ def get_stack_info(frames):
         else:
             abs_path = None
             function = None
+
+        loader = _getitem_from_frame(f_globals, '__loader__')
+        module_name = _getitem_from_frame(f_globals, '__name__')
 
         if lineno:
             lineno -= 1

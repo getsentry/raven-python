@@ -140,7 +140,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(exc['value'], u"invalid literal for int() with base 10: 'hello'")
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], u"ValueError: invalid literal for int() with base 10: 'hello'")
-        self.assertEquals(event['culprit'], 'tests.contrib.django.tests.test_signal_integration')
+        self.assertEquals(event['culprit'], 'tests.contrib.django.tests in test_signal_integration')
 
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
@@ -153,7 +153,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(exc['value'], 'view exception')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'Exception: view exception')
-        self.assertEquals(event['culprit'], 'tests.contrib.django.views.raise_exc')
+        self.assertEquals(event['culprit'], 'tests.contrib.django.views in raise_exc')
 
     def test_user_info(self):
         from django.contrib.auth.models import User
@@ -200,7 +200,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(exc['value'], 'request')
             self.assertEquals(event['level'], logging.ERROR)
             self.assertEquals(event['message'], 'ImportError: request')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware.process_request')
+            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware in process_request')
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -217,7 +217,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(exc['value'], 'response')
             self.assertEquals(event['level'], logging.ERROR)
             self.assertEquals(event['message'], 'ImportError: response')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware.process_response')
+            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware in process_response')
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
@@ -235,7 +235,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(exc['value'], 'view exception')
             self.assertEquals(event['level'], logging.ERROR)
             self.assertEquals(event['message'], 'Exception: view exception')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.views.raise_exc')
+            self.assertEquals(event['culprit'], 'tests.contrib.django.views in raise_exc')
 
             event = self.raven.events.pop(0)
 
@@ -245,7 +245,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(exc['value'], 'handler500')
             self.assertEquals(event['level'], logging.ERROR)
             self.assertEquals(event['message'], 'ValueError: handler500')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.urls.handler500')
+            self.assertEquals(event['culprit'], 'tests.contrib.django.urls in handler500')
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
@@ -260,7 +260,7 @@ class DjangoClientTest(TestCase):
             self.assertEquals(exc['value'], 'view')
             self.assertEquals(event['level'], logging.ERROR)
             self.assertEquals(event['message'], 'ImportError: view')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware.process_view')
+            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware in process_view')
 
     def test_exclude_modules_view(self):
         exclude_paths = self.raven.exclude_paths
@@ -270,7 +270,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        self.assertEquals(event['culprit'], 'tests.contrib.django.views.raise_exc')
+        self.assertEquals(event['culprit'], 'tests.contrib.django.views in raise_exc')
         self.raven.exclude_paths = exclude_paths
 
     def test_include_modules(self):
@@ -282,7 +282,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        self.assertEquals(event['culprit'], 'django.shortcuts.get_object_or_404')
+        self.assertEquals(event['culprit'], 'django.shortcuts in get_object_or_404')
         self.raven.include_paths = include_paths
 
     def test_template_name_as_view(self):
@@ -300,7 +300,7 @@ class DjangoClientTest(TestCase):
     #     self.assertEquals(len(self.raven.events), 1)
     #     event = self.raven.events.pop(0)
 
-    #     self.assertEquals(event['culprit'], 'tests.contrib.django.views.logging_request_exc')
+    #     self.assertEquals(event['culprit'], 'tests.contrib.django.views in logging_request_exc')
     #     self.assertEquals(event['data']['META']['REMOTE_ADDR'], '127.0.0.1')
 
     def test_record_none_exc_info(self):

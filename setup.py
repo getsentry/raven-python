@@ -30,7 +30,7 @@ tests_require = open(os.path.join(
 
 setup(
     name='raven',
-    version='3.0.0',
+    version='3.1.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',

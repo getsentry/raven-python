@@ -66,7 +66,7 @@ class FlaskTest(TestCase):
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
-        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests.an_error')
+        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests in an_error')
 
     def test_get(self):
         client = TempStoreClient()
