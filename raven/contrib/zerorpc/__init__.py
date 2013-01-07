@@ -13,21 +13,27 @@ from raven.base import Client
 class SentryMiddleware(object):
     """Sentry/Raven middleware for ZeroRPC.
 
+    >>> import zerorpc
+    >>> from raven.contrib.zerorpc import SentryMiddleware
     >>> sentry = SentryMiddleware(dsn='udp://..../')
     >>> zerorpc.Context.get_instance().register_middleware(sentry)
 
     Exceptions detected server-side in ZeroRPC will be submitted to Sentry (and
     propagated to the client as well).
 
-    hide_zerorpc_frames: modify the exception stacktrace to remove the internal
-                         zerorpc frames (True by default to make the stacktrace
-                         as readable as possible);
-    client: use an existing raven.Client object, otherwise one will be
-            instantiated from the keyword arguments.
-
     """
 
     def __init__(self, hide_zerorpc_frames=True, client=None, **kwargs):
+        """Create a middleware object that can be injected in a ZeroRPC server.
+
+        - hide_zerorpc_frames: modify the exception stacktrace to remove the
+                               internal zerorpc frames (True by default to make
+                               the stacktrace as readable as possible);
+        - client: use an existing raven.Client object, otherwise one will be
+                  instantiated from the keyword arguments.
+
+        """
+
         self._sentry_client = client or Client(**kwargs)
         self._hide_zerorpc_frames = hide_zerorpc_frames
 
