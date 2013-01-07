@@ -24,8 +24,8 @@ submits exceptions to Sentry. This behavior can be disabled by passing the
 Compatibility
 -------------
 
-- ZeroRPC-Python < 0.4.0 is compatible with Raven <= 3.0.0;
-- ZeroRPC-Python >= 0.4.0 requires Raven > 3.0.0.
+- ZeroRPC-Python < 0.4.0 is compatible with Raven <= 3.1.0;
+- ZeroRPC-Python >= 0.4.0 requires Raven > 3.1.0.
 
 Caveats
 -------
