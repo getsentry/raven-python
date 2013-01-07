@@ -133,6 +133,35 @@ class ClientTest(TestCase):
             },
         )
 
+    @mock.patch('raven.base.Client._send_remote')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_raise_exception_on_send_error(self, should_try, _send_remote):
+        should_try.return_value = True
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+
+        # Test for the default behaviour in which a send error is handled by the client
+        _send_remote.side_effect = Exception()
+        client.capture('Message', data={}, date=None, time_spent=10,
+                        extra={}, stack=None, tags=None, message='Test message')
+        self.assertEquals(client.state.status, client.state.ERROR)
+
+        # Test for the case in which a send error is raised to the calling frame.
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+            raise_send_errors=True,
+        )
+        with self.assertRaises(Exception):
+            client.capture('Message', data={}, date=None, time_spent=10,
+                            extra={}, stack=None, tags=None, message='Test message')
+
     def test_encode_decode(self):
         data = {'foo': 'bar'}
         encoded = self.client.encode(data)

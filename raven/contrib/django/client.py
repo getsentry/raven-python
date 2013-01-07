@@ -130,6 +130,8 @@ class DjangoClient(Client):
             try:
                 return self.send_integrated(kwargs)
             except Exception, e:
+                if self.raise_send_errors:
+                    raise
                 self.error_logger.error('Unable to record event: %s', e, exc_info=True)
 
     def send_integrated(self, kwargs):
