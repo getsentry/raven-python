@@ -1,5 +1,6 @@
 import logging
 import sys
+import mock
 from unittest2 import TestCase
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
@@ -45,6 +46,37 @@ class LoggingIntegrationTest(TestCase):
         msg = event['sentry.interfaces.Message']
         self.assertEquals(msg['message'], 'This is a test error')
         self.assertEquals(msg['params'], ())
+
+    @mock.patch('raven.base.Client._send_remote')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_exception_on_emit(self, should_try, _send_remote):
+        should_try.return_value = True
+        # Test for the default behaviour in which an exception is handled by the client or handler
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+        handler = SentryHandler(client)
+        _send_remote.side_effect = Exception()
+        record = self.make_record('This is a test error')
+        handler.emit(record)
+        self.assertEquals(handler.client.state.status, handler.client.state.ERROR)
+
+        # Test for the case in which a send error is raised to the calling frame.
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+            raise_send_errors=True,
+        )
+        handler = SentryHandler(client)
+        _send_remote.side_effect = Exception()
+        with self.assertRaises(Exception):
+            record = self.make_record('This is a test error')
+            handler.emit(record)
 
     def test_logger_extra_data(self):
         record = self.make_record('This is a test error', extra={'data': {
