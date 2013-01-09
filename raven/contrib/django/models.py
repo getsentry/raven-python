@@ -134,6 +134,7 @@ def get_client(client=None):
         options.setdefault('project', ga('PROJECT'))
         options.setdefault('processors', ga('PROCESSORS'))
         options.setdefault('dsn', ga('DSN'))
+        options.setdefault('context', ga('CONTEXT'))
 
         instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
         if not tmp_client:
