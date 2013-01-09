@@ -424,15 +424,14 @@ class DjangoClientTest(TestCase):
                 assert frame.get('in_app') is False
 
     def test_adds_site_to_tags(self):
-        with Settings(SITE_ID=1000, INSTALLED_APPS=list(settings.INSTALLED_APPS) + ['django.contrib.sites']):
-            self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
+        self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
         tags = event['tags']
         assert 'site' in event['tags']
-        assert tags['site'] == 1000
+        assert tags['site'] == u'example.com'
 
 
 class DjangoLoggingTest(TestCase):
