@@ -203,6 +203,9 @@ class Client(object):
             tags=None, **kwargs):
         """
         Captures, processes and serializes an event into a dict object
+
+        The result of ``build_msg`` should be a standardized dict, with
+        all default values available.
         """
 
         # create ID client-side so that it can be passed to application
@@ -270,7 +273,7 @@ class Client(object):
         if not data.get('modules'):
             data['modules'] = get_versions(self.include_paths)
 
-        data['tags'] = tags
+        data['tags'] = tags or {}
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
 
@@ -308,7 +311,11 @@ class Client(object):
             data['message'] = handler.to_string(data)
 
         data.setdefault('project', self.project)
-        data.setdefault('site', self.site)
+
+        # Legacy support for site attribute
+        site = data.pop('site', None) or self.site
+        if site:
+            data['tags'].setdefault('site', site)
 
         # Make sure all data is coerced
         data = self.transform(data)
@@ -355,7 +362,6 @@ class Client(object):
         >>>         'method': 'POST',
         >>>     },
         >>>     'logger': 'logger.name',
-        >>>     'site': 'site.name',
         >>> }, extra={
         >>>     'key': 'value',
         >>> })

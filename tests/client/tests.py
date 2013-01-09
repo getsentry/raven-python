@@ -273,8 +273,8 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['site'], 'test')
-        self.assertTrue('timestamp' in event)
+        assert 'site' in event['tags']
+        assert event['tags']['site'] == 'test'
 
     def test_implicit_site(self):
         self.client = TempStoreClient(site='foo')
@@ -282,7 +282,8 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['site'], 'foo')
+        assert 'site' in event['tags']
+        assert event['tags']['site'] == 'foo'
 
     def test_logger(self):
         self.client.captureMessage(message='test', data={'logger': 'test'})

@@ -82,6 +82,9 @@ class DjangoClient(Client):
                 if frame.get('module', '').startswith('django.'):
                     frame['in_app'] = False
 
+        if 'django.contrib.sites' in settings.INSTALLED_APPS:
+            data['tags'].setdefault('site', settings.SITE_ID)
+
         return data
 
     def capture(self, event_type, request=None, **kwargs):
