@@ -11,6 +11,7 @@ from __future__ import absolute_import
 import logging
 
 from django.conf import settings
+from django.contrib.sites import models as site_models
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
@@ -83,7 +84,9 @@ class DjangoClient(Client):
                     frame['in_app'] = False
 
         if 'django.contrib.sites' in settings.INSTALLED_APPS:
-            data['tags'].setdefault('site', settings.SITE_ID)
+            site = site_models.Site.objects.get_current()
+            site_name = site.name or site.domain
+            data['tags'].setdefault('site', site_name)
 
         return data
 
