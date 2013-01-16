@@ -186,6 +186,9 @@ class Client(object):
         for processor in self.processors:
             yield self.module_cache[processor](self)
 
+    def get_module_versions(self):
+        return get_versions(self.include_paths)
+
     def get_ident(self, result):
         """
         Returns a searchable string representing a message.
@@ -271,7 +274,7 @@ class Client(object):
             data['server_name'] = self.name
 
         if not data.get('modules'):
-            data['modules'] = get_versions(self.include_paths)
+            data['modules'] = self.get_module_versions()
 
         data['tags'] = tags or {}
         data.setdefault('extra', {})
