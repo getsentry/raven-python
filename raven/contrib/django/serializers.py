@@ -7,7 +7,7 @@ raven.contrib.django.serializers
 """
 from __future__ import absolute_import
 
-from django.db.models.query import QuerySet
+from django.conf import settings
 from django.utils.functional import Promise
 from raven.utils.serializer import Serializer, register
 
@@ -39,16 +39,18 @@ class PromiseSerializer(Serializer):
             return unicode(value)
         return self.recurse(value, **kwargs)
 
-
-class QuerySetSerializer(Serializer):
-    types = (QuerySet,)
-
-    def serialize(self, value, **kwargs):
-        qs_name = type(value).__name__
-        if value.model:
-            return u'<%s: model=%s>' % (qs_name, value.model.__name__)
-        return u'<%s: (Unbound)>' % (qs_name,)
-
-
 register(PromiseSerializer)
+
+if getattr(settings, 'DATABASES', None):
+    from django.db.models.query import QuerySet
+
+    class QuerySetSerializer(Serializer):
+        types = (QuerySet,)
+
+        def serialize(self, value, **kwargs):
+            qs_name = type(value).__name__
+            if value.model:
+                return u'<%s: model=%s>' % (qs_name, value.model.__name__)
+            return u'<%s: (Unbound)>' % (qs_name,)
+
 register(QuerySetSerializer)

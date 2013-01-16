@@ -143,56 +143,41 @@ def get_client(client=None):
     return _client[1]
 
 
-def get_transaction_wrapper(client):
-    if client.servers:
-        class MockTransaction(object):
-            def commit_on_success(self, func):
-                return func
-
-            def is_dirty(self):
-                return False
-
-            def rollback(self):
-                pass
-
-        transaction = MockTransaction()
-    else:
-        from django.db import transaction
-
-    return transaction
-
-
 def sentry_exception_handler(request=None, **kwargs):
-    transaction = get_transaction_wrapper(client)
+    exc_info = sys.exc_info()
 
-    @transaction.commit_on_success
-    def actually_do_stuff(request=None, **kwargs):
-        exc_info = sys.exc_info()
+    if exc_info[0].__name__ in get_option('IGNORE_EXCEPTIONS', tuple()):
+        logger.info('Not capturing exception due to filters: %s', exc_info[0], exc_info=exc_info)
+        return
 
-        if exc_info[0].__name__ in get_option('IGNORE_EXCEPTIONS', tuple()):
-            logger.info('Not capturing exception due to filters: %s', exc_info[0], exc_info=exc_info)
-            return
-
-        # HACK: this ensures Sentry can report its own errors
-        if 'sentry' in django_settings.INSTALLED_APPS and transaction.is_dirty():
-            transaction.rollback()
-
+    try:
+        client.captureException(exc_info=exc_info, request=request)
+    except Exception, exc:
         try:
-            client.captureException(exc_info=exc_info, request=request)
+            logger.exception(u'Unable to process log entry: %s' % (exc,))
         except Exception, exc:
-            try:
-                logger.exception(u'Unable to process log entry: %s' % (exc,))
-            except Exception, exc:
-                warnings.warn(u'Unable to process log entry: %s' % (exc,))
-
-    return actually_do_stuff(request, **kwargs)
+            warnings.warn(u'Unable to process log entry: %s' % (exc,))
 
 
 def register_handlers():
     from django.core.signals import got_request_exception
 
+    # HACK: support Sentry's internal communication
+    if 'sentry' in django_settings.INSTALLED_APPS:
+        from django.db import transaction
+
+        @transaction.commit_on_success
+        def wrap_sentry(request, **kwargs):
+            if transaction.is_dirty():
+                transaction.rollback()
+            return sentry_exception_handler(request, **kwargs)
+
+        exception_handler = wrap_sentry
+    else:
+        exception_handler = sentry_exception_handler
+
     # Connect to Django's internal signal handler
-    got_request_exception.connect(sentry_exception_handler)
+    got_request_exception.connect(exception_handler)
 
     # If Celery is installed, register a signal handler
     if 'djcelery' in django_settings.INSTALLED_APPS:
