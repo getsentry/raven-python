@@ -208,6 +208,7 @@ def register_serializers():
     # force import so serializers can call register
     import raven.contrib.django.serializers  # NOQA
 
-if 'raven.contrib.django' in django_settings.INSTALLED_APPS:
+if ('raven.contrib.django' in django_settings.INSTALLED_APPS
+      or 'raven.contrib.django_compat' in django_settings.INSTALLED_APPS):
     register_handlers()
     register_serializers()
