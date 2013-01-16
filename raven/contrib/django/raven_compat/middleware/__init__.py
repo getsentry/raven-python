@@ -9,4 +9,3 @@ raven.contrib.django.raven_compat.middleware
 from __future__ import absolute_import
 
 from raven.contrib.django.middleware import *  # NOQA
-from raven.contrib.django.middleware import wsgi  # NOQA
