@@ -208,6 +208,7 @@ additional global state data or sanitizing data that you want to keep off of the
 
     processors = (
         'raven.processors.SanitizePasswordsProcessor',
+        'raven.processors.RemovePostDataProcessor',
     )
 
 Sanitizing Data
