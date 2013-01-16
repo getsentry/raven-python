@@ -1,6 +1,6 @@
 """
-raven.contrib.django.raven_compat.middleware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+raven.contrib.django.raven_compat.middleware.wsgi
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -8,4 +8,4 @@ raven.contrib.django.raven_compat.middleware
 
 from __future__ import absolute_import
 
-from raven.contrib.django.middleware import *  # NOQA
+from raven.contrib.django.middleware.wsgi import *  # NOQA
