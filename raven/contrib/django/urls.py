@@ -7,11 +7,11 @@ raven.contrib.django.urls
 """
 from __future__ import absolute_import
 
-try: 
+try:
     from django.conf.urls import patterns, url
-except ImportError: 
+except ImportError:
     # for Django version less then 1.4
-    from django.conf.urls.defaults import patterns, url
+    from django.conf.urls.defaults import patterns, url  # NOQA
 
 urlpatterns = patterns('',
     url(r'^api/(?:(?P<project_id>[\w_-]+)/)?store/$', 'raven.contrib.django.views.report', name='raven-report'),
