@@ -168,7 +168,8 @@ class Client(object):
         self.site = o.get('site') or defaults.SITE
         self.processors = o.get('processors') or defaults.PROCESSORS
 
-        if o.get('context') is None:
+        context = o.get('context')
+        if context is None:
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
 
