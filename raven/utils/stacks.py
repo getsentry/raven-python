@@ -162,7 +162,7 @@ def iter_stack_frames(frames=None):
         yield frame, lineno
 
 
-def get_stack_info(frames):
+def get_stack_info(frames, list_max_length=None, string_max_length=None):
     """
     Given a list of frames, returns a list of stack information
     dictionary objects that are JSON-ready.
@@ -234,7 +234,8 @@ def get_stack_info(frames):
             'module': module_name or '<unknown>',
             'function': function or '<unknown>',
             'lineno': lineno + 1,
-            'vars': transform(f_locals),
+            'vars': transform(f_locals, list_max_length=list_max_length,
+                string_max_length=string_max_length),
         }
         if context_line:
             frame_result.update({

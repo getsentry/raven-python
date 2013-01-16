@@ -60,7 +60,7 @@ class IterableSerializer(Serializer):
     types = (tuple, list, set, frozenset)
 
     def serialize(self, value, **kwargs):
-        list_max_length = kwargs.get('list_max_length', float('inf'))
+        list_max_length = kwargs.get('list_max_length') or float('inf')
         return tuple(self.recurse(o, **kwargs) for n, o in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value)))
 
 
@@ -75,7 +75,7 @@ class DictSerializer(Serializer):
     types = (dict,)
 
     def serialize(self, value, **kwargs):
-        list_max_length = kwargs.get('list_max_length', float('inf'))
+        list_max_length = kwargs.get('list_max_length') or float('inf')
         return dict(
             (to_string(k), self.recurse(v, **kwargs))
             for n, (k, v) in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value.iteritems()))

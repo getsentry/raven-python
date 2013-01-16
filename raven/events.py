@@ -67,7 +67,9 @@ class Exception(BaseEvent):
 
             frames = varmap(lambda k, v: shorten(v,
                 string_length=self.client.string_max_length, list_length=self.client.list_max_length),
-            get_stack_info(iter_traceback_frames(exc_traceback)))
+            get_stack_info(iter_traceback_frames(exc_traceback),
+                list_max_length=self.client.list_max_length,
+                string_max_length=self.client.string_max_length))
 
             exc_module = getattr(exc_type, '__module__', None)
             exc_type = getattr(exc_type, '__name__', '<unknown>')

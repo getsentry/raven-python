@@ -248,7 +248,9 @@ class Client(object):
 
             data.update({
                 'sentry.interfaces.Stacktrace': {
-                    'frames': get_stack_info(frames)
+                    'frames': get_stack_info(frames,
+                        list_max_length=self.list_max_length,
+                        string_max_length=self.string_max_length)
                 },
             })
 
