@@ -55,7 +55,7 @@ class SanitizePasswordsProcessor(Processor):
     """
     MASK = '*' * 8
     FIELDS = frozenset(['password', 'secret', 'passwd'])
-    VALUES_RE = re.compile(r'^\d{15,16}$')
+    VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 
     def sanitize(self, key, value):
         if value is None:
