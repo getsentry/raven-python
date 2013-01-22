@@ -10,6 +10,7 @@ import inspect
 
 from raven.base import Client
 
+
 class SentryMiddleware(object):
     """Sentry/Raven middleware for ZeroRPC.
 
