@@ -558,13 +558,14 @@ class ReportViewTest(TestCase):
     def setUp(self):
         self.path = reverse('raven-report')
 
-    def test_does_not_allow_get(self):
-        resp = self.client.get(self.path)
-        self.assertEquals(resp.status_code, 405)
-
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header(self, is_valid_origin):
         self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        is_valid_origin.assert_called_once_with('http://example.com')
+
+    @mock.patch('raven.contrib.django.views.is_valid_origin')
+    def test_calls_is_valid_origin_with_header_as_get(self, is_valid_origin):
+        self.client.get(self.path, HTTP_ORIGIN='http://example.com')
         is_valid_origin.assert_called_once_with('http://example.com')
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=False))
@@ -577,7 +578,7 @@ class ReportViewTest(TestCase):
         resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp['Access-Control-Allow-Origin'], 'http://example.com')
-        self.assertEquals(resp['Access-Control-Allow-Methods'], 'POST, OPTIONS')
+        self.assertEquals(resp['Access-Control-Allow-Methods'], 'GET, POST, OPTIONS')
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_missing_data(self):

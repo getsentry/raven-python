@@ -38,6 +38,7 @@ def pytest_configure(config):
             BROKER_USER="guest",
             BROKER_PASSWORD="guest",
             BROKER_VHOST="/",
+            SENTRY_ALLOW_ORIGIN='*',
             CELERY_ALWAYS_EAGER=True,
             TEMPLATE_DEBUG=True,
             TEMPLATE_DIRS=[os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates')],
