@@ -36,6 +36,7 @@ class ZeroRPCTest(unittest2.TestCase):
                     client=self._sentry
         ))
 
+    def test_zerorpc_middleware_with_reqrep(self):
         self._server = zerorpc.Server(random)
         self._server.bind(self._server_endpoint)
         gevent.spawn(self._server.run)
@@ -43,7 +44,6 @@ class ZeroRPCTest(unittest2.TestCase):
         self._client = zerorpc.Client()
         self._client.connect(self._server_endpoint)
 
-    def test_zerorpc_middleware(self):
         try:
             self._client.choice([])
         except zerorpc.exceptions.RemoteError, ex:
@@ -57,6 +57,28 @@ class ZeroRPCTest(unittest2.TestCase):
             return
 
         self.fail('An IndexError exception should have been raised an catched')
+
+    def test_zerorpc_middleware_with_pushpull(self):
+        self._server = zerorpc.Puller(random)
+        self._server.bind(self._server_endpoint)
+        gevent.spawn(self._server.run)
+
+        self._client = zerorpc.Pusher()
+        self._client.connect(self._server_endpoint)
+
+        self._client.choice([])
+
+        for attempt in xrange(0, 10):
+            gevent.sleep(0.1)
+            if len(self._sentry.events):
+                exc = self._sentry.events[0]['sentry.interfaces.Exception']
+                self.assertEqual(exc['type'], 'IndexError')
+                frames = self._sentry.events[0]['sentry.interfaces.Stacktrace']['frames']
+                self.assertEqual(frames[0]['function'], 'choice')
+                self.assertEqual(frames[0]['module'], 'random')
+                return
+
+        self.fail('An IndexError exception should have been sent to Sentry')
 
     def tearDown(self):
         self._client.close()
