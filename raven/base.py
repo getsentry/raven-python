@@ -120,8 +120,10 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, **options):
+    def __init__(self, dsn=None, raise_send_errors=False, **options):
         o = options
+
+        self.raise_send_errors = raise_send_errors
 
         # configure loggers first
         cls = self.__class__
@@ -439,7 +441,10 @@ class Client(object):
         return bool(self.servers)
 
     def send_remote(self, url, data, headers={}):
-        if not self.state.should_try():
+        # If the client is configured to raise errors on sending,
+        # the implication is that the backoff and retry strategies
+        # will be handled by the calling application
+        if not self.raise_send_errors and not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)
             return
@@ -447,6 +452,8 @@ class Client(object):
         try:
             self._send_remote(url=url, data=data, headers=headers)
         except Exception, e:
+            if self.raise_send_errors:
+                raise
             if isinstance(e, urllib2.HTTPError):
                 body = e.read()
                 self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
