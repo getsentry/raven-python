@@ -16,7 +16,7 @@ import logging
 
 class Sentry404CatchMiddleware(object):
     def process_response(self, request, response):
-        if response.status_code != 404 or _is_ignorable_404(request.get_full_path()):
+        if response.status_code != 404 or _is_ignorable_404(request.get_full_path()) or not client.is_enabled():
             return response
         data = client.get_data_from_request(request)
         data.update({
