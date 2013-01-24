@@ -227,7 +227,12 @@ class SentryMixin(object):
         if data is None:
             data = self.get_default_context()
         else:
-            data = dict(self.get_default_context(), data)
+            default_context = self.get_default_context()
+            if isinstance(data, dict):
+                default_context.update(data)
+            else:
+                default_context['extra']['extra_data'] = data
+            data = default_context
 
         client = self.get_sentry_client()
 
