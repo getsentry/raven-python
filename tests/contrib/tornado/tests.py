@@ -18,9 +18,26 @@ class AnErrorProneHandler(SentryMixin, web.RequestHandler):
             self.captureException(True)
 
 
+class AnErrorWithCustomNonDictData(SentryMixin, web.RequestHandler):
+    def get(self):
+        try:
+            raise Exception("Oops")
+        except Exception:
+            self.captureException(True, data="extra custom non-dict data")
+
+
+class AnErrorWithCustomDictData(SentryMixin, web.RequestHandler):
+    def get(self):
+        try:
+            raise Exception("Oops")
+        except Exception:
+            self.captureException(True, data={'extra': {'extra_data': 'extra custom dict data'}})
+
+
 class SendErrorTestHandler(SentryMixin, web.RequestHandler):
     def get(self):
         raise Exception("Oops")
+
 
 class SendErrorAsyncHandler(SentryMixin, web.RequestHandler):
     @web.asynchronous
@@ -53,6 +70,8 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
             web.url(r'/an-async-message', AsyncMessageHandler),
             web.url(r'/send-error', SendErrorTestHandler),
             web.url(r'/send-error-async', SendErrorAsyncHandler),
+            web.url(r'/an-error-with-custom-non-dict-data', AnErrorWithCustomNonDictData),
+            web.url(r'/an-error-with-custom-dict-data', AnErrorWithCustomDictData),
         ])
         app.sentry_client = AsyncSentryClient(
             'http://public_key:secret_key@host:9000/project'
@@ -79,6 +98,56 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
 
         user_data = kwargs['sentry.interfaces.User']
         self.assertEqual(user_data['is_authenticated'], False)
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send')
+    def test_error_with_custom_non_dict_data_handler(self, send):
+        response = self.fetch('/an-error-with-custom-non-dict-data?qs=qs')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(send.call_count, 1)
+        args, kwargs = send.call_args
+
+        self.assertTrue(('sentry.interfaces.User' in kwargs))
+        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
+        self.assertTrue(('sentry.interfaces.Http' in kwargs))
+        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
+        self.assertTrue(('extra' in kwargs))
+
+        http_data = kwargs['sentry.interfaces.Http']
+        self.assertEqual(http_data['cookies'], None)
+        self.assertEqual(http_data['url'], response.effective_url)
+        self.assertEqual(http_data['query_string'], 'qs=qs')
+        self.assertEqual(http_data['method'], 'GET')
+
+        user_data = kwargs['sentry.interfaces.User']
+        self.assertEqual(user_data['is_authenticated'], False)
+
+        self.assertTrue('extra_data' in kwargs['extra'])
+        self.assertEqual(kwargs['extra']['extra_data'], 'extra custom non-dict data')
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send')
+    def test_error_with_custom_dict_data_handler(self, send):
+        response = self.fetch('/an-error-with-custom-dict-data?qs=qs')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(send.call_count, 1)
+        args, kwargs = send.call_args
+
+        self.assertTrue(('sentry.interfaces.User' in kwargs))
+        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
+        self.assertTrue(('sentry.interfaces.Http' in kwargs))
+        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
+        self.assertTrue(('extra' in kwargs))
+
+        http_data = kwargs['sentry.interfaces.Http']
+        self.assertEqual(http_data['cookies'], None)
+        self.assertEqual(http_data['url'], response.effective_url)
+        self.assertEqual(http_data['query_string'], 'qs=qs')
+        self.assertEqual(http_data['method'], 'GET')
+
+        user_data = kwargs['sentry.interfaces.User']
+        self.assertEqual(user_data['is_authenticated'], False)
+
+        self.assertTrue('extra_data' in kwargs['extra'])
+        self.assertEqual(kwargs['extra']['extra_data'], 'extra custom dict data')
 
     @patch(
         'raven.contrib.tornado.AsyncSentryClient.send',
