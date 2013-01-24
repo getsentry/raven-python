@@ -6,6 +6,7 @@ raven.contrib.celery
 :license: BSD, see LICENSE for more details.
 """
 
+import logging
 try:
     from celery.task import task
 except ImportError:
@@ -29,7 +30,7 @@ class CeleryClient(CeleryMixin, Client):
     pass
 
 
-class CeleryFilter(object):
+class CeleryFilter(logging.Filter):
     def filter(self, record):
         return record.funcName not in ('_log_error',)
 
@@ -50,11 +51,10 @@ def register_signal(client):
 
 
 def register_logger_signal(client, logger=None):
-    import logging
+    filter_ = CeleryFilter()
 
     if logger is None:
         logger = logging.getLogger()
-        filter_ = CeleryFilter()
         handler = SentryHandler(client)
         handler.setLevel(logging.ERROR)
         handler.addFilter(filter_)
