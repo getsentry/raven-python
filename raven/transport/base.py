@@ -31,6 +31,7 @@ except:
 
 try:
     import twisted.web.client
+    import twisted.internet.protocol
     has_twisted = True
 except:
     has_twisted = False
@@ -82,15 +83,10 @@ class Transport(object):
         raise NotImplementedError
 
 
-class UDPTransport(Transport):
-
-    scheme = ['udp']
-
+class BaseUDPTransport(Transport):
     def __init__(self, parsed_url):
-        if not has_socket:
-            raise ImportError('UDPTransport requires the socket module')
+        super(BaseUDPTransport, self).__init__()
         self.check_scheme(parsed_url)
-
         self._parsed_url = parsed_url
 
     def send(self, data, headers):
@@ -101,21 +97,7 @@ class UDPTransport(Transport):
             return
 
         host, port = self._parsed_url.netloc.split(':')
-
-        udp_socket = None
-        try:
-            udp_socket = socket(AF_INET, SOCK_DGRAM)
-            udp_socket.setblocking(False)
-            udp_socket.sendto(auth_header + '\n\n' + data, (host, int(port)))
-        except socket_error:
-            # as far as I understand things this simply can't happen,
-            # but still, it can't hurt
-            pass
-        finally:
-            # Always close up the socket when we're done
-            if udp_socket is not None:
-                udp_socket.close()
-                udp_socket = None
+        self._send_data(auth_header + '\n\n' + data, (host, int(port)))
 
     def compute_scope(self, url, scope):
         path_bits = url.path.rsplit('/', 1)
@@ -139,6 +121,31 @@ class UDPTransport(Transport):
             'SENTRY_SECRET_KEY': url.password,
         })
         return scope
+
+
+class UDPTransport(BaseUDPTransport):
+    scheme = ['udp']
+
+    def __init__(self, parsed_url):
+        super(UDPTransport, self).__init__(parsed_url)
+        if not has_socket:
+            raise ImportError('UDPTransport requires the socket module')
+
+    def _send_data(self, data, addr):
+        udp_socket = None
+        try:
+            udp_socket = socket(AF_INET, SOCK_DGRAM)
+            udp_socket.setblocking(False)
+            udp_socket.sendto(data, addr)
+        except socket_error:
+            # as far as I understand things this simply can't happen,
+            # but still, it can't hurt
+            pass
+        finally:
+            # Always close up the socket when we're done
+            if udp_socket is not None:
+                udp_socket.close()
+                udp_socket = None
 
 
 class HTTPTransport(Transport):
@@ -235,6 +242,20 @@ class TwistedHTTPTransport(HTTPTransport):
         d = twisted.web.client.getPage(self._url, method='POST', postdata=data, headers=headers)
         d.addErrback(lambda f: self.logger.error(
             'Cannot send error to sentry: %s', f.getTraceback()))
+
+
+class TwistedUDPTransport(BaseUDPTransport):
+    scheme = ['twisted+udp']
+
+    def __init__(self, parsed_url):
+        super(TwistedUDPTransport, self).__init__(parsed_url)
+        if not has_twisted:
+            raise ImportError('TwistedUDPTransport requires twisted.')
+        self.protocol = twisted.internet.protocol.DatagramProtocol()
+        twisted.internet.reactor.listenUDP(0, self.protocol)
+
+    def _send_data(self, data, addr):
+        self.protocol.transport.write(data, addr)
 
 
 class TornadoHTTPTransport(HTTPTransport):
