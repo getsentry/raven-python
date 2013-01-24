@@ -31,10 +31,7 @@ class CeleryClient(CeleryMixin, Client):
 
 class CeleryFilter(object):
     def filter(self, record):
-        if record.funcName in ('_log_error',):
-            return 0
-        else:
-            return 1
+        return record.funcName not in ('_log_error',)
 
 
 def register_signal(client):
@@ -48,16 +45,31 @@ def register_signal(client):
                 'args': args,
                 'kwargs': kwargs,
             })
+
     task_failure.connect(process_failure_signal, weak=False)
+
+
+def register_logger_signal(client, logger=None):
+    import logging
+
+    if logger is None:
+        logger = logging.getLogger()
+        filter_ = CeleryFilter()
+        handler = SentryHandler(client)
+        handler.setLevel(logging.ERROR)
+        handler.addFilter(filter_)
 
     def process_logger_event(sender, logger, loglevel, logfile, format,
                              colorize, **kw):
-        import logging
-        logger = logging.getLogger()
-        handler = SentryHandler(client)
-        if handler.__class__ in map(type, logger.handlers):
-            return False
-        handler.setLevel(logging.ERROR)
-        handler.addFilter(CeleryFilter())
+        # Attempt to find an existing SentryHandler, and if it exists ensure
+        # that the CeleryFilter is installed.
+        # If one is found, we do not attempt to install another one.
+        for h in logger.handlers:
+            if type(h) == SentryHandler:
+                if not any(type(f) == CeleryFilter for f in h.filters):
+                    h.addFilter(filter_)
+                return False
+
         logger.addHandler(handler)
+
     after_setup_logger.connect(process_logger_event, weak=False)
