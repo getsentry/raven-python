@@ -199,6 +199,6 @@ def register_serializers():
     import raven.contrib.django.serializers  # NOQA
 
 if ('raven.contrib.django' in django_settings.INSTALLED_APPS
-      or 'raven.contrib.django_compat' in django_settings.INSTALLED_APPS):
+      or 'raven.contrib.django.raven_compat' in django_settings.INSTALLED_APPS):
     register_handlers()
     register_serializers()
