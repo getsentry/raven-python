@@ -231,7 +231,7 @@ def get_stack_info(frames, list_max_length=None, string_max_length=None):
         frame_result = {
             'abs_path': abs_path,
             'filename': filename,
-            'module': module_name or '<unknown>',
+            'module': module_name or None,
             'function': function or '<unknown>',
             'lineno': lineno + 1,
             'vars': transform(f_locals, list_max_length=list_max_length,

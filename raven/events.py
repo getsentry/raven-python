@@ -72,6 +72,8 @@ class Exception(BaseEvent):
                 string_max_length=self.client.string_max_length))
 
             exc_module = getattr(exc_type, '__module__', None)
+            if exc_module:
+                exc_module = str(exc_module)
             exc_type = getattr(exc_type, '__name__', '<unknown>')
         finally:
             if new_exc_info:
@@ -86,7 +88,7 @@ class Exception(BaseEvent):
             'sentry.interfaces.Exception': {
                 'value': to_unicode(exc_value),
                 'type': str(exc_type),
-                'module': str(exc_module),
+                'module': exc_module,
             },
             'sentry.interfaces.Stacktrace': {
                 'frames': frames

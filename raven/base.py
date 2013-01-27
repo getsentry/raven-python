@@ -260,6 +260,16 @@ class Client(object):
                 for frame in data['sentry.interfaces.Stacktrace']['frames']:
                     if frame.get('in_app') is not None:
                         continue
+
+                    if frame.get('module') and frame.get('function'):
+                        func_name = '%s.%s' % (frame['module'], frame['module'])
+                    elif frame.get('module'):
+                        func_name = frame['module']
+                    elif frame.get('function'):
+                        func_name = frame['function']
+                    else:
+                        func_name = ''
+
                     func_name = '%s.%s' % (frame.get('module') or '<unknown>',
                         frame.get('function') or '<unknown>')
                     frame['in_app'] = (any(func_name.startswith(x)
