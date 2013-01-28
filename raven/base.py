@@ -157,16 +157,16 @@ class Client(object):
         self.secret_key = secret_key
         self.project = project or defaults.PROJECT
 
-        self.include_paths = set(o.get('include_paths') or defaults.INCLUDE_PATHS)
-        self.exclude_paths = set(o.get('exclude_paths') or defaults.EXCLUDE_PATHS)
+        self.include_paths = set(o.get('include_paths', defaults.INCLUDE_PATHS) or [])
+        self.exclude_paths = set(o.get('exclude_paths', defaults.EXCLUDE_PATHS) or [])
         self.name = unicode(o.get('name') or defaults.NAME)
         self.auto_log_stacks = bool(o.get('auto_log_stacks') or
                 defaults.AUTO_LOG_STACKS)
         self.string_max_length = int(o.get('string_max_length') or
                 defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
-        self.site = o.get('site') or defaults.SITE
-        self.processors = o.get('processors') or defaults.PROCESSORS
+        self.site = o.get('site', defaults.SITE)
+        self.processors = o.get('processors', defaults.PROCESSORS) or ()
 
         context = o.get('context')
         if context is None:
