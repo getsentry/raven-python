@@ -196,7 +196,7 @@ If supported, the timeout value for sending messages to remote.
 
 ::
 
-    timeout = 5
+    timeout = 1
 
 processors
 ~~~~~~~~~~
