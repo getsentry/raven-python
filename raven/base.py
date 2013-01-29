@@ -96,8 +96,7 @@ class Client(object):
     >>> client = Client()
 
     >>> # Specify a DSN explicitly
-    >>> client =
-    >>> Client(dsn='https://public_key:secret_key@sentry.local/project_id')
+    >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
 
     >>> # Configure the client manually
     >>> client = Client(
