@@ -89,14 +89,16 @@ def get_culprit(frames, *args, **kwargs):
 
     best_guess = None
     culprit = None
-    for frame in frames:
+    for frame in reversed(frames):
         try:
             culprit = '%s in %s' % (frame.get('module') or '<unknown module>',
                 frame.get('function') or '<unknown function>')
         except KeyError:
             continue
 
-        if frame.get('in_app', False):
+        if frame.get('in_app'):
+            return culprit
+        elif not best_guess:
             best_guess = culprit
         elif best_guess:
             break
