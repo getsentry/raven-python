@@ -59,7 +59,7 @@ class SentryHandler(logbook.Handler):
 
     def _emit(self, record):
         data = {
-            'level': record.level,
+            'level': logbook.get_level_name(record.level).lower(),
             'logger': record.channel,
         }
 
