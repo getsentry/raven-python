@@ -53,4 +53,4 @@ if getattr(settings, 'DATABASES', None):
                 return u'<%s: model=%s>' % (qs_name, value.model.__name__)
             return u'<%s: (Unbound)>' % (qs_name,)
 
-register(QuerySetSerializer)
+    register(QuerySetSerializer)
