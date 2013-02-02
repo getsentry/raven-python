@@ -41,14 +41,6 @@ PUBLIC_KEY = None
 # from this module, the specific logic is within the SiteFilter
 SITE = None
 
-# Extending this allow you to ignore module prefixes when we attempt to
-# discover which function an error comes from (typically a view)
-EXCLUDE_PATHS = []
-
-# By default Sentry only looks at modules in INSTALLED_APPS for drilling down
-# where an exception is located
-INCLUDE_PATHS = []
-
 # The maximum number of elements to store for a list-like structure.
 MAX_LENGTH_LIST = 50
 
