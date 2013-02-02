@@ -25,6 +25,7 @@ from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import client, get_client, sentry_exception_handler
 from raven.contrib.django.middleware.wsgi import Sentry
+from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
 from raven.utils.serializer import transform
 
@@ -432,6 +433,18 @@ class DjangoClientTest(TestCase):
         tags = event['tags']
         assert 'site' in event['tags']
         assert tags['site'] == u'example.com'
+
+
+class DjangoTemplateTagTest(TestCase):
+    @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
+    def test_sentry_public_dsn_no_args(self, get_public_dsn):
+        sentry_public_dsn()
+        get_public_dsn.assert_called_once_with()
+
+    @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
+    def test_sentry_public_dsn_no_args(self, get_public_dsn):
+        sentry_public_dsn('https')
+        get_public_dsn.assert_called_once_with('https')
 
 
 class DjangoLoggingTest(TestCase):

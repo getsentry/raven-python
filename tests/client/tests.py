@@ -160,6 +160,16 @@ class ClientTest(TestCase):
         self.assertEquals(client.public_key, 'public')
         self.assertEquals(client.secret_key, 'secret')
 
+    def test_get_public_dsn(self):
+        client = Client('threaded+http://public:secret@example.com/1')
+        public_dsn = client.get_public_dsn()
+        self.assertEquals(public_dsn, '//public@example.com/1')
+
+    def test_get_public_dsn_override_scheme(self):
+        client = Client('threaded+http://public:secret@example.com/1')
+        public_dsn = client.get_public_dsn('https')
+        self.assertEquals(public_dsn, 'https://public@example.com/1')
+
     def test_explicit_message_on_message_event(self):
         self.client.captureMessage(message='test', data={
             'message': 'foo'
