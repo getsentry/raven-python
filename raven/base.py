@@ -203,6 +203,29 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
+    def _get_public_dsn(self):
+        url = urlparse(self.servers[0])
+        netloc = url.hostname
+        if url.port:
+            netloc += ':%s' % url.port
+        path = url.path.replace('api/store/', self.project)
+        return '//%s@%s%s' % (self.public_key, netloc, path)
+
+    def get_public_dsn(self, scheme=None):
+        """
+        Returns a public DSN which is consumable by raven-js
+
+        >>> # Return scheme-less DSN
+        >>> print client.get_public_dsn()
+
+        >>> # Specify a scheme to use (http or https)
+        >>> print client.get_public_dsn('https')
+        """
+        url = self._get_public_dsn()
+        if not scheme:
+            return url
+        return '%s:%s' % (scheme, url)
+
     def build_msg(self, event_type, data=None, date=None,
             time_spent=None, extra=None, stack=None, public_key=None,
             tags=None, **kwargs):
