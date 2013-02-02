@@ -24,6 +24,24 @@ You'll be referencing the client slightly differently in Django as well::
     client.captureException()
 
 
+Using with Raven.js
+-------------------
+
+A Django template tag is provided to render a proper public DSN inside your templates, you must first load ``raven``::
+
+    {% load raven %}
+
+Inside your template, you can now use::
+
+    <script>Raven.config('{% sentry_public_dsn %}').install()</script>
+
+By default, the DSN is generated in a protocol relative fashion, e.g. ``//public@example.com/1``. If you need a specific protocol, you can override::
+
+    {% sentry_public_dsn 'https' %}
+
+See `Raven.js documentation <http://raven-js.readthedocs.org/>`_ for more information.
+
+
 Integration with :mod:`logging`
 -------------------------------
 
