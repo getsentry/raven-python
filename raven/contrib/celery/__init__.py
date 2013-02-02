@@ -38,8 +38,15 @@ class CeleryFilter(logging.Filter):
 def register_signal(client):
     def process_failure_signal(sender, task_id, exception, args, kwargs,
                                traceback, einfo, **kw):
+        if hasattr(einfo, 'exc_info'):
+            # for Celery 2.4 or later
+            exc_info = einfo.exc_info
+        else:
+            # for Celery before 2.4
+            exc_info = (type(exception), exception, traceback)
+
         client.captureException(
-            exc_info=einfo.exc_info,
+            exc_info=exc_info,
             extra={
                 'task_id': task_id,
                 'task': sender,
