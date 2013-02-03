@@ -34,6 +34,9 @@ __all__ = ('Client',)
 
 PLATFORM_NAME = 'python'
 
+# singleton for the client
+Raven = None
+
 
 class ModuleProxyCache(dict):
     def __missing__(self, key):
@@ -120,6 +123,8 @@ class Client(object):
     _registry = TransportRegistry(transports=default_transports)
 
     def __init__(self, dsn=None, **options):
+        global Raven
+
         o = options
 
         # configure loggers first
@@ -179,6 +184,9 @@ class Client(object):
         # servers may be set to a NoneType (for Django)
         if not self.is_enabled():
             self.logger.info('Raven is not configured (disabled). Please see documentation for more information.')
+
+        if Raven is None:
+            Raven = self
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):

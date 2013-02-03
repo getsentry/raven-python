@@ -63,6 +63,15 @@ class ClientTest(TestCase):
     def setUp(self):
         self.client = TempStoreClient()
 
+    def test_first_client_is_singleton(self):
+        from raven import base
+        base.Raven = None
+
+        client = Client()
+        client2 = Client()  # NOQA
+
+        assert base.Raven is client
+
     @mock.patch('raven.base.Client._send_remote')
     @mock.patch('raven.base.ClientState.should_try')
     def test_send_remote_failover(self, should_try, send_remote):
