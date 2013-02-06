@@ -7,6 +7,7 @@ raven.transport.threaded
 """
 
 import atexit
+import logging
 import time
 import threading
 import os
@@ -15,6 +16,8 @@ from Queue import Queue
 from raven.transport.base import HTTPTransport
 
 DEFAULT_TIMEOUT = 10
+
+logger = logging.getLogger('sentry.errors')
 
 
 class AsyncWorker(object):
@@ -77,7 +80,11 @@ class AsyncWorker(object):
             if record is self._terminator:
                 break
             callback, args, kwargs = record
-            callback(*args, **kwargs)
+            try:
+                callback(*args, **kwargs)
+            except Exception:
+                logger.error('Failed processing job', exc_info=True)
+
             time.sleep(0)
 
 
