@@ -25,8 +25,7 @@ from raven.context import Context
 from raven.utils import json, get_versions, get_auth_header
 from raven.utils.encoding import to_string
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames, \
-  get_culprit
+from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
 from raven.transport.registry import TransportRegistry, default_transports
 
@@ -293,20 +292,13 @@ class Client(object):
                     if frame.get('in_app') is not None:
                         continue
 
-                    if frame.get('module') and frame.get('function'):
-                        func_name = '%s.%s' % (frame['module'], frame['module'])
-                    elif frame.get('module'):
-                        func_name = frame['module']
-                    elif frame.get('function'):
-                        func_name = frame['function']
-                    else:
-                        func_name = ''
+                    path = frame.get('module')
+                    if not path:
+                        continue
 
-                    func_name = '%s.%s' % (frame.get('module') or '<unknown>',
-                        frame.get('function') or '<unknown>')
-                    frame['in_app'] = (any(func_name.startswith(x)
+                    frame['in_app'] = (any(path.startswith(x)
                         for x in self.include_paths)
-                            and not any(func_name.startswith(x)
+                            and not any(path.startswith(x)
                                 for x in self.exclude_paths))
 
             if not culprit:

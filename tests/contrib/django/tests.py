@@ -265,7 +265,7 @@ class DjangoClientTest(TestCase):
 
     def test_exclude_modules_view(self):
         exclude_paths = self.raven.exclude_paths
-        self.raven.exclude_paths = ['tests.views.decorated_raise_exc']
+        self.raven.exclude_paths = ['tests.views']
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
 
         self.assertEquals(len(self.raven.events), 1)
@@ -276,14 +276,14 @@ class DjangoClientTest(TestCase):
 
     def test_include_modules(self):
         include_paths = self.raven.include_paths
-        self.raven.include_paths = ['django.shortcuts.get_object_or_404']
+        self.raven.include_paths = ['django.shortcuts']
 
         self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        self.assertEquals(event['culprit'], 'django.shortcuts in get_object_or_404')
+        assert event['culprit'].startswith('django.shortcuts in ')
         self.raven.include_paths = include_paths
 
     def test_template_name_as_view(self):

@@ -79,6 +79,14 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     return pre_context, context_line, post_context
 
 
+def label_from_frame(frame):
+    module = frame.get('module') or '?'
+    function = frame.get('function') or '?'
+    if module == function == '?':
+        return ''
+    return '%s in %s' % (module, function)
+
+
 def get_culprit(frames, *args, **kwargs):
     # We iterate through each frame looking for a deterministic culprit
     # When one is found, we mark it as last "best guess" (best_guess) and then
@@ -90,10 +98,9 @@ def get_culprit(frames, *args, **kwargs):
     best_guess = None
     culprit = None
     for frame in reversed(frames):
-        try:
-            culprit = '%s in %s' % (frame.get('module') or '<unknown module>',
-                frame.get('function') or '<unknown function>')
-        except KeyError:
+        culprit = label_from_frame(frame)
+        if not culprit:
+            culprit = None
             continue
 
         if frame.get('in_app'):

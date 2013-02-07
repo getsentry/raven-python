@@ -79,7 +79,11 @@ class DjangoClient(Client):
         stacktrace = data.get('sentry.interfaces.Stacktrace')
         if stacktrace:
             for frame in stacktrace['frames']:
-                if frame.get('module', '').startswith('django.'):
+                module = frame.get('module')
+                if not module:
+                    continue
+
+                if module.startswith('django.'):
                     frame['in_app'] = False
 
         if 'django.contrib.sites' in settings.INSTALLED_APPS:

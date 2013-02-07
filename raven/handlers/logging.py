@@ -15,7 +15,7 @@ import traceback
 
 from raven.base import Client
 from raven.utils.encoding import to_string
-from raven.utils.stacks import iter_stack_frames
+from raven.utils.stacks import iter_stack_frames, label_from_frame
 
 RESERVED = ('stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated', 'tags')
 
@@ -142,7 +142,9 @@ class SentryHandler(logging.Handler, object):
 
         # HACK: discover a culprit when we normally couldn't
         elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
-            data['culprit'] = '%s in %s' % (record.name or '<unknown module>', record.funcName or '<unknown function>')
+            culprit = label_from_frame({'module': record.name, 'function': record.funcName})
+            if culprit:
+                data['culprit'] = culprit
 
         data['level'] = record.levelno
         data['logger'] = record.name
