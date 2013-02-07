@@ -8,6 +8,7 @@ raven.contrib.django.serializers
 from __future__ import absolute_import
 
 from django.conf import settings
+from django.http import HttpRequest
 from django.utils.functional import Promise
 from raven.utils.serializer import Serializer, register
 
@@ -40,6 +41,16 @@ class PromiseSerializer(Serializer):
         return self.recurse(value, **kwargs)
 
 register(PromiseSerializer)
+
+
+class HttpRequestSerializer(Serializer):
+    types = (HttpRequest,)
+
+    def serialize(self, value, **kwargs):
+        return u'<%s at 0x%s>' % (type(value).__name__, id(value))
+
+register(HttpRequestSerializer)
+
 
 if getattr(settings, 'DATABASES', None):
     from django.db.models.query import QuerySet
