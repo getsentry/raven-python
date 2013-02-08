@@ -82,13 +82,13 @@ class DjangoClient(Client):
                 if frame.get('module', '').startswith('django.'):
                     frame['in_app'] = False
 
-        if (not self.site) and 'django.contrib.sites' in settings.INSTALLED_APPS:
+        if not self.site and 'django.contrib.sites' in settings.INSTALLED_APPS:
             try:
                 from django.contrib.sites import models as site_models
                 site = site_models.Site.objects.get_current()
                 site_name = site.name or site.domain
                 data['tags'].setdefault('site', site_name)
-            except:
+            except Exception:
                 # Database error? Fallback to the id
                 data['tags'].setdefault('site', settings.SITE_ID)
 
