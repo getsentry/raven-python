@@ -434,6 +434,28 @@ class DjangoClientTest(TestCase):
         assert 'site' in event['tags']
         assert tags['site'] == u'example.com'
 
+    def test_adds_site_to_tags_fallback(self):
+        with Settings(SITE_ID=12345):  # nonexistant site, should fallback to SITE_ID
+            self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
+
+            self.assertEquals(len(self.raven.events), 1)
+            event = self.raven.events.pop(0)
+
+            tags = event['tags']
+            assert 'site' in event['tags']
+            assert tags['site'] == 12345
+
+    def test_settings_site_overrides_contrib(self):
+        self.raven.site = 'FOO'
+        self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
+
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+
+        tags = event['tags']
+        assert 'site' in event['tags']
+        assert tags['site'] == 'FOO'
+
 
 class DjangoTemplateTagTest(TestCase):
     @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
