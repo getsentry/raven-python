@@ -46,11 +46,14 @@ class DjangoClient(Client):
         from django.contrib.auth.models import User, AnonymousUser
 
         if request.method != 'GET':
-            try:
-                data = request.raw_post_data and request.raw_post_data or request.POST
-            except Exception:
-                # assume we had a partial read:
-                data = '<unavailable>'
+            if hasattr(request, 'body'):
+                data = request.body
+            else:
+                try:
+                    data = request.raw_post_data and request.raw_post_data or request.POST
+                except Exception:
+                    # assume we had a partial read:
+                    data = '<unavailable>'
         else:
             data = None
 

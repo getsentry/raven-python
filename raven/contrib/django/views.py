@@ -87,7 +87,10 @@ def report(request, project_id=None):
         return HttpResponse()
 
     if request.method == 'POST':
-        data = request.raw_post_data
+        if hasattr(request, 'body'):
+            data = request.body
+        else:
+            data = request.raw_post_data
     else:
         data = request.GET.get('sentry_data')
 
