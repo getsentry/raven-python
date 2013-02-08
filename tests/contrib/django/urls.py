@@ -1,8 +1,14 @@
 from __future__ import absolute_import
 
 from django.conf import settings
-from django.conf.urls.defaults import *
+try:
+    from django.conf.urls import *
+except ImportError:
+    # for Django version less then 1.4
+    from django.conf.urls.defaults import *  # NOQA
+
 from django.http import HttpResponse
+
 
 def handler500(request):
     if getattr(settings, 'BREAK_THAT_500', False):
