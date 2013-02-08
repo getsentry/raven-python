@@ -8,15 +8,22 @@ raven.contrib.django.middleware
 
 from __future__ import absolute_import
 
-from django.middleware.common import _is_ignorable_404
+from django.conf import settings
 from raven.contrib.django.models import client
 import threading
 import logging
 
 
+def is_ignorable_404(uri):
+    """
+    Returns True if a 404 at the given URL *shouldn't* notify the site managers.
+    """
+    return any(pattern.search(uri) for pattern in settings.IGNORABLE_404_URLS)
+
+
 class Sentry404CatchMiddleware(object):
     def process_response(self, request, response):
-        if response.status_code != 404 or _is_ignorable_404(request.get_full_path()):
+        if response.status_code != 404 or is_ignorable_404(request.get_full_path()):
             return response
         data = client.get_data_from_request(request)
         data.update({
