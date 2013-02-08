@@ -169,6 +169,7 @@ class Client(object):
                 defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
         self.site = o.get('site', defaults.SITE)
+        self.include_versions = o.get('include_versions', True)
         self.processors = o.get('processors')
         if self.processors is None:
             self.processors = defaults.PROCESSORS
@@ -196,6 +197,8 @@ class Client(object):
             yield self.module_cache[processor](self)
 
     def get_module_versions(self):
+        if not self.include_versions:
+            return {}
         return get_versions(self.include_paths)
 
     def get_ident(self, result):
