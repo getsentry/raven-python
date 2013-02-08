@@ -355,7 +355,8 @@ class DjangoClientTest(TestCase):
         }
         with Settings(**extra_settings):
             resp = self.client.get('/non-existant-page')
-            self.assertEquals(resp.status_code, 404)
+            assert resp.status_code == 404
+            assert self.raven.events == []
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
