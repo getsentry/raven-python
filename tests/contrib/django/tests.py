@@ -70,6 +70,11 @@ class TempStoreClient(DjangoClient):
         return True
 
 
+class DisabledTempStoreClient(TempStoreClient):
+    def is_enabled(self, **kwargs):
+        return False
+
+
 class Settings(object):
     """
     Allows you to define settings that are required for this function to work.
@@ -342,6 +347,15 @@ class DjangoClientTest(TestCase):
             self.assertEquals(http['method'], 'GET')
             self.assertEquals(http['query_string'], '')
             self.assertEquals(http['data'], None)
+
+    def test_404_middleware_when_disabled(self):
+        extra_settings = {
+            'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
+            'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledTempStoreClient',
+        }
+        with Settings(**extra_settings):
+            resp = self.client.get('/non-existant-page')
+            self.assertEquals(resp.status_code, 404)
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
