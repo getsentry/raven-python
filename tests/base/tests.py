@@ -217,7 +217,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(frames['frames']), 1)
         frame = frames['frames'][0]
         self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
-        self.assertEquals(frame['filename'], 'tests/client/tests.py')
+        self.assertEquals(frame['filename'], 'tests/base/tests.py')
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
@@ -256,7 +256,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(frames['frames']), 1)
         frame = frames['frames'][0]
         self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
-        self.assertEquals(frame['filename'], 'tests/client/tests.py')
+        self.assertEquals(frame['filename'], 'tests/base/tests.py')
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test_exception_context_manager')
         self.assertTrue('timestamp' in event)
