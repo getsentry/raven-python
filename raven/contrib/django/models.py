@@ -177,7 +177,7 @@ def register_handlers():
         exception_handler = sentry_exception_handler
 
     # Connect to Django's internal signal handler
-    got_request_exception.connect(exception_handler)
+    got_request_exception.connect(exception_handler, weak=False)
 
     # If Celery is installed, register a signal handler
     if 'djcelery' in django_settings.INSTALLED_APPS:
