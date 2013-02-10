@@ -95,7 +95,7 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        return to_string(value)[:string_max_length]
+        return to_string(value).decode('utf8')[:string_max_length].encode('utf8')
 
 
 class TypeSerializer(Serializer):
