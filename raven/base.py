@@ -231,6 +231,8 @@ class Client(object):
         >>> # Specify a scheme to use (http or https)
         >>> print client.get_public_dsn('https')
         """
+        if not self.is_enabled():
+            return
         url = self._get_public_dsn()
         if not scheme:
             return url
