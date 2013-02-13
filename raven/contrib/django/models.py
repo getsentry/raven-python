@@ -45,7 +45,7 @@ class ProxyClient(object):
 
     __dict__ = property(lambda o: get_client().__dict__)
 
-    __repr__ = lambda: repr(get_client())
+    __repr__ = lambda x: repr(get_client())
     __getattr__ = lambda x, o: getattr(get_client(), o)
     __setattr__ = lambda x, o, v: setattr(get_client(), o, v)
     __delattr__ = lambda x, o: delattr(get_client(), o)
