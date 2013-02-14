@@ -248,5 +248,5 @@ class SentryMixin(object):
         """Override implementation to report all exceptions to sentry.
         """
         rv = super(SentryMixin, self).write_error(status_code, **kwargs)
-        self.captureException(exc_info=kwargs['exc_info'])
+        self.captureException(exc_info=kwargs.get('exc_info'))
         return rv
