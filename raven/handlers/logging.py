@@ -123,8 +123,6 @@ class SentryHandler(logging.Handler, object):
         date = datetime.datetime.utcfromtimestamp(record.created)
         event_type = 'raven.events.Message'
         handler_kwargs = {'message': record.msg, 'params': record.args}
-        if hasattr(record, 'tags'):
-            handler_kwargs['tags'] = record.tags
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
@@ -148,6 +146,9 @@ class SentryHandler(logging.Handler, object):
 
         data['level'] = record.levelno
         data['logger'] = record.name
+
+        if hasattr(record, 'tags'):
+            kwargs['tags'] = record.tags
 
         kwargs.update(handler_kwargs)
 

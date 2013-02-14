@@ -149,6 +149,26 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['extra']['data'], 'foo')
 
+    def test_tags(self):
+        record = self.make_record('Message', extra={'tags': {'foo': 'bar'}})
+        self.handler.emit(record)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['tags'] == {'foo': 'bar'}
+
+    def test_tags_on_error(self):
+        try:
+            raise ValueError('This is a test ValueError')
+        except ValueError:
+            record = self.make_record('Message', extra={'tags': {'foo': 'bar'}}, exc_info=sys.exc_info())
+        self.handler.emit(record)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['tags'] == {'foo': 'bar'}
+
+
 
 class LoggingHandlerTest(TestCase):
     def test_client_arg(self):
