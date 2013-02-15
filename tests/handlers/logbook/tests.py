@@ -87,7 +87,7 @@ class LogbookHandlerTest(TestCase):
             self.assertEquals(msg['params'], ())
 
             # test args
-            logger.info('This is a test of %s', 'args')
+            logger.info('This is a test of {0}', 'args')
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
             self.assertEquals(event['message'], 'This is a test of args')
@@ -95,7 +95,7 @@ class LogbookHandlerTest(TestCase):
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test of %s')
+            self.assertEquals(msg['message'], 'This is a test of {0}')
             self.assertEquals(msg['params'], ('args',))
 
     def test_client_arg(self):

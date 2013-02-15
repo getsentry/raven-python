@@ -133,7 +133,7 @@ class SentryHandler(logging.Handler, object):
             handler = self.client.get_handler(event_type)
             data.update(handler.capture(**handler_kwargs))
             # ensure message is propagated, otherwise the exception will overwrite it
-            data['message'] = handler.to_string(data)
+            data['message'] = record.message
 
             event_type = 'raven.events.Exception'
             handler_kwargs = {'exc_info': record.exc_info}

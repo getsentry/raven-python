@@ -39,11 +39,9 @@ class SentryHandler(logbook.Handler):
 
     def emit(self, record):
         try:
-            self.format(record)
-
             # Avoid typical config issues by overriding loggers behavior
             if record.channel.startswith('sentry.errors'):
-                print >> sys.stderr, to_string(record.message)
+                print >> sys.stderr, to_string(self.format(record))
                 return
 
             return self._emit(record)
@@ -61,18 +59,23 @@ class SentryHandler(logbook.Handler):
         data = {
             'level': logbook.get_level_name(record.level).lower(),
             'logger': record.channel,
+            'message': self.format(record),
         }
+
+        event_type = 'raven.events.Message'
+        handler_kwargs = {'message': record.msg, 'params': record.args}
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info is True or (record.exc_info and all(record.exc_info)):
-            handler = self.client.get_handler('raven.events.Exception')
+            handler = self.client.get_handler(event_type)
+            data.update(handler.capture(**handler_kwargs))
 
-            data.update(handler.capture(exc_info=record.exc_info))
+            event_type = 'raven.events.Exception'
+            handler_kwargs = {'exc_info': record.exc_info}
 
-        return self.client.capture('Message',
-            message=record.msg,
-            params=record.args,
+        return self.client.capture(event_type,
             data=data,
             extra=record.extra,
+            **handler_kwargs
         )
