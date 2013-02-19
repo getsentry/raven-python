@@ -4,8 +4,8 @@ Configuring Tornado
 Setup
 -----
 
-The first thing you'll need to do is to initialize Raven under your
-application
+The first thing you'll need to do is to initialize sentry client under
+your application
 
 .. code-block:: python
    :emphasize-lines: 2,11,12,13
@@ -28,13 +28,20 @@ application
 Usage
 -----
 
-Once you've configured the Sentry application it will automatically
-capture uncaught exceptions within Tornado.
-
 Once the sentry client is attached to the application, request handlers
-can send events using the shortcuts defined in the `SentryMixin` class.
+can automatically capture uncaught exceptions by inheriting the `SentryMixin` class.
+
+.. code-block:: python
+
+    import tornado.web
+    from raven.contrib.tornado import SentryMixin
+
+    class UncaughtExceptionExampleHandler(SentryMixin, tornado.web.RequestHandler):
+        def get(self):
+            1/0
 
 
+You can also send events manually using the shortcuts defined in `SentryMixin`.
 The shortcuts can be used for both asynchronous and synchronous usage.
 
 
@@ -87,4 +94,3 @@ Synchronous
         def get(self):
             self.write("You requested the main page")
             self.captureMessage("Request for main page served")
-
