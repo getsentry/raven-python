@@ -19,6 +19,7 @@ This document describes configuration options available to Sentry.
    wsgi
    zerorpc
    zope
+   tornado
 
 
 Configuring the Client
