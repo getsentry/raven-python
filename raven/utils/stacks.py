@@ -246,7 +246,7 @@ def get_stack_info(frames, list_max_length=None, string_max_length=None):
             'vars': transform(f_locals, list_max_length=list_max_length,
                 string_max_length=string_max_length),
         }
-        if context_line:
+        if context_line is not None:
             frame_result.update({
                 'pre_context': pre_context,
                 'context_line': context_line,
