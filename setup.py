@@ -20,17 +20,35 @@ for m in ('multiprocessing', 'billiard'):
     except ImportError:
         pass
 
-import os.path
 from setuptools import setup, find_packages
 
-tests_require = open(os.path.join(
-    os.path.dirname(__file__), 'test-requirements.txt'),
-).readlines()
+dev_requires = [
+    'flake8>=1.6',
+]
+
+tests_require = [
+    'blinker>=1.1',
+    'celery>=2.5',
+    'Django>=1.2',
+    'django-celery>=2.5',
+    'exam>=0.5.2',
+    'Flask>=0.8',
+    'logbook',
+    'mock',
+    'nose',
+    'pep8',
+    'pytz',
+    'pytest',
+    'pytest-django',
+    'tornado',
+    'unittest2',
+    'webob',
+]
 
 
 setup(
     name='raven',
-    version='3.1.13',
+    version='3.1.14',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',
@@ -38,8 +56,10 @@ setup(
     long_description=__doc__,
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,
-    tests_require=tests_require,
-    extras_require={'test': tests_require},
+    extras_require={
+        'tests': tests_require,
+        'dev': dev_requires,
+    },
     test_suite='runtests.runtests',
     include_package_data=True,
     entry_points={
