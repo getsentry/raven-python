@@ -13,6 +13,7 @@ from celery.tests.utils import with_eager_tasks
 from StringIO import StringIO
 
 from django.conf import settings
+from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
@@ -471,15 +472,23 @@ class DjangoClientTest(TestCase):
         assert 'site' in event['tags']
         assert tags['site'] == 'FOO'
 
+    @mock.patch.object(WSGIRequest, 'build_absolute_uri')
+    def test_suspicious_operation_in_build_absolute_uri(self, build_absolute_uri):
+        build_absolute_uri.side_effect = SuspiciousOperation()
+        request = make_request()
+        result = self.raven.get_data_from_request(request)
+        build_absolute_uri.assert_called_once_with()
+        assert 'sentry.interfaces.Http' not in result
+
 
 class DjangoTemplateTagTest(TestCase):
     @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
     def test_sentry_public_dsn_no_args(self, get_public_dsn):
         sentry_public_dsn()
-        get_public_dsn.assert_called_once_with()
+        get_public_dsn.assert_called_once_with(None)
 
     @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
-    def test_sentry_public_dsn_no_args(self, get_public_dsn):
+    def test_sentry_public_dsn_with_https(self, get_public_dsn):
         sentry_public_dsn('https')
         get_public_dsn.assert_called_once_with('https')
 

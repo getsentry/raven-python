@@ -11,6 +11,7 @@ from __future__ import absolute_import
 import logging
 
 from django.conf import settings
+from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
@@ -45,6 +46,17 @@ class DjangoClient(Client):
     def get_data_from_request(self, request):
         from django.contrib.auth.models import User, AnonymousUser
 
+        result = {}
+
+        if hasattr(request, 'user') and isinstance(request.user, (User, AnonymousUser)):
+            result['sentry.interfaces.User'] = self.get_user_info(request)
+
+        try:
+            uri = request.build_absolute_uri()
+        except SuspiciousOperation:
+            # Bail early if the URL has an invalid host
+            return result
+
         if request.method != 'GET':
             if hasattr(request, 'body'):
                 data = request.body
@@ -59,20 +71,17 @@ class DjangoClient(Client):
 
         environ = request.META
 
-        result = {
+        result.update({
             'sentry.interfaces.Http': {
                 'method': request.method,
-                'url': request.build_absolute_uri(),
+                'url': uri,
                 'query_string': request.META.get('QUERY_STRING'),
                 'data': data,
                 'cookies': dict(request.COOKIES),
                 'headers': dict(get_headers(environ)),
                 'env': dict(get_environ(environ)),
             }
-        }
-
-        if hasattr(request, 'user') and isinstance(request.user, (User, AnonymousUser)):
-            result['sentry.interfaces.User'] = self.get_user_info(request)
+        })
 
         return result
 
