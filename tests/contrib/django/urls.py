@@ -2,18 +2,23 @@ from __future__ import absolute_import
 
 from django.conf import settings
 try:
-    from django.conf.urls import *
+    from django.conf.urls import url, patterns
 except ImportError:
     # for Django version less then 1.4
-    from django.conf.urls.defaults import *  # NOQA
+    from django.conf.urls.defaults import url, patterns  # NOQA
 
 from django.http import HttpResponse
+
+
+def handler404(request):
+    return HttpResponse('', status=404)
 
 
 def handler500(request):
     if getattr(settings, 'BREAK_THAT_500', False):
         raise ValueError('handler500')
-    return HttpResponse('')
+    return HttpResponse('', status=500)
+
 
 urlpatterns = patterns('',
     url(r'^no-error$', 'tests.contrib.django.views.no_error', name='sentry-no-error'),
