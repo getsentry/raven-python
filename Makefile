@@ -1,8 +1,6 @@
-bootstrap: bootstrap-tests
+bootstrap:
 	pip install -e . --use-mirrors
 	pip install "file://`pwd`#egg=raven[dev]"
-
-bootstrap-tests:
 	pip install "file://`pwd`#egg=raven[tests]"
 
 test: bootstrap-tests lint
