@@ -53,7 +53,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         except (OSError, IOError):
             pass
     if source is None:
-        return None, [], None
+        return None, None, None
 
     encoding = 'ascii'
     for line in source[:2]:
@@ -74,7 +74,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         post_context = [line.strip('\r\n') for line in source[(lineno + 1):upper_bound]]
     except IndexError:
         # the file may have changed since it was loaded into memory
-        return None, [], None
+        return None, None, None
 
     return pre_context, context_line, post_context
 
@@ -216,7 +216,7 @@ def get_stack_info(frames, list_max_length=None, string_max_length=None):
         if lineno is not None and abs_path:
             pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 5, loader, module_name)
         else:
-            pre_context, context_line, post_context = [], None, []
+            pre_context, context_line, post_context = None, None, None
 
         # Try to pull a relative file path
         # This changes /foo/site-packages/baz/bar.py into baz/bar.py
