@@ -39,7 +39,7 @@ tests_require = [
     'pep8',
     'pytz',
     'pytest',
-    'pytest-django',
+    'pytest-django-lite',
     'tornado',
     'unittest2',
     'webob',
