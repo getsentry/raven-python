@@ -64,7 +64,8 @@ class SentryHandler(logbook.Handler):
 
         event_type = 'raven.events.Message'
         handler_kwargs = {'message': record.msg, 'params': record.args}
-
+        if 'tags' in record.kwargs:
+            handler_kwargs['tags'] = record.kwargs['tags']
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info is True or (record.exc_info and all(record.exc_info)):
