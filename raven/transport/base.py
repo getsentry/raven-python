@@ -304,7 +304,7 @@ class EventletHTTPTransport(HTTPTransport):
                 response = eventlet_urllib2.urlopen(req, payload[0],
                                                     self.timeout).read()
             return response
-        except Exception, err:
+        except Exception as err:
             return err
 
     def send(self, data, headers):

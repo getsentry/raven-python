@@ -39,7 +39,7 @@ def force_unicode(s, encoding='utf-8', errors='strict'):
             # errors), so that if s is a SafeString, it ends up being a
             # SafeUnicode at the end.
             s = s.decode(encoding, errors)
-    except UnicodeDecodeError, e:
+    except UnicodeDecodeError as e:
         if not isinstance(s, Exception):
             raise UnicodeDecodeError(s, *e.args)
         else:
