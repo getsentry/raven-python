@@ -92,7 +92,7 @@ def get_versions(module_list=None):
 
             try:
                 version = get_version_from_app(module_name, app)
-            except Exception, e:
+            except Exception as e:
                 logger.exception(e)
                 version = None
 
