@@ -50,7 +50,7 @@ class Serializer(object):
         if _depth >= max_depth:
             try:
                 value = repr(value)
-            except Exception, e:
+            except Exception as e:
                 self.manager.logger.exception(e)
                 return unicode(type(value))
         return self.manager.transform(value, max_depth=max_depth, _depth=_depth, **kwargs)

@@ -11,7 +11,7 @@ __all__ = ('VERSION', 'Client', 'load')
 try:
     VERSION = __import__('pkg_resources') \
         .get_distribution('raven').version
-except Exception, e:
+except Exception as e:
     VERSION = 'unknown'
 
 from raven.base import *  # NOQA

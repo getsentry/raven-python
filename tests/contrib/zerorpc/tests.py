@@ -46,7 +46,7 @@ class ZeroRPCTest(unittest2.TestCase):
 
         try:
             self._client.choice([])
-        except zerorpc.exceptions.RemoteError, ex:
+        except zerorpc.exceptions.RemoteError as ex:
             self.assertEqual(ex.name, 'IndexError')
             self.assertEqual(len(self._sentry.events), 1)
             exc = self._sentry.events[0]['sentry.interfaces.Exception']
