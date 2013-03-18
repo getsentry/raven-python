@@ -30,6 +30,8 @@ def make_client(client_cls, app, dsn=None):
         project=app.config.get('SENTRY_PROJECT'),
         site=app.config.get('SENTRY_SITE_NAME'),
         processors=app.config.get('SENTRY_PROCESSORS'),
+        string_max_length=app.config.get('SENTRY_MAX_LENGTH_STRING'),
+        list_max_length=app.config.get('SENTRY_MAX_LENGTH_LIST'),
     )
 
 
