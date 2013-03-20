@@ -58,14 +58,27 @@ class Transport(object):
     """
     All transport implementations need to subclass this class
 
-    You must implement a send method and the compute_scope method.
+    You must implement a send method (or an async_send method) and the
+    compute_scope method. If you implement async_send you should set
+    the async class attribute to True.
 
     Please see the HTTPTransport class for an example of a
     compute_scope implementation.
     """
+
+    async = False
+
     def check_scheme(self, url):
         if url.scheme not in self.scheme:
             raise InvalidScheme()
+
+    def async_send(self, data, headers, success_cb, error_cb):
+        """
+        Override this method for asynchronous transports. Call
+        `success_cb()` if the send succeeds or `error_cb(exception)`
+        if the send fails.
+        """
+        raise NotImplementedError
 
     def send(self, data, headers):
         """
