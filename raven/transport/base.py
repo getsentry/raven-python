@@ -240,6 +240,7 @@ class GeventedHTTPTransport(HTTPTransport):
 class TwistedHTTPTransport(HTTPTransport):
 
     scheme = ['twisted+http', 'twisted+https']
+    async = True
 
     def __init__(self, parsed_url):
         if not has_twisted:
@@ -251,10 +252,11 @@ class TwistedHTTPTransport(HTTPTransport):
         # remove the twisted+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
-    def send(self, data, headers):
-        d = twisted.web.client.getPage(self._url, method='POST', postdata=data, headers=headers)
-        d.addErrback(lambda f: self.logger.error(
-            'Cannot send error to sentry: %s', f.getTraceback()))
+    def async_send(self, data, headers, success_cb, failure_cb):
+        d = twisted.web.client.getPage(self._url, method='POST', postdata=data,
+                                       headers=headers)
+        d.addCallback(lambda r: success_cb())
+        d.addErrback(lambda f: failure_cb(f.value))
 
 
 class TwistedUDPTransport(BaseUDPTransport):
