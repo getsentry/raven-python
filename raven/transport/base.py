@@ -58,9 +58,8 @@ class Transport(object):
     """
     All transport implementations need to subclass this class
 
-    You must implement a send method (or an async_send method) and the
-    compute_scope method. If you implement async_send you should set
-    the async class attribute to True.
+    You must implement a send method (or an async_send method if
+    sub-classing AsyncTransport) and the compute_scope method.
 
     Please see the HTTPTransport class for an example of a
     compute_scope implementation.
@@ -71,14 +70,6 @@ class Transport(object):
     def check_scheme(self, url):
         if url.scheme not in self.scheme:
             raise InvalidScheme()
-
-    def async_send(self, data, headers, success_cb, error_cb):
-        """
-        Override this method for asynchronous transports. Call
-        `success_cb()` if the send succeeds or `error_cb(exception)`
-        if the send fails.
-        """
-        raise NotImplementedError
 
     def send(self, data, headers):
         """
@@ -92,6 +83,26 @@ class Transport(object):
         You need to override this to compute the SENTRY specific
         additions to the variable scope.  See the HTTPTransport for an
         example.
+        """
+        raise NotImplementedError
+
+
+class AsyncTransport(Transport):
+    """
+    All asynchronous transport implementations should subclass this
+    class.
+
+    You must implement a async_send method (and the compute_scope
+    method as describe on the base Transport class).
+    """
+
+    async = True
+
+    def async_send(self, data, headers, success_cb, error_cb):
+        """
+        Override this method for asynchronous transports. Call
+        `success_cb()` if the send succeeds or `error_cb(exception)`
+        if the send fails.
         """
         raise NotImplementedError
 
@@ -237,7 +248,7 @@ class GeventedHTTPTransport(HTTPTransport):
         self._lock.release()
 
 
-class TwistedHTTPTransport(HTTPTransport):
+class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['twisted+http', 'twisted+https']
     async = True
