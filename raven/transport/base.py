@@ -58,11 +58,15 @@ class Transport(object):
     """
     All transport implementations need to subclass this class
 
-    You must implement a send method and the compute_scope method.
+    You must implement a send method (or an async_send method if
+    sub-classing AsyncTransport) and the compute_scope method.
 
     Please see the HTTPTransport class for an example of a
     compute_scope implementation.
     """
+
+    async = False
+
     def check_scheme(self, url):
         if url.scheme not in self.scheme:
             raise InvalidScheme()
@@ -79,6 +83,26 @@ class Transport(object):
         You need to override this to compute the SENTRY specific
         additions to the variable scope.  See the HTTPTransport for an
         example.
+        """
+        raise NotImplementedError
+
+
+class AsyncTransport(Transport):
+    """
+    All asynchronous transport implementations should subclass this
+    class.
+
+    You must implement a async_send method (and the compute_scope
+    method as describe on the base Transport class).
+    """
+
+    async = True
+
+    def async_send(self, data, headers, success_cb, error_cb):
+        """
+        Override this method for asynchronous transports. Call
+        `success_cb()` if the send succeeds or `error_cb(exception)`
+        if the send fails.
         """
         raise NotImplementedError
 
@@ -224,9 +248,10 @@ class GeventedHTTPTransport(HTTPTransport):
         self._lock.release()
 
 
-class TwistedHTTPTransport(HTTPTransport):
+class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['twisted+http', 'twisted+https']
+    async = True
 
     def __init__(self, parsed_url):
         if not has_twisted:
@@ -238,10 +263,11 @@ class TwistedHTTPTransport(HTTPTransport):
         # remove the twisted+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
-    def send(self, data, headers):
-        d = twisted.web.client.getPage(self._url, method='POST', postdata=data, headers=headers)
-        d.addErrback(lambda f: self.logger.error(
-            'Cannot send error to sentry: %s', f.getTraceback()))
+    def async_send(self, data, headers, success_cb, failure_cb):
+        d = twisted.web.client.getPage(self._url, method='POST', postdata=data,
+                                       headers=headers)
+        d.addCallback(lambda r: success_cb())
+        d.addErrback(lambda f: failure_cb(f.value))
 
 
 class TwistedUDPTransport(BaseUDPTransport):
