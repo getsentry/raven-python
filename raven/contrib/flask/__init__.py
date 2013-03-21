@@ -87,8 +87,12 @@ class Sentry(object):
             },
         )
 
-    def init_app(self, app):
+    def init_app(self, app, dsn=None):
         self.app = app
+
+        if dsn is not None:
+            self.dsn = dsn
+
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)
 
