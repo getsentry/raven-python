@@ -7,6 +7,7 @@ import time
 from socket import socket, AF_INET, SOCK_DGRAM
 from unittest2 import TestCase
 from raven.base import Client, ClientState
+from raven.transport import AsyncTransport, HTTPTransport
 from raven.utils.stacks import iter_stack_frames
 
 
@@ -72,9 +73,9 @@ class ClientTest(TestCase):
 
         assert base.Raven is client
 
-    @mock.patch('raven.base.Client._send_remote')
+    @mock.patch('raven.transport.base.HTTPTransport.send')
     @mock.patch('raven.base.ClientState.should_try')
-    def test_send_remote_failover(self, should_try, send_remote):
+    def test_send_remote_failover(self, should_try, send):
         should_try.return_value = True
 
         client = Client(
@@ -85,14 +86,46 @@ class ClientTest(TestCase):
         )
 
         # test error
-        send_remote.side_effect = Exception()
+        send.side_effect = Exception()
         client.send_remote('http://example.com/api/store', 'foo')
         self.assertEquals(client.state.status, client.state.ERROR)
 
         # test recovery
-        send_remote.side_effect = None
+        send.side_effect = None
         client.send_remote('http://example.com/api/store', 'foo')
         self.assertEquals(client.state.status, client.state.ONLINE)
+
+    @mock.patch('raven.base.Client._registry.get_transport')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_async_send_remote_failover(self, should_try, get_transport):
+        should_try.return_value = True
+        async_transport = AsyncTransport()
+        async_transport.async_send = async_send = mock.Mock()
+        get_transport.return_value = async_transport
+
+        client = Client(
+            servers=['http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+
+        # test immediate raise of error
+        async_send.side_effect = Exception()
+        client.send_remote('http://example.com/api/store', 'foo')
+        self.assertEquals(client.state.status, client.state.ERROR)
+
+        # test recovery
+        client.send_remote('http://example.com/api/store', 'foo')
+        success_cb = async_send.call_args[0][2]
+        success_cb()
+        self.assertEquals(client.state.status, client.state.ONLINE)
+
+        # test delayed raise of error
+        client.send_remote('http://example.com/api/store', 'foo')
+        failure_cb = async_send.call_args[0][3]
+        failure_cb(Exception())
+        self.assertEquals(client.state.status, client.state.ERROR)
 
     @mock.patch('raven.base.Client.send_remote')
     @mock.patch('raven.base.time.time')
