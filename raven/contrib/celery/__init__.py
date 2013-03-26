@@ -33,8 +33,8 @@ class CeleryClient(CeleryMixin, Client):
 class CeleryFilter(logging.Filter):
     def filter(self, record):
         # Context is fixed in Celery 3.x so use internal flag ignstead
-        keep_record = record.funcName not in ('_log_error',) or \
-                          getattr(record, 'internal', True)
+        keep_record = getattr(record, 'internal',
+                        record.funcName not in ('_log_error',))
 
         return keep_record
 
