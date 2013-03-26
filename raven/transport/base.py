@@ -251,7 +251,6 @@ class GeventedHTTPTransport(HTTPTransport):
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['twisted+http', 'twisted+https']
-    async = True
 
     def __init__(self, parsed_url):
         if not has_twisted:
