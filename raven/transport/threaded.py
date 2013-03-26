@@ -13,7 +13,7 @@ import threading
 import os
 from Queue import Queue
 
-from raven.transport.base import HTTPTransport
+from raven.transport.base import HTTPTransport, AsyncTransport
 
 DEFAULT_TIMEOUT = 10
 
@@ -88,7 +88,7 @@ class AsyncWorker(object):
             time.sleep(0)
 
 
-class ThreadedHTTPTransport(HTTPTransport):
+class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['threaded+http', 'threaded+https']
 
@@ -105,6 +105,13 @@ class ThreadedHTTPTransport(HTTPTransport):
 
     def send_sync(self, data, headers):
         super(ThreadedHTTPTransport, self).send(data, headers)
+
+    def async_send(self, data, headers, success_cb, failure_cb):
+        try:
+            self.get_worker().queue(self.send_sync, data, headers)
+            success_cb
+        except Exception as e:
+            failure_cb(e)
 
     def send(self, data, headers):
         self.get_worker().queue(self.send_sync, data, headers)
