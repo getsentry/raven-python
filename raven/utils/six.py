@@ -128,7 +128,6 @@ class MovedAttribute(_LazyDescr):
         return getattr(module, self.attr)
 
 
-
 class _MovedItems(types.ModuleType):
     """Lazy loading of moved objects"""
 
@@ -247,14 +246,13 @@ except NameError:
     def callable(obj):
         return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
 
-
 if PY3:
     def get_unbound_function(unbound):
         return unbound
 
     Iterator = object
 else:
-    def get_unbound_function(unbound):
+    def get_unbound_function(unbound):  # NOQA
         return unbound.im_func
 
     class Iterator(object):
@@ -279,13 +277,16 @@ def iterkeys(d, **kw):
     """Return an iterator over the keys of a dictionary."""
     return iter(getattr(d, _iterkeys)(**kw))
 
+
 def itervalues(d, **kw):
     """Return an iterator over the values of a dictionary."""
     return iter(getattr(d, _itervalues)(**kw))
 
+
 def iteritems(d, **kw):
     """Return an iterator over the (key, value) pairs of a dictionary."""
     return iter(getattr(d, _iteritems)(**kw))
+
 
 def iterlists(d, **kw):
     """Return an iterator over the (key, [values]) pairs of a dictionary."""
@@ -295,6 +296,7 @@ def iterlists(d, **kw):
 if PY3:
     def b(s):
         return s.encode("latin-1")
+
     def u(s):
         return s
     if sys.version_info[1] <= 1:
@@ -307,9 +309,10 @@ if PY3:
     StringIO = io.StringIO
     BytesIO = io.BytesIO
 else:
-    def b(s):
+    def b(s):  # NOQA
         return s
-    def u(s):
+
+    def u(s):  # NOQA
         return unicode(s, "unicode_escape")
     int2byte = chr
     import StringIO
@@ -322,12 +325,10 @@ if PY3:
     import builtins
     exec_ = getattr(builtins, "exec")
 
-
     def reraise(tp, value, tb=None):
         if value.__traceback__ is not tb:
             raise value.with_traceback(tb)
         raise value
-
 
     print_ = getattr(builtins, "print")
     del builtins
@@ -345,17 +346,16 @@ else:
             _locs_ = _globs_
         exec("""exec _code_ in _globs_, _locs_""")
 
-
     exec_("""def reraise(tp, value, tb=None):
     raise tp, value, tb
 """)
-
 
     def print_(*args, **kwargs):
         """The new-style print function."""
         fp = kwargs.pop("file", sys.stdout)
         if fp is None:
             return
+
         def write(data):
             if not isinstance(data, basestring):
                 data = str(data)
