@@ -33,10 +33,7 @@ class CeleryClient(CeleryMixin, Client):
 class CeleryFilter(logging.Filter):
     def filter(self, record):
         # Context is fixed in Celery 3.x so use internal flag ignstead
-        keep_record = getattr(record, 'internal',
-            record.funcName != '_log_error')
-
-        return keep_record
+        return getattr(record, 'internal', record.funcName != '_log_error')
 
 
 def register_signal(client):
