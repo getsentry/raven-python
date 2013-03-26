@@ -112,8 +112,5 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
             success_cb
 
     def async_send(self, data, headers, success_cb, failure_cb):
-            self.get_worker().queue(self.send_sync, data, headers, success_cb,
-                    failure_cb)
-
-    def send(self, data, headers):
-        self.get_worker().queue(self.send_sync, data, headers)
+        self.get_worker().queue(self.send_sync, data, headers, success_cb,
+            failure_cb)
