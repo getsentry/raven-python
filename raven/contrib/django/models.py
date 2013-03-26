@@ -152,10 +152,10 @@ def sentry_exception_handler(request=None, **kwargs):
 
     try:
         client.captureException(exc_info=exc_info, request=request)
-    except Exception, exc:
+    except Exception as exc:
         try:
             logger.exception(u'Unable to process log entry: %s' % (exc,))
-        except Exception, exc:
+        except Exception as exc:
             warnings.warn(u'Unable to process log entry: %s' % (exc,))
 
 

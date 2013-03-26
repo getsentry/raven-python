@@ -64,14 +64,14 @@ class Serializer(object):
                 if serializer.can(value):
                     try:
                         return serializer.serialize(value, **kwargs)
-                    except Exception, e:
+                    except Exception as e:
                         logger.exception(e)
                         return unicode(type(value))
 
             # if all else fails, lets use the repr of the object
             try:
                 return self.transform(repr(value), **kwargs)
-            except Exception, e:
+            except Exception as e:
                 logger.exception(e)
                 # It's common case that a model's __unicode__ definition may try to query the database
                 # which if it was not cleaned up correctly, would hit a transaction aborted exception

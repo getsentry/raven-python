@@ -457,12 +457,6 @@ class Client(object):
 
         return (data['event_id'], data['checksum'])
 
-    def _send_remote(self, url, data, headers={}):
-        parsed = urlparse(url)
-
-        transport = self._registry.get_transport(parsed)
-        return transport.send(data, headers)
-
     def _get_log_message(self, data):
         # decode message so we can show the actual event
         try:
@@ -480,29 +474,46 @@ class Client(object):
         """
         return bool(self.servers)
 
+    def _successful_send(self):
+        self.state.set_success()
+
+    def _failed_send(self, e, url, data):
+        if isinstance(e, urllib2.HTTPError):
+            body = e.read()
+            self.error_logger.error(
+                'Unable to reach Sentry log server: %s'
+                ' (url: %%s, body: %%s)' % (e,),
+                url, body, exc_info=True,
+                extra={'data': {'body': body, 'remote_url': url}})
+        else:
+            tmpl = 'Unable to reach Sentry log server: %s (url: %%s)'
+            self.error_logger.error(tmpl % (e,), url, exc_info=True,
+                    extra={'data': {'remote_url': url}})
+
+        message = self._get_log_message(data)
+        self.error_logger.error('Failed to submit message: %r', message)
+        self.state.set_fail()
+
     def send_remote(self, url, data, headers={}):
         if not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)
             return
 
-        try:
-            self._send_remote(url=url, data=data, headers=headers)
-        except Exception, e:
-            if isinstance(e, urllib2.HTTPError):
-                body = e.read()
-                self.error_logger.error('Unable to reach Sentry log server: %s (url: %%s, body: %%s)' % (e,), url, body,
-                    exc_info=True, extra={'data': {'body': body, 'remote_url': url}})
-            else:
-                tmpl = 'Unable to reach Sentry log server: %s (url: %%s)'
-                self.error_logger.error(tmpl % (e,), url, exc_info=True,
-                        extra={'data': {'remote_url': url}})
+        def failed_send(e):
+            self._failed_send(e, url, data)
 
-            message = self._get_log_message(data)
-            self.error_logger.error('Failed to submit message: %r', message)
-            self.state.set_fail()
-        else:
-            self.state.set_success()
+        try:
+            parsed = urlparse(url)
+            transport = self._registry.get_transport(parsed)
+            if transport.async:
+                transport.async_send(data, headers, self._successful_send,
+                                     failed_send)
+            else:
+                transport.send(data, headers)
+                self._successful_send()
+        except Exception as e:
+            failed_send(e)
 
     def send(self, auth_header=None, **data):
         """

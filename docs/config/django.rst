@@ -186,7 +186,10 @@ middleware which will ensure that you catch errors even at the fundamental
 level of your Django application::
 
     from raven.contrib.django.raven_compat.middleware.wsgi import Sentry
-    application = Sentry(django.core.handlers.wsgi.WSGIHandler())
+    from django.core.handlers.wsgi import WSGIHandler
+    
+    application = Sentry(WSGIHandler())
+
 
 Additional Settings
 -------------------

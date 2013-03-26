@@ -74,8 +74,17 @@ class SentryHandler(logbook.Handler):
             event_type = 'raven.events.Exception'
             handler_kwargs = {'exc_info': record.exc_info}
 
+        extra = {
+            'lineno': record.lineno,
+            'filename': record.filename,
+            'function': record.func_name,
+            'process': record.process,
+            'process_name': record.process_name,
+        }
+        extra.update(record.extra)
+
         return self.client.capture(event_type,
             data=data,
-            extra=record.extra,
+            extra=extra,
             **handler_kwargs
         )

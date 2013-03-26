@@ -80,7 +80,7 @@ class Exception(BaseEvent):
                 try:
                     del exc_info
                     del exc_traceback
-                except Exception, e:
+                except Exception as e:
                     self.logger.exception(e)
 
         return {

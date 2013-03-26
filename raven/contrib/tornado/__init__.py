@@ -84,7 +84,7 @@ class AsyncSentryClient(Client):
             self._send_remote(
                 url=url, data=data, headers=headers, callback=callback
             )
-        except HTTPError, e:
+        except HTTPError as e:
             body = e.response.body
             self.error_logger.error(
                 'Unable to reach Sentry log server: %s '
@@ -92,7 +92,7 @@ class AsyncSentryClient(Client):
                 url, body, exc_info=True,
                 extra={'data': {'body': body, 'remote_url': url}}
             )
-        except Exception, e:
+        except Exception as e:
             self.error_logger.error(
                 'Unable to reach Sentry log server: %s (url: %%s)' % (e,),
                 url, exc_info=True, extra={'data': {'remote_url': url}}
@@ -130,7 +130,7 @@ class SentryMixin(object):
             def get(self):
                 try:
                     fail()
-                except Exception, e:
+                except Exception as e:
                     self.captureException(sys.exc_info())
 
 
