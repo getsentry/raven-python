@@ -3,7 +3,7 @@ import pytest
 import random
 import shutil
 import tempfile
-import unittest2
+from raven.utils.compat import TestCase
 
 from raven.base import Client
 from raven.contrib.zerorpc import SentryMiddleware
@@ -24,7 +24,7 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
-class ZeroRPCTest(unittest2.TestCase):
+class ZeroRPCTest(TestCase):
     def setUp(self):
         self._socket_dir = tempfile.mkdtemp(prefix='ravenzerorpcunittest')
         self._server_endpoint = 'ipc://{0}'.format(os.path.join(

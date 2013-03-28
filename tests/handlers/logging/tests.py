@@ -1,6 +1,6 @@
 import logging
 import sys
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
 from raven.utils.stacks import iter_stack_frames

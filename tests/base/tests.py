@@ -5,7 +5,7 @@ import mock
 import raven
 import time
 from socket import socket, AF_INET, SOCK_DGRAM
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from raven.base import Client, ClientState
 from raven.transport import AsyncTransport, HTTPTransport
 from raven.utils.stacks import iter_stack_frames

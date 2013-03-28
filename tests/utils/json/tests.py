@@ -2,7 +2,7 @@
 
 import datetime
 import uuid
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 
 from raven.utils import json
 
