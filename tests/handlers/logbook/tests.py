@@ -1,6 +1,6 @@
 from __future__ import with_statement
 import logbook
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from raven.base import Client
 from raven.handlers.logbook import SentryHandler
 
