@@ -37,7 +37,7 @@ except ImportError:
 
 
 try:
-    from unittest import TestCase, skipIf
-except ImportError:
     from unittest2 import TestCase, skipIf
+except ImportError:
+    from unittest import TestCase, skipIf
 
