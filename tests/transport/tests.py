@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from raven.base import Client
 
 # Some internal stuff to extend the transport layer

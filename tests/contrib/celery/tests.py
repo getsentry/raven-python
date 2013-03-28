@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import mock
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from celery.tests.utils import with_eager_tasks
 from raven.contrib.celery import CeleryClient
 

@@ -2,7 +2,7 @@ import logging
 from flask import Flask, current_app
 from raven.base import Client
 from raven.contrib.flask import Sentry
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from mock import patch
 
 

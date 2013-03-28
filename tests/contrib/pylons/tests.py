@@ -1,4 +1,4 @@
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 from raven.contrib.pylons import Sentry
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 
 import raven
 from raven.utils import get_versions
