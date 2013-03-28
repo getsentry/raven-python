@@ -9,6 +9,7 @@ raven.core.processors
 import re
 
 from raven.utils import varmap
+from raven.utils import six
 
 
 class Processor(object):
@@ -61,7 +62,7 @@ class SanitizePasswordsProcessor(Processor):
         if value is None:
             return
 
-        if isinstance(value, basestring) and self.VALUES_RE.match(value):
+        if isinstance(value, six.string_types) and self.VALUES_RE.match(value):
             return self.MASK
 
         if not key:  # key can be a NoneType
@@ -87,7 +88,7 @@ class SanitizePasswordsProcessor(Processor):
             if n not in data:
                 continue
 
-            if isinstance(data[n], basestring) and '=' in data[n]:
+            if isinstance(data[n], six.string_types) and '=' in data[n]:
                 # at this point we've assumed it's a standard HTTP query
                 querybits = []
                 for bit in data[n].split('&'):

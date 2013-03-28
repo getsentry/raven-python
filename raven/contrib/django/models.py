@@ -15,6 +15,8 @@ import logging
 import sys
 import warnings
 
+from raven.utils import six
+
 from django.conf import settings as django_settings
 
 logger = logging.getLogger('sentry.errors.client')
@@ -88,8 +90,8 @@ class ProxyClient(object):
     __int__ = lambda x: int(get_client())
     __long__ = lambda x: long(get_client())
     __float__ = lambda x: float(get_client())
-    __str__ = lambda x: str(get_client())
-    __unicode__ = lambda x: unicode(get_client())
+    __str__ = lambda x: six.binary_type(get_client())
+    __unicode__ = lambda x: six.text_type(get_client())
     __oct__ = lambda x: oct(get_client())
     __hex__ = lambda x: hex(get_client())
     __index__ = lambda x: get_client().__index__()

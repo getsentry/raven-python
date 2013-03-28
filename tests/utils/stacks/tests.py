@@ -2,6 +2,7 @@
 
 from mock import Mock
 from raven.utils.compat import TestCase
+from raven.utils import six
 
 from raven.utils.stacks import get_culprit, get_stack_info
 
@@ -12,7 +13,7 @@ class Context(object):
 
     __getitem__ = lambda s, *a: s.dict.__getitem__(*a)
     __setitem__ = lambda s, *a: s.dict.__setitem__(*a)
-    iterkeys = lambda s, *a: s.dict.iterkeys(*a)
+    iterkeys = lambda s, *a: six.iterkeys(s.dict, *a)
 
 
 class GetCulpritTest(TestCase):

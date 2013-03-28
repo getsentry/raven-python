@@ -6,6 +6,8 @@ raven.context
 :license: BSD, see LICENSE for more details.
 """
 
+from raven.utils import six
+
 
 class Context(object):
     """
@@ -31,7 +33,7 @@ class Context(object):
             self.result = self.captureException(exc_info)
 
     def __call(self, function, *args, **kwargs):
-        for key, value in self.defaults.iteritems():
+        for key, value in six.iteritems(self.defaults):
             if key not in kwargs:
                 kwargs[key] = value
 
