@@ -9,35 +9,34 @@ raven.utils.compat
 try:
     from urllib.error import HTTPError
 except ImportError:
-    from urllib2 import HTTPError
+    from urllib2 import HTTPError  # NOQA
 
 
 try:
     from urllib.request import Request, urlopen
 except ImportError:
-    from urllib2 import Request, urlopen
+    from urllib2 import Request, urlopen  # NOQA
 
 
 try:
     from urllib import quote as urllib_quote
 except ImportError:
-    from urllib.parse import quote as urllib_quote
+    from urllib.parse import quote as urllib_quote  # NOQA
 
 
 try:
     from queue import Queue
 except ImportError:
-    from Queue import Queue
+    from Queue import Queue  # NOQA
 
 
 try:
     import urlparse as _urlparse
 except ImportError:
-    from urllib import parse as _urlparse
+    from urllib import parse as _urlparse  # NOQA
 
 
 try:
     from unittest2 import TestCase, skipIf
 except ImportError:
-    from unittest import TestCase, skipIf
-
+    from unittest import TestCase, skipIf  # NOQA
