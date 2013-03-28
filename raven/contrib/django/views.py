@@ -17,6 +17,7 @@ from django.views.decorators.http import require_http_methods
 
 from raven.contrib.django.models import client
 from raven.utils import json
+from raven.utils import six
 
 
 def is_valid_origin(origin):
@@ -31,7 +32,7 @@ def is_valid_origin(origin):
 
     origin = origin.lower()
     for value in settings.SENTRY_ALLOW_ORIGIN:
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             if value.lower() == origin:
                 return True
         else:

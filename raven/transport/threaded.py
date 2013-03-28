@@ -11,7 +11,7 @@ import logging
 import time
 import threading
 import os
-from Queue import Queue
+from raven.utils.compat import Queue
 
 from raven.transport.base import HTTPTransport, AsyncTransport
 

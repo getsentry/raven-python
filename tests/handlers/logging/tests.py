@@ -1,6 +1,7 @@
 import logging
 import sys
 from raven.utils.compat import TestCase
+from raven.utils import six
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
 from raven.utils.stacks import iter_stack_frames
@@ -26,7 +27,7 @@ class LoggingIntegrationTest(TestCase):
     def make_record(self, msg, args=(), level=logging.INFO, extra=None, exc_info=None):
         record = logging.LogRecord('root', level, __file__, 27, msg, args, exc_info, 'make_record')
         if extra:
-            for key, value in extra.iteritems():
+            for key, value in six.iteritems(extra):
                 record.__dict__[key] = value
         return record
 
