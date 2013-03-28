@@ -63,7 +63,7 @@ class TransportTest(TestCase):
     def test_custom_transport(self):
         c = Client(dsn="mock://some_username:some_password@localhost:8143/1")
 
-        data = dict(a=42, b=55, c=range(50))
+        data = dict(a=42, b=55, c=list(range(50)))
         c.send(**data)
 
         expected_message = c.encode(data)

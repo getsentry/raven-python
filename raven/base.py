@@ -16,7 +16,6 @@ import logging
 import os
 import sys
 import time
-import urllib2
 import uuid
 import warnings
 
@@ -28,6 +27,8 @@ from raven.utils.encoding import to_string
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
+from raven.utils.compat import HTTPError
+from raven.utils import six
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -163,7 +164,7 @@ class Client(object):
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
-        self.name = unicode(o.get('name') or defaults.NAME)
+        self.name = six.text_type(o.get('name') or defaults.NAME)
         self.auto_log_stacks = bool(o.get('auto_log_stacks') or
                 defaults.AUTO_LOG_STACKS)
         self.string_max_length = int(o.get('string_max_length') or
@@ -273,7 +274,7 @@ class Client(object):
         if data.get('culprit'):
             culprit = data['culprit']
 
-        for k, v in result.iteritems():
+        for k, v in six.iteritems(result):
             if k not in data:
                 data[k] = v
 
@@ -328,10 +329,10 @@ class Client(object):
 
         # Add extra context
         if self.extra:
-            for k, v in self.extra.iteritems():
+            for k, v in six.iteritems(self.extra):
                 data['extra'].setdefault(k, v)
 
-        for k, v in extra.iteritems():
+        for k, v in six.iteritems(extra):
             data['extra'][k] = v
 
         if culprit:
@@ -479,7 +480,7 @@ class Client(object):
         self.state.set_success()
 
     def _failed_send(self, e, url, data):
-        if isinstance(e, urllib2.HTTPError):
+        if isinstance(e, HTTPError):
             body = e.read()
             self.error_logger.error(
                 'Unable to reach Sentry log server: %s'

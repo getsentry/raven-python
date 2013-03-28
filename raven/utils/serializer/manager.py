@@ -7,6 +7,7 @@ raven.utils.serializer.manager
 """
 import logging
 from contextlib import closing
+from raven.utils import six
 
 __all__ = ('register', 'transform')
 
@@ -66,7 +67,7 @@ class Serializer(object):
                         return serializer.serialize(value, **kwargs)
                     except Exception as e:
                         logger.exception(e)
-                        return unicode(type(value))
+                        return six.text_type(type(value))
 
             # if all else fails, lets use the repr of the object
             try:
@@ -75,7 +76,7 @@ class Serializer(object):
                 logger.exception(e)
                 # It's common case that a model's __unicode__ definition may try to query the database
                 # which if it was not cleaned up correctly, would hit a transaction aborted exception
-                return unicode(type(value))
+                return six.text_type(type(value))
         finally:
             self.context.remove(objid)
 

@@ -14,7 +14,7 @@ class InvalidScheme(ValueError):
     """
 
 
-class DuplicateScheme(StandardError):
+class DuplicateScheme(Exception):
     """
     Raised when registering a handler for a particular scheme which
     is already registered
