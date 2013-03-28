@@ -9,6 +9,7 @@ raven.base
 from __future__ import absolute_import
 
 import base64
+import zlib
 import datetime
 import hashlib
 import logging
@@ -554,13 +555,13 @@ class Client(object):
         """
         Serializes ``data`` into a raw string.
         """
-        return base64.b64encode(json.dumps(data).encode('zlib'))
+        return base64.b64encode(zlib.compress(json.dumps(data).encode('utf8')))
 
     def decode(self, data):
         """
         Unserializes a string, ``data``.
         """
-        return json.loads(base64.b64decode(data).decode('zlib'))
+        return json.loads(zlib.decompress(base64.b64decode(data)).decode('utf8'))
 
     def captureMessage(self, message, **kwargs):
         """
