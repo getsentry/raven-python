@@ -24,12 +24,10 @@ logger = logging.getLogger('sentry.errors.client')
 
 def get_installed_apps():
     """
-    Generate a list of modules in settings.INSTALLED_APPS.
+    Modules in settings.INSTALLED_APPS as a set.
     """
-    out = set()
-    for app in django_settings.INSTALLED_APPS:
-        out.add(app)
-    return out
+    return set(django_settings.INSTALLED_APPS)
+
 
 _client = (None, None)
 
