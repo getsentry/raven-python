@@ -9,7 +9,7 @@ raven.utils.serializer.base
 import itertools
 from raven.utils.encoding import to_string, to_unicode
 from raven.utils.serializer.manager import register
-from types import ClassType, TypeType
+from raven.utils import six
 from uuid import UUID
 
 __all__ = ('Serializer',)
@@ -52,7 +52,7 @@ class Serializer(object):
                 value = repr(value)
             except Exception as e:
                 self.manager.logger.exception(e)
-                return unicode(type(value))
+                return six.text_type(type(value))
         return self.manager.transform(value, max_depth=max_depth, _depth=_depth, **kwargs)
 
 
@@ -83,7 +83,7 @@ class DictSerializer(Serializer):
 
 
 class UnicodeSerializer(Serializer):
-    types = (unicode,)
+    types = (six.text_type,)
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
@@ -91,7 +91,7 @@ class UnicodeSerializer(Serializer):
 
 
 class StringSerializer(Serializer):
-    types = (str,)
+    types = (six.binary_type,)
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
@@ -99,7 +99,7 @@ class StringSerializer(Serializer):
 
 
 class TypeSerializer(Serializer):
-    types = (ClassType, TypeType,)
+    types = six.class_types
 
     def can(self, value):
         return not super(TypeSerializer, self).can(value) and has_sentry_metadata(value)
@@ -129,11 +129,12 @@ class IntegerSerializer(Serializer):
         return int(value)
 
 
-class LongSerializer(Serializer):
-    types = (long,)
+if not six.PY3:
+    class LongSerializer(Serializer):
+        types = (long,)
 
-    def serialize(self, value, **kwargs):
-        return long(value)
+        def serialize(self, value, **kwargs):
+            return long(value)
 
 
 register(IterableSerializer)
@@ -145,4 +146,5 @@ register(TypeSerializer)
 register(BooleanSerializer)
 register(FloatSerializer)
 register(IntegerSerializer)
-register(LongSerializer)
+if not six.PY3:
+    register(LongSerializer)

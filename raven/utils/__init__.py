@@ -6,6 +6,7 @@ raven.utils
 :license: BSD, see LICENSE for more details.
 """
 
+from raven.utils import six
 import logging
 try:
     import pkg_resources
@@ -29,7 +30,7 @@ def varmap(func, var, context=None, name=None):
         return func(name, '<...>')
     context[objid] = 1
     if isinstance(var, dict):
-        ret = dict((k, varmap(func, v, context, k)) for k, v in var.iteritems())
+        ret = dict((k, varmap(func, v, context, k)) for k, v in six.iteritems(var))
     elif isinstance(var, (list, tuple)):
         ret = [varmap(func, f, context, name) for f in var]
     else:
@@ -75,7 +76,7 @@ def get_versions(module_list=None):
     ext_module_list = set()
     for m in module_list:
         parts = m.split('.')
-        ext_module_list.update('.'.join(parts[:idx]) for idx in xrange(1, len(parts) + 1))
+        ext_module_list.update('.'.join(parts[:idx]) for idx in range(1, len(parts) + 1))
 
     versions = {}
     for module_name in ext_module_list:

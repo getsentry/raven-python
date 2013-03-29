@@ -16,6 +16,7 @@ import traceback
 from raven.base import Client
 from raven.utils.encoding import to_string
 from raven.utils.stacks import iter_stack_frames, label_from_frame
+from raven.utils import six
 
 RESERVED = ('stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated', 'tags')
 
@@ -25,7 +26,7 @@ class SentryHandler(logging.Handler, object):
         client = kwargs.get('client_cls', Client)
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, basestring):
+            if isinstance(arg, six.string_types):
                 self.client = client(dsn=arg)
             elif isinstance(arg, Client):
                 self.client = arg
@@ -67,7 +68,7 @@ class SentryHandler(logging.Handler, object):
     def _emit(self, record, **kwargs):
         data = {}
 
-        for k, v in record.__dict__.iteritems():
+        for k, v in six.iteritems(record.__dict__):
             if '.' not in k and k not in ('culprit',):
                 continue
             data[k] = v

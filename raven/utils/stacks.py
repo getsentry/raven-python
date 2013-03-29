@@ -12,6 +12,8 @@ import sys
 import warnings
 
 from raven.utils.serializer import transform
+from raven.utils import six
+
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
 
@@ -63,7 +65,7 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         if match:
             encoding = match.group(1)
             break
-    source = [unicode(sline, encoding, 'replace') for sline in source]
+    source = [six.text_type(sline, encoding, 'replace') for sline in source]
 
     lower_bound = max(0, lineno - context_lines)
     upper_bound = min(lineno + 1 + context_lines, len(source))
