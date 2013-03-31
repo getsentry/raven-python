@@ -364,7 +364,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra'], {"'logger'": "'test'", "'foo'": "'bar'"})
+        self.assertEquals(event['extra'], {'logger': "'test'", 'foo': "'bar'"})
 
 
 class ClientUDPTest(TestCase):

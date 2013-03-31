@@ -121,8 +121,8 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         user_data = kwargs['sentry.interfaces.User']
         self.assertEqual(user_data['is_authenticated'], False)
 
-        assert "'extra_data'" in kwargs['extra']
-        assert kwargs['extra']["'extra_data'"] == "'extra custom non-dict data'"
+        assert 'extra_data' in kwargs['extra']
+        assert kwargs['extra']['extra_data'] == "'extra custom non-dict data'"
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
     def test_error_with_custom_dict_data_handler(self, send):
@@ -146,8 +146,8 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         user_data = kwargs['sentry.interfaces.User']
         self.assertEqual(user_data['is_authenticated'], False)
 
-        assert "'extra_data'" in kwargs['extra']
-        assert kwargs['extra']["'extra_data'"] == "'extra custom dict data'"
+        assert 'extra_data' in kwargs['extra']
+        assert kwargs['extra']['extra_data'] == "'extra custom dict data'"
 
     @patch(
         'raven.contrib.tornado.AsyncSentryClient.send',

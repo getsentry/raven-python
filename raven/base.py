@@ -366,10 +366,12 @@ class Client(object):
         if site:
             data['tags'].setdefault('site', site)
 
-        # Make sure custom data is coerced
-        data['extra'] = self.transform(data['extra'])
         for key, value in six.iteritems(data['tags']):
             data['tags'][key] = to_unicode(value)
+
+        # Make sure custom data is coerced
+        for k, v in six.iteritems(data['extra']):
+            data['extra'][k] = self.transform(v)
 
         # It's important date is added **after** we serialize
         data.update({

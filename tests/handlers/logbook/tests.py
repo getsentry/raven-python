@@ -59,7 +59,7 @@ class LogbookHandlerTest(TestCase):
             ))
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
-            self.assertEquals(event['extra']["'url'"], "'http://example.com'")
+            self.assertEquals(event['extra']['url'], "'http://example.com'")
             self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)

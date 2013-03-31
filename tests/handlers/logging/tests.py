@@ -55,7 +55,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra']["'url'"], "'http://example.com'")
+        self.assertEquals(event['extra']['url'], "'http://example.com'")
 
     def test_logger_exc_info(self):
         try:
@@ -148,7 +148,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra']["'data'"], "'foo'")
+        self.assertEquals(event['extra']['data'], "'foo'")
 
     def test_tags(self):
         record = self.make_record('Message', extra={'tags': {'foo': 'bar'}})
