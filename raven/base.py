@@ -23,7 +23,7 @@ import raven
 from raven.conf import defaults
 from raven.context import Context
 from raven.utils import json, get_versions, get_auth_header
-from raven.utils.encoding import to_string
+from raven.utils.encoding import to_string, to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
@@ -288,8 +288,7 @@ class Client(object):
             data.update({
                 'sentry.interfaces.Stacktrace': {
                     'frames': get_stack_info(frames,
-                        list_max_length=self.list_max_length,
-                        string_max_length=self.string_max_length)
+                        transformer=self.transform)
                 },
             })
 
@@ -367,8 +366,10 @@ class Client(object):
         if site:
             data['tags'].setdefault('site', site)
 
-        # Make sure all data is coerced
-        data = self.transform(data)
+        # Make sure custom data is coerced
+        data['extra'] = self.transform(data['extra'])
+        for key, value in six.iteritems(data['tags']):
+            data['tags'][key] = to_unicode(value)
 
         # It's important date is added **after** we serialize
         data.update({
@@ -457,7 +458,7 @@ class Client(object):
 
         self.send(**data)
 
-        return (data['event_id'], data['checksum'])
+        return (data.get('event_id'), data.get('checksum'))
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event

@@ -669,7 +669,8 @@ class ReportViewTest(TestCase):
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_x_sentry_auth_header(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}', content_type='application/octet-stream')
+            HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}',
+            content_type='application/octet-stream')
         self.assertEquals(resp.status_code, 200)
         event = client.events.pop(0)
         self.assertEquals(event, {'auth_header': 'Sentry foo/bar'})
@@ -681,7 +682,7 @@ class PromiseSerializerTestCase(TestCase):
 
         obj = lazy(lambda: 'bar', str)()
         res = transform(obj)
-        self.assertEquals(res, 'bar')
+        self.assertEquals(res, "'bar'")
 
     def test_handles_gettext_lazy(self):
         from django.utils.functional import lazy
@@ -693,24 +694,26 @@ class PromiseSerializerTestCase(TestCase):
 
         result = transform(fake_gettext_lazy("something"))
         self.assertTrue(isinstance(result, basestring))
-        self.assertEquals(result, u'Igpay Atinlay')
+        self.assertEquals(result, "u'Igpay Atinlay'")
 
 
-class QuerySetSerializerTestCase(TestCase):
-    def test_model_instance(self):
+class ModelInstanceSerializerTestCase(TestCase):
+    def test_basic(self):
         instance = TestModel()
 
         result = transform(instance)
         self.assertTrue(isinstance(result, basestring))
-        self.assertEquals(result, u'<TestModel: TestModel object>')
+        self.assertEquals(result, '<TestModel: TestModel object>')
 
+
+class QuerySetSerializerTestCase(TestCase):
     def test_basic(self):
         from django.db.models.query import QuerySet
         obj = QuerySet(model=TestModel)
 
         result = transform(obj)
         self.assertTrue(isinstance(result, basestring))
-        self.assertEquals(result, u'<QuerySet: model=TestModel>')
+        self.assertEquals(result, '<QuerySet: model=TestModel>')
 
 
 class SentryExceptionHandlerTest(TestCase):

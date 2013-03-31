@@ -2,9 +2,8 @@
 
 import uuid
 
+from raven.utils import six
 from raven.utils.compat import TestCase
-
-from raven.utils.encoding import shorten
 from raven.utils.serializer import transform
 
 
@@ -13,22 +12,20 @@ class TransformTest(TestCase):
         x = 'רונית מגן'
 
         result = transform(x)
-        self.assertEquals(type(result), str)
-        self.assertEquals(result, 'רונית מגן')
+        assert result == "'רונית מגן'"
 
     def test_correct_unicode(self):
-        x = 'רונית מגן'.decode('utf-8')
+        # 'רונית מגן'
+        x = six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x)
-        self.assertEquals(type(result), unicode)
-        self.assertEquals(result, x)
+        assert result == six.text_type("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
     def test_bad_string(self):
         x = 'The following character causes problems: \xd4'
 
         result = transform(x)
-        self.assertEquals(type(result), str)
-        self.assertEquals(result, '<type \'str\'>')
+        assert result == "<type 'str'>"
 
     def test_float(self):
         result = transform(13.0)
@@ -55,14 +52,14 @@ class TransformTest(TestCase):
     #     self.assertEquals(result, '(Error decoding value)')
 
     def test_dict_keys(self):
-        x = {u'foo': 'bar'}
+        x = {'foo': 'bar'}
 
         result = transform(x)
         self.assertEquals(type(result), dict)
         keys = result.keys()
         self.assertEquals(len(keys), 1)
         self.assertTrue(type(keys[0]), str)
-        self.assertEquals(keys[0], 'foo')
+        self.assertEquals(keys[0], "'foo'")
 
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
@@ -71,23 +68,23 @@ class TransformTest(TestCase):
         self.assertEquals(type(result), dict)
         keys = result.keys()
         self.assertEquals(len(keys), 1)
-        self.assertTrue(type(keys[0]), str)
-        self.assertEquals(keys[0], 'רונית מגן')
+        assert keys[0] == "'רונית מגן'"
 
     def test_dict_keys_utf8_as_unicode(self):
-        x = {u'רונית מגן': 'bar'}
+        x = {
+            six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'): 'bar'
+        }
 
         result = transform(x)
+        assert type(result) is dict
         keys = result.keys()
-        self.assertEquals(len(keys), 1)
-        self.assertTrue(type(keys[0]), str)
-        self.assertEquals(keys[0], 'רונית מגן')
+        assert len(keys) == 1
+        assert keys[0] == six.text_type("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
     def test_uuid(self):
         x = uuid.uuid4()
         result = transform(x)
-        self.assertEquals(result, repr(x))
-        self.assertTrue(type(result), str)
+        assert result == repr(x)
 
     def test_recursive(self):
         x = []
@@ -104,7 +101,7 @@ class TransformTest(TestCase):
         x = Foo()
 
         result = transform(x)
-        self.assertEquals(result, 'example')
+        self.assertEquals(result, "'example'")
 
     def test_broken_repr(self):
         class Foo(object):
@@ -114,12 +111,12 @@ class TransformTest(TestCase):
         x = Foo()
 
         result = transform(x)
-        self.assertEquals(result, u"<class 'tests.utils.encoding.tests.Foo'>")
+        self.assertEquals(result, "<class 'tests.utils.encoding.tests.Foo'>")
 
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
         result = transform(x, max_depth=3)
-        self.assertEquals(result, ((('[1]',),),))
+        self.assertEquals(result, ((("'[1]'",),),))
 
     def test_list_max_length(self):
         x = range(10)
@@ -135,41 +132,4 @@ class TransformTest(TestCase):
     def test_string_max_length(self):
         x = '1234'
         result = transform(x, string_max_length=3)
-        self.assertEquals(result, '123')
-
-
-class ShortenTest(TestCase):
-    def test_shorten_string(self):
-        result = shorten('hello world!', string_length=5)
-        self.assertEquals(len(result), 8)
-        self.assertEquals(result, 'hello...')
-
-    def test_shorten_lists(self):
-        result = shorten(range(500), list_length=50)
-        self.assertEquals(len(result), 52)
-        self.assertEquals(result[-2], '...')
-        self.assertEquals(result[-1], '(450 more elements)')
-
-    def test_shorten_sets(self):
-        result = shorten(set(range(500)), list_length=50)
-        self.assertEquals(len(result), 52)
-        self.assertEquals(result[-2], '...')
-        self.assertEquals(result[-1], '(450 more elements)')
-
-    def test_shorten_frozenset(self):
-        result = shorten(frozenset(range(500)), list_length=50)
-        self.assertEquals(len(result), 52)
-        self.assertEquals(result[-2], '...')
-        self.assertEquals(result[-1], '(450 more elements)')
-
-    def test_shorten_tuple(self):
-        result = shorten(tuple(range(500)), list_length=50)
-        self.assertEquals(len(result), 52)
-        self.assertEquals(result[-2], '...')
-        self.assertEquals(result[-1], '(450 more elements)')
-
-    # def test_shorten_generator(self):
-    #     result = shorten(xrange(500))
-    #     self.assertEquals(len(result), 52)
-    #     self.assertEquals(result[-2], '...')
-    #     self.assertEquals(result[-1], '(450 more elements)')
+        self.assertEquals(result, "'123'")

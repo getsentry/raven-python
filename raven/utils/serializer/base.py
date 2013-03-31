@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 raven.utils.serializer.base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -7,9 +9,9 @@ raven.utils.serializer.base
 """
 
 import itertools
-from raven.utils.encoding import to_string, to_unicode
-from raven.utils.serializer.manager import register
 from raven.utils import six
+from raven.utils.encoding import to_unicode
+from raven.utils.serializer.manager import register
 from uuid import UUID
 
 __all__ = ('Serializer',)
@@ -51,8 +53,10 @@ class Serializer(object):
             try:
                 value = repr(value)
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 self.manager.logger.exception(e)
-                return six.text_type(type(value))
+                return type(value)
         return self.manager.transform(value, max_depth=max_depth, _depth=_depth, **kwargs)
 
 
@@ -61,7 +65,11 @@ class IterableSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         list_max_length = kwargs.get('list_max_length') or float('inf')
-        return tuple(self.recurse(o, **kwargs) for n, o in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value)))
+        return tuple(
+            self.recurse(o, **kwargs)
+            for n, o
+            in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value))
+        )
 
 
 class UUIDSerializer(Serializer):
@@ -74,11 +82,17 @@ class UUIDSerializer(Serializer):
 class DictSerializer(Serializer):
     types = (dict,)
 
+    def make_key(self, key):
+        if not isinstance(key, basestring):
+            return to_unicode(key)
+        return key
+
     def serialize(self, value, **kwargs):
         list_max_length = kwargs.get('list_max_length') or float('inf')
         return dict(
-            (to_string(k), self.recurse(v, **kwargs))
-            for n, (k, v) in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value.iteritems()))
+            (self.make_key(self.recurse(k, **kwargs)), self.recurse(v, **kwargs))
+            for n, (k, v)
+            in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(six.iteritems(value)))
         )
 
 
@@ -86,8 +100,12 @@ class UnicodeSerializer(Serializer):
     types = (six.text_type,)
 
     def serialize(self, value, **kwargs):
+        # try to return a reasonable string that can be decoded
+        # correctly by the server so it doesnt show up as \uXXX for each
+        # unicode character
+        # e.g. we want the output to be like: "u'רונית מגן'"
         string_max_length = kwargs.get('string_max_length', None)
-        return to_unicode(value)[:string_max_length]
+        return six.text_type("u'{}'").format(value[:string_max_length])
 
 
 class StringSerializer(Serializer):
@@ -95,7 +113,8 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        return to_string(value)[:string_max_length]
+        return six.binary_type("'{}'").format(
+            value.decode('utf-8').encode('utf-8')[:string_max_length])
 
 
 class TypeSerializer(Serializer):

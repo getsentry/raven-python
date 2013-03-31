@@ -7,7 +7,7 @@ import time
 from socket import socket, AF_INET, SOCK_DGRAM
 from raven.utils.compat import TestCase
 from raven.base import Client, ClientState
-from raven.transport import AsyncTransport, HTTPTransport
+from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
 
 
@@ -69,9 +69,10 @@ class ClientTest(TestCase):
         base.Raven = None
 
         client = Client()
-        client2 = Client()  # NOQA
+        client2 = Client()
 
         assert base.Raven is client
+        assert client is not client2
 
     @mock.patch('raven.transport.base.HTTPTransport.send')
     @mock.patch('raven.base.ClientState.should_try')
@@ -146,9 +147,11 @@ class ClientTest(TestCase):
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
-                'X-Sentry-Auth': 'Sentry sentry_timestamp=1328055286.51, '
-                    'sentry_client=raven-python/%s, sentry_version=2.0, sentry_key=public, '
-                    'sentry_secret=secret' % (raven.VERSION,)
+                'X-Sentry-Auth': (
+                    'Sentry sentry_timestamp=1328055286.51, '
+                    'sentry_client=raven-python/%s, sentry_version=2.0, '
+                    'sentry_key=public, '
+                    'sentry_secret=secret' % (raven.VERSION,))
             },
         )
 
@@ -361,7 +364,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra'], {'logger': 'test', 'foo': 'bar'})
+        self.assertEquals(event['extra'], {"'logger'": "'test'", "'foo'": "'bar'"})
 
 
 class ClientUDPTest(TestCase):

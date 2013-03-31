@@ -60,11 +60,14 @@ class SentryHandler(logbook.Handler):
         data = {
             'level': logbook.get_level_name(record.level).lower(),
             'logger': record.channel,
-            'message': self.format(record),
         }
 
         event_type = 'raven.events.Message'
-        handler_kwargs = {'message': record.msg, 'params': record.args}
+        handler_kwargs = {
+            'message': record.msg,
+            'params': record.args,
+            'formatted': self.format(record),
+        }
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info

@@ -65,46 +65,39 @@ class SentryHandler(logging.Handler, object):
             except Exception:
                 pass
 
+    def _get_targetted_stack(self, stack):
+        # we might need to traverse this multiple times, so coerce it to a list
+        stack = list(stack)
+        frames = []
+        started = False
+        last_mod = ''
+
+        for item in stack:
+            if isinstance(item, (list, tuple)):
+                frame, lineno = item
+            else:
+                frame, lineno = item, item.f_lineno
+
+            if not started:
+                f_globals = getattr(frame, 'f_globals', {})
+                module_name = f_globals.get('__name__', '')
+                if ((last_mod and last_mod.startswith('logging'))
+                        and not module_name.startswith('logging')):
+                    started = True
+                else:
+                    last_mod = module_name
+                    continue
+
+            frames.append((frame, lineno))
+
+        # We failed to find a starting point
+        if not frames:
+            return stack
+
+        return frames
+
     def _emit(self, record, **kwargs):
         data = {}
-
-        for k, v in six.iteritems(record.__dict__):
-            if '.' not in k and k not in ('culprit',):
-                continue
-            data[k] = v
-
-        stack = getattr(record, 'stack', None)
-        if stack is True:
-            stack = iter_stack_frames()
-
-        if stack:
-            # we might need to traverse this multiple times, so coerce it to a list
-            stack = list(stack)
-            frames = []
-            started = False
-            last_mod = ''
-            for item in stack:
-                if isinstance(item, (list, tuple)):
-                    frame, lineno = item
-                else:
-                    frame, lineno = item, item.f_lineno
-
-                if not started:
-                    f_globals = getattr(frame, 'f_globals', {})
-                    module_name = f_globals.get('__name__', '')
-                    if (last_mod and last_mod.startswith('logging')) \
-                        and not module_name.startswith('logging'):
-                        started = True
-                    else:
-                        last_mod = module_name
-                        continue
-                frames.append((frame, lineno))
-
-            # We must've not found a starting point
-            if not frames:
-                frames = stack
-
-            stack = frames
 
         extra = getattr(record, 'data', None)
         if not isinstance(extra, dict):
@@ -113,17 +106,30 @@ class SentryHandler(logging.Handler, object):
             else:
                 extra = {}
 
-        # Add in all of the data from the record that we aren't already capturing
-        for k in record.__dict__.keys():
+        for k, v in six.iteritems(vars(record)):
             if k in RESERVED:
                 continue
             if k.startswith('_'):
                 continue
-            extra[k] = record.__dict__[k]
+            if '.' not in k and k not in ('culprit',):
+                extra[k] = v
+            else:
+                data[k] = v
+
+        stack = getattr(record, 'stack', None)
+        if stack is True:
+            stack = iter_stack_frames()
+
+        if stack:
+            stack = self._get_targetted_stack(stack)
 
         date = datetime.datetime.utcfromtimestamp(record.created)
         event_type = 'raven.events.Message'
-        handler_kwargs = {'message': record.msg, 'params': record.args}
+        handler_kwargs = {
+            'message': record.msg,
+            'params': record.args,
+            'formatted': record.message,
+        }
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
@@ -133,8 +139,6 @@ class SentryHandler(logging.Handler, object):
             # message interface attached
             handler = self.client.get_handler(event_type)
             data.update(handler.capture(**handler_kwargs))
-            # ensure message is propagated, otherwise the exception will overwrite it
-            data['message'] = record.message
 
             event_type = 'raven.events.Exception'
             handler_kwargs = {'exc_info': record.exc_info}
@@ -153,5 +157,5 @@ class SentryHandler(logging.Handler, object):
 
         kwargs.update(handler_kwargs)
 
-        return self.client.capture(event_type, stack=stack, data=data, extra=extra,
-            date=date, **kwargs)
+        return self.client.capture(event_type, stack=stack, data=data,
+            extra=extra, date=date, **kwargs)

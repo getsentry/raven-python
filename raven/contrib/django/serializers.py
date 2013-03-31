@@ -48,7 +48,8 @@ class HttpRequestSerializer(Serializer):
     types = (HttpRequest,)
 
     def serialize(self, value, **kwargs):
-        return u'<%s at 0x%s>' % (type(value).__name__, id(value))
+        return six.text_type(
+            '<%s at 0x%s>' % (type(value).__name__, id(value)))
 
 register(HttpRequestSerializer)
 
@@ -62,7 +63,8 @@ if getattr(settings, 'DATABASES', None):
         def serialize(self, value, **kwargs):
             qs_name = type(value).__name__
             if value.model:
-                return u'<%s: model=%s>' % (qs_name, value.model.__name__)
-            return u'<%s: (Unbound)>' % (qs_name,)
+                return six.text_type(
+                    '<%s: model=%s>' % (qs_name, value.model.__name__))
+            return six.text_type('<%s: (Unbound)>' % (qs_name,))
 
     register(QuerySetSerializer)

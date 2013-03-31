@@ -55,7 +55,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra']['url'], 'http://example.com')
+        self.assertEquals(event['extra']["'url'"], "'http://example.com'")
 
     def test_logger_exc_info(self):
         try:
@@ -90,7 +90,7 @@ class LoggingIntegrationTest(TestCase):
         self.assertEquals(event['message'], 'This is a test of args')
         msg = event['sentry.interfaces.Message']
         self.assertEquals(msg['message'], 'This is a test of %s')
-        self.assertEquals(msg['params'], ('args',))
+        self.assertEquals(msg['params'], ("'args'",))
 
     def test_record_stack(self):
         record = self.make_record('This is a test of stacks', extra={'stack': True})
@@ -148,7 +148,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra']['data'], 'foo')
+        self.assertEquals(event['extra']["'data'"], "'foo'")
 
     def test_tags(self):
         record = self.make_record('Message', extra={'tags': {'foo': 'bar'}})
@@ -168,7 +168,6 @@ class LoggingIntegrationTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         assert event['tags'] == {'foo': 'bar'}
-
 
 
 class LoggingHandlerTest(TestCase):
