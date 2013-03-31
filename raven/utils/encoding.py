@@ -78,17 +78,3 @@ def to_string(value):
         return str(value.decode('utf-8').encode('utf-8'))
     except:
         return to_unicode(value).encode('utf-8')
-
-
-def shorten(var, list_length=50, string_length=200):
-    from raven.utils.serializer import transform
-
-    var = transform(var)
-    if isinstance(var, basestring) and len(var) > string_length:
-        var = var[:string_length] + '...'
-    elif isinstance(var, (list, tuple, set, frozenset)) and len(var) > list_length:
-        # TODO: we should write a real API for storing some metadata with vars when
-        # we get around to doing ref storage
-        # TODO: when we finish the above, we should also implement this for dicts
-        var = list(var)[:list_length] + ['...', '(%d more elements)' % (len(var) - list_length,)]
-    return var

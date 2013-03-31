@@ -33,7 +33,7 @@ class GetCulpritTest(TestCase):
 
     def test_no_module_or_function(self):
         culprit = get_culprit([{}])
-        assert culprit == None
+        assert culprit is None
 
     def test_all_params(self):
         culprit = get_culprit([{
@@ -59,10 +59,8 @@ class GetStackInfoTest(TestCase):
         results = get_stack_info(frames)
         self.assertEquals(len(results), 1)
         result = results[0]
-        self.assertTrue('vars' in result)
-        vars = result['vars']
-        self.assertTrue(isinstance(vars, dict))
-        self.assertTrue('foo' in vars)
-        self.assertEquals(vars['foo'], 'bar')
-        self.assertTrue('biz' in vars)
-        self.assertEquals(vars['biz'], 'baz')
+        assert 'vars' in result
+        assert result['vars'] == {
+            "'foo'": "'bar'",
+            "'biz'": "'baz'",
+        }

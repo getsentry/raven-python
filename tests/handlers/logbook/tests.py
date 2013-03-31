@@ -59,7 +59,7 @@ class LogbookHandlerTest(TestCase):
             ))
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
-            self.assertEquals(event['extra']['url'], 'http://example.com')
+            self.assertEquals(event['extra']["'url'"], "'http://example.com'")
             self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
@@ -96,7 +96,7 @@ class LogbookHandlerTest(TestCase):
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test of {0}')
-            self.assertEquals(msg['params'], ('args',))
+            self.assertEquals(msg['params'], ("'args'",))
 
     def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])
