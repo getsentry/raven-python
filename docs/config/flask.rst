@@ -30,6 +30,14 @@ Additional settings for the client can be configured using ``SENTRY_<setting nam
         SENTRY_DSN = 'http://public_key:secret_key@example.com/1'
         SENTRY_INCLUDE_PATHS = ['myproject']
 
+If `Flask-Login <https://pypi.python.org/pypi/Flask-Login/>`_ is used by your application (including `Flask-Security <https://pypi.python.org/pypi/Flask-Security/>`_), user information will be captured when an exception or message is captured.
+By default, only the ``id`` (current_user.get_id()), ``is_authenticated``, and ``is_anonymous`` is captured for the user.  If you would like additional attributes on the ``current_user`` to be captured,  you can configure them using ``SENTRY_USER_ATTRS``::
+
+    class MyConfig(object):
+        SENTRY_USER_ATTRS = ['username', 'first_name', 'last_name', 'email']
+
+``email`` will be captured as ``sentry.interfaces.User.email``, and any additionl attributes will be available under ``sentry.interfaces.User.data``
+
 Usage
 -----
 
