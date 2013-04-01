@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from mock import Mock
 from raven.utils.compat import TestCase
@@ -61,6 +62,6 @@ class GetStackInfoTest(TestCase):
         result = results[0]
         assert 'vars' in result
         assert result['vars'] == {
-            "'foo'": "'bar'",
-            "'biz'": "'baz'",
+            "u'foo'": "u'bar'",
+            "u'biz'": "u'baz'",
         }
