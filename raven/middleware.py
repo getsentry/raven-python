@@ -18,8 +18,11 @@ class Sentry(object):
     >>> from raven.base import Client
     >>> application = Sentry(application, Client())
     """
-    def __init__(self, application, client):
+    def __init__(self, application, client=None):
         self.application = application
+        if client is None:
+            from raven.base import Client
+            client = Client()
         self.client = client
 
     def __call__(self, environ, start_response):
