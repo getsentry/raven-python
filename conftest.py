@@ -1,6 +1,26 @@
 from django.conf import settings
 import os.path
 
+INSTALLED_APPS=[
+    'django.contrib.auth',
+    'django.contrib.admin',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+
+    # Included to fix Disqus' test Django which solves IntegrityMessage case
+    'django.contrib.contenttypes',
+
+    'raven.contrib.django',
+]
+
+
+use_djcelery = True
+try:
+    import djcelery
+    INSTALLED_APPS.append('djcelery')
+except ImportError:
+    use_djcelery = False
+
 
 def pytest_configure(config):
     where_am_i = os.path.dirname(os.path.abspath(__file__))
@@ -17,19 +37,7 @@ def pytest_configure(config):
             },
             DATABASE_NAME=':memory:',
             TEST_DATABASE_NAME=':memory:',
-            INSTALLED_APPS=[
-                'django.contrib.auth',
-                'django.contrib.admin',
-                'django.contrib.sessions',
-                'django.contrib.sites',
-
-                # Included to fix Disqus' test Django which solves IntegrityMessage case
-                'django.contrib.contenttypes',
-
-                'djcelery',  # celery client
-
-                'raven.contrib.django',
-            ],
+            INSTALLED_APPS=INSTALLED_APPS,
             ROOT_URLCONF='',
             DEBUG=False,
             SITE_ID=1,
@@ -42,6 +50,5 @@ def pytest_configure(config):
             CELERY_ALWAYS_EAGER=True,
             TEMPLATE_DEBUG=True,
             TEMPLATE_DIRS=[os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates')],
+            ALLOWED_HOSTS=['*'],
         )
-        import djcelery
-        djcelery.setup_loader()

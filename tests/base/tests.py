@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 import inspect
 import mock
 import raven
 import time
 from socket import socket, AF_INET, SOCK_DGRAM
-from raven.utils.compat import TestCase
 from raven.base import Client, ClientState
 from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
+from raven.utils import six
+from raven.utils.compat import TestCase, skipIf
 
 
 class TempStoreClient(Client):
@@ -143,7 +145,7 @@ class ClientTest(TestCase):
         })
         send_remote.assert_called_once_with(
             url='http://example.com',
-            data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
+            data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
@@ -170,7 +172,7 @@ class ClientTest(TestCase):
         })
         send_remote.assert_called_once_with(
             url='http://example.com',
-            data='eJyrVkrLz1eyUlBKSixSqgUAIJgEVA==',
+            data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
@@ -364,9 +366,10 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra'], {'logger': "'test'", 'foo': "'bar'"})
+        self.assertEquals(event['extra'], {'logger': "u'test'", 'foo': "u'bar'"})
 
 
+@skipIf(six.PY3, "Skipping UDP for python3 for now")
 class ClientUDPTest(TestCase):
     def setUp(self):
         self.server_socket = socket(AF_INET, SOCK_DGRAM)

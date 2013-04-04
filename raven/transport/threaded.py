@@ -36,12 +36,12 @@ class AsyncWorker(object):
         size = self._queue.qsize()
         if size:
             timeout = self.options['shutdown_timeout']
-            print "Sentry is attempting to send %s pending error messages" % size
-            print "Waiting up to %s seconds" % timeout
+            print("Sentry is attempting to send %s pending error messages" % size)
+            print("Waiting up to %s seconds" % timeout)
             if os.name == 'nt':
-                print "Press Ctrl-Break to quit"
+                print("Press Ctrl-Break to quit")
             else:
-                print "Press Ctrl-C to quit"
+                print("Press Ctrl-C to quit")
             self.stop(timeout=timeout)
 
     def start(self):

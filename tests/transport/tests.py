@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from raven.utils.compat import TestCase
 from raven.base import Client
@@ -81,7 +82,7 @@ class TransportTest(TestCase):
         expected = {
             'project': '1',
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
-            'server_name': u'test_server',
+            'server_name': 'test_server',
             'level': 40,
             'modules': {},
             'tags': {},
