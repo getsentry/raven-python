@@ -3,7 +3,7 @@ bootstrap:
 	pip install "file://`pwd`#egg=raven[dev]"
 	pip install "file://`pwd`#egg=raven[tests]"
 
-test: lint
+test: bootstrap lint
 	@echo "Running Python tests"
 	python runtests.py -x
 	@echo ""
