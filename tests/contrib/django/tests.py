@@ -685,7 +685,7 @@ class PromiseSerializerTestCase(TestCase):
     def test_basic(self):
         from django.utils.functional import lazy
 
-        obj = lazy(lambda: 'bar', str)()
+        obj = lazy(lambda: 'bar', six.text_type)()
         res = transform(obj)
         self.assertEquals(res, "u'bar'")
 
@@ -695,7 +695,7 @@ class PromiseSerializerTestCase(TestCase):
         def fake_gettext(to_translate):
             return 'Igpay Atinlay'
 
-        fake_gettext_lazy = lazy(fake_gettext, str)
+        fake_gettext_lazy = lazy(fake_gettext, six.text_type)
 
         result = transform(fake_gettext_lazy("something"))
         self.assertTrue(isinstance(result, six.string_types))

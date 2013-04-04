@@ -39,7 +39,7 @@ class PromiseSerializer(Serializer):
         if hasattr(value, '%s__func' % pre):
             value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))
         else:
-            return six.text_type(value)
+            return self.recurse(six.text_type(value))
         return self.recurse(value, **kwargs)
 
 register(PromiseSerializer)
