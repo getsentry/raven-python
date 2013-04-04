@@ -11,7 +11,6 @@ from __future__ import absolute_import
 import base64
 import zlib
 import datetime
-import hashlib
 import logging
 import os
 import sys
@@ -23,7 +22,7 @@ import raven
 from raven.conf import defaults
 from raven.context import Context
 from raven.utils import json, get_versions, get_auth_header
-from raven.utils.encoding import to_string, to_unicode
+from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
@@ -337,21 +336,6 @@ class Client(object):
         if culprit:
             data['culprit'] = culprit
 
-        if not data.get('checksum'):
-            checksum_bits = handler.get_hash(data)
-        else:
-            checksum_bits = data['checksum']
-
-        if isinstance(checksum_bits, (list, tuple)):
-            checksum = hashlib.md5()
-            for bit in checksum_bits:
-                checksum.update(to_string(bit))
-            checksum = checksum.hexdigest()
-        else:
-            checksum = checksum_bits
-
-        data['checksum'] = checksum
-
         # Run the data through processors
         for processor in self.get_processors():
             data.update(processor.process(data))
@@ -456,11 +440,11 @@ class Client(object):
             return
 
         data = self.build_msg(event_type, data, date, time_spent,
-                extra, stack, tags=tags, **kwargs)
+            extra, stack, tags=tags, **kwargs)
 
         self.send(**data)
 
-        return (data.get('event_id'), data.get('checksum'))
+        return (data.get('event_id'),)
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event

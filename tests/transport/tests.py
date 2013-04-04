@@ -73,7 +73,7 @@ class TransportTest(TestCase):
 
     def test_build_then_send(self):
         c = Client(dsn="mock://some_username:some_password@localhost:8143/1",
-                name="test_server")
+            name="test_server")
 
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
         d = calendar.timegm(mydate.timetuple())
@@ -83,7 +83,6 @@ class TransportTest(TestCase):
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
             'server_name': u'test_server',
             'level': 40,
-            'checksum': 'acbd18db4cc2f85cedef654fccc4a4d8',
             'modules': {},
             'tags': {},
             'time_spent': None,

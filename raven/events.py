@@ -47,14 +47,6 @@ class Exception(BaseEvent):
             return '%s: %s' % (exc['type'], exc['value'])
         return exc['type']
 
-    def get_hash(self, data):
-        exc = data['sentry.interfaces.Exception']
-        output = [exc['type']]
-        for frame in data['sentry.interfaces.Stacktrace']['frames']:
-            output.append(frame['module'])
-            output.append(frame.get('context_line', frame['function']))
-        return output
-
     def capture(self, exc_info=None, **kwargs):
         new_exc_info = False
         if not exc_info or exc_info is True:
@@ -102,10 +94,6 @@ class Message(BaseEvent):
     - message: 'My message from %s about %s'
     - params: ('foo', 'bar')
     """
-    def get_hash(self, data):
-        msg = data['sentry.interfaces.Message']
-        return [msg['message']]
-
     def capture(self, message, params=(), formatted=None, **kwargs):
         message = to_unicode(message)
         data = {
@@ -129,10 +117,6 @@ class Query(BaseEvent):
     def to_string(self, data):
         sql = data['sentry.interfaces.Query']
         return sql['query']
-
-    def get_hash(self, data):
-        sql = data['sentry.interfaces.Query']
-        return [sql['query'], sql['engine']]
 
     def capture(self, query, engine, **kwargs):
         return {

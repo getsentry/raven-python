@@ -35,7 +35,7 @@ class AsyncSentryClient(Client):
 
         self.send(callback=kwargs.get('callback', None), **data)
 
-        return (data['event_id'], data['checksum'])
+        return (data['event_id'],)
 
     def send(self, auth_header=None, callback=None, **data):
         """

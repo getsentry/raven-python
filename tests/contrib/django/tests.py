@@ -369,7 +369,7 @@ class DjangoClientTest(TestCase):
             self.assertTrue('X-Sentry-ID' in headers)
             self.assertEquals(len(self.raven.events), 1)
             event = self.raven.events.pop(0)
-            self.assertEquals('$'.join([event['event_id'], event['checksum']]), headers['X-Sentry-ID'])
+            assert event['event_id'] == headers['X-Sentry-ID']
 
     def test_get_client(self):
         self.assertEquals(get_client(), get_client())
