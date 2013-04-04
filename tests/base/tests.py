@@ -271,7 +271,7 @@ class ClientTest(TestCase):
         self.assertTrue('timestamp' in event)
 
     def test_exception_context_manager(self):
-        cm = self.client.captureExceptions(tags={'foo': 'bar'})
+        cm = self.client.context(tags={'foo': 'bar'})
         try:
             with cm:
                 raise ValueError('foo')
