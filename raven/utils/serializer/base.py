@@ -105,7 +105,7 @@ class UnicodeSerializer(Serializer):
         # unicode character
         # e.g. we want the output to be like: "u'רונית מגן'"
         string_max_length = kwargs.get('string_max_length', None)
-        return "u'{}'".format(value[:string_max_length])
+        return "u'%s'" % (value[:string_max_length],)
 
 
 class StringSerializer(Serializer):
