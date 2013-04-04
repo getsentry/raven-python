@@ -8,7 +8,9 @@ import datetime
 import django
 import logging
 import mock
+import pytest
 import re
+import sys  # NOQA
 from exam import fixture
 from celery.tests.utils import with_eager_tasks
 
@@ -31,7 +33,6 @@ from raven.contrib.django.views import is_valid_origin
 from raven.utils.serializer import transform
 from raven.utils import six
 from raven.utils.six import StringIO
-from raven.utils.compat import skipIf
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 from .models import TestModel
@@ -313,7 +314,8 @@ class DjangoClientTest(TestCase):
     #     self.assertEquals(event['culprit'], 'tests.contrib.django.views in logging_request_exc')
     #     self.assertEquals(event['data']['META']['REMOTE_ADDR'], '127.0.0.1')
 
-    @skipIf(six.PY3, "Skipping due to python bug #10805")
+    # TODO: Python bug #10805
+    @pytest.mark.skipif(str('six.PY3'))
     def test_record_none_exc_info(self):
         # sys.exc_info can return (None, None, None) if no exception is being
         # handled anywhere on the stack. See:

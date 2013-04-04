@@ -37,6 +37,6 @@ except ImportError:
 
 
 try:
-    from unittest2 import TestCase, skipIf
+    from unittest2 import TestCase
 except ImportError:
-    from unittest import TestCase, skipIf  # NOQA
+    from unittest import TestCase  # NOQA

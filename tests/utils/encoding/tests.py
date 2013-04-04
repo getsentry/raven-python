@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 
+import pytest
 import uuid
 
 from raven.utils import six
-from raven.utils.compat import TestCase, skipIf
+from raven.utils.compat import TestCase
 from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
-
-    @skipIf(six.PY3, "Doesn't apply for python 3")
+    @pytest.mark.skipif(str('six.PY3'))
     def test_incorrect_unicode(self):
         x = 'רונית מגן'
         result = transform(x)
 
         assert result == "'רונית מגן'"
 
-    @skipIf(six.PY3, "Doesn't apply for python 3")
+    @pytest.mark.skipif(str('lambda: six.PY3'))
     def test_correct_unicode(self):
         # 'רונית מגן'
         x = six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
@@ -67,7 +67,7 @@ class TransformTest(TestCase):
         else:
             self.assertEqual(keys[0], "'foo'")
 
-    @skipIf(six.PY3, "Doesn't apply for python 3")
+    @pytest.mark.skipif(str('six.PY3'))
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 

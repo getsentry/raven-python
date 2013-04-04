@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import inspect
 import mock
+import pytest
 import raven
 import time
 from socket import socket, AF_INET, SOCK_DGRAM
@@ -10,7 +11,7 @@ from raven.base import Client, ClientState
 from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils import six
-from raven.utils.compat import TestCase, skipIf
+from raven.utils.compat import TestCase
 
 
 class TempStoreClient(Client):
@@ -369,7 +370,8 @@ class ClientTest(TestCase):
         self.assertEquals(event['extra'], {'logger': "u'test'", 'foo': "u'bar'"})
 
 
-@skipIf(six.PY3, "Skipping UDP for python3 for now")
+# TODO: Python 3
+@pytest.mark.skipif(str("six.PY3"))
 class ClientUDPTest(TestCase):
     def setUp(self):
         self.server_socket = socket(AF_INET, SOCK_DGRAM)
