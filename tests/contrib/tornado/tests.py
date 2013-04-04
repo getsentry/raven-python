@@ -4,6 +4,8 @@
 
     Test the tornado Async Client
 """
+from __future__ import unicode_literals
+
 import unittest
 from mock import patch
 from tornado import web, gen, testing
@@ -122,7 +124,7 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
-        assert kwargs['extra']['extra_data'] == "'extra custom non-dict data'"
+        assert kwargs['extra']['extra_data'] == "u'extra custom non-dict data'"
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
     def test_error_with_custom_dict_data_handler(self, send):
@@ -147,7 +149,7 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
-        assert kwargs['extra']['extra_data'] == "'extra custom dict data'"
+        assert kwargs['extra']['extra_data'] == "u'extra custom dict data'"
 
     @patch(
         'raven.contrib.tornado.AsyncSentryClient.send',

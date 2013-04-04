@@ -51,7 +51,7 @@ class Serializer(object):
         _depth += 1
         if _depth >= max_depth:
             try:
-                value = repr(value)
+                value = six.text_type(repr(value))
             except Exception as e:
                 import traceback
                 traceback.print_exc()
@@ -83,7 +83,7 @@ class DictSerializer(Serializer):
     types = (dict,)
 
     def make_key(self, key):
-        if not isinstance(key, basestring):
+        if not isinstance(key, six.string_types):
             return to_unicode(key)
         return key
 
@@ -105,7 +105,7 @@ class UnicodeSerializer(Serializer):
         # unicode character
         # e.g. we want the output to be like: "u'רונית מגן'"
         string_max_length = kwargs.get('string_max_length', None)
-        return six.text_type("u'{}'").format(value[:string_max_length])
+        return "u'{}'".format(value[:string_max_length])
 
 
 class StringSerializer(Serializer):

@@ -7,6 +7,7 @@ raven.handlers.logging
 """
 
 from __future__ import absolute_import
+from __future__ import print_function
 
 import datetime
 import logging
@@ -47,18 +48,19 @@ class SentryHandler(logging.Handler, object):
 
     def emit(self, record):
         try:
+            # Beware to python3 bug (see #10805) if exc_info is (None, None, None)
             self.format(record)
 
             # Avoid typical config issues by overriding loggers behavior
             if record.name.startswith('sentry.errors'):
-                print >> sys.stderr, to_string(record.message)
+                print(to_string(record.message), sys.stderr)
                 return
 
             return self._emit(record)
         except Exception:
-            print >> sys.stderr, "Top level Sentry exception caught - failed creating log record"
-            print >> sys.stderr, to_string(record.msg)
-            print >> sys.stderr, to_string(traceback.format_exc())
+            print("Top level Sentry exception caught - failed creating log record", sys.stderr)
+            print(to_string(record.msg), sys.stderr)
+            print(to_string(traceback.format_exc()), sys.stderr)
 
             try:
                 self.client.captureException()

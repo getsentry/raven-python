@@ -99,7 +99,7 @@ def report(request, project_id=None):
         return HttpResponseBadRequest()
 
     try:
-        decoded = json.loads(data)
+        decoded = json.loads(data.decode('utf8'))
     except json.JSONDecodeError:
         return HttpResponseBadRequest()
 
