@@ -66,7 +66,6 @@ class Serializer(object):
                     try:
                         return serializer.serialize(value, **kwargs)
                     except Exception as e:
-                        raise
                         logger.exception(e)
                         return six.text_type(type(value))
 
@@ -74,7 +73,6 @@ class Serializer(object):
             try:
                 return six.text_type(repr(value))
             except Exception as e:
-                raise
                 logger.exception(e)
                 # It's common case that a model's __unicode__ definition may try to query the database
                 # which if it was not cleaned up correctly, would hit a transaction aborted exception
