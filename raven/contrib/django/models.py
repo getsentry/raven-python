@@ -137,6 +137,8 @@ def get_client(client=None):
         options.setdefault('dsn', ga('DSN'))
         options.setdefault('context', ga('CONTEXT'))
 
+        class_name = str(class_name)
+
         instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
         if not tmp_client:
             _client = (client, instance)
