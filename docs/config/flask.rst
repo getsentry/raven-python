@@ -1,6 +1,13 @@
 Configuring Flask
 =================
 
+Installation
+------------
+
+If you haven't already, install raven with its explicit Flask dependencies:
+
+    pip install raven[flask]
+
 Setup
 -----
 
