@@ -45,6 +45,10 @@ tests_require = [
     'webob',
 ]
 
+flask_requires = [
+    'blinker',
+]
+
 
 setup(
     name='raven',
@@ -57,6 +61,7 @@ setup(
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,
     extras_require={
+        'flask': flask_requires,
         'tests': tests_require,
         'dev': dev_requires,
     },
