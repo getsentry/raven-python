@@ -9,7 +9,7 @@ env:
   - DJANGO=Django==1.2.7
   - DJANGO=Django==1.3.7
   - DJANGO=Django==1.4.5
-  - DJANGO=Django==1.5.0
+  - DJANGO=Django==1.5.1
   - DJANGO="-e git+git://github.com/django/django.git#egg=Django"
 
 install:
@@ -23,3 +23,13 @@ notifications:
     channels: "irc.freenode.org#sentry"
     on_success: change
     on_failure: change
+matrix:
+  exclude:
+    - python: "3.2"
+      env: DJANGO=Django==1.2.7
+    - python: "3.2"
+      env: DJANGO=Django==1.3.7
+    - python: "3.3"
+      env: DJANGO=Django==1.2.7
+    - python: "3.3"
+      env: DJANGO=Django==1.3.7
