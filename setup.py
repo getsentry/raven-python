@@ -26,13 +26,16 @@ dev_requires = [
     'flake8>=1.6',
 ]
 
-tests_require = [
+flask_requires = [
+    'Flask>=0.8',
     'blinker>=1.1',
+]
+
+tests_require = [
     'celery>=2.5',
     'Django>=1.2',
     'django-celery>=2.5',
     'exam>=0.5.2',
-    'Flask>=0.8',
     'logbook',
     'mock',
     'nose',
@@ -43,12 +46,7 @@ tests_require = [
     'tornado',
     'unittest2',
     'webob',
-]
-
-flask_requires = [
-    'blinker',
-]
-
+] + flask_requires
 
 setup(
     name='raven',
