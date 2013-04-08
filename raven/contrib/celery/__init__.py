@@ -68,8 +68,7 @@ def register_logger_signal(client, logger=None):
         # If one is found, we do not attempt to install another one.
         for h in logger.handlers:
             if type(h) == SentryHandler:
-                if not any(type(f) == CeleryFilter for f in h.filters):
-                    h.addFilter(filter_)
+                h.addFilter(filter_)
                 return False
 
         logger.addHandler(handler)
