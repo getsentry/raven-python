@@ -10,12 +10,13 @@ Using the Django integration is as simple as adding :mod:`raven.contrib.django.r
         'raven.contrib.django.raven_compat',
     )
 
+.. note:: This causes Raven to install a hook in Django that will automatically report uncaught exceptions.
+
 Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::
 
     RAVEN_CONFIG = {
         'dsn': 'http://public:secret@example.com/1',
     }
-
 
 You'll be referencing the client slightly differently in Django as well::
 
@@ -47,8 +48,8 @@ Integration with :mod:`logging`
 
 To integrate with the standard library's :mod:`logging` module:
 
-Django 1.3
-~~~~~~~~~~
+Django 1.3 or Newer
+~~~~~~~~~~~~~~~~~~~
 
 ::
 
