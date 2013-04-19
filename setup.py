@@ -31,6 +31,11 @@ flask_requires = [
     'blinker>=1.1',
 ]
 
+unittest2_requires = []
+if sys.version_info[0] == 2:
+    unittest2_requires = ['unittest2']
+
+
 tests_require = [
     'celery>=2.5',
     'Django>=1.2',
@@ -44,9 +49,8 @@ tests_require = [
     'pytest',
     'pytest-django-lite',
     'tornado',
-    'unittest2',
     'webob',
-] + flask_requires
+] + flask_requires + unittest2_requires
 
 setup(
     name='raven',
