@@ -23,7 +23,7 @@ for m in ('multiprocessing', 'billiard'):
 from setuptools import setup, find_packages
 
 dev_requires = [
-    'flake8>=1.6',
+    'flake8>=1.6,<2.0',
 ]
 
 flask_requires = [
