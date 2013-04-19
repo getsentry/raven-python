@@ -21,6 +21,7 @@ for m in ('multiprocessing', 'billiard'):
         pass
 
 from setuptools import setup, find_packages
+import sys
 
 dev_requires = [
     'flake8>=1.6,<2.0',
