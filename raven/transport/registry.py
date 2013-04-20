@@ -16,7 +16,7 @@ class TransportRegistry(object):
                 self.register_transport(transport)
 
     def register_transport(self, transport):
-        if not hasattr(transport, 'scheme') and not hasattr(transport.scheme, '__iter__'):
+        if not hasattr(transport, 'scheme') or not hasattr(transport.scheme, '__iter__'):
             raise AttributeError('Transport %s must have a scheme list', transport.__class__.__name__)
 
         for scheme in transport.scheme:
