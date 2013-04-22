@@ -27,14 +27,16 @@ dev_requires = [
     'flake8>=1.6,<2.0',
 ]
 
+unittest2_requires = ['unittest2']
 flask_requires = [
     'Flask>=0.8',
     'blinker>=1.1',
 ]
 
-unittest2_requires = []
-if sys.version_info[0] == 2:
-    unittest2_requires = ['unittest2']
+# If it's python3, remove flask & unittest2
+if sys.version_info[0] == 3:
+    flask_requires = []
+    unittest2_requires = []
 
 
 tests_require = [
