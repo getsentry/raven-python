@@ -12,4 +12,4 @@ socket.setsockopt(zmq.SUBSCRIBE, '')
 while True:
     data = socket.recv()
     jdata = json.loads(data)
-    print jdata
+    print(jdata)
