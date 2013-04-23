@@ -61,11 +61,19 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     for line in source[:2]:
         # File coding may be specified. Match pattern from PEP-263
         # (http://www.python.org/dev/peps/pep-0263/)
+        if isinstance(line, six.text_type):
+            line = line.encode()
         match = _coding_re.search(line.decode('ascii'))  # let's assume ascii
         if match:
             encoding = match.group(1)
             break
-    source = [six.text_type(sline, encoding, 'replace') for sline in source]
+
+    def decode_str(line):
+        if isinstance(line, six.text_type):
+            return line
+        else:
+            return six.text_type(line, encoding, 'replace')
+    source = [decode_str(sline) for sline in source]
 
     lower_bound = max(0, lineno - context_lines)
     upper_bound = min(lineno + 1 + context_lines, len(source))

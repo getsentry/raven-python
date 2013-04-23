@@ -118,7 +118,10 @@ class TransformTest(TestCase):
         x = Foo()
 
         result = transform(x)
-        self.assertEqual(result, "<class 'tests.utils.encoding.tests.Foo'>")
+        if six.PY3:
+            self.assertEqual(result, "<class 'tests.utils.encoding.tests.TransformTest.test_broken_repr.<locals>.Foo'>")
+        else:
+            self.assertEqual(result, "<class 'tests.utils.encoding.tests.Foo'>")
 
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
