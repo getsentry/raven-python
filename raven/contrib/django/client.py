@@ -156,7 +156,9 @@ class DjangoClient(Client):
             try:
                 return self.send_integrated(kwargs)
             except Exception as e:
-                self.error_logger.error('Unable to record event: %s', e, exc_info=True)
+                self.error_logger.error(
+                    'Unable to record event: %s\nEvent was: %r', e,
+                    kwargs['message'], exc_info=True)
 
     def send_integrated(self, kwargs):
         from sentry.models import Group

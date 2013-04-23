@@ -304,10 +304,11 @@ class Client(object):
                     if path.startswith('raven.'):
                         frame['in_app'] = False
                     else:
-                        frame['in_app'] = (any(path.startswith(x)
-                            for x in self.include_paths)
-                                and not any(path.startswith(x)
-                                    for x in self.exclude_paths))
+                        frame['in_app'] = (
+                            any(path.startswith(x) for x in self.include_paths)
+                            and not
+                            any(path.startswith(x) for x in self.exclude_paths)
+                        )
 
             if not culprit:
                 culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'])

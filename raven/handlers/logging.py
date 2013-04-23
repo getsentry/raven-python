@@ -15,9 +15,10 @@ import sys
 import traceback
 
 from raven.base import Client
-from raven.utils.encoding import to_string
-from raven.utils.stacks import iter_stack_frames, label_from_frame
 from raven.utils import six
+from raven.utils.encoding import to_string, to_unicode
+from raven.utils.stacks import iter_stack_frames, label_from_frame
+from raven.utils.encoding import to_unicode
 
 RESERVED = ('stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated', 'tags')
 
@@ -159,5 +160,6 @@ class SentryHandler(logging.Handler, object):
 
         kwargs.update(handler_kwargs)
 
-        return self.client.capture(event_type, stack=stack, data=data,
+        return self.client.capture(
+            event_type, stack=stack, data=data,
             extra=extra, date=date, **kwargs)
