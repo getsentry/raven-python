@@ -1,12 +1,14 @@
 from django.conf import settings
 import os.path
 import sys
+
+
 collect_ignore = []
 if sys.version_info[0] > 2:
     collect_ignore.append("tests/contrib/flask")
-    collect_ignore.append("tests/handlers/logbook")
 
-INSTALLED_APPS=[
+
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.admin',
     'django.contrib.sessions',
