@@ -41,12 +41,9 @@ Raven = None
 class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
-        if six.PY3:
-            level = 0
-        else:
-            level = -1
+
         handler = getattr(__import__(module, {},
-                {}, [class_name], level), class_name)
+                {}, [class_name]), class_name)
 
         self[key] = handler
 
