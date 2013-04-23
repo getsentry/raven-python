@@ -16,9 +16,8 @@ import traceback
 
 from raven.base import Client
 from raven.utils import six
-from raven.utils.encoding import to_string, to_unicode
+from raven.utils.encoding import to_string
 from raven.utils.stacks import iter_stack_frames, label_from_frame
-from raven.utils.encoding import to_unicode
 
 RESERVED = ('stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated', 'tags')
 
