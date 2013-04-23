@@ -53,6 +53,7 @@ tests_require = [
     'pytest-django-lite',
     'tornado',
     'webob',
+    'anyjson',
 ] + flask_requires + unittest2_requires
 
 setup(
