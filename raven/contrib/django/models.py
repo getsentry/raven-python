@@ -57,7 +57,8 @@ class ProxyClient(object):
     __ne__ = lambda x, o: get_client() != o
     __gt__ = lambda x, o: get_client() > o
     __ge__ = lambda x, o: get_client() >= o
-    __cmp__ = lambda x, o: cmp(get_client(), o)
+    if not six.PY3:
+        __cmp__ = lambda x, o: cmp(get_client(), o)  # NOQA
     __hash__ = lambda x: hash(get_client())
     # attributes are currently not callable
     # __call__ = lambda x, *a, **kw: get_client()(*a, **kw)
@@ -87,7 +88,8 @@ class ProxyClient(object):
     __invert__ = lambda x: ~(get_client())
     __complex__ = lambda x: complex(get_client())
     __int__ = lambda x: int(get_client())
-    __long__ = lambda x: long(get_client())
+    if not six.PY3:
+        __long__ = lambda x: long(get_client())  # NOQA
     __float__ = lambda x: float(get_client())
     __str__ = lambda x: six.binary_type(get_client())
     __unicode__ = lambda x: six.text_type(get_client())

@@ -1,4 +1,5 @@
 """Utilities for writing code that runs on Python 2 and 3"""
+# flake8: noqa
 
 # Copyright (c) 2010-2013 Benjamin Peterson
 #

@@ -150,10 +150,10 @@ class IntegerSerializer(Serializer):
 
 if not six.PY3:
     class LongSerializer(Serializer):
-        types = (long,)
+        types = (long,)  # noqa
 
         def serialize(self, value, **kwargs):
-            return long(value)
+            return long(value)  # noqa
 
 
 register(IterableSerializer)
