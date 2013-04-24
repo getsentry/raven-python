@@ -7,7 +7,7 @@ from raven.transport import Transport
 import json
 
 
-class MissingLibrary(StandardError):
+class MissingLibrary(Exception):
     pass
 
 try:
