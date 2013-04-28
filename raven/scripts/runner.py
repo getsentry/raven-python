@@ -12,7 +12,6 @@ from __future__ import print_function
 import logging
 import os
 import sys
-import pwd
 from optparse import OptionParser
 
 from raven import Client
@@ -26,6 +25,20 @@ def store_json(option, opt_str, value, parser):
         print("Invalid JSON was used for option %s.  Received: %s" % (opt_str, value))
         sys.exit(1)
     setattr(parser.values, option.dest, value)
+
+
+def get_loadavg():
+    if hasattr(os, 'getloadavg'):
+        return os.getloadavg()
+    return None
+
+
+def get_uid():
+    try:
+        import pwd
+    except ImportError:
+        return None
+    return pwd.getpwuid(os.geteuid())[0]
 
 
 def send_test_message(client, options):
@@ -60,8 +73,8 @@ def send_test_message(client, options):
         stack=True,
         tags=options.get('tags', {}),
         extra={
-            'user': pwd.getpwuid(os.geteuid())[0],
-            'loadavg': os.getloadavg(),
+            'user': get_uid(),
+            'loadavg': get_loadavg(),
         },
     ))
 
