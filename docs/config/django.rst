@@ -18,6 +18,11 @@ Additional settings for the client are configured using the ``RAVEN_CONFIG`` dic
         'dsn': 'http://public:secret@example.com/1',
     }
 
+Once you've configured the client, you can test it using the standard Django
+management interface::
+
+    python manage.py raven test
+
 You'll be referencing the client slightly differently in Django as well::
 
     from raven.contrib.django.raven_compat.models import client
