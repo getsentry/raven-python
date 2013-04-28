@@ -28,6 +28,51 @@ def store_json(option, opt_str, value, parser):
     setattr(parser.values, option.dest, value)
 
 
+def send_test_message(client, options):
+    print("Client configuration:")
+    for k in ('servers', 'project', 'public_key', 'secret_key'):
+        print('  %-15s: %s' % (k, getattr(client, k)))
+    print()
+
+    if not all([client.servers, client.project, client.public_key, client.secret_key]):
+        print("Error: All values must be set!")
+        sys.exit(1)
+
+    if not client.is_enabled():
+        print('Error: Client reports as being disabled!')
+        sys.exit(1)
+
+    data = options.get('data', {
+        'culprit': 'raven.scripts.runner',
+        'logger': 'raven.test',
+        'sentry.interfaces.Http': {
+            'method': 'GET',
+            'url': 'http://example.com',
+        }
+    })
+
+    print('Sending a test message...',)
+
+    ident = client.get_ident(client.captureMessage(
+        message='This is a test message generated using ``raven test``',
+        data=data,
+        level=logging.INFO,
+        stack=True,
+        tags=options.get('tags', {}),
+        extra={
+            'user': pwd.getpwuid(os.geteuid())[0],
+            'loadavg': os.getloadavg(),
+        },
+    ))
+
+    if client.state.did_fail():
+        print('error!')
+        return False
+
+    print('success!')
+    print('Event ID was %r' % (ident,))
+
+
 def main():
     root = logging.getLogger('sentry.errors')
     root.setLevel(logging.DEBUG)
@@ -51,44 +96,4 @@ def main():
     print()
 
     client = Client(dsn, include_paths=['raven'])
-
-    print("Client configuration:")
-    for k in ('servers', 'project', 'public_key', 'secret_key'):
-        print('  %-15s: %s' % (k, getattr(client, k)))
-    print()
-
-    if not all([client.servers, client.project, client.public_key, client.secret_key]):
-        print("Error: All values must be set!")
-        sys.exit(1)
-
-    data = opts.data or {
-        'culprit': 'raven.scripts.runner',
-        'logger': 'raven.test',
-        'sentry.interfaces.Http': {
-            'method': 'GET',
-            'url': 'http://example.com',
-        }
-    }
-
-    print('Sending a test message...',)
-    ident = client.get_ident(client.captureMessage(
-        message='This is a test message generated using ``raven test``',
-        data=data,
-        level=logging.INFO,
-        stack=True,
-        tags=opts.tags,
-        extra={
-            'user': pwd.getpwuid(os.geteuid())[0],
-            'loadavg': os.getloadavg(),
-        },
-    ))
-
-    if client.state.did_fail():
-        print('error!')
-        return False
-
-    print('success!')
-    print()
-    print('The test message can be viewed at the following URL:')
-    url = client.servers[0].split('/api/store/', 1)[0]
-    print('  %s/%s/search/?q=%s' % (url, client.project, ident))
+    send_test_message(client, opts.__dict__)
