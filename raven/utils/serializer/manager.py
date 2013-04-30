@@ -71,7 +71,7 @@ class Serializer(object):
 
             # if all else fails, lets use the repr of the object
             try:
-                return six.text_type(repr(value))
+                return repr(value)
             except Exception as e:
                 logger.exception(e)
                 # It's common case that a model's __unicode__ definition may try to query the database
