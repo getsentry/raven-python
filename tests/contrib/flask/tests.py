@@ -1,5 +1,7 @@
 import logging
 from flask import Flask, current_app
+from flask.ext.login import LoginManager, AnonymousUser
+
 from raven.base import Client
 from raven.contrib.flask import Sentry
 from raven.utils.compat import TestCase
@@ -38,6 +40,20 @@ def create_app():
         current_app.sentry.captureMessage('Interesting')
         return 'World'
     return app
+
+
+def init_login(app):
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    class User(AnonymousUser):
+        is_active = lambda: True
+        is_authenticated = lambda: True
+        get_id = lambda: 1
+
+    @login_manager.user_loader
+    def load_user(userid):
+        return User()
 
 
 class FlaskTest(TestCase):
@@ -163,3 +179,17 @@ class FlaskTest(TestCase):
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
         self.assertEqual({}, http.get('data'))
+
+
+class FlaskTest(TestCase):
+    def setUp(self):
+        self.app = create_app()
+        init_login(self.app)
+        self.client = self.app.test_client()
+
+    def test_user(self):
+        client = TempStoreClient()
+        sentry = Sentry(self.app, client=client)
+        response = self.client.get('/an-error/')
+        event = client.events.pop(0)
+        self.assertTrue('sentry.interfaces.User' in event)
