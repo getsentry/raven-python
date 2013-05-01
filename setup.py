@@ -30,8 +30,11 @@ dev_requires = [
 unittest2_requires = ['unittest2']
 flask_requires = [
     'Flask>=0.8',
-    'Flask-Login>=0.1.3',
     'blinker>=1.1',
+]
+
+flask_tests_requires = [
+    'Flask-Login>=0.1.3',
 ]
 
 # If it's python3, remove flask & unittest2
@@ -55,7 +58,7 @@ tests_require = [
     'tornado',
     'webob',
     'anyjson',
-] + flask_requires + unittest2_requires
+] + flask_requires + flask_tests_requires + unittest2_requires
 
 setup(
     name='raven',
