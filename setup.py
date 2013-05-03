@@ -40,6 +40,7 @@ flask_tests_requires = [
 # If it's python3, remove flask & unittest2
 if sys.version_info[0] == 3:
     flask_requires = []
+    flask_tests_requires = []
     unittest2_requires = []
 
 
