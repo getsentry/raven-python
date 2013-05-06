@@ -52,7 +52,7 @@ class SentryHandler(logging.Handler, object):
             self.format(record)
 
             # Avoid typical config issues by overriding loggers behavior
-            if record.name.startswith('sentry.errors'):
+            if record.name.startswith(('sentry.errors', 'raven')):
                 print(to_string(record.message), sys.stderr)
                 return
 

@@ -41,7 +41,7 @@ class SentryHandler(logbook.Handler):
     def emit(self, record):
         try:
             # Avoid typical config issues by overriding loggers behavior
-            if record.channel.startswith('sentry.errors'):
+            if record.channel.startswith(('sentry.errors', 'raven')):
                 print >> sys.stderr, to_string(self.format(record))
                 return
 
