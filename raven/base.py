@@ -490,6 +490,8 @@ class Client(object):
             self.error_logger.error(message)
             return
 
+        self.logger.debug('Sending message of length %d to %s', len(data), url)
+
         def failed_send(e):
             self._failed_send(e, url, data)
 
