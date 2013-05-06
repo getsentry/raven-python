@@ -1,8 +1,19 @@
+import logging
 import urlparse
 
 from raven.utils.wsgi import get_headers, get_environ
 from werkzeug.exceptions import ClientDisconnected
 from flask import current_app
+
+logger = logging.getLogger(__name__)
+
+
+try:
+    from flask_login import current_user
+except ImportError:
+    has_flask_login = False
+else:
+    has_flask_login = True
 
 
 def get_user_info(request):
@@ -10,15 +21,21 @@ def get_user_info(request):
         Requires Flask-Login (https://pypi.python.org/pypi/Flask-Login/) to be installed
         and setup
     """
-    try:
-        from flask_login import current_user
-    except ImportError:
-        return None
+    if not has_flask_login:
+        return
 
     if not hasattr(current_app, 'login_manager'):
-        return None
+        return
 
-    if current_user.is_authenticated():
+    try:
+        is_authenticated = current_user.is_authenticated()
+    except AttributeError:
+        # HACK: catch the attribute error thrown by flask-login is not attached
+        # >   current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
+        # E   AttributeError: 'RequestContext' object has no attribute 'user'
+        return {}
+
+    if is_authenticated:
         user_info = {
             'is_authenticated': True,
             'is_anonymous': current_user.is_anonymous(),
@@ -46,17 +63,22 @@ def get_data_from_request(request):
     except ClientDisconnected:
         formdata = {}
 
-    result = {}
-
-    result['sentry.interfaces.User'] = get_user_info(request)
-
-    result['sentry.interfaces.Http'] = {
-        'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
-        'query_string': urlparts.query,
-        'method': request.method,
-        'data': formdata,
-        'headers': dict(get_headers(request.environ)),
-        'env': dict(get_environ(request.environ)),
+    data = {
+        'sentry.interfaces.Http': {
+            'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
+            'query_string': urlparts.query,
+            'method': request.method,
+            'data': formdata,
+            'headers': dict(get_headers(request.environ)),
+            'env': dict(get_environ(request.environ)),
+        }
     }
+    try:
+        user_data = get_user_info(request)
+    except Exception as e:
+        logger.exception(e)
+    else:
+        if user_data:
+            data['sentry.interfaces.User'] = user_data
 
-    return result
+    return data

@@ -1,11 +1,14 @@
 import logging
+
+from exam import before, fixture
+from mock import patch
+
 from flask import Flask, current_app
-from flask.ext.login import LoginManager, AnonymousUser
+from flask.ext.login import LoginManager, AnonymousUser, login_user
 
 from raven.base import Client
 from raven.contrib.flask import Sentry
 from raven.utils.compat import TestCase
-from mock import patch
 
 
 class TempStoreClient(Client):
@@ -20,6 +23,12 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
+class User(AnonymousUser):
+    is_active = lambda x: True
+    is_authenticated = lambda x: True
+    get_id = lambda x: 1
+
+
 def create_app():
     app = Flask(__name__)
 
@@ -32,13 +41,18 @@ def create_app():
         try:
             raise ValueError('Boom')
         except:
-            current_app.sentry.captureException()
+            current_app.extensions['sentry'].captureException()
         return 'Hello'
 
     @app.route('/message/', methods=['GET', 'POST'])
     def capture_message():
-        current_app.sentry.captureMessage('Interesting')
+        current_app.extensions['sentry'].captureMessage('Interesting')
         return 'World'
+
+    @app.route('/an-error-logged-in/', methods=['GET', 'POST'])
+    def login():
+        login_user(User())
+        raise ValueError('hello world')
     return app
 
 
@@ -46,35 +60,39 @@ def init_login(app):
     login_manager = LoginManager()
     login_manager.init_app(app)
 
-    class User(AnonymousUser):
-        is_active = lambda: True
-        is_authenticated = lambda: True
-        get_id = lambda: 1
-
     @login_manager.user_loader
     def load_user(userid):
         return User()
 
+    return login_manager
 
-class FlaskTest(TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
 
+class BaseTest(TestCase):
+    @fixture
+    def app(self):
+        return create_app()
+
+    @fixture
+    def client(self):
+        return self.app.test_client()
+
+    @before
+    def bind_sentry(self):
+        self.raven = TempStoreClient()
+        self.middleware = Sentry(self.app, client=self.raven)
+
+
+class FlaskTest(BaseTest):
     def test_does_add_to_extensions(self):
-        client = TempStoreClient()
-        sentry = Sentry(self.app, client=client)
         self.assertIn('sentry', self.app.extensions)
-        self.assertEquals(self.app.extensions['sentry'], sentry)
+        self.assertEquals(self.app.extensions['sentry'], self.middleware)
 
     def test_error_handler(self):
-        client = TempStoreClient()
-        sentry = Sentry(self.app, client=client)
         response = self.client.get('/an-error/')
         self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(client.events), 1)
+        self.assertEquals(len(self.raven.events), 1)
 
-        event = client.events.pop(0)
+        event = self.raven.events.pop(0)
 
         self.assertTrue('sentry.interfaces.Exception' in event)
         exc = event['sentry.interfaces.Exception']
@@ -85,13 +103,11 @@ class FlaskTest(TestCase):
         self.assertEquals(event['culprit'], 'tests.contrib.flask.tests in an_error')
 
     def test_get(self):
-        client = TempStoreClient()
-        sentry = Sentry(self.app, client=client)
         response = self.client.get('/an-error/?foo=bar')
         self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(client.events), 1)
+        self.assertEquals(len(self.raven.events), 1)
 
-        event = client.events.pop(0)
+        event = self.raven.events.pop(0)
 
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
@@ -114,13 +130,11 @@ class FlaskTest(TestCase):
         self.assertEquals(env['SERVER_PORT'], '80')
 
     def test_post(self):
-        client = TempStoreClient()
-        sentry = Sentry(self.app, client=client)
         response = self.client.post('/an-error/?biz=baz', data={'foo': 'bar'})
         self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(client.events), 1)
+        self.assertEquals(len(self.raven.events), 1)
 
-        event = client.events.pop(0)
+        event = self.raven.events.pop(0)
 
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
@@ -143,25 +157,22 @@ class FlaskTest(TestCase):
         self.assertEquals(env['SERVER_PORT'], '80')
 
     def test_captureException_captures_http(self):
-        client = TempStoreClient()
-        sentry = self.app.sentry = Sentry(self.app, client=client)
         response = self.client.get('/capture/?foo=bar')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(len(client.events), 1)
+        self.assertEquals(len(self.raven.events), 1)
 
-        event = client.events.pop(0)
+        event = self.raven.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        self.assertTrue('sentry.interfaces.Http' in event)
+        assert event['message'] == 'ValueError: Boom'
+        assert 'sentry.interfaces.Http' in event
+        assert 'sentry.interfaces.Exception' in event
 
     def test_captureMessage_captures_http(self):
-        client = TempStoreClient()
-        sentry = self.app.sentry = Sentry(self.app, client=client)
         response = self.client.get('/message/?foo=bar')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(len(client.events), 1)
+        self.assertEquals(len(self.raven.events), 1)
 
-        event = client.events.pop(0)
+        event = self.raven.events.pop(0)
 
         self.assertTrue('sentry.interfaces.Message' in event)
         self.assertTrue('sentry.interfaces.Http' in event)
@@ -170,26 +181,22 @@ class FlaskTest(TestCase):
     def test_get_data_handles_disconnected_client(self, lfd):
         from werkzeug.exceptions import ClientDisconnected
         lfd.side_effect = ClientDisconnected
-        client = TempStoreClient()
-        sentry = self.app.sentry = Sentry(self.app, client=client)
-        response = self.client.post('/capture/?foo=bar', data={'baz': 'foo'})
+        self.client.post('/capture/?foo=bar', data={'baz': 'foo'})
 
-        event = client.events.pop(0)
+        event = self.raven.events.pop(0)
 
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
         self.assertEqual({}, http.get('data'))
 
 
-class FlaskTest(TestCase):
-    def setUp(self):
-        self.app = create_app()
-        init_login(self.app)
-        self.client = self.app.test_client()
+class FlaskLoginTest(BaseTest):
+    @before
+    def setup_login(self):
+        self.login_manager = init_login(self.app)
 
     def test_user(self):
-        client = TempStoreClient()
-        sentry = Sentry(self.app, client=client)
-        response = self.client.get('/an-error/')
-        event = client.events.pop(0)
-        self.assertTrue('sentry.interfaces.User' in event)
+        self.client.get('/an-error-logged-in/')
+        event = self.raven.events.pop(0)
+        assert 'sentry.interfaces.Http' in event
+        assert 'sentry.interfaces.User' in event
