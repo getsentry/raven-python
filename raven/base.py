@@ -130,8 +130,8 @@ class Client(object):
         # configure loggers first
         cls = self.__class__
         self.state = ClientState()
-        self.logger = logging.getLogger('%s.%s' % (cls.__module__,
-            cls.__name__))
+        self.logger = logging.getLogger(
+            '%s.%s' % (cls.__module__, cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
 
         if dsn is None and os.environ.get('SENTRY_DSN'):
@@ -142,9 +142,9 @@ class Client(object):
         if dsn:
             # TODO: should we validate other options werent sent?
             urlparts = urlparse(dsn)
-            msg = "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
-                    urlparts.netloc, urlparts.path)
-            self.logger.debug(msg)
+            self.logger.debug(
+                "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
+                urlparts.netloc, urlparts.path))
             dsn_config = raven.load(dsn, transport_registry=self._registry)
             servers = dsn_config['SENTRY_SERVERS']
             project = dsn_config['SENTRY_PROJECT']
@@ -164,11 +164,12 @@ class Client(object):
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
         self.name = six.text_type(o.get('name') or defaults.NAME)
-        self.auto_log_stacks = bool(o.get('auto_log_stacks') or
-                defaults.AUTO_LOG_STACKS)
-        self.string_max_length = int(o.get('string_max_length') or
-                defaults.MAX_LENGTH_STRING)
-        self.list_max_length = int(o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
+        self.auto_log_stacks = bool(
+            o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
+        self.string_max_length = int(
+            o.get('string_max_length') or defaults.MAX_LENGTH_STRING)
+        self.list_max_length = int(
+            o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
         self.site = o.get('site', defaults.SITE)
         self.include_versions = o.get('include_versions', True)
         self.processors = o.get('processors')
@@ -184,7 +185,9 @@ class Client(object):
 
         # servers may be set to a NoneType (for Django)
         if not self.is_enabled():
-            self.logger.info('Raven is not configured (disabled). Please see documentation for more information.')
+            self.logger.info(
+                'Raven is not configured (logging is disabled). Please see the'
+                ' documentation for more information.')
 
         if Raven is None:
             Raven = self
@@ -240,8 +243,8 @@ class Client(object):
         return '%s:%s' % (scheme, url)
 
     def build_msg(self, event_type, data=None, date=None,
-            time_spent=None, extra=None, stack=None, public_key=None,
-            tags=None, **kwargs):
+                  time_spent=None, extra=None, stack=None, public_key=None,
+                  tags=None, **kwargs):
         """
         Captures, processes and serializes an event into a dict object
 
@@ -369,7 +372,8 @@ class Client(object):
         return data
 
     def transform(self, data):
-        return transform(data, list_max_length=self.list_max_length,
+        return transform(
+            data, list_max_length=self.list_max_length,
             string_max_length=self.string_max_length)
 
     def context(self, **kwargs):
@@ -440,8 +444,9 @@ class Client(object):
         if not self.is_enabled():
             return
 
-        data = self.build_msg(event_type, data, date, time_spent,
-            extra, stack, tags=tags, **kwargs)
+        data = self.build_msg(
+            event_type, data, date, time_spent, extra, stack, tags=tags,
+            **kwargs)
 
         self.send(**data)
 
@@ -471,14 +476,13 @@ class Client(object):
         if isinstance(e, HTTPError):
             body = e.read()
             self.error_logger.error(
-                'Unable to reach Sentry log server: %s'
-                ' (url: %%s, body: %%s)' % (e,),
-                url, body, exc_info=True,
-                extra={'data': {'body': body, 'remote_url': url}})
+                'Unable to reach Sentry log server: %s (url: %s, body: %s)',
+                e, url, body, exc_info=True,
+                extra={'data': {'body': body[:200], 'remote_url': url}})
         else:
-            tmpl = 'Unable to reach Sentry log server: %s (url: %%s)'
-            self.error_logger.error(tmpl % (e,), url, exc_info=True,
-                    extra={'data': {'remote_url': url}})
+            self.error_logger.error(
+                'Unable to reach Sentry log server: %s (url: %s)', e, url,
+                exc_info=True, extra={'data': {'remote_url': url}})
 
         message = self._get_log_message(data)
         self.error_logger.error('Failed to submit message: %r', message)
@@ -576,7 +580,8 @@ class Client(object):
         perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
         for you.
         """
-        return self.capture('raven.events.Exception', exc_info=exc_info, **kwargs)
+        return self.capture(
+            'raven.events.Exception', exc_info=exc_info, **kwargs)
 
     def captureQuery(self, query, params=(), engine=None, **kwargs):
         """
@@ -584,11 +589,14 @@ class Client(object):
 
         >>> client.captureQuery('SELECT * FROM foo')
         """
-        return self.capture('raven.events.Query', query=query, params=params, engine=engine,
-                **kwargs)
+        return self.capture(
+            'raven.events.Query', query=query, params=params, engine=engine,
+            **kwargs)
 
     def captureExceptions(self, **kwargs):
-        warnings.warn('captureExceptions is deprecated, used context() instead.', DeprecationWarning)
+        warnings.warn(
+            'captureExceptions is deprecated, used context() instead.',
+            DeprecationWarning)
         return self.context(**kwargs)
 
 
