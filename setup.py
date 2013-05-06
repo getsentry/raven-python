@@ -33,9 +33,14 @@ flask_requires = [
     'blinker>=1.1',
 ]
 
+flask_tests_requires = [
+    'Flask-Login>=0.1.3',
+]
+
 # If it's python3, remove flask & unittest2
 if sys.version_info[0] == 3:
     flask_requires = []
+    flask_tests_requires = []
     unittest2_requires = []
 
 
@@ -54,7 +59,7 @@ tests_require = [
     'tornado',
     'webob',
     'anyjson',
-] + flask_requires + unittest2_requires
+] + flask_requires + flask_tests_requires + unittest2_requires
 
 setup(
     name='raven',
