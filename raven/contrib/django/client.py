@@ -17,7 +17,7 @@ from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
 
 from raven.base import Client
-from raven.contrib.django.utils import get_data_from_template
+from raven.contrib.django.utils import get_data_from_template, get_host
 from raven.utils.wsgi import get_headers, get_environ
 
 __all__ = ('DjangoClient',)
@@ -60,7 +60,7 @@ class DjangoClient(Client):
                 scheme = 'https'
             else:
                 scheme = 'http'
-            host = request.META.get('HTTP_HOST', 'unknown.host')
+            host = get_host(request)
             uri = '%s://%s%s' % (scheme, host, request.path)
 
         if request.method != 'GET':

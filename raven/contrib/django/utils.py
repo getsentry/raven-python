@@ -8,6 +8,8 @@ raven.contrib.django.utils
 
 from __future__ import absolute_import
 
+from django.conf import settings
+
 
 def linebreak_iter(template_source):
     yield 0
@@ -49,3 +51,23 @@ def get_data_from_template(source):
         },
         'culprit': origin.loadname,
     }
+
+
+def get_host(request):
+    """
+    A reimplementation of Django's get_host, without the
+    SuspiciousOperation check.
+    """
+    # We try three options, in order of decreasing preference.
+    if settings.USE_X_FORWARDED_HOST and (
+            'HTTP_X_FORWARDED_HOST' in request.META):
+        host = request.META['HTTP_X_FORWARDED_HOST']
+    elif 'HTTP_HOST' in request.META:
+        host = request.META['HTTP_HOST']
+    else:
+        # Reconstruct the host using the algorithm from PEP 333.
+        host = request.META['SERVER_NAME']
+        server_port = str(request.META['SERVER_PORT'])
+        if server_port != (request.is_secure() and '443' or '80'):
+            host = '%s:%s' % (host, server_port)
+    return host
