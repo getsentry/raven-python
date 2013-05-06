@@ -80,7 +80,8 @@ class Sentry(object):
         if not self.client:
             return
 
-        self.client.captureException(exc_info=kwargs.get('exc_info'),
+        self.client.captureException(
+            exc_info=kwargs.get('exc_info'),
             data=get_data_from_request(request),
             extra={
                 'app': self.app,
@@ -111,7 +112,7 @@ class Sentry(object):
         if data is None:
             try:
                 kwargs['data'] = get_data_from_request(request)
-            except RuntimeError:
+            except RuntimeError as e:
                 # app is probably not configured yet
                 pass
         return self.client.captureException(*args, **kwargs)
@@ -122,7 +123,7 @@ class Sentry(object):
         if data is None:
             try:
                 kwargs['data'] = get_data_from_request(request)
-            except RuntimeError:
+            except RuntimeError as e:
                 # app is probably not configured yet
                 pass
         return self.client.captureMessage(*args, **kwargs)
