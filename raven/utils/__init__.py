@@ -66,7 +66,7 @@ def get_version_from_app(module_name, app):
     if isinstance(version, (list, tuple)):
         version = '.'.join(str(o) for o in version)
 
-    return version
+    return str(version)
 
 
 def get_versions(module_list=None):
