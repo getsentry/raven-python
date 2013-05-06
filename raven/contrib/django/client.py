@@ -54,8 +54,14 @@ class DjangoClient(Client):
         try:
             uri = request.build_absolute_uri()
         except SuspiciousOperation:
-            # Bail early if the URL has an invalid host
-            return result
+            # attempt to build a URL for reporting as Django won't allow us to
+            # use get_host()
+            if request.is_secure():
+                scheme = 'https'
+            else:
+                scheme = 'http'
+            host = request.META.get('HTTP_HOST', 'unknown.host')
+            uri = '%s://%s%s' % (scheme, host, request.path)
 
         if request.method != 'GET':
             if hasattr(request, 'body'):

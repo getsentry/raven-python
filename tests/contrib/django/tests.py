@@ -481,9 +481,11 @@ class DjangoClientTest(TestCase):
     def test_suspicious_operation_in_build_absolute_uri(self, build_absolute_uri):
         build_absolute_uri.side_effect = SuspiciousOperation()
         request = make_request()
+        request.META['HTTP_HOST'] = 'example.com'
         result = self.raven.get_data_from_request(request)
         build_absolute_uri.assert_called_once_with()
-        assert 'sentry.interfaces.Http' not in result
+        assert 'sentry.interfaces.Http' in result
+        assert result['sentry.interfaces.Http']['url'] == 'http://example.com/'
 
 
 class DjangoTemplateTagTest(TestCase):
