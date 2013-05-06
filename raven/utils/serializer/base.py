@@ -105,7 +105,7 @@ class UnicodeSerializer(Serializer):
         # unicode character
         # e.g. we want the output to be like: "u'רונית מגן'"
         string_max_length = kwargs.get('string_max_length', None)
-        return "u'%s'" % (value[:string_max_length],)
+        return repr(six.text_type('%s')) % (value[:string_max_length],)
 
 
 class StringSerializer(Serializer):
@@ -113,7 +113,7 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        return six.binary_type("'%s'") % (
+        return repr(six.binary_type('%s')) % (
             value.decode('utf-8').encode('utf-8')[:string_max_length],)
 
 
