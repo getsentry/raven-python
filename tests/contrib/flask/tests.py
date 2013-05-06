@@ -30,7 +30,10 @@ class User(AnonymousUser):
 
 
 def create_app():
+    import os
+
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.urandom(40)
 
     @app.route('/an-error/', methods=['GET', 'POST'])
     def an_error():
@@ -198,5 +201,6 @@ class FlaskLoginTest(BaseTest):
     def test_user(self):
         self.client.get('/an-error-logged-in/')
         event = self.raven.events.pop(0)
+        assert event['message'] == 'ValueError: hello world'
         assert 'sentry.interfaces.Http' in event
         assert 'sentry.interfaces.User' in event
