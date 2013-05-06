@@ -48,43 +48,40 @@ class Exception(BaseEvent):
         return exc['type']
 
     def capture(self, exc_info=None, **kwargs):
-        new_exc_info = False
         if not exc_info or exc_info is True:
-            new_exc_info = True
             exc_info = sys.exc_info()
 
         if not exc_info:
             raise ValueError('No exception found')
 
-        try:
-            exc_type, exc_value, exc_traceback = exc_info
+        exc_type, exc_value, exc_traceback = exc_info
 
-            frames = get_stack_info(iter_traceback_frames(exc_traceback),
+        try:
+            frames = get_stack_info(
+                iter_traceback_frames(exc_traceback),
                 transformer=self.transform)
 
             exc_module = getattr(exc_type, '__module__', None)
             if exc_module:
                 exc_module = str(exc_module)
             exc_type = getattr(exc_type, '__name__', '<unknown>')
-        finally:
-            if new_exc_info:
-                try:
-                    del exc_info
-                    del exc_traceback
-                except Exception as e:
-                    self.logger.exception(e)
 
-        return {
-            'level': logging.ERROR,
-            'sentry.interfaces.Exception': {
-                'value': to_unicode(exc_value),
-                'type': str(exc_type),
-                'module': to_unicode(exc_module),
-            },
-            'sentry.interfaces.Stacktrace': {
-                'frames': frames
-            },
-        }
+            return {
+                'level': logging.ERROR,
+                'sentry.interfaces.Exception': {
+                    'value': to_unicode(exc_value),
+                    'type': str(exc_type),
+                    'module': to_unicode(exc_module),
+                },
+                'sentry.interfaces.Stacktrace': {
+                    'frames': frames
+                },
+            }
+        finally:
+            try:
+                del exc_type, exc_value, exc_traceback
+            except Exception as e:
+                self.logger.exception(e)
 
 
 class Message(BaseEvent):

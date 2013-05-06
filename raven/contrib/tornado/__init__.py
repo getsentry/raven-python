@@ -131,7 +131,7 @@ class SentryMixin(object):
                 try:
                     fail()
                 except Exception as e:
-                    self.captureException(sys.exc_info())
+                    self.captureException()
 
 
     While the above example would result in sequential execution, an example
