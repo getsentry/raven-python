@@ -201,6 +201,8 @@ class Client(object):
     def configure_logging(self):
         for name in ('raven', 'sentry'):
             logger = logging.getLogger(name)
+            if logger.handlers:
+                continue
             logger.addHandler(logging.StreamHandler())
             logger.setLevel(logging.INFO)
 
