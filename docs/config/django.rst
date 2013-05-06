@@ -261,3 +261,32 @@ will need to add a hook to gunicorn to activate Raven::
     def when_ready(server):
         from django.core.management import call_command
         call_command('validate')
+
+Circus
+~~~~~~
+
+If you are running Django with `circus <http://circus.rtfd.org/>`_ and
+`chaussette <http://chaussette.readthedocs.org/>`_ you will also need
+to add a hook to circus to activate Raven::
+
+    def run_raven(*args, **kwargs):
+        """Set up raven for django by running a django command.
+        It is necessary because chaussette doesn't run a django command.
+    
+        """
+        from django.core.management import call_command
+        call_command('validate')
+        return True
+
+And in your circus configuration::
+
+    [socket:dwebapp]
+    host = 127.0.0.1
+    port = 8080
+
+    [watcher:dwebworker]
+    cmd = chaussette --fd $(circus.sockets.dwebapp) dproject.wsgi.application
+    use_sockets = True
+    numprocesses = 2
+    hooks.after_start = dproject.hooks.run_raven
+
