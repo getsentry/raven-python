@@ -27,7 +27,7 @@ class BetterJSONEncoder(json.JSONEncoder):
         if isinstance(obj, uuid.UUID):
             return obj.hex
         elif isinstance(obj, datetime.datetime):
-            return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+            return obj.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         elif isinstance(obj, (set, frozenset)):
             return list(obj)
         return super(BetterJSONEncoder, self).default(obj)
