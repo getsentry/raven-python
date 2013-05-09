@@ -62,8 +62,8 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         # File coding may be specified. Match pattern from PEP-263
         # (http://www.python.org/dev/peps/pep-0263/)
         search_line = line if isinstance(line, six.binary_type) else line.decode('ascii')
-        match = _coding_re.search(search_line)  
-        
+        match = _coding_re.search(search_line)
+
         if match:
             encoding = match.group(1)
             break
