@@ -56,6 +56,7 @@ tests_require = [
     'pytz',
     'pytest',
     'pytest-django-lite',
+    'python-coveralls',
     'tornado',
     'webob',
     'anyjson',
