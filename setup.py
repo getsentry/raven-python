@@ -55,6 +55,7 @@ tests_require = [
     'pep8',
     'pytz',
     'pytest',
+    'pytest-cov>=1.4',
     'pytest-django-lite',
     'python-coveralls',
     'tornado',
