@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from mock import Mock
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 from raven.utils import six
 
 from raven.utils.stacks import get_culprit, get_stack_info

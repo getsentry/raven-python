@@ -4,7 +4,7 @@ import pytest
 import uuid
 
 from raven.utils import six
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 from raven.utils.serializer import transform
 
 

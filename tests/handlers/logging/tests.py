@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import sys
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 from raven.utils import six
 from raven.base import Client
 from raven.handlers.logging import SentryHandler

@@ -37,12 +37,6 @@ except ImportError:
 
 
 try:
-    from unittest2 import TestCase as BaseTestCase
+    from unittest2 import TestCase
 except ImportError:
-    from unittest import TestCase as BaseTestCase  # NOQA
-
-from exam import Exam
-
-
-class TestCase(Exam, BaseTestCase):
-    pass
+    from unittest import TestCase  # NOQA

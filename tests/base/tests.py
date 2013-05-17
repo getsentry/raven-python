@@ -11,7 +11,7 @@ from raven.base import Client, ClientState
 from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils import six
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
