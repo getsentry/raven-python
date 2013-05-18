@@ -61,7 +61,14 @@ class GetStackInfoTest(TestCase):
         self.assertEquals(len(results), 1)
         result = results[0]
         assert 'vars' in result
-        assert result['vars'] == {
-            "u'foo'": "u'bar'",
-            "u'biz'": "u'baz'",
-        }
+        if six.PY3:
+            expected = {
+                "'foo'": "'bar'",
+                "'biz'": "'baz'",
+            }
+        else:
+            expected = {
+                "u'foo'": "u'bar'",
+                "u'biz'": "u'baz'",
+            }
+        assert result['vars'] == expected

@@ -57,7 +57,11 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEqual(event['extra']['url'], "u'http://example.com'")
+        if six.PY3:
+            expected = "'http://example.com'"
+        else:
+            expected = "u'http://example.com'"
+        self.assertEqual(event['extra']['url'], expected)
 
     def test_logger_exc_info(self):
         try:
@@ -92,7 +96,8 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(event['message'], 'This is a test of args')
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test of %s')
-        self.assertEqual(msg['params'], ("u'args'",))
+        expected = ("'args'",) if six.PY3 else ("u'args'",)
+        self.assertEqual(msg['params'], expected)
 
     def test_record_stack(self):
         record = self.make_record('This is a test of stacks', extra={'stack': True})
@@ -150,7 +155,8 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEqual(event['extra']['data'], "u'foo'")
+        expected = "'foo'" if six.PY3 else "u'foo'"
+        self.assertEqual(event['extra']['data'], expected)
 
     def test_tags(self):
         record = self.make_record('Message', extra={'tags': {'foo': 'bar'}})

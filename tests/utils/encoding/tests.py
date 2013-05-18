@@ -62,10 +62,7 @@ class TransformTest(TestCase):
         keys = list(result.keys())
         self.assertEqual(len(keys), 1)
         self.assertTrue(type(keys[0]), str)
-        if six.PY3:
-            self.assertEqual(keys[0], "u'foo'")
-        else:
-            self.assertEqual(keys[0], "'foo'")
+        self.assertEqual(keys[0], "'foo'")
 
     @pytest.mark.skipif(str('six.PY3'))
     def test_dict_keys_utf8_as_str(self):
@@ -86,7 +83,11 @@ class TransformTest(TestCase):
         assert type(result) is dict
         keys = list(result.keys())
         assert len(keys) == 1
-        assert keys[0] == six.text_type("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+        if six.PY3:
+            expected = "'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'"
+        else:
+            expected = "u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'"
+        assert keys[0] == expected
 
     def test_uuid(self):
         x = uuid.uuid4()
@@ -108,7 +109,11 @@ class TransformTest(TestCase):
         x = Foo()
 
         result = transform(x)
-        self.assertEqual(result, "u'example'")
+        if six.PY3:
+            expected = "'example'"
+        else:
+            expected = "u'example'"
+        self.assertEqual(result, expected)
 
     def test_broken_repr(self):
         class Foo(object):
@@ -123,7 +128,11 @@ class TransformTest(TestCase):
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
         result = transform(x, max_depth=3)
-        self.assertEqual(result, ((("u'[1]'",),),))
+        if six.PY3:
+            expected = ((("'[1]'",),),)
+        else:
+            expected = ((("u'[1]'",),),)
+        self.assertEqual(result, expected)
 
     def test_list_max_length(self):
         x = list(range(10))
@@ -139,4 +148,5 @@ class TransformTest(TestCase):
     def test_string_max_length(self):
         x = six.u('1234')
         result = transform(x, string_max_length=3)
-        self.assertEqual(result, "u'123'")
+        expected = "'123'" if six.PY3 else "u'123'"
+        self.assertEqual(result, expected)
