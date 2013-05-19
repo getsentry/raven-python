@@ -64,9 +64,9 @@ class DjangoClient(Client):
             uri = '%s://%s%s' % (scheme, host, request.path)
 
         if request.method != 'GET':
-            if hasattr(request, 'body'):
+            try:
                 data = request.body
-            else:
+            except:
                 try:
                     data = request.raw_post_data and request.raw_post_data or request.POST
                 except Exception:
