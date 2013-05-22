@@ -24,9 +24,6 @@ class SentryHandler(BaseSentryHandler):
     client = property(_get_client)
 
     def _emit(self, record):
-        from raven.contrib.django.middleware import SentryLogMiddleware
-
-        # Fetch the request from a threadlocal variable, if available
-        request = getattr(record, 'request', getattr(SentryLogMiddleware.thread, 'request', None))
+        request = getattr(record, 'request', None)
 
         return super(SentryHandler, self)._emit(record, request=request)
