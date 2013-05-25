@@ -16,7 +16,7 @@ class TransformTest(TestCase):
 
         assert result == "'רונית מגן'"
 
-    @pytest.mark.skipif(str('lambda: six.PY3'))
+    @pytest.mark.skipif(str('six.PY3'))
     def test_correct_unicode(self):
         # 'רונית מגן'
         x = six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
