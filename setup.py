@@ -51,6 +51,7 @@ tests_require = [
     'exam>=0.5.2',
     'logbook',
     'mock',
+    'nose',
     'pep8',
     'pytz',
     'pytest',
