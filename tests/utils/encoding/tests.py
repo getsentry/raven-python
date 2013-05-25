@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import pytest
 import uuid
 
@@ -9,26 +8,34 @@ from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif(six.binary_type('six.PY3'))
     def test_incorrect_unicode(self):
-        x = 'רונית מגן'
+        x = six.b('רונית מגן')
         result = transform(x)
 
-        assert result == "'רונית מגן'"
+        assert result == six.b("'רונית מגן'")
 
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif(six.binary_type('six.PY3'))
+    def test_truncating_unicode(self):
+        # 'רונית מגן'
+        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+
+        result = transform(x, string_max_length=5)
+        assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea'")
+
+    @pytest.mark.skipif(six.binary_type('six.PY3'))
     def test_correct_unicode(self):
         # 'רונית מגן'
-        x = six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x)
-        assert result == six.text_type("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+        assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
     def test_bad_string(self):
         x = six.b('The following character causes problems: \xd4')
 
         result = transform(x)
-        assert result == str(six.binary_type)
+        assert result == six.binary_type(six.binary_type)
 
     def test_float(self):
         result = transform(13.0)
