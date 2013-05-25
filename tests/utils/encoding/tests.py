@@ -8,14 +8,14 @@ from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
-    @pytest.mark.skipif(six.binary_type('six.PY3'))
+    @pytest.mark.skipif(six.b('six.PY3'))
     def test_incorrect_unicode(self):
         x = six.b('רונית מגן')
         result = transform(x)
 
         assert result == six.b("'רונית מגן'")
 
-    @pytest.mark.skipif(six.binary_type('six.PY3'))
+    @pytest.mark.skipif(six.b('six.PY3'))
     def test_truncating_unicode(self):
         # 'רונית מגן'
         x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
@@ -23,13 +23,37 @@ class TransformTest(TestCase):
         result = transform(x, string_max_length=5)
         assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea'")
 
-    @pytest.mark.skipif(six.binary_type('six.PY3'))
-    def test_correct_unicode(self):
+    @pytest.mark.skipif(six.b('not six.PY3'))
+    def test_unicode_in_python3(self):
+        # 'רונית מגן'
+        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+
+        result = transform(x)
+        assert result == six.u("'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+
+    @pytest.mark.skipif(six.b('six.PY3'))
+    def test_unicode_in_python2(self):
         # 'רונית מגן'
         x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x)
         assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+
+    @pytest.mark.skipif(six.b('not six.PY3'))
+    def test_string_in_python3(self):
+        # 'רונית מגן'
+        x = six.b('hello world')
+
+        result = transform(x)
+        assert result == "b'hello world'"
+
+    @pytest.mark.skipif(six.b('six.PY3'))
+    def test_string_in_python2(self):
+        # 'רונית מגן'
+        x = six.b('hello world')
+
+        result = transform(x)
+        assert result == "'hello world'"
 
     def test_bad_string(self):
         x = six.b('The following character causes problems: \xd4')
@@ -71,7 +95,7 @@ class TransformTest(TestCase):
         self.assertTrue(type(keys[0]), str)
         self.assertEqual(keys[0], "'foo'")
 
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif(six.b('six.PY3'))
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 
