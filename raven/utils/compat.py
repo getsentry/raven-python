@@ -25,9 +25,9 @@ except ImportError:
 
 
 try:
-    from queue import Queue
+    from queue import Queue, Full
 except ImportError:
-    from Queue import Queue  # NOQA
+    from Queue import Queue, Full  # NOQA
 
 
 try:

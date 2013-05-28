@@ -8,14 +8,16 @@ raven.transport.threaded
 
 import atexit
 import logging
+import os
 import time
 import threading
-import os
-from raven.utils.compat import Queue
 
+from raven.utils import memoize
+from raven.utils.compat import Queue, Full
 from raven.transport.base import HTTPTransport, AsyncTransport
 
 DEFAULT_TIMEOUT = 10
+QUEUE_SIZE = 100
 
 logger = logging.getLogger('sentry.errors')
 
@@ -23,8 +25,8 @@ logger = logging.getLogger('sentry.errors')
 class AsyncWorker(object):
     _terminator = object()
 
-    def __init__(self, shutdown_timeout=DEFAULT_TIMEOUT):
-        self._queue = Queue(-1)
+    def __init__(self, shutdown_timeout=DEFAULT_TIMEOUT, queue_size=QUEUE_SIZE):
+        self._queue = Queue(queue_size)
         self._lock = threading.Lock()
         self._thread = None
         self.options = {
@@ -34,26 +36,30 @@ class AsyncWorker(object):
 
     def main_thread_terminated(self):
         size = self._queue.qsize()
-        if size:
-            timeout = self.options['shutdown_timeout']
-            print("Sentry is attempting to send %s pending error messages" % size)
-            print("Waiting up to %s seconds" % timeout)
-            if os.name == 'nt':
-                print("Press Ctrl-Break to quit")
-            else:
-                print("Press Ctrl-C to quit")
-            self.stop(timeout=timeout)
+        if not size:
+            return
+
+        timeout = self.options['shutdown_timeout']
+        print("Sentry is attempting to send %s pending error messages" % size)
+        print("Waiting up to %s seconds" % timeout)
+        if os.name == 'nt':
+            print("Press Ctrl-Break to quit")
+        else:
+            print("Press Ctrl-C to quit")
+        self.stop(timeout=timeout)
 
     def start(self):
         """
         Starts the task thread.
         """
+        if not self._thread:
+            return
+
         self._lock.acquire()
         try:
-            if not self._thread:
-                self._thread = threading.Thread(target=self._target)
-                self._thread.setDaemon(True)
-                self._thread.start()
+            self._thread = threading.Thread(target=self._target)
+            self._thread.setDaemon(True)
+            self._thread.start()
         finally:
             self._lock.release()
             atexit.register(self.main_thread_terminated)
@@ -62,17 +68,22 @@ class AsyncWorker(object):
         """
         Stops the task thread. Synchronous!
         """
+        if not self._thread:
+            return
+
         self._lock.acquire()
         try:
-            if self._thread:
-                self._queue.put_nowait(self._terminator)
-                self._thread.join(timeout=timeout)
-                self._thread = None
+            self._queue.put_nowait(self._terminator)
+            self._thread.join(timeout=timeout)
+            self._thread = None
         finally:
             self._lock.release()
 
     def queue(self, callback, *args, **kwargs):
-        self._queue.put_nowait((callback, args, kwargs))
+        try:
+            self._queue.put_nowait((callback, args, kwargs))
+        except Full:
+            logger.error('Unable to queue job (full)', exc_info=True)
 
     def _target(self):
         while 1:
@@ -92,16 +103,16 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['threaded+http', 'threaded+https']
 
-    def __init__(self, parsed_url):
+    def __init__(self, parsed_url, queue_size=QUEUE_SIZE):
         super(ThreadedHTTPTransport, self).__init__(parsed_url)
 
         # remove the threaded+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
+        self._queue_size = queue_size
 
-    def get_worker(self):
-        if not hasattr(self, '_worker'):
-            self._worker = AsyncWorker()
-        return self._worker
+    @memoize
+    def worker(self):
+        return AsyncWorker(queue_size=self._queue_size)
 
     def send_sync(self, data, headers, success_cb, failure_cb):
         try:
@@ -112,5 +123,5 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
             success_cb()
 
     def async_send(self, data, headers, success_cb, failure_cb):
-        self.get_worker().queue(self.send_sync, data, headers, success_cb,
-            failure_cb)
+        self.worker.queue(
+            self.send_sync, data, headers, success_cb, failure_cb)
