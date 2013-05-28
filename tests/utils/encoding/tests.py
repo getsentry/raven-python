@@ -55,6 +55,7 @@ class TransformTest(TestCase):
         result = transform(x)
         assert result == "'hello world'"
 
+    @pytest.mark.skipif('six.PY3')
     def test_bad_string(self):
         x = six.b('The following character causes problems: \xd4')
 
