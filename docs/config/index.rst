@@ -9,6 +9,7 @@ This document describes configuration options available to Sentry.
 .. toctree::
    :maxdepth: 2
 
+   bottle
    celery
    django
    flask

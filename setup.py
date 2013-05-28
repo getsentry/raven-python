@@ -45,6 +45,7 @@ if sys.version_info[0] == 3:
 
 
 tests_require = [
+    'bottle',
     'celery>=2.5',
     'Django>=1.2',
     'django-celery>=2.5',
@@ -60,6 +61,7 @@ tests_require = [
     'python-coveralls',
     'tornado',
     'webob',
+    'webtest',
     'anyjson',
 ] + flask_requires + flask_tests_requires + unittest2_requires
 
