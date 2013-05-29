@@ -8,14 +8,14 @@ from raven.contrib.gearman import GearmanMixin, RAVEN_GEARMAN_JOB_NAME
 from raven.contrib.django import DjangoClient
 from raven.contrib.django.models import get_client
 
-__all__ = ('GearmanClient', 'Command')
+__all__ = ('GearmanClient', 'GearmanWorkerCommand')
 
 
 class GearmanClient(GearmanMixin, DjangoClient):
     """Gearman client implementation for django applications."""
 
 
-class Command(GearmanWorkerBaseCommand):
+class GearmanWorkerCommand(GearmanWorkerBaseCommand):
     """Gearman worker implementation.
 
     This worker is run as django management command. Gearman client send messages to gearman deamon. Next

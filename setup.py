@@ -37,6 +37,11 @@ flask_tests_requires = [
     'Flask-Login>=0.1.3',
 ]
 
+gearman_requires = [
+    'gearman==dev',
+    'django-gearman-commands==dev'
+]
+
 # If it's python3, remove flask & unittest2
 if sys.version_info[0] == 3:
     flask_requires = []
@@ -61,7 +66,7 @@ tests_require = [
     'tornado',
     'webob',
     'anyjson',
-] + flask_requires + flask_tests_requires + unittest2_requires
+] + flask_requires + flask_tests_requires + gearman_requires + unittest2_requires
 
 setup(
     name='raven',
@@ -75,8 +80,9 @@ setup(
     zip_safe=False,
     extras_require={
         'flask': flask_requires,
+        'gearman': gearman_requires,
         'tests': tests_require,
-        'dev': dev_requires,
+        'dev': dev_requires
     },
     test_suite='runtests.runtests',
     include_package_data=True,
@@ -99,4 +105,8 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.2',
     ],
+    dependency_links = [
+        'git+git://github.com/Yelp/python-gearman.git#egg=gearman-dev',
+        'git+git://github.com/CodeScaleInc/django-gearman-commands.git#egg=django_gearman_commands-dev'
+    ]
 )
