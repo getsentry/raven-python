@@ -628,11 +628,11 @@ class GearmanWorkerTest(TestCase):
         self.assertEqual([mock.call.send_encoded(u'foo', auth_header=u'bar')], get_client.return_value.mock_calls)
 
     def test_worker_client_default_settings(self):
-        self.assertIsInstance(self.worker.client, DjangoClient)
+        self.assertTrue(isinstance(self.worker.client, DjangoClient))
 
     def test_worker_client_custom_settings(self):
         with Settings(SENTRY_GEARMAN_CLIENT='raven.contrib.django.gearman.GearmanClient'):
-            self.assertIsInstance(self.worker.client, GearmanClient)
+            self.assertTrue(isinstance(self.worker.client, GearmanClient))
 
 
 class IsValidOriginTestCase(TestCase):
