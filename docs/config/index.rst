@@ -10,6 +10,7 @@ This document describes configuration options available to Sentry.
    :maxdepth: 2
 
    celery
+   gearman
    django
    flask
    logbook
