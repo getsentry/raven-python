@@ -5,6 +5,8 @@ raven.utils.compat
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
+
 
 try:
     from urllib.error import HTTPError
@@ -37,12 +39,6 @@ except ImportError:
 
 
 try:
-    from unittest2 import TestCase as BaseTestCase
+    from unittest2 import TestCase
 except ImportError:
-    from unittest import TestCase as BaseTestCase  # NOQA
-
-from exam import Exam
-
-
-class TestCase(Exam, BaseTestCase):
-    pass
+    from unittest import TestCase  # NOQA

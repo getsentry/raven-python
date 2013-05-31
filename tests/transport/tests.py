@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 from raven.base import Client
 
 # Some internal stuff to extend the transport layer

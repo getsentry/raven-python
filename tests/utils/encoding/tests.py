@@ -1,34 +1,66 @@
 # -*- coding: utf-8 -*-
-
 import pytest
 import uuid
 
 from raven.utils import six
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_incorrect_unicode(self):
-        x = 'רונית מגן'
+        x = six.b('רונית מגן')
         result = transform(x)
 
-        assert result == "'רונית מגן'"
+        assert result == six.b("'רונית מגן'")
 
-    @pytest.mark.skipif(str('lambda: six.PY3'))
-    def test_correct_unicode(self):
+    @pytest.mark.skipif('six.PY3')
+    def test_truncating_unicode(self):
         # 'רונית מגן'
-        x = six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+
+        result = transform(x, string_max_length=5)
+        assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea'")
+
+    @pytest.mark.skipif('not six.PY3')
+    def test_unicode_in_python3(self):
+        # 'רונית מגן'
+        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x)
-        assert result == six.text_type("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+        assert result == six.u("'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
+    @pytest.mark.skipif('six.PY3')
+    def test_unicode_in_python2(self):
+        # 'רונית מגן'
+        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+
+        result = transform(x)
+        assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+
+    @pytest.mark.skipif('not six.PY3')
+    def test_string_in_python3(self):
+        # 'רונית מגן'
+        x = six.b('hello world')
+
+        result = transform(x)
+        assert result == "b'hello world'"
+
+    @pytest.mark.skipif('six.PY3')
+    def test_string_in_python2(self):
+        # 'רונית מגן'
+        x = six.b('hello world')
+
+        result = transform(x)
+        assert result == "'hello world'"
+
+    @pytest.mark.skipif('six.PY3')
     def test_bad_string(self):
         x = six.b('The following character causes problems: \xd4')
 
         result = transform(x)
-        assert result == str(six.binary_type)
+        assert result == six.binary_type(six.binary_type)
 
     def test_float(self):
         result = transform(13.0)
@@ -62,12 +94,9 @@ class TransformTest(TestCase):
         keys = list(result.keys())
         self.assertEqual(len(keys), 1)
         self.assertTrue(type(keys[0]), str)
-        if six.PY3:
-            self.assertEqual(keys[0], "u'foo'")
-        else:
-            self.assertEqual(keys[0], "'foo'")
+        self.assertEqual(keys[0], "'foo'")
 
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 
@@ -86,7 +115,11 @@ class TransformTest(TestCase):
         assert type(result) is dict
         keys = list(result.keys())
         assert len(keys) == 1
-        assert keys[0] == six.text_type("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+        if six.PY3:
+            expected = "'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'"
+        else:
+            expected = "u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'"
+        assert keys[0] == expected
 
     def test_uuid(self):
         x = uuid.uuid4()
@@ -108,7 +141,11 @@ class TransformTest(TestCase):
         x = Foo()
 
         result = transform(x)
-        self.assertEqual(result, "u'example'")
+        if six.PY3:
+            expected = "'example'"
+        else:
+            expected = "u'example'"
+        self.assertEqual(result, expected)
 
     def test_broken_repr(self):
         class Foo(object):
@@ -123,7 +160,11 @@ class TransformTest(TestCase):
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
         result = transform(x, max_depth=3)
-        self.assertEqual(result, ((("u'[1]'",),),))
+        if six.PY3:
+            expected = ((("'[1]'",),),)
+        else:
+            expected = ((("u'[1]'",),),)
+        self.assertEqual(result, expected)
 
     def test_list_max_length(self):
         x = list(range(10))
@@ -139,4 +180,5 @@ class TransformTest(TestCase):
     def test_string_max_length(self):
         x = six.u('1234')
         result = transform(x, string_max_length=3)
-        self.assertEqual(result, "u'123'")
+        expected = "'123'" if six.PY3 else "u'123'"
+        self.assertEqual(result, expected)

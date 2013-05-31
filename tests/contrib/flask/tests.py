@@ -8,7 +8,7 @@ from flask.ext.login import LoginManager, AnonymousUser, login_user
 
 from raven.base import Client
 from raven.contrib.flask import Sentry
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):

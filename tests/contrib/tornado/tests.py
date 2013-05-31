@@ -10,6 +10,7 @@ import unittest
 from mock import patch
 from tornado import web, gen, testing
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
+from raven.utils import six
 
 
 class AnErrorProneHandler(SentryMixin, web.RequestHandler):
@@ -124,7 +125,11 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
-        assert kwargs['extra']['extra_data'] == "u'extra custom non-dict data'"
+        if six.PY3:
+            expected = "'extra custom non-dict data'"
+        else:
+            expected = "u'extra custom non-dict data'"
+        assert kwargs['extra']['extra_data'] == expected
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
     def test_error_with_custom_dict_data_handler(self, send):
@@ -149,7 +154,11 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
-        assert kwargs['extra']['extra_data'] == "u'extra custom dict data'"
+        if six.PY3:
+            expected = "'extra custom dict data'"
+        else:
+            expected = "u'extra custom dict data'"
+        assert kwargs['extra']['extra_data'] == expected
 
     @patch(
         'raven.contrib.tornado.AsyncSentryClient.send',

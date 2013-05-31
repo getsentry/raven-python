@@ -4,6 +4,9 @@ Raven
 .. image:: https://secure.travis-ci.org/getsentry/raven-python.png?branch=master
    :target: http://travis-ci.org/getsentry/raven-python
 
+.. image:: https://coveralls.io/repos/getsentry/raven-python/badge.png?branch=master
+   :target: https://coveralls.io/r/getsentry/raven-python?branch=master
+
 Raven is a Python client for `Sentry <http://www.getsentry.com/>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
 Django, and Flask. Raven also includes drop-in support for any WSGI-compatible

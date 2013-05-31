@@ -45,6 +45,7 @@ if sys.version_info[0] == 3:
 
 
 tests_require = [
+    'bottle',
     'celery>=2.5',
     'Django>=1.2',
     'django-celery>=2.5',
@@ -55,21 +56,24 @@ tests_require = [
     'pep8',
     'pytz',
     'pytest',
+    'pytest-cov>=1.4',
     'pytest-django-lite',
+    'python-coveralls',
     'tornado',
     'webob',
+    'webtest',
     'anyjson',
 ] + flask_requires + flask_tests_requires + unittest2_requires
 
 setup(
     name='raven',
-    version='3.3.6',
+    version='3.3.7',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',
     description='Raven is a client for Sentry (https://www.getsentry.com)',
     long_description=__doc__,
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(exclude=("tests", "tests.*",)),
     zip_safe=False,
     extras_require={
         'flask': flask_requires,

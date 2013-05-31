@@ -17,7 +17,8 @@ install:
   - pip install $DJANGO --use-mirrors
   - make bootstrap
 script:
-  - make test
+  - make lint
+  - py.test tests/ --cov raven --cov-report term-missing
 notifications:
   irc:
     channels: "irc.freenode.org#sentry"
@@ -37,3 +38,5 @@ matrix:
       env: DJANGO=Django==1.3.7
     - python: "3.3"
       env: DJANGO=Django==1.4.5
+after_success:
+  - coveralls

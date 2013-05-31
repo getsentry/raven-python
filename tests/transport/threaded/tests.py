@@ -1,6 +1,6 @@
 import mock
 import time
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 
 from raven.base import Client
 from raven.transport.threaded import ThreadedHTTPTransport

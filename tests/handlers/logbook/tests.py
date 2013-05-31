@@ -2,7 +2,7 @@ from __future__ import with_statement
 from __future__ import unicode_literals
 
 import logbook
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 from raven.utils import six
 from raven.base import Client
 from raven.handlers.logbook import SentryHandler
@@ -62,7 +62,11 @@ class LogbookHandlerTest(TestCase):
             ))
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
-            self.assertEquals(event['extra']['url'], "u'http://example.com'")
+            if six.PY3:
+                expected = "'http://example.com'"
+            else:
+                expected = "u'http://example.com'"
+            self.assertEquals(event['extra']['url'], expected)
             self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
@@ -99,7 +103,8 @@ class LogbookHandlerTest(TestCase):
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test of {0}')
-            self.assertEquals(msg['params'], ("u'args'",))
+            expected = ("'args'",) if six.PY3 else ("u'args'",)
+            self.assertEquals(msg['params'], expected)
 
     def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])

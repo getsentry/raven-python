@@ -52,7 +52,7 @@ class SentryHandler(logging.Handler, object):
             self.format(record)
 
             # Avoid typical config issues by overriding loggers behavior
-            if record.name.startswith(('sentry.errors', 'raven')):
+            if record.name.startswith(('sentry.errors', 'raven')) or record.module.startswith('raven'):
                 print(to_string(record.message), sys.stderr)
                 return
 
@@ -61,11 +61,6 @@ class SentryHandler(logging.Handler, object):
             print("Top level Sentry exception caught - failed creating log record", sys.stderr)
             print(to_string(record.msg), sys.stderr)
             print(to_string(traceback.format_exc()), sys.stderr)
-
-            try:
-                self.client.captureException()
-            except Exception:
-                pass
 
     def _get_targetted_stack(self, stack):
         # we might need to traverse this multiple times, so coerce it to a list

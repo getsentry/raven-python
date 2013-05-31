@@ -3,5 +3,5 @@
 Usage
 =====
 
-.. autoclass:: raven.Client
+.. autoclass:: raven.base.Client
    :members:

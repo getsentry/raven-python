@@ -11,7 +11,7 @@ from raven.base import Client, ClientState
 from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils import six
-from raven.utils.compat import TestCase
+from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
@@ -367,7 +367,11 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['extra'], {'logger': "u'test'", 'foo': "u'bar'"})
+        if six.PY3:
+            expected = {'logger': "'test'", 'foo': "'bar'"}
+        else:
+            expected = {'logger': "u'test'", 'foo': "u'bar'"}
+        self.assertEquals(event['extra'], expected)
 
 
 # TODO: Python 3

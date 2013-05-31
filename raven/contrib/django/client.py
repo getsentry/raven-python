@@ -18,6 +18,7 @@ from django.template.loader import LoaderOrigin
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
+from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.wsgi import get_headers, get_environ
 
 __all__ = ('DjangoClient',)
@@ -64,9 +65,9 @@ class DjangoClient(Client):
             uri = '%s://%s%s' % (scheme, host, request.path)
 
         if request.method != 'GET':
-            if hasattr(request, 'body'):
+            try:
                 data = request.body
-            else:
+            except:
                 try:
                     data = request.raw_post_data and request.raw_post_data or request.POST
                 except Exception:
@@ -121,6 +122,9 @@ class DjangoClient(Client):
             kwargs['data'] = data = {}
         else:
             data = kwargs['data']
+
+        if request is None:
+            request = getattr(SentryLogMiddleware.thread, 'request', None)
 
         is_http_request = isinstance(request, HttpRequest)
         if is_http_request:
