@@ -67,7 +67,7 @@ class Exception(BaseEvent):
             exc_type = getattr(exc_type, '__name__', '<unknown>')
 
             return {
-                'level': logging.ERROR,
+                'level': kwargs.get('level', logging.ERROR),
                 'sentry.interfaces.Exception': {
                     'value': to_unicode(exc_value),
                     'type': str(exc_type),
