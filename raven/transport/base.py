@@ -242,7 +242,7 @@ class GeventedHTTPTransport(HTTPTransport):
         # this can be optimized by making a custom self.send that does not
         # read the response since we don't use it.
         self._lock.acquire()
-        return gevent.spawn(super(GeventedHTTPTransport, self).send, data, headers).link(self._done, self)
+        return gevent.spawn(super(GeventedHTTPTransport, self).send, data, headers).link(self._done)
 
     def _done(self, *args):
         self._lock.release()
