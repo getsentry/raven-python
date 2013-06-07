@@ -34,6 +34,8 @@ class CeleryFilter(logging.Filter):
     def filter(self, record):
         # Context is fixed in Celery 3.x so use internal flag instead
         extra_data = getattr(record, 'data', {})
+        if not isinstance(extra_data, dict):
+            return record.funcName != '_log_error'
         # Fallback to funcName for Celery 2.5
         return extra_data.get('internal', record.funcName != '_log_error')
 
