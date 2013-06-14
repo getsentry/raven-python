@@ -19,7 +19,7 @@ install:
   - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '2' ]]; then pip install gevent --use-mirrors; fi"
   - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '3' ]]; then pip install https://github.com/Fluxx/exam/archive/master.zip; fi"
   - "if [[ ${TRAVIS_PYTHON_VERSION} == '3.2' ]]; then pip install https://github.com/celery/celery/archive/3.0.zip; fi"
-  - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '3' ]]; then pip uninstall django-celery; fi"
+  - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '3' ]]; then pip uninstall django-celery -y; fi"
 script:
   - make lint
   - py.test tests/ --cov raven --cov-report term-missing
