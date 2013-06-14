@@ -113,8 +113,11 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        return repr(six.binary_type('%s')) % (
-            value.decode('utf-8').encode('utf-8')[:string_max_length],)
+        if not six.PY3:
+            return repr(six.binary_type('%s')) % (
+                value.decode('utf-8').encode('utf-8')[:string_max_length],)
+        else:
+            return repr(value[:string_max_length])
 
 
 class TypeSerializer(Serializer):
