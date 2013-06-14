@@ -55,6 +55,9 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         except (OSError, IOError):
             pass
 
+        if source is None:
+            return None, None, None
+
         encoding = 'ascii'
         for line in source[:2]:
             # File coding may be specified. Match pattern from PEP-263
@@ -64,9 +67,6 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
                 encoding = match.group(1)
                 break
         source = [six.text_type(sline, encoding, 'replace') for sline in source]
-
-    if source is None:
-        return None, None, None
 
     lower_bound = max(0, lineno - context_lines)
     upper_bound = min(lineno + 1 + context_lines, len(source))
