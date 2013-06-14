@@ -16,7 +16,8 @@ install:
   - sudo apt-get install libevent-dev
   - pip install $DJANGO --use-mirrors
   - make bootstrap
-  - "if [[ ${TRAVIS_PYTHON_VERSION::1} != '3' ]]; then pip install gevent --use-mirrors; fi"
+  - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '2' ]]; then pip install gevent --use-mirrors; fi"
+  - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '3' ]]; then pip install -e git+git@github.com:Fluxx/exam.git#egg=exam; fi"
 script:
   - make lint
   - py.test tests/ --cov raven --cov-report term-missing
