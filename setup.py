@@ -67,7 +67,7 @@ tests_require = [
 
 setup(
     name='raven',
-    version='3.3.7',
+    version='3.3.8',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',
