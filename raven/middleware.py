@@ -5,9 +5,10 @@ raven.middleware
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
-from raven.utils.wsgi import get_current_url, get_headers, \
-  get_environ
+from raven.utils.wsgi import (
+    get_current_url, get_headers, get_environ)
 
 
 class Sentry(object):

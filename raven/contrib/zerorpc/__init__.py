@@ -2,9 +2,10 @@
 raven.contrib.zerorpc
 ~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import inspect
 
@@ -59,7 +60,7 @@ class SentryMiddleware(object):
                 # or hardcoding the number of frames to skip) to know when we
                 # are out of zerorpc?
                 if frame_info.function == '__call__' \
-                    or frame_info.function == '_receiver':
+                        or frame_info.function == '_receiver':
                     break
                 traceback = traceback.tb_next
 

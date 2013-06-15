@@ -1,3 +1,12 @@
+"""
+raven.contrib.bottle.utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+from __future__ import absolute_import
+
 import logging
 from raven.utils.compat import _urlparse
 

@@ -1,5 +1,15 @@
-from raven.transport.base import HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport, \
-  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport
+"""
+raven.transport.registry
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+from __future__ import absolute_import
+
+from raven.transport.base import (
+    HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport,
+    TornadoHTTPTransport, UDPTransport, EventletHTTPTransport)
 from raven.transport.exceptions import DuplicateScheme
 from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils import urlparse
