@@ -174,8 +174,7 @@ class DjangoClientTest(TestCase):
         user.set_password('admin')
         user.save()
 
-        with self.assertRaises(Exception):
-            self.client.get(reverse('sentry-raise-exc'))
+        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
