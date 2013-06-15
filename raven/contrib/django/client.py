@@ -114,8 +114,8 @@ class DjangoClient(Client):
 
         if not self.site and 'django.contrib.sites' in settings.INSTALLED_APPS:
             try:
-                from django.contrib.sites import models as site_models
-                site = site_models.Site.objects.get_current()
+                from django.contrib.sites.models import Site
+                site = Site.objects.get_current()
                 site_name = site.name or site.domain
                 data['tags'].setdefault('site', site_name)
             except Exception:
