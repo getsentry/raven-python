@@ -23,7 +23,7 @@ from django.template import TemplateSyntaxError
 from django.test import TestCase
 
 from raven.base import Client
-from raven.contrib.django import DjangoClient
+from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import client, get_client, sentry_exception_handler

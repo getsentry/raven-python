@@ -8,7 +8,7 @@ raven.contrib.django.celery
 from __future__ import absolute_import
 
 from raven.contrib.celery import CeleryMixin
-from raven.contrib.django import DjangoClient
+from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.models import get_client
 try:
     from celery.task import task
