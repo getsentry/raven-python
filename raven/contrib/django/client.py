@@ -30,27 +30,34 @@ class DjangoClient(Client):
     def is_enabled(self):
         return bool(self.servers or 'sentry' in settings.INSTALLED_APPS)
 
-    def get_user_info(self, request):
-        if request.user.is_authenticated():
-            user_info = {
-                'is_authenticated': True,
-                'id': request.user.pk,
-                'username': request.user.username,
-                'email': request.user.email,
-            }
-        else:
-            user_info = {
-                'is_authenticated': False,
-            }
+    def get_user_info(self, user):
+        if not user.is_authenticated():
+            return {}
+
+        user_info = {
+            'id': user.pk,
+        }
+
+        if hasattr(user, 'email'):
+            user_info['email'] = user.email
+
+        if hasattr(user, 'get_username'):
+            user_info['username'] = user.get_username()
+        elif hasattr(user, 'username'):
+            user_info['username'] = user.username
+
         return user_info
 
     def get_data_from_request(self, request):
-        from django.contrib.auth.models import User, AnonymousUser
+        try:
+            from django.contrib.auth.models import AbstractBaseUser as BaseUser
+        except ImportError:
+            from django.contrib.auth.models import User as BaseUser  # NOQA
 
         result = {}
 
-        if hasattr(request, 'user') and isinstance(request.user, (User, AnonymousUser)):
-            result['sentry.interfaces.User'] = self.get_user_info(request)
+        if hasattr(request, 'user') and isinstance(request.user, BaseUser):
+            result['sentry.interfaces.User'] = self.get_user_info(request.user)
 
         try:
             uri = request.build_absolute_uri()
