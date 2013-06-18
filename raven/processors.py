@@ -56,7 +56,7 @@ class SanitizePasswordsProcessor(Processor):
     card numbers in frames, http, and basic extra data.
     """
     MASK = '*' * 8
-    FIELDS = frozenset(['password', 'secret', 'passwd'])
+    FIELDS = frozenset(['password', 'secret', 'passwd', 'authorization'])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 
     def sanitize(self, key, value):
