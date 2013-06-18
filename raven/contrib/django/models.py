@@ -141,7 +141,11 @@ def get_client(client=None):
 
         class_name = str(class_name)
 
-        instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
+        try:
+            instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
+        except TypeError:
+            # Python 2.6 compatibility fix
+            instance = getattr(__import__(module, {}, {}, class_name), class_name)(**dict([(str(key), val) for key, val in options.items()]))
         if not tmp_client:
             _client = (client, instance)
         return instance
