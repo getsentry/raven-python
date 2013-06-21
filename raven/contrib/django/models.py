@@ -149,16 +149,16 @@ def get_client(client=None):
 
 
 def sentry_exception_handler(request=None, **kwargs):
-    exc_info = sys.exc_info()
+    exc_type = sys.exc_info()[0]
 
-    if exc_info[0].__name__ in get_option('IGNORE_EXCEPTIONS', ()):
+    if exc_type.__name__ in get_option('IGNORE_EXCEPTIONS', ()):
         logger.info(
-            'Not capturing exception due to filters: %s', exc_info[0],
-            exc_info=exc_info)
+            'Not capturing exception due to filters: %s', exc_type,
+            exc_info=sys.exc_info())
         return
 
     try:
-        client.captureException(exc_info=exc_info, request=request)
+        client.captureException(exc_info=sys.exc_info(), request=request)
     except Exception as exc:
         try:
             logger.exception('Unable to process log entry: %s' % (exc,))
