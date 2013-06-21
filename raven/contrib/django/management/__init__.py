@@ -29,15 +29,16 @@ def patch_base_command(cls):
         return False
 
     @wraps(original_func)
-    def new_execute(*args, **kwargs):
+    def new_execute(self, *args, **kwargs):
         try:
-            return original_func(*args, **kwargs)
+            return original_func(self, *args, **kwargs)
         except Exception:
-            from raven.contrib.django import client
+            if not type(self).__module__.startswith(('raven.', 'sentry.')):
+                from raven.contrib.django import client
 
-            client.captureException(extra={
-                'argv': sys.argv
-            })
+                client.captureException(extra={
+                    'argv': sys.argv
+                })
             raise
 
     new_execute.__raven_patched = True
