@@ -34,7 +34,7 @@ flask_requires = [
 ]
 
 flask_tests_requires = [
-    'Flask-Login>=0.1.3',
+    'Flask-Login>=0.2.0',
 ]
 
 # If it's python3, remove flask & unittest2
