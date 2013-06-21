@@ -2,7 +2,7 @@ import fnmatch
 import os
 
 from subprocess import call
-from unittest2 import TestCase
+from raven.utils.compat import TestCase
 
 
 ROOT = os.path.normpath(
