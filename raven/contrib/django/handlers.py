@@ -25,5 +25,7 @@ class SentryHandler(BaseSentryHandler):
 
     def _emit(self, record):
         request = getattr(record, 'request', None)
-
-        return super(SentryHandler, self)._emit(record, request=request)
+        
+        tags = dict() if not 'tags' in record.__dict__ else record.__dict__['tags']
+        
+        return super(SentryHandler, self)._emit(record, request=request, tags=tags)
