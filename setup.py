@@ -21,7 +21,22 @@ for m in ('multiprocessing', 'billiard'):
         pass
 
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 import sys
+
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
+
 
 dev_requires = [
     'flake8>=1.6,<2.0',
@@ -81,6 +96,7 @@ setup(
         'dev': dev_requires,
     },
     test_suite='runtests.runtests',
+    cmdclass={'test': PyTest},
     include_package_data=True,
     entry_points={
         'console_scripts': [
