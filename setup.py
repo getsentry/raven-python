@@ -24,6 +24,10 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
+setup_requires = [
+    'pytest',
+]
+
 dev_requires = [
     'flake8>=1.6,<2.0',
 ]
@@ -43,7 +47,6 @@ if sys.version_info[0] == 3:
     flask_requires = []
     flask_tests_requires = []
     unittest2_requires = []
-
 
 tests_require = [
     'bottle',
@@ -95,6 +98,7 @@ setup(
         'tests': tests_require,
         'dev': dev_requires,
     },
+    tests_require=tests_require,
     cmdclass={'test': PyTest},
     include_package_data=True,
     entry_points={
