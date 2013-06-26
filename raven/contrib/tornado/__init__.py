@@ -105,7 +105,10 @@ class SentryClient(Client):
 
 try:
     from tornado.httpclient import AsyncHTTPClient, HTTPError
+except ImportError:
+    AsyncHTTPClient, HTTPError = None, None
 
+if AsyncHTTPClient:
     class AsyncSentryClient(SentryClient):
 
         HTTP_ERROR = HTTPError
@@ -122,9 +125,6 @@ try:
             return AsyncHTTPClient().fetch(
                 url, callback, method="POST", body=data, headers=headers
             )
-
-except ImportError as e:
-    pass
 
 
 class SentryMixin(object):
