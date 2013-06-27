@@ -98,6 +98,7 @@ setup(
         'tests': tests_require,
         'dev': dev_requires,
     },
+    license='BSD',
     tests_require=tests_require,
     cmdclass={'test': PyTest},
     include_package_data=True,
