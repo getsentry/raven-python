@@ -5,7 +5,7 @@ bootstrap:
 
 test: bootstrap lint
 	@echo "Running Python tests"
-	python runtests.py -x
+	py.test -x tests
 	@echo ""
 
 lint:
