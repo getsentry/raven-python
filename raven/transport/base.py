@@ -138,7 +138,8 @@ class BaseUDPTransport(Transport):
         netloc = url.hostname
         netloc += ':%s' % url.port
 
-        server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
+        server = '%s://%s%s/api/%s/store/' % (
+            url.scheme, netloc, path, project)
         scope.update({
             'SENTRY_SERVERS': [server],
             'SENTRY_PROJECT': project,
@@ -212,7 +213,8 @@ class HTTPTransport(Transport):
         if not all([netloc, project, url.username, url.password]):
             raise ValueError('Invalid Sentry DSN: %r' % url.geturl())
 
-        server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
+        server = '%s://%s%s/api/%s/store/' % (
+            url.scheme, netloc, path, project)
         scope.update({
             'SENTRY_SERVERS': [server],
             'SENTRY_PROJECT': project,

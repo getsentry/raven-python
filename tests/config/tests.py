@@ -12,7 +12,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local/api/store/'],
+            'SENTRY_SERVERS': ['https://sentry.local/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -23,7 +23,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local/app/api/store/'],
+            'SENTRY_SERVERS': ['https://sentry.local/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -34,7 +34,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local:9000/app/api/store/'],
+            'SENTRY_SERVERS': ['https://sentry.local:9000/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -44,7 +44,7 @@ class LoadTest(TestCase):
         res = load(dsn)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local/api/store/'],
+            'SENTRY_SERVERS': ['https://sentry.local/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -55,7 +55,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['http://sentry.local/app/api/store/'],
+            'SENTRY_SERVERS': ['http://sentry.local/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -66,7 +66,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['http://sentry.local:9000/app/api/store/'],
+            'SENTRY_SERVERS': ['http://sentry.local:9000/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -77,7 +77,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local/app/api/store/'],
+            'SENTRY_SERVERS': ['https://sentry.local/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -88,7 +88,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local:80/app/api/store/'],
+            'SENTRY_SERVERS': ['https://sentry.local:80/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
@@ -99,7 +99,7 @@ class LoadTest(TestCase):
         load(dsn, res)
         self.assertEquals(res, {
             'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['udp://sentry.local:9001/api/store/'],
+            'SENTRY_SERVERS': ['udp://sentry.local:9001/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
         })
