@@ -59,11 +59,11 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
         if source is None:
             return None, None, None
 
-        encoding = 'ascii'
+        encoding = 'utf8'
         for line in source[:2]:
             # File coding may be specified. Match pattern from PEP-263
             # (http://www.python.org/dev/peps/pep-0263/)
-            match = _coding_re.search(line.decode('ascii'))  # let's assume ascii
+            match = _coding_re.search(line.decode('utf8'))  # let's assume utf8
             if match:
                 encoding = match.group(1)
                 break
