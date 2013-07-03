@@ -113,11 +113,17 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        if not six.PY3:
-            return repr(six.binary_type('%s')) % (
-                value.decode('utf-8').encode('utf-8')[:string_max_length],)
-        else:
+        if six.PY3:
             return repr(value[:string_max_length])
+
+        try:
+            # Python2 madness: let's try to recover from developer's issues
+            # Try to process the string as if it was a unicode.
+            return "'" + value.decode('utf8')[:string_max_length].encode('utf8') + "'"
+        except UnicodeDecodeError:
+            pass
+
+        return repr(value[:string_max_length])
 
 
 class TypeSerializer(Serializer):

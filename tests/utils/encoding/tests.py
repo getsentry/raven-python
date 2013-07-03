@@ -60,7 +60,7 @@ class TransformTest(TestCase):
         x = six.b('The following character causes problems: \xd4')
 
         result = transform(x)
-        assert result == six.binary_type(six.binary_type)
+        assert result == six.b("'The following character causes problems: \\xd4'")
 
     def test_float(self):
         result = transform(13.0)
@@ -176,3 +176,11 @@ class TransformTest(TestCase):
         result = transform(x, string_max_length=3)
         expected = "'123'" if six.PY3 else "u'123'"
         self.assertEqual(result, expected)
+
+    def test_bytes_max_length(self):
+        x = six.b('\xd7\xd7\xd7\xd7\xd7\xd7')
+        result = transform(x, string_max_length=1)
+        if six.PY3:
+            assert result == "b'\\xd7'"
+        else:
+            assert result == "'\\xd7'"
