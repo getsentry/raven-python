@@ -146,10 +146,12 @@ class TransformTest(TestCase):
             def __repr__(self):
                 raise ValueError
 
-        x = Foo()
-
-        result = transform(x)
-        self.assertEqual(result, "<class 'tests.utils.encoding.tests.Foo'>")
+        result = transform(Foo())
+        expected = "<class 'tests.utils.encoding.tests.Foo'>"
+        import sys
+        if sys.version_info[0] == 3 and sys.version_info[1] >= 3:
+            expected = "<class 'tests.utils.encoding.tests.TransformTest.test_broken_repr.<locals>.Foo'>"
+        assert result == expected
 
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
