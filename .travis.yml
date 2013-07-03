@@ -44,6 +44,6 @@ matrix:
     - python: "3.3"
       env: DJANGO=Django==1.4.5
     - python: "2.6"
-      env: DJANGO=="-e git+git://github.com/django/django.git#egg=Django"
+      env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
 after_success:
   - coveralls
