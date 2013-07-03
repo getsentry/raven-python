@@ -80,12 +80,6 @@ class TransformTest(TestCase):
         self.assertEqual(type(result), int)
         self.assertEqual(result, 0)
 
-    # def test_bad_string(self):
-    #     x = 'The following character causes problems: \xd4'
-
-    #     result = transform(x)
-    #     self.assertEqual(result, '(Error decoding value)')
-
     def test_dict_keys(self):
         x = {'foo': 'bar'}
 
