@@ -81,4 +81,4 @@ class GetLineFromFileTest(TestCase):
         filename = os.path.join(os.path.dirname(__file__), 'utf8_file.txt')
         self.assertEqual(
             get_lines_from_file(filename, 3, 1),
-            ([u'Some code here'], u'', [u'lorem ipsum']))
+            (['Some code here'], '', ['lorem ipsum']))
