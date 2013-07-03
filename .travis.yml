@@ -22,7 +22,7 @@ install:
   - "if [[ ${TRAVIS_PYTHON_VERSION} == '3.2' ]]; then pip install -I https://github.com/celery/celery/archive/3.0.zip; fi"
   - "if [[ ${TRAVIS_PYTHON_VERSION::1} == '3' ]]; then pip uninstall django-celery -y; fi"
 script:
-  - "if [[ ${TRAVIS_PYTHON_VERSION} == 'pypy' ]]; then make lint; fi"
+  - "if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi"
   - py.test tests/ --cov raven --cov-report term-missing
 notifications:
   irc:
