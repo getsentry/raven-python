@@ -55,7 +55,10 @@ class ZopeSentryHandler(SentryHandler):
                     request = frame.f_locals.get('request', None)
                     if not request:
                         view = frame.f_locals.get('self', None)
-                        request = getattr(view, 'request', None)
+                        try:
+                            request = getattr(view, 'request', None)
+                        except RuntimeError:
+                            request = None
                 if not exc_info:
                     exc_info = frame.f_locals.get('exc_info', None)
                     if not hasattr(exc_info, '__getitem__'):
