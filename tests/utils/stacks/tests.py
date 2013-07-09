@@ -2,9 +2,8 @@
 from __future__ import unicode_literals
 
 from mock import Mock
-from raven.utils.testutils import TestCase
-from raven.utils import six
 
+from raven.utils import six
 from raven.utils.stacks import get_culprit, get_stack_info, get_lines_from_file
 
 
@@ -17,7 +16,7 @@ class Context(object):
     iterkeys = lambda s, *a: six.iterkeys(s.dict, *a)
 
 
-class GetCulpritTest(TestCase):
+class TestGetCulprit(object):
     def test_empty_module(self):
         culprit = get_culprit([{
             'module': None,
@@ -44,7 +43,7 @@ class GetCulpritTest(TestCase):
         assert culprit == 'package.name in foo'
 
 
-class GetStackInfoTest(TestCase):
+class TestGetStackInfo(object):
     def test_bad_locals_in_frame(self):
         frame = Mock()
         frame.f_locals = Context({
@@ -58,7 +57,7 @@ class GetStackInfoTest(TestCase):
 
         frames = [(frame, 1)]
         results = get_stack_info(frames)
-        self.assertEquals(len(results), 1)
+        assert len(results) == 1
         result = results[0]
         assert 'vars' in result
         if six.PY3:
@@ -74,11 +73,10 @@ class GetStackInfoTest(TestCase):
         assert result['vars'] == expected
 
 
-class GetLineFromFileTest(TestCase):
+class TestGetLineFromFile(object):
 
     def test_non_ascii_file(self):
         import os.path
         filename = os.path.join(os.path.dirname(__file__), 'utf8_file.txt')
-        self.assertEqual(
-            get_lines_from_file(filename, 3, 1),
-            (['Some code here'], '', ['lorem ipsum']))
+        result = get_lines_from_file(filename, 3, 1)
+        assert result == (['Some code here'], '', ['lorem ipsum'])
