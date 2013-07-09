@@ -3,11 +3,10 @@ import pytest
 import uuid
 
 from raven.utils import six
-from raven.utils.testutils import TestCase
 from raven.utils.serializer import transform
 
 
-class TransformTest(TestCase):
+class TestTransform(object):
     @pytest.mark.skipif('six.PY3')
     def test_incorrect_unicode(self):
         x = six.b('רונית מגן')
@@ -64,40 +63,40 @@ class TransformTest(TestCase):
 
     def test_float(self):
         result = transform(13.0)
-        self.assertEqual(type(result), float)
-        self.assertEqual(result, 13.0)
+        assert isinstance(result, float)
+        assert result == 13.0
 
     def test_bool(self):
         result = transform(True)
-        self.assertEqual(type(result), bool)
-        self.assertEqual(result, True)
+        assert isinstance(result, bool)
+        assert result == True
 
     def test_int_subclass(self):
         class X(int):
             pass
 
         result = transform(X())
-        self.assertEqual(type(result), int)
-        self.assertEqual(result, 0)
+        assert isinstance(result, int)
+        assert result == 0
 
     def test_dict_keys(self):
         x = {'foo': 'bar'}
 
         result = transform(x)
-        self.assertEqual(type(result), dict)
+        assert isinstance(result, dict)
         keys = list(result.keys())
-        self.assertEqual(len(keys), 1)
-        self.assertTrue(type(keys[0]), str)
-        self.assertEqual(keys[0], "'foo'")
+        assert len(keys) == 1
+        assert isinstance(keys[0], str)
+        assert keys[0] == "'foo'"
 
     @pytest.mark.skipif('six.PY3')
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 
         result = transform(x)
-        self.assertEqual(type(result), dict)
+        assert isinstance(result, dict)
         keys = list(result.keys())
-        self.assertEqual(len(keys), 1)
+        assert len(keys) == 1
         assert keys[0] == "'רונית מגן'"
 
     def test_dict_keys_utf8_as_unicode(self):
@@ -125,7 +124,7 @@ class TransformTest(TestCase):
         x.append(x)
 
         result = transform(x)
-        self.assertEqual(result, ('<...>',))
+        assert result == ('<...>',)
 
     def test_custom_repr(self):
         class Foo(object):
@@ -139,7 +138,7 @@ class TransformTest(TestCase):
             expected = "'example'"
         else:
             expected = "u'example'"
-        self.assertEqual(result, expected)
+        assert result == expected
 
     def test_broken_repr(self):
         class Foo(object):
@@ -160,24 +159,24 @@ class TransformTest(TestCase):
             expected = ((("'[1]'",),),)
         else:
             expected = ((("u'[1]'",),),)
-        self.assertEqual(result, expected)
+        assert result == expected
 
     def test_list_max_length(self):
         x = list(range(10))
         result = transform(x, list_max_length=3)
-        self.assertEqual(result, (0, 1, 2))
+        assert result == (0, 1, 2)
 
     def test_dict_max_length(self):
         x = dict((x, x) for x in range(10))
         result = transform(x, list_max_length=3)
-        self.assertEqual(type(x), dict)
-        self.assertEqual(len(result), 3)
+        assert isinstance(x, dict)
+        assert len(result) == 3
 
     def test_string_max_length(self):
         x = six.u('1234')
         result = transform(x, string_max_length=3)
         expected = "'123'" if six.PY3 else "u'123'"
-        self.assertEqual(result, expected)
+        assert result == expected
 
     def test_bytes_max_length(self):
         x = six.b('\xd7\xd7\xd7\xd7\xd7\xd7')
