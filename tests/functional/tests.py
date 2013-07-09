@@ -2,7 +2,6 @@ import fnmatch
 import os
 
 from subprocess import call
-from raven.utils.compat import TestCase
 
 
 ROOT = os.path.normpath(
@@ -17,7 +16,7 @@ def find_files(root, pattern='*'):
     return matches
 
 
-class FutureImportsTest(TestCase):
+class TestFutureImports(object):
     def test_absolute_import(self):
         string = 'from __future__ import absolute_import'
         kwargs = {
