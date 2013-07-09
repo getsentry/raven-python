@@ -29,28 +29,28 @@ class TempStoreClient(Client):
 class ClientStateTest(TestCase):
     def test_should_try_online(self):
         state = ClientState()
-        self.assertEquals(state.should_try(), True)
+        assert state.should_try()
 
     def test_should_try_new_error(self):
         state = ClientState()
         state.status = state.ERROR
         state.last_check = time.time()
         state.retry_number = 1
-        self.assertEquals(state.should_try(), False)
+        assert not state.should_try()
 
     def test_should_try_time_passed_error(self):
         state = ClientState()
         state.status = state.ERROR
         state.last_check = time.time() - 10
         state.retry_number = 1
-        self.assertEquals(state.should_try(), True)
+        assert state.should_try()
 
     def test_set_fail(self):
         state = ClientState()
         state.set_fail()
-        self.assertEquals(state.status, state.ERROR)
-        self.assertNotEquals(state.last_check, None)
-        self.assertEquals(state.retry_number, 1)
+        assert state.status == state.ERROR
+        assert state.last_check != None
+        assert state.retry_number == 1
 
     def test_set_success(self):
         state = ClientState()
@@ -58,9 +58,9 @@ class ClientStateTest(TestCase):
         state.last_check = 'foo'
         state.retry_number = 0
         state.set_success()
-        self.assertEquals(state.status, state.ONLINE)
-        self.assertEquals(state.last_check, None)
-        self.assertEquals(state.retry_number, 0)
+        assert state.status == state.ONLINE
+        assert state.last_check == None
+        assert state.retry_number == 0
 
 
 class ClientTest(TestCase):
@@ -92,12 +92,12 @@ class ClientTest(TestCase):
         # test error
         send.side_effect = Exception()
         client.send_remote('http://example.com/api/store', 'foo')
-        self.assertEquals(client.state.status, client.state.ERROR)
+        assert client.state.status == client.state.ERROR
 
         # test recovery
         send.side_effect = None
         client.send_remote('http://example.com/api/store', 'foo')
-        self.assertEquals(client.state.status, client.state.ONLINE)
+        assert client.state.status == client.state.ONLINE
 
     @mock.patch('raven.base.Client._registry.get_transport')
     @mock.patch('raven.base.ClientState.should_try')
@@ -117,19 +117,19 @@ class ClientTest(TestCase):
         # test immediate raise of error
         async_send.side_effect = Exception()
         client.send_remote('http://example.com/api/store', 'foo')
-        self.assertEquals(client.state.status, client.state.ERROR)
+        assert client.state.status == client.state.ERROR
 
         # test recovery
         client.send_remote('http://example.com/api/store', 'foo')
         success_cb = async_send.call_args[0][2]
         success_cb()
-        self.assertEquals(client.state.status, client.state.ONLINE)
+        assert client.state.status == client.state.ONLINE
 
         # test delayed raise of error
         client.send_remote('http://example.com/api/store', 'foo')
         failure_cb = async_send.call_args[0][3]
         failure_cb(Exception())
-        self.assertEquals(client.state.status, client.state.ERROR)
+        assert client.state.status == client.state.ERROR
 
     @mock.patch('raven.base.Client.send_remote')
     @mock.patch('raven.base.time.time')
@@ -184,48 +184,48 @@ class ClientTest(TestCase):
     def test_encode_decode(self):
         data = {'foo': 'bar'}
         encoded = self.client.encode(data)
-        self.assertTrue(type(encoded), str)
-        self.assertEquals(data, self.client.decode(encoded))
+        assert isinstance(encoded, str)
+        assert data == self.client.decode(encoded)
 
     def test_dsn(self):
         client = Client(dsn='http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
-        self.assertEquals(client.project, '1')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
+        assert client.servers == ['http://example.com/api/1/store/']
+        assert client.project == '1'
+        assert client.public_key == 'public'
+        assert client.secret_key == 'secret'
 
     def test_dsn_as_first_arg(self):
         client = Client('http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
-        self.assertEquals(client.project, '1')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
+        assert client.servers == ['http://example.com/api/1/store/']
+        assert client.project == '1'
+        assert client.public_key == 'public'
+        assert client.secret_key == 'secret'
 
     def test_slug_in_dsn(self):
         client = Client('http://public:secret@example.com/slug-name')
-        self.assertEquals(client.servers, ['http://example.com/api/slug-name/store/'])
-        self.assertEquals(client.project, 'slug-name')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
+        assert client.servers == ['http://example.com/api/slug-name/store/']
+        assert client.project == 'slug-name'
+        assert client.public_key == 'public'
+        assert client.secret_key == 'secret'
 
     def test_get_public_dsn(self):
         client = Client('threaded+http://public:secret@example.com/1')
         public_dsn = client.get_public_dsn()
-        self.assertEquals(public_dsn, '//public@example.com/1')
+        assert public_dsn == '//public@example.com/1'
 
     def test_get_public_dsn_override_scheme(self):
         client = Client('threaded+http://public:secret@example.com/1')
         public_dsn = client.get_public_dsn('https')
-        self.assertEquals(public_dsn, 'https://public@example.com/1')
+        assert public_dsn == 'https://public@example.com/1'
 
     def test_explicit_message_on_message_event(self):
         self.client.captureMessage(message='test', data={
             'message': 'foo'
         })
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'foo')
+        assert event['message'] == 'foo'
 
     def test_explicit_message_on_exception_event(self):
         try:
@@ -233,9 +233,9 @@ class ClientTest(TestCase):
         except:
             self.client.captureException(data={'message': 'foobar'})
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'foobar')
+        assert event['message'] == 'foobar'
 
     def test_exception_event(self):
         try:
@@ -243,32 +243,32 @@ class ClientTest(TestCase):
         except:
             self.client.captureException()
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'ValueError: foo')
-        self.assertTrue('sentry.interfaces.Exception' in event)
+        assert event['message'] == 'ValueError: foo'
+        assert 'sentry.interfaces.Exception' in event
         exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
-        self.assertEquals(exc['value'], 'foo')
-        self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'foo'
+        assert exc['module'] == ValueError.__module__  # this differs in some Python versions
+        assert 'sentry.interfaces.Stacktrace' in event
         frames = event['sentry.interfaces.Stacktrace']
-        self.assertEquals(len(frames['frames']), 1)
+        assert len(frames['frames']) == 1
         frame = frames['frames'][0]
-        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
-        self.assertEquals(frame['filename'], 'tests/base/tests.py')
-        self.assertEquals(frame['module'], __name__)
-        self.assertEquals(frame['function'], 'test_exception_event')
-        self.assertTrue('timestamp' in event)
+        assert frame['abs_path'] == __file__.replace('.pyc', '.py')
+        assert frame['filename'] == 'tests/base/tests.py'
+        assert frame['module'] == __name__
+        assert frame['function'] == 'test_exception_event'
+        assert 'timestamp' in event
 
     def test_message_event(self):
         self.client.captureMessage(message='test')
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
-        self.assertFalse('sentry.interfaces.Stacktrace' in event)
-        self.assertTrue('timestamp' in event)
+        assert event['message'] == 'test'
+        assert 'sentry.interfaces.Stacktrace' not in event
+        assert 'timestamp' in event
 
     def test_exception_context_manager(self):
         cm = self.client.context(tags={'foo': 'bar'})
@@ -280,25 +280,25 @@ class ClientTest(TestCase):
         else:
             self.fail('Exception should have been raised')
 
-        self.assertNotEquals(cm.result, None)
+        assert cm.result != None
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'ValueError: foo')
-        self.assertTrue('sentry.interfaces.Exception' in event)
+        assert event['message'] == 'ValueError: foo'
+        assert 'sentry.interfaces.Exception' in event
         exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
-        self.assertEquals(exc['value'], 'foo')
-        self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'foo'
+        assert exc['module'] == ValueError.__module__  # this differs in some Python versions
+        assert 'sentry.interfaces.Stacktrace' in event
         frames = event['sentry.interfaces.Stacktrace']
-        self.assertEquals(len(frames['frames']), 1)
+        assert len(frames['frames']) == 1
         frame = frames['frames'][0]
-        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
-        self.assertEquals(frame['filename'], 'tests/base/tests.py')
-        self.assertEquals(frame['module'], __name__)
-        self.assertEquals(frame['function'], 'test_exception_context_manager')
-        self.assertTrue('timestamp' in event)
+        assert frame['abs_path'] == __file__.replace('.pyc', '.py')
+        assert frame['filename'] == 'tests/base/tests.py'
+        assert frame['module'] == __name__
+        assert frame['function'] == 'test_exception_context_manager'
+        assert 'timestamp' in event
 
     def test_stack_explicit_frames(self):
         def bar():
@@ -308,28 +308,28 @@ class ClientTest(TestCase):
 
         self.client.captureMessage('test', stack=iter_stack_frames(frames))
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        self.assertEquals(len(frames), len(event['sentry.interfaces.Stacktrace']['frames']))
+        assert event['message'] == 'test'
+        assert 'sentry.interfaces.Stacktrace' in event
+        assert len(frames) == len(event['sentry.interfaces.Stacktrace']['frames'])
         for frame, frame_i in zip(frames, event['sentry.interfaces.Stacktrace']['frames']):
-            self.assertEquals(frame[0].f_code.co_filename, frame_i['abs_path'])
-            self.assertEquals(frame[0].f_code.co_name, frame_i['function'])
+            assert frame[0].f_code.co_filename == frame_i['abs_path']
+            assert frame[0].f_code.co_name == frame_i['function']
 
     def test_stack_auto_frames(self):
         self.client.captureMessage('test', stack=True)
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        self.assertTrue('timestamp' in event)
+        assert event['message'] == 'test'
+        assert 'sentry.interfaces.Stacktrace' in event
+        assert 'timestamp' in event
 
     def test_site(self):
         self.client.captureMessage(message='test', data={'site': 'test'})
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         assert 'site' in event['tags']
         assert event['tags']['site'] == 'test'
@@ -338,7 +338,7 @@ class ClientTest(TestCase):
         self.client = TempStoreClient(site='foo')
         self.client.captureMessage(message='test')
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         assert 'site' in event['tags']
         assert event['tags']['site'] == 'foo'
@@ -346,17 +346,17 @@ class ClientTest(TestCase):
     def test_logger(self):
         self.client.captureMessage(message='test', data={'logger': 'test'})
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['logger'], 'test')
-        self.assertTrue('timestamp' in event)
+        assert event['logger'] == 'test'
+        assert 'timestamp' in event
 
     def test_tags(self):
         self.client.captureMessage(message='test', tags={'logger': 'test'})
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEquals(event['tags'], {'logger': 'test'})
+        assert event['tags'] == {'logger': 'test'}
 
     def test_client_extra_context(self):
         self.client.extra = {
@@ -365,13 +365,13 @@ class ClientTest(TestCase):
         }
         self.client.captureMessage(message='test', extra={'logger': 'test'})
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         if six.PY3:
             expected = {'logger': "'test'", 'foo': "'bar'"}
         else:
             expected = {'logger': "u'test'", 'foo': "u'bar'"}
-        self.assertEquals(event['extra'], expected)
+        assert event['extra'] == expected
 
 
 # TODO: Python 3
@@ -385,10 +385,10 @@ class ClientUDPTest(TestCase):
     def test_delivery(self):
         self.client.captureMessage('test')
         data, address = self.server_socket.recvfrom(2 ** 16)
-        self.assertTrue("\n\n" in data)
+        assert "\n\n" in data
         header, payload = data.split("\n\n")
         for substring in ("sentry_timestamp=", "sentry_client="):
-            self.assertTrue(substring in header)
+            assert substring in header
 
     def tearDown(self):
         self.server_socket.close()
