@@ -184,7 +184,7 @@ class ClientTest(TestCase):
     def test_encode_decode(self):
         data = {'foo': 'bar'}
         encoded = self.client.encode(data)
-        assert isinstance(encoded, str)
+        assert isinstance(encoded, six.binary_type)
         assert data == self.client.decode(encoded)
 
     def test_dsn(self):
