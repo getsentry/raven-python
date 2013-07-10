@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import sys
+import pytest
 from raven.utils.testutils import TestCase
 from raven.utils import six
 from raven.base import Client
@@ -37,17 +38,17 @@ class LoggingIntegrationTest(TestCase):
         record = self.make_record('This is a test error')
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEqual(event['logger'], 'root')
-        self.assertEqual(event['level'], logging.INFO)
-        self.assertEqual(event['message'], 'This is a test error')
-        self.assertFalse('sentry.interfaces.Stacktrace' in event)
-        self.assertFalse('sentry.interfaces.Exception' in event)
-        self.assertTrue('sentry.interfaces.Message' in event)
+        assert event['logger'] == 'root'
+        assert event['level'] == logging.INFO
+        assert event['message'] == 'This is a test error'
+        assert 'sentry.interfaces.Stacktrace' not in event
+        assert 'sentry.interfaces.Exception' not in event
+        assert 'sentry.interfaces.Message' in event
         msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test error')
-        self.assertEqual(msg['params'], ())
+        assert msg['message'] == 'This is a test error'
+        assert msg['params'] == ()
 
     def test_logger_extra_data(self):
         record = self.make_record('This is a test error', extra={'data': {
@@ -55,13 +56,13 @@ class LoggingIntegrationTest(TestCase):
         }})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         if six.PY3:
             expected = "'http://example.com'"
         else:
             expected = "u'http://example.com'"
-        self.assertEqual(event['extra']['url'], expected)
+        assert event['extra']['url'] == expected
 
     def test_logger_exc_info(self):
         try:
@@ -73,96 +74,96 @@ class LoggingIntegrationTest(TestCase):
 
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
 
         self.assertEqual(event['message'], 'This is a test info with an exception')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        self.assertTrue('sentry.interfaces.Exception' in event)
+        assert 'sentry.interfaces.Stacktrace' in event
+        assert 'sentry.interfaces.Exception' in event
         exc = event['sentry.interfaces.Exception']
-        self.assertEqual(exc['type'], 'ValueError')
-        self.assertEqual(exc['value'], 'This is a test ValueError')
-        self.assertTrue('sentry.interfaces.Message' in event)
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'This is a test ValueError'
+        assert 'sentry.interfaces.Message' in event
         msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test info with an exception')
-        self.assertEqual(msg['params'], ())
+        assert msg['message'] == 'This is a test info with an exception'
+        assert msg['params'] == ()
 
     def test_message_params(self):
         record = self.make_record('This is a test of %s', args=('args',))
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEqual(event['message'], 'This is a test of args')
+        assert event['message'] == 'This is a test of args'
         msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test of %s')
+        assert msg['message'] == 'This is a test of %s'
         expected = ("'args'",) if six.PY3 else ("u'args'",)
-        self.assertEqual(msg['params'], expected)
+        assert msg['params'] == expected
 
     def test_record_stack(self):
         record = self.make_record('This is a test of stacks', extra={'stack': True})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        assert 'sentry.interfaces.Stacktrace' in event
         frames = event['sentry.interfaces.Stacktrace']['frames']
-        self.assertNotEquals(len(frames), 1)
+        assert len(frames) != 1
         frame = frames[0]
-        self.assertEqual(frame['module'], 'raven.handlers.logging')
-        self.assertFalse('sentry.interfaces.Exception' in event)
-        self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertEqual(event['culprit'], 'root in make_record')
-        self.assertEqual(event['message'], 'This is a test of stacks')
+        assert frame['module'] == 'raven.handlers.logging'
+        assert 'sentry.interfaces.Exception' not in event
+        assert 'sentry.interfaces.Message' in event
+        assert event['culprit'] == 'root in make_record'
+        assert event['message'] == 'This is a test of stacks'
 
     def test_no_record_stack(self):
         record = self.make_record('This is a test with no stacks', extra={'stack': False})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEqual(event['message'], 'This is a test with no stacks')
-        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        assert event['message'] == 'This is a test with no stacks'
+        assert 'sentry.interfaces.Stacktrace' not in event
 
     def test_explicit_stack(self):
         record = self.make_record('This is a test of stacks', extra={'stack': iter_stack_frames()})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         assert 'sentry.interfaces.Stacktrace' in event
         assert 'culprit' in event
         assert event['culprit'] == 'root in make_record'
-        self.assertTrue('message' in event, event)
-        self.assertEqual(event['message'], 'This is a test of stacks')
-        self.assertFalse('sentry.interfaces.Exception' in event)
-        self.assertTrue('sentry.interfaces.Message' in event)
+        assert 'message' in event, event
+        assert event['message'] == 'This is a test of stacks'
+        assert 'sentry.interfaces.Exception' not in event
+        assert 'sentry.interfaces.Message' in event
         msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test of stacks')
-        self.assertEqual(msg['params'], ())
+        assert msg['message'] == 'This is a test of stacks'
+        assert msg['params'] == ()
 
     def test_extra_culprit(self):
         record = self.make_record('This is a test of stacks', extra={'culprit': 'foo in bar'})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
-        self.assertEqual(event['culprit'], 'foo in bar')
+        assert event['culprit'] == 'foo in bar'
 
     def test_extra_data_as_string(self):
         record = self.make_record('Message', extra={'data': 'foo'})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         expected = "'foo'" if six.PY3 else "u'foo'"
-        self.assertEqual(event['extra']['data'], expected)
+        assert event['extra']['data'] == expected
 
     def test_tags(self):
         record = self.make_record('Message', extra={'tags': {'foo': 'bar'}})
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         assert event['tags'] == {'foo': 'bar'}
 
@@ -173,42 +174,43 @@ class LoggingIntegrationTest(TestCase):
             record = self.make_record('Message', extra={'tags': {'foo': 'bar'}}, exc_info=sys.exc_info())
         self.handler.emit(record)
 
-        self.assertEqual(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
         assert event['tags'] == {'foo': 'bar'}
 
 
-class LoggingHandlerTest(TestCase):
+class TestLoggingHandler(object):
     def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client)
-        self.assertEqual(handler.client, client)
+        assert handler.client == client
 
     def test_client_kwarg(self):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client=client)
-        self.assertEqual(handler.client, client)
+        assert handler.client == client
 
     def test_args_as_servers_and_key(self):
         handler = SentryHandler(['http://sentry.local/api/store/'], 'KEY')
-        self.assertTrue(isinstance(handler.client, Client))
+        assert isinstance(handler.client, Client)
 
     def test_first_arg_as_dsn(self):
         handler = SentryHandler('http://public:secret@example.com/1')
-        self.assertTrue(isinstance(handler.client, Client))
+        assert isinstance(handler.client, Client)
 
     def test_custom_client_class(self):
         handler = SentryHandler('http://public:secret@example.com/1', client_cls=TempStoreClient)
-        self.assertTrue(type(handler.client), TempStoreClient)
+        assert type(handler.client) == TempStoreClient
 
     def test_invalid_first_arg_type(self):
-        self.assertRaises(ValueError, SentryHandler, object)
+        with pytest.raises(ValueError):
+            SentryHandler(object)
 
     def test_logging_level_set(self):
         handler = SentryHandler('http://public:secret@example.com/1', level="ERROR")
         # XXX: some version of python 2.6 seem to pass the string on instead of coercing it
-        self.assertTrue(handler.level in (logging.ERROR, 'ERROR'))
+        assert handler.level in (logging.ERROR, 'ERROR')
 
     def test_logging_level_not_set(self):
         handler = SentryHandler('http://public:secret@example.com/1')
-        self.assertEqual(handler.level, logging.NOTSET)
+        assert handler.level == logging.NOTSET

@@ -68,7 +68,7 @@ class TransportTest(TestCase):
         c.send(**data)
 
         expected_message = c.encode(data)
-        self.assertIn('mock://localhost:8143/api/store/', Client._registry._transports)
+        assert 'mock://localhost:8143/api/store/' in Client._registry._transports
         mock_cls = Client._registry._transports['mock://localhost:8143/api/store/']
         assert mock_cls._data == expected_message
 
@@ -94,4 +94,4 @@ class TransportTest(TestCase):
         # The event_id is always overridden
         del msg['event_id']
 
-        self.assertDictContainsSubset(expected, msg)
+        assert all(item in msg.items() for item in expected.items())

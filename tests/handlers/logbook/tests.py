@@ -2,6 +2,7 @@ from __future__ import with_statement
 from __future__ import unicode_literals
 
 import logbook
+import pytest
 from raven.utils.testutils import TestCase
 from raven.utils import six
 from raven.base import Client
@@ -32,100 +33,102 @@ class LogbookHandlerTest(TestCase):
         with handler.applicationbound():
             logger.error('This is a test error')
 
-            self.assertEquals(len(client.events), 1)
+            len(client.events) == 1
             event = client.events.pop(0)
-            self.assertEquals(event['logger'], __name__)
-            self.assertEquals(event['level'], 'error')
-            self.assertEquals(event['message'], 'This is a test error')
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
+            assert event['logger'] == __name__
+            assert event['level'] == 'error'
+            assert event['message'] == 'This is a test error'
+            assert 'sentry.interfaces.Stacktrace' not in event
+            assert 'sentry.interfaces.Exception' not in event
+            assert 'sentry.interfaces.Message' in event
             msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test error')
-            self.assertEquals(msg['params'], ())
+            assert msg['message'] == 'This is a test error'
+            assert msg['params'] == ()
 
             logger.warning('This is a test warning')
-            self.assertEquals(len(client.events), 1)
+            assert len(client.events) == 1
             event = client.events.pop(0)
-            self.assertEquals(event['logger'], __name__)
-            self.assertEquals(event['level'], 'warning')
-            self.assertEquals(event['message'], 'This is a test warning')
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
+            assert event['logger'] == __name__
+            assert event['level'] == 'warning'
+            assert event['message'] == 'This is a test warning'
+            assert 'sentry.interfaces.Stacktrace' not in event
+            assert 'sentry.interfaces.Exception' not in event
+            assert 'sentry.interfaces.Message' in event
             msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test warning')
-            self.assertEquals(msg['params'], ())
+            assert msg['message'] == 'This is a test warning'
+            assert msg['params'] == ()
 
             logger.info('This is a test info with a url', extra=dict(
                 url='http://example.com',
             ))
-            self.assertEquals(len(client.events), 1)
+            assert len(client.events) == 1
             event = client.events.pop(0)
             if six.PY3:
                 expected = "'http://example.com'"
             else:
                 expected = "u'http://example.com'"
-            self.assertEquals(event['extra']['url'], expected)
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
+            assert event['extra']['url'] == expected
+            assert 'sentry.interfaces.Stacktrace' not in event
+            assert 'sentry.interfaces.Exception' not in event
+            assert 'sentry.interfaces.Message' in event
             msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test info with a url')
-            self.assertEquals(msg['params'], ())
+            assert msg['message'] == 'This is a test info with a url'
+            assert msg['params'] == ()
 
             try:
                 raise ValueError('This is a test ValueError')
             except ValueError:
                 logger.info('This is a test info with an exception', exc_info=True)
 
-            self.assertEquals(len(client.events), 1)
+            assert len(client.events) == 1
             event = client.events.pop(0)
 
-            self.assertEquals(event['message'], 'This is a test info with an exception')
-            self.assertTrue('sentry.interfaces.Stacktrace' in event)
-            self.assertTrue('sentry.interfaces.Exception' in event)
+            assert event['message'] == 'This is a test info with an exception'
+            assert 'sentry.interfaces.Stacktrace' in event
+            assert 'sentry.interfaces.Exception' in event
             exc = event['sentry.interfaces.Exception']
-            self.assertEquals(exc['type'], 'ValueError')
-            self.assertEquals(exc['value'], 'This is a test ValueError')
-            self.assertTrue('sentry.interfaces.Message' in event)
+            assert exc['type'] == 'ValueError'
+            assert exc['value'] == 'This is a test ValueError'
+            assert 'sentry.interfaces.Message' in event
             msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test info with an exception')
-            self.assertEquals(msg['params'], ())
+            assert msg['message'] == 'This is a test info with an exception'
+            assert msg['params'] == ()
 
             # test args
             logger.info('This is a test of {0}', 'args')
-            self.assertEquals(len(client.events), 1)
+            assert len(client.events) == 1
             event = client.events.pop(0)
-            self.assertEquals(event['message'], 'This is a test of args')
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
+            assert event['message'] == 'This is a test of args'
+            assert 'sentry.interfaces.Stacktrace' not in event
+            assert 'sentry.interfaces.Exception' not in event
+            assert 'sentry.interfaces.Message' in event
             msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test of {0}')
+            assert msg['message'] == 'This is a test of {0}'
             expected = ("'args'",) if six.PY3 else ("u'args'",)
-            self.assertEquals(msg['params'], expected)
+            assert msg['params'] == expected
 
     def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client)
-        self.assertEquals(handler.client, client)
+        assert handler.client == client
 
     def test_client_kwarg(self):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client=client)
-        self.assertEquals(handler.client, client)
+        assert handler.client == client
 
     def test_first_arg_as_dsn(self):
         handler = SentryHandler('http://public:secret@example.com/1')
-        self.assertTrue(isinstance(handler.client, Client))
+        assert isinstance(handler.client, Client)
 
     def test_custom_client_class(self):
         handler = SentryHandler('http://public:secret@example.com/1', client_cls=TempStoreClient)
-        self.assertTrue(type(handler.client), TempStoreClient)
+        assert type(handler.client) == TempStoreClient
 
     def test_invalid_first_arg_type(self):
-        self.assertRaises(ValueError, SentryHandler, object)
+        with pytest.raises(ValueError):
+            SentryHandler(object)
 
     def test_missing_client_arg(self):
-        self.assertRaises(TypeError, SentryHandler)
+        with pytest.raises(TypeError):
+            SentryHandler()

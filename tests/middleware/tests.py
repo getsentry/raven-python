@@ -40,7 +40,7 @@ class ExampleApp(object):
         return self.iterable
 
 
-class MiddlewareTestCase(TestCase):
+class TestMiddlewareTestCase(TestCase):
     @fixture
     def client(self):
         return TempStoreClient()
@@ -60,29 +60,29 @@ class MiddlewareTestCase(TestCase):
             response = list(response)
 
         # TODO: this should be a separate test
-        self.assertTrue(iterable.closed, True)
+        assert iterable.closed
 
-        self.assertEquals(len(self.client.events), 1)
+        assert len(self.client.events) == 1
         event = self.client.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Exception' in event)
+        assert 'sentry.interfaces.Exception' in event
         exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
-        self.assertEquals(exc['value'], 'hello world')
-        self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'ValueError: hello world')
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'hello world'
+        assert event['level'] == logging.ERROR
+        assert event['message'] == 'ValueError: hello world'
 
-        self.assertTrue('sentry.interfaces.Http' in event)
+        assert 'sentry.interfaces.Http' in event
         http = event['sentry.interfaces.Http']
-        self.assertEquals(http['url'], 'http://localhost/an-error')
-        self.assertEquals(http['query_string'], 'foo=bar')
-        self.assertEquals(http['method'], 'GET')
+        assert http['url'] == 'http://localhost/an-error'
+        assert http['query_string'] == 'foo=bar'
+        assert http['method'] == 'GET'
         # self.assertEquals(http['data'], {'foo': 'bar'})
         headers = http['headers']
-        self.assertTrue('Host' in headers, headers.keys())
-        self.assertEquals(headers['Host'], 'localhost:80')
+        assert 'Host' in headers, headers.keys()
+        assert headers['Host'] == 'localhost:80'
         env = http['env']
-        self.assertTrue('SERVER_NAME' in env, env.keys())
-        self.assertEquals(env['SERVER_NAME'], 'localhost')
-        self.assertTrue('SERVER_PORT' in env, env.keys())
-        self.assertEquals(env['SERVER_PORT'], '80')
+        assert 'SERVER_NAME' in env, env.keys()
+        assert env['SERVER_NAME'] == 'localhost'
+        assert 'SERVER_PORT' in env, env.keys()
+        assert env['SERVER_PORT'] == '80'
