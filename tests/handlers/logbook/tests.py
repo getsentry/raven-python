@@ -33,7 +33,7 @@ class LogbookHandlerTest(TestCase):
         with handler.applicationbound():
             logger.error('This is a test error')
 
-            len(client.events) == 1
+            assert len(client.events) == 1
             event = client.events.pop(0)
             assert event['logger'] == __name__
             assert event['level'] == 'error'
