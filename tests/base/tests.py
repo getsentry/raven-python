@@ -189,21 +189,21 @@ class ClientTest(TestCase):
 
     def test_dsn(self):
         client = Client(dsn='http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
         self.assertEquals(client.project, '1')
         self.assertEquals(client.public_key, 'public')
         self.assertEquals(client.secret_key, 'secret')
 
     def test_dsn_as_first_arg(self):
         client = Client('http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
         self.assertEquals(client.project, '1')
         self.assertEquals(client.public_key, 'public')
         self.assertEquals(client.secret_key, 'secret')
 
     def test_slug_in_dsn(self):
         client = Client('http://public:secret@example.com/slug-name')
-        self.assertEquals(client.servers, ['http://example.com/api/store/'])
+        self.assertEquals(client.servers, ['http://example.com/api/slug-name/store/'])
         self.assertEquals(client.project, 'slug-name')
         self.assertEquals(client.public_key, 'public')
         self.assertEquals(client.secret_key, 'secret')

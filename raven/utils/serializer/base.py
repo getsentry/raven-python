@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 raven.utils.serializer.base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -7,6 +6,7 @@ raven.utils.serializer.base
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import itertools
 from raven.utils import six
@@ -113,8 +113,17 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        return repr(six.binary_type('%s')) % (
-            value.decode('utf-8').encode('utf-8')[:string_max_length],)
+        if six.PY3:
+            return repr(value[:string_max_length])
+
+        try:
+            # Python2 madness: let's try to recover from developer's issues
+            # Try to process the string as if it was a unicode.
+            return "'" + value.decode('utf8')[:string_max_length].encode('utf8') + "'"
+        except UnicodeDecodeError:
+            pass
+
+        return repr(value[:string_max_length])
 
 
 class TypeSerializer(Serializer):

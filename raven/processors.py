@@ -5,6 +5,7 @@ raven.core.processors
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import re
 
@@ -55,7 +56,7 @@ class SanitizePasswordsProcessor(Processor):
     card numbers in frames, http, and basic extra data.
     """
     MASK = '*' * 8
-    FIELDS = frozenset(['password', 'secret', 'passwd'])
+    FIELDS = frozenset(['password', 'secret', 'passwd', 'authorization'])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 
     def sanitize(self, key, value):

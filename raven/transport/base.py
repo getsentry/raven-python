@@ -5,6 +5,7 @@ raven.transport.builtins
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import logging
 import sys
@@ -137,7 +138,8 @@ class BaseUDPTransport(Transport):
         netloc = url.hostname
         netloc += ':%s' % url.port
 
-        server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
+        server = '%s://%s%s/api/%s/store/' % (
+            url.scheme, netloc, path, project)
         scope.update({
             'SENTRY_SERVERS': [server],
             'SENTRY_PROJECT': project,
@@ -211,7 +213,8 @@ class HTTPTransport(Transport):
         if not all([netloc, project, url.username, url.password]):
             raise ValueError('Invalid Sentry DSN: %r' % url.geturl())
 
-        server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
+        server = '%s://%s%s/api/%s/store/' % (
+            url.scheme, netloc, path, project)
         scope.update({
             'SENTRY_SERVERS': [server],
             'SENTRY_PROJECT': project,
@@ -221,7 +224,7 @@ class HTTPTransport(Transport):
         return scope
 
 
-class GeventedHTTPTransport(HTTPTransport):
+class GeventedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['gevent+http', 'gevent+https']
 
@@ -235,17 +238,23 @@ class GeventedHTTPTransport(HTTPTransport):
         # remove the gevent+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
-    def send(self, data, headers):
+    def async_send(self, data, headers, success_cb, failure_cb):
         """
         Spawn an async request to a remote webserver.
         """
         # this can be optimized by making a custom self.send that does not
         # read the response since we don't use it.
         self._lock.acquire()
-        return gevent.spawn(super(GeventedHTTPTransport, self).send, data, headers).link(self._done, self)
+        return gevent.spawn(
+            super(GeventedHTTPTransport, self).send, data, headers
+        ).link(lambda x: self._done(x, success_cb, failure_cb))
 
-    def _done(self, *args):
+    def _done(self, greenlet, success_cb, failure_cb, *args):
         self._lock.release()
+        if greenlet.successful():
+            success_cb()
+        else:
+            failure_cb(greenlet.value)
 
 
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):

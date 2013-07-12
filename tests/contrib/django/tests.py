@@ -24,7 +24,7 @@ from django.test import TestCase
 from django.core.management import call_command
 
 from raven.base import Client
-from raven.contrib.django import DjangoClient
+from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.gearman import GearmanClient, GearmanWorkerCommand
 from raven.contrib.django.handlers import SentryHandler
@@ -40,6 +40,8 @@ from django.test.client import Client as TestClient, ClientHandler as TestClient
 from .models import TestModel
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
+
+DJANGO_15 = django.VERSION >= (1, 5, 0)
 
 
 def make_request():
@@ -176,29 +178,46 @@ class DjangoClientTest(TestCase):
 
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.User' in event)
-        user_info = event['sentry.interfaces.User']
-        self.assertTrue('is_authenticated' in user_info)
-        self.assertFalse(user_info['is_authenticated'])
-        self.assertFalse('username' in user_info)
-        self.assertFalse('email' in user_info)
+        assert 'sentry.interfaces.User' not in event
 
-        self.assertTrue(self.client.login(username='admin', password='admin'))
+        assert self.client.login(username='admin', password='admin')
 
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.User' in event)
+        assert 'sentry.interfaces.User' in event
         user_info = event['sentry.interfaces.User']
-        self.assertTrue('is_authenticated' in user_info)
-        self.assertTrue(user_info['is_authenticated'])
-        self.assertTrue('username' in user_info)
-        self.assertEquals(user_info['username'], 'admin')
-        self.assertTrue('email' in user_info)
-        self.assertEquals(user_info['email'], 'admin@example.com')
+        assert user_info == {
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
+
+    @pytest.mark.skipif(str('not DJANGO_15'))
+    def test_get_user_info_abstract_user(self):
+        from django.db import models
+        from django.contrib.auth.models import AbstractBaseUser
+
+        class MyUser(AbstractBaseUser):
+            USERNAME_FIELD = 'username'
+
+            username = models.CharField(max_length=32)
+            email = models.EmailField()
+
+        user = MyUser(
+            username='admin',
+            email='admin@example.com',
+            id=1,
+        )
+        user_info = self.raven.get_user_info(user)
+        assert user_info == {
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
 
     def test_request_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenRequestMiddleware']):

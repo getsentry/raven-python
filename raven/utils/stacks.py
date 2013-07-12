@@ -5,6 +5,7 @@ raven.utils.stacks
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import inspect
 import re
@@ -54,18 +55,19 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
                 f.close()
         except (OSError, IOError):
             pass
-    if source is None:
-        return None, None, None
 
-    encoding = 'ascii'
-    for line in source[:2]:
-        # File coding may be specified. Match pattern from PEP-263
-        # (http://www.python.org/dev/peps/pep-0263/)
-        match = _coding_re.search(line.decode('ascii'))  # let's assume ascii
-        if match:
-            encoding = match.group(1)
-            break
-    source = [six.text_type(sline, encoding, 'replace') for sline in source]
+        if source is None:
+            return None, None, None
+
+        encoding = 'utf8'
+        for line in source[:2]:
+            # File coding may be specified. Match pattern from PEP-263
+            # (http://www.python.org/dev/peps/pep-0263/)
+            match = _coding_re.search(line.decode('utf8'))  # let's assume utf8
+            if match:
+                encoding = match.group(1)
+                break
+        source = [six.text_type(sline, encoding, 'replace') for sline in source]
 
     lower_bound = max(0, lineno - context_lines)
     upper_bound = min(lineno + 1 + context_lines, len(source))

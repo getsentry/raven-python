@@ -9,6 +9,11 @@ if sys.version_info[0] > 2:
     if sys.version_info[1] == 3:
         collect_ignore.append("tests/handlers/logbook")
 
+try:
+    import gevent
+except ImportError:
+    collect_ignore.append("tests/transport/gevent")
+
 
 INSTALLED_APPS = [
     'django.contrib.auth',

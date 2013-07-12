@@ -4,6 +4,7 @@ This module implements WSGI related helpers adapted from ``werkzeug.wsgi``
 :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 from raven.utils import six
 from raven.utils.compat import urllib_quote

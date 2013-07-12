@@ -5,6 +5,7 @@ raven.events
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
 import logging
 import sys
@@ -67,7 +68,7 @@ class Exception(BaseEvent):
             exc_type = getattr(exc_type, '__name__', '<unknown>')
 
             return {
-                'level': logging.ERROR,
+                'level': kwargs.get('level', logging.ERROR),
                 'sentry.interfaces.Exception': {
                     'value': to_unicode(exc_value),
                     'type': str(exc_type),

@@ -5,7 +5,7 @@ from mock import Mock
 from raven.utils.testutils import TestCase
 from raven.utils import six
 
-from raven.utils.stacks import get_culprit, get_stack_info
+from raven.utils.stacks import get_culprit, get_stack_info, get_lines_from_file
 
 
 class Context(object):
@@ -72,3 +72,13 @@ class GetStackInfoTest(TestCase):
                 "u'biz'": "u'baz'",
             }
         assert result['vars'] == expected
+
+
+class GetLineFromFileTest(TestCase):
+
+    def test_non_ascii_file(self):
+        import os.path
+        filename = os.path.join(os.path.dirname(__file__), 'utf8_file.txt')
+        self.assertEqual(
+            get_lines_from_file(filename, 3, 1),
+            (['Some code here'], '', ['lorem ipsum']))

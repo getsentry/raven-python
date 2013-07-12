@@ -232,7 +232,7 @@ class Client(object):
         netloc = url.hostname
         if url.port:
             netloc += ':%s' % url.port
-        path = url.path.replace('api/store/', self.project)
+        path = url.path.replace('api/%s/store/' % (self.project,), self.project)
         return '//%s@%s%s' % (self.public_key, netloc, path)
 
     def get_public_dsn(self, scheme=None):

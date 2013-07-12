@@ -4,7 +4,7 @@ from exam import before, fixture
 from mock import patch
 
 from flask import Flask, current_app
-from flask.ext.login import LoginManager, AnonymousUser, login_user
+from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
 
 from raven.base import Client
 from raven.contrib.flask import Sentry
@@ -23,7 +23,7 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
-class User(AnonymousUser):
+class User(AnonymousUserMixin):
     is_active = lambda x: True
     is_authenticated = lambda x: True
     get_id = lambda x: 1

@@ -21,7 +21,12 @@ for m in ('multiprocessing', 'billiard'):
         pass
 
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 import sys
+
+setup_requires = [
+    'pytest',
+]
 
 dev_requires = [
     'flake8>=1.6,<2.0',
@@ -34,7 +39,7 @@ flask_requires = [
 ]
 
 flask_tests_requires = [
-    'Flask-Login>=0.1.3',
+    'Flask-Login>=0.2.0',
 ]
 
 gearman_requires = [
@@ -48,8 +53,8 @@ if sys.version_info[0] == 3:
     flask_tests_requires = []
     unittest2_requires = []
 
-
 tests_require = [
+    'bottle',
     'celery>=2.5',
     'Django>=1.2',
     'django-celery>=2.5',
@@ -65,12 +70,27 @@ tests_require = [
     'python-coveralls',
     'tornado',
     'webob',
+    'webtest',
     'anyjson',
 ] + flask_requires + flask_tests_requires + gearman_requires + unittest2_requires
 
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
+
+
 setup(
     name='raven',
-    version='3.3.7',
+    version='3.4.0',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',
@@ -84,7 +104,9 @@ setup(
         'tests': tests_require,
         'dev': dev_requires
     },
-    test_suite='runtests.runtests',
+    license='BSD',
+    tests_require=tests_require,
+    cmdclass={'test': PyTest},
     include_package_data=True,
     entry_points={
         'console_scripts': [

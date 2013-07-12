@@ -1,5 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+raven.contrib.zope
+~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+from __future__ import absolute_import
 
 from inspect import getouterframes, currentframe, getinnerframes
 from raven.handlers.logging import SentryHandler
@@ -47,7 +55,10 @@ class ZopeSentryHandler(SentryHandler):
                     request = frame.f_locals.get('request', None)
                     if not request:
                         view = frame.f_locals.get('self', None)
-                        request = getattr(view, 'request', None)
+                        try:
+                            request = getattr(view, 'request', None)
+                        except RuntimeError:
+                            request = None
                 if not exc_info:
                     exc_info = frame.f_locals.get('exc_info', None)
                     if not hasattr(exc_info, '__getitem__'):

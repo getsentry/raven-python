@@ -8,14 +8,14 @@ from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
-    @pytest.mark.skipif(six.b('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_incorrect_unicode(self):
         x = six.b('רונית מגן')
         result = transform(x)
 
         assert result == six.b("'רונית מגן'")
 
-    @pytest.mark.skipif(six.b('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_truncating_unicode(self):
         # 'רונית מגן'
         x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
@@ -23,7 +23,7 @@ class TransformTest(TestCase):
         result = transform(x, string_max_length=5)
         assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea'")
 
-    @pytest.mark.skipif(six.b('not six.PY3'))
+    @pytest.mark.skipif('not six.PY3')
     def test_unicode_in_python3(self):
         # 'רונית מגן'
         x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
@@ -31,7 +31,7 @@ class TransformTest(TestCase):
         result = transform(x)
         assert result == six.u("'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
-    @pytest.mark.skipif(six.b('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_unicode_in_python2(self):
         # 'רונית מגן'
         x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
@@ -39,7 +39,7 @@ class TransformTest(TestCase):
         result = transform(x)
         assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
-    @pytest.mark.skipif(six.b('not six.PY3'))
+    @pytest.mark.skipif('not six.PY3')
     def test_string_in_python3(self):
         # 'רונית מגן'
         x = six.b('hello world')
@@ -47,7 +47,7 @@ class TransformTest(TestCase):
         result = transform(x)
         assert result == "b'hello world'"
 
-    @pytest.mark.skipif(six.b('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_string_in_python2(self):
         # 'רונית מגן'
         x = six.b('hello world')
@@ -55,11 +55,12 @@ class TransformTest(TestCase):
         result = transform(x)
         assert result == "'hello world'"
 
+    @pytest.mark.skipif('six.PY3')
     def test_bad_string(self):
         x = six.b('The following character causes problems: \xd4')
 
         result = transform(x)
-        assert result == six.binary_type(six.binary_type)
+        assert result == six.b("'The following character causes problems: \\xd4'")
 
     def test_float(self):
         result = transform(13.0)
@@ -79,12 +80,6 @@ class TransformTest(TestCase):
         self.assertEqual(type(result), int)
         self.assertEqual(result, 0)
 
-    # def test_bad_string(self):
-    #     x = 'The following character causes problems: \xd4'
-
-    #     result = transform(x)
-    #     self.assertEqual(result, '(Error decoding value)')
-
     def test_dict_keys(self):
         x = {'foo': 'bar'}
 
@@ -95,7 +90,7 @@ class TransformTest(TestCase):
         self.assertTrue(type(keys[0]), str)
         self.assertEqual(keys[0], "'foo'")
 
-    @pytest.mark.skipif(six.b('six.PY3'))
+    @pytest.mark.skipif('six.PY3')
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 
@@ -151,10 +146,12 @@ class TransformTest(TestCase):
             def __repr__(self):
                 raise ValueError
 
-        x = Foo()
-
-        result = transform(x)
-        self.assertEqual(result, "<class 'tests.utils.encoding.tests.Foo'>")
+        result = transform(Foo())
+        expected = "<class 'tests.utils.encoding.tests.Foo'>"
+        import sys
+        if sys.version_info[0] == 3 and sys.version_info[1] >= 3:
+            expected = "<class 'tests.utils.encoding.tests.TransformTest.test_broken_repr.<locals>.Foo'>"
+        assert result == expected
 
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
@@ -181,3 +178,11 @@ class TransformTest(TestCase):
         result = transform(x, string_max_length=3)
         expected = "'123'" if six.PY3 else "u'123'"
         self.assertEqual(result, expected)
+
+    def test_bytes_max_length(self):
+        x = six.b('\xd7\xd7\xd7\xd7\xd7\xd7')
+        result = transform(x, string_max_length=1)
+        if six.PY3:
+            assert result == "b'\\xd7'"
+        else:
+            assert result == "'\\xd7'"

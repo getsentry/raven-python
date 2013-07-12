@@ -244,9 +244,21 @@ class SentryMixin(object):
     def captureMessage(self, message, **kwargs):
         return self._capture('captureMessage', message=message, **kwargs)
 
-    def write_error(self, status_code, **kwargs):
+    def log_exception(self, typ, value, tb):
         """Override implementation to report all exceptions to sentry.
+        log_exception() is added in Tornado v3.1.
         """
-        rv = super(SentryMixin, self).write_error(status_code, **kwargs)
-        self.captureException(exc_info=kwargs.get('exc_info'))
+        rv = super(SentryMixin, self).log_exception(typ, value, tb)
+        self.captureException(exc_info=(typ, value, tb))
         return rv
+
+    def send_error(self, status_code=500, **kwargs):
+        """Override implementation to report all exceptions to sentry, even
+        after self.flush() or self.finish() is called, for pre-v3.1 Tornado.
+        """
+        if hasattr(super(SentryMixin, self), 'log_exception'):
+            return super(SentryMixin, self).send_error(status_code, **kwargs)
+        else:
+            rv = super(SentryMixin, self).send_error(status_code, **kwargs)
+            self.captureException(exc_info=kwargs.get('exc_info'))
+            return rv
