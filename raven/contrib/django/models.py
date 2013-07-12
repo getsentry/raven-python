@@ -194,16 +194,16 @@ def register_handlers():
                 register_signal, register_logger_signal)
         except ImportError:
             logger.exception('Failed to install Celery error handler')
-    else:
-        try:
-            register_signal(client)
-        except Exception:
-            logger.exception('Failed to install Celery error handler')
+        else:
+            try:
+                register_signal(client)
+            except Exception:
+                logger.exception('Failed to install Celery error handler')
 
-        try:
-            register_logger_signal(client)
-        except Exception:
-            logger.exception('Failed to install Celery error handler')
+            try:
+                register_logger_signal(client)
+            except Exception:
+                logger.exception('Failed to install Celery error handler')
 
 
 def register_serializers():
