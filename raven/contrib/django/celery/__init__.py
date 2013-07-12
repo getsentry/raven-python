@@ -9,7 +9,6 @@ from __future__ import absolute_import
 
 from raven.contrib.celery import CeleryMixin
 from raven.contrib.django.client import DjangoClient
-from raven.contrib.django.models import get_client
 try:
     from celery.task import task
 except ImportError:
@@ -28,9 +27,11 @@ class CeleryClient(CeleryMixin, DjangoClient):
 
 @task(routing_key='sentry')
 def send_raw_integrated(kwargs):
+	from raven.contrib.django.models import get_client
     super(DjangoClient, get_client()).send_integrated(kwargs)
 
 
 @task(routing_key='sentry')
 def send_raw(*args, **kwargs):
+	from raven.contrib.django.models import get_client
     super(DjangoClient, get_client()).send_encoded(*args, **kwargs)
