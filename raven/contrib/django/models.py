@@ -151,7 +151,10 @@ def get_client(client=None):
 def sentry_exception_handler(request=None, **kwargs):
     exc_type = sys.exc_info()[0]
 
-    if exc_type.__name__ in get_option('IGNORE_EXCEPTIONS', ()):
+    exclusions = set(get_option('IGNORE_EXCEPTIONS', ()))
+
+    exc_name = '%s.%s' % (exc_type.__module__, exc_type.__name__)
+    if exc_type.__name__ in exclusions or exc_name in exclusions or any(exc_name.startswith(e[:-1]) for e in exclusions if e.endswith('*')):
         logger.info(
             'Not capturing exception due to filters: %s', exc_type,
             exc_info=sys.exc_info())
