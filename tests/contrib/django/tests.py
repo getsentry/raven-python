@@ -777,7 +777,9 @@ class SentryExceptionHandlerTest(TestCase):
     @mock.patch('raven.contrib.django.models.get_option')
     def test_ignore_exceptions_with_expression_match(self, get_option, exc_info, captureException):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['exceptions.*']
+        get_option.return_value = ['builtins.*']
+        if not six.PY3:
+            get_option.return_value = ['exceptions.*']
 
         sentry_exception_handler(request=self.request)
 
@@ -788,7 +790,9 @@ class SentryExceptionHandlerTest(TestCase):
     @mock.patch('raven.contrib.django.models.get_option')
     def test_ignore_exceptions_with_module_match(self, get_option, exc_info, captureException):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['exceptions.ValueError']
+        get_option.return_value = ['builtins.ValueError']
+        if not six.PY3:
+            get_option.return_value = ['exceptions.ValueError']
 
         sentry_exception_handler(request=self.request)
 
