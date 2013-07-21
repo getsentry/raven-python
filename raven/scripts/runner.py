@@ -14,7 +14,7 @@ import os
 import sys
 from optparse import OptionParser
 
-from raven import Client
+from raven import Client, get_version
 from raven.utils.json import json
 
 
@@ -91,7 +91,7 @@ def main():
     root.setLevel(logging.DEBUG)
     root.addHandler(logging.StreamHandler())
 
-    parser = OptionParser()
+    parser = OptionParser(version=get_version())
     parser.add_option("--data", action="callback", callback=store_json,
         type="string", nargs=1, dest="data")
     parser.add_option("--tags", action="callback", callback=store_json,
