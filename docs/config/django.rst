@@ -274,7 +274,11 @@ to add a hook to circus to activate Raven::
         It is necessary because chaussette doesn't run a django command.
     
         """
+        from django.conf import settings
         from django.core.management import call_command
+        if not settings.configured:
+            settings.configure()
+            
         call_command('validate')
         return True
 
