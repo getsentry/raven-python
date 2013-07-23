@@ -126,13 +126,13 @@ class SentryHandler(logging.Handler, object):
             'params': record.args,
         }
         try:
-            handler_kwargs['message'] = unicode(record.msg)
+            handler_kwargs['message'] = six.text_type(record.msg)
         except UnicodeDecodeError:
             # Handle binary strings where it should be unicode...
             handler_kwargs['message'] = repr(record.msg)[1:-1]
 
         try:
-            handler_kwargs['formatted'] = unicode(record.message)
+            handler_kwargs['formatted'] = six.text_type(record.message)
         except UnicodeDecodeError:
             # Handle binary strings where it should be unicode...
             handler_kwargs['formatted'] = repr(record.message)[1:-1]
