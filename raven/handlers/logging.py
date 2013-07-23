@@ -123,10 +123,19 @@ class SentryHandler(logging.Handler, object):
         date = datetime.datetime.utcfromtimestamp(record.created)
         event_type = 'raven.events.Message'
         handler_kwargs = {
-            'message': record.msg,
             'params': record.args,
-            'formatted': record.message,
         }
+        try:
+            handler_kwargs['message'] = unicode(record.msg)
+        except UnicodeDecodeError:
+            # Handle binary strings where it should be unicode...
+            handler_kwargs['message'] = repr(record.msg)[1:-1]
+
+        try:
+            handler_kwargs['formatted'] = unicode(record.message)
+        except UnicodeDecodeError:
+            # Handle binary strings where it should be unicode...
+            handler_kwargs['formatted'] = repr(record.message)[1:-1]
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
