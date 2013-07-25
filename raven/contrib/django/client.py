@@ -80,6 +80,11 @@ class DjangoClient(Client):
                 except Exception:
                     # assume we had a partial read:
                     data = '<unavailable>'
+
+			# hide sensitive data
+            if hasattr(request, 'sensitive_post_parameters'):
+                if request.sensitive_post_parameters == '__ALL__':
+                    data ='<hidden>'
         else:
             data = None
 
