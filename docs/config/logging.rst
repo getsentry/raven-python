@@ -80,6 +80,8 @@ Sentry to render it based on that information::
         'culprit': 'my.view.name',
     })
 
+.. note:: Depending on the version of Python you're using, ``extra`` might not be an acceptable keyword argument for a logger's ``.exception()`` method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and ``.critical()`` should work fine regardless of Python version). This should be fixed as of Python 3.2. Official issue here: [http://bugs.python.org/issue15541](http://bugs.python.org/issue15541).
+
 You may also pass additional information to be stored as meta information with
 the event. As long as the key name is not reserved and not private (_foo) it
 will be displayed on the Sentry dashboard. To do this, pass it as ``data``
