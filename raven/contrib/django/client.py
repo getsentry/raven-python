@@ -81,10 +81,19 @@ class DjangoClient(Client):
                     # assume we had a partial read:
                     data = '<unavailable>'
 
-			# hide sensitive data
+            # hide sensitive data
             if hasattr(request, 'sensitive_post_parameters'):
                 if request.sensitive_post_parameters == '__ALL__':
-                    data ='<hidden>'
+                    data = '<hidden>'
+                elif data != '<unavailable>':
+                    tmp = data.split('&')
+                    tmp = dict(keys.split('=') for keys in tmp)
+                    for param in request.sensitive_post_parameters:
+                        if param in tmp.keys():
+                            tmp[param] = '<hidden>'
+                    data = '&'.join(['%s=%s' % (key, value)
+                                     for (key, value) in tmp.items()])
+
         else:
             data = None
 
