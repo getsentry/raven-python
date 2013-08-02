@@ -8,7 +8,7 @@ raven.contrib.flask.utils
 from __future__ import absolute_import
 
 import logging
-import urlparse
+from raven.utils.compat import _urlparse
 
 from raven.utils.wsgi import get_headers, get_environ
 from werkzeug.exceptions import ClientDisconnected
@@ -65,7 +65,7 @@ def get_user_info(request):
 
 
 def get_data_from_request(request):
-    urlparts = urlparse.urlsplit(request.url)
+    urlparts = _urlparse.urlsplit(request.url)
 
     try:
         formdata = request.form
