@@ -76,11 +76,22 @@ You can also use the ``exc_info`` and ``extra={'stack': True}`` arguments on
 your ``log`` methods. This will store the appropriate information and allow
 Sentry to render it based on that information::
 
-    logger.error('There was some crazy error', exc_info=True, extra={
-        'culprit': 'my.view.name',
+    # If you're actually catching an exception, use `exc_info=True`
+    logger.error('There was an error, with a stacktrace!', exc_info=True)
+
+    # If you don't have an exception, but still want to capture a stacktrace, use the `stack` arg
+    logger.error('There was an error, with a stacktrace!', extra={
+        'stack': True,
     })
 
 .. note:: Depending on the version of Python you're using, ``extra`` might not be an acceptable keyword argument for a logger's ``.exception()`` method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and ``.critical()`` should work fine regardless of Python version). This should be fixed as of Python 3.2. Official issue here: [http://bugs.python.org/issue15541](http://bugs.python.org/issue15541).
+
+While we don't recommend this, you can also enable implicit stack capturing for all messages::
+
+    client = Client(..., auto_log_stacks=True)
+    handler = SentryHandler(client)
+
+    logger.error('There was an error, with a stacktrace!')
 
 You may also pass additional information to be stored as meta information with
 the event. As long as the key name is not reserved and not private (_foo) it
@@ -106,15 +117,6 @@ be seen as the same message within Sentry::
     logger.error('There was some %s error', 'crazy')
     logger.error('There was some %s error', 'fun')
     logger.error('There was some %s error', 1)
-
-As of Sentry 1.10.0 the :mod:`logging` integration also allows easy capture of
-stack frames (and their locals) as if you were logging an exception. This can
-be done automatically with the ``SENTRY_AUTO_LOG_STACKS`` setting, as well as
-by passing the ``stack`` boolean to ``extra``::
-
-    logger.error('There was an error', extra={
-        'stack': True,
-    })
 
 .. note::
 
