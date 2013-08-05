@@ -84,7 +84,7 @@ Sentry to render it based on that information::
         'stack': True,
     })
 
-.. note:: Depending on the version of Python you're using, ``extra`` might not be an acceptable keyword argument for a logger's ``.exception()`` method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and ``.critical()`` should work fine regardless of Python version). This should be fixed as of Python 3.2. Official issue here: [http://bugs.python.org/issue15541](http://bugs.python.org/issue15541).
+.. note:: Depending on the version of Python you're using, ``extra`` might not be an acceptable keyword argument for a logger's ``.exception()`` method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and ``.critical()`` should work fine regardless of Python version). This should be fixed as of Python 3.2. Official issue here: http://bugs.python.org/issue15541.
 
 While we don't recommend this, you can also enable implicit stack capturing for all messages::
 
