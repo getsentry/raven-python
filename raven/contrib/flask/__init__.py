@@ -9,6 +9,7 @@ raven.contrib.flask
 from __future__ import absolute_import
 
 import os
+import sys
 
 from flask import request
 from flask.signals import got_request_exception
@@ -115,6 +116,9 @@ class Sentry(object):
             except RuntimeError:
                 # app is probably not configured yet
                 pass
+        exc_info = kwargs.get('exc_info')
+        if exc_info is None:
+            kwargs['exc_info'] = sys.exc_info()
         return self.client.captureException(*args, **kwargs)
 
     def captureMessage(self, *args, **kwargs):
