@@ -8,12 +8,13 @@ raven.transport.builtins
 from __future__ import absolute_import
 
 import logging
+import ssl
 import sys
 from raven.utils import compat
 
 try:
-    # Google App Engine blacklists parts of the socket module, this will prevent
-    # it from blowing up.
+    # Google App Engine blacklists parts of the socket module, this will
+    # prevent it from blowing up.
     from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
     has_socket = True
 except:
@@ -185,16 +186,21 @@ class HTTPTransport(Transport):
         self._url = parsed_url.geturl()
         self.timeout = timeout
 
-    def send(self, data, headers):
+    def send(self, data, headers, retries=3):
         """
         Sends a request to a remote webserver using HTTP POST.
         """
         req = compat.Request(self._url, headers=headers)
 
-        if sys.version_info < (2, 6):
-            response = compat.urlopen(req, data).read()
-        else:
-            response = compat.urlopen(req, data, self.timeout).read()
+        try:
+            if sys.version_info < (2, 6):
+                response = compat.urlopen(req, data).read()
+            else:
+                response = compat.urlopen(req, data, self.timeout).read()
+        except (ssl.SSLError, compat.HTTPError) as exc:
+            if retries <= 0:
+                raise exc
+            return self.send(data, headers, retries=retries - 1)
         return response
 
     def compute_scope(self, url, scope):
