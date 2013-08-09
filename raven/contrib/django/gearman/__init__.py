@@ -1,4 +1,6 @@
 import json
+import uuid
+import hashlib
 
 from django_gearman_commands import GearmanWorkerBaseCommand
 
@@ -13,6 +15,14 @@ __all__ = ('GearmanClient', 'GearmanWorkerCommand')
 
 class GearmanClient(GearmanMixin, DjangoClient):
     """Gearman client implementation for django applications."""
+    def build_msg(self, event_type, data=None, date=None,
+                  time_spent=None, extra=None, stack=None, public_key=None,
+                  tags=None, **kwargs):
+        msg = super(GearmanClient, self).build_msg(event_type, data=data, date=date,
+                                                   time_spen=time_spent, extra=extra, stack=stack,
+                                                   public_key=public_key, tags=None, **kwargs)
+        msg['checksum'] = hashlib.md5(str(uuid.uuid4())).hexdigest()
+        return msg
 
 
 class GearmanWorkerCommand(GearmanWorkerBaseCommand):
