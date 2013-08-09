@@ -189,6 +189,7 @@ class DjangoClientTest(TestCase):
         assert 'sentry.interfaces.User' in event
         user_info = event['sentry.interfaces.User']
         assert user_info == {
+            'is_authenticated': True,
             'username': user.username,
             'id': user.id,
             'email': user.email,
@@ -212,6 +213,7 @@ class DjangoClientTest(TestCase):
         )
         user_info = self.raven.get_user_info(user)
         assert user_info == {
+            'is_authenticated': True,
             'username': user.username,
             'id': user.id,
             'email': user.email,
