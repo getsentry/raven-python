@@ -55,6 +55,8 @@ class TransportRegistry(object):
                 options = dict(q.split('=', 1) for q in parsed_url.query.split('&'))
             else:
                 options = dict()
+            # Remove the options from the parsed_url
+            parsed_url = urlparse.urlparse(full_url.split('?')[0])
             self._transports[full_url] = self._schemes[parsed_url.scheme](parsed_url, **options)
         return self._transports[full_url]
 

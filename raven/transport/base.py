@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import logging
 import sys
-from raven.utils import compat
+from raven.utils import compat, six
 
 try:
     # Google App Engine blacklists parts of the socket module, this will prevent
@@ -183,6 +183,8 @@ class HTTPTransport(Transport):
 
         self._parsed_url = parsed_url
         self._url = parsed_url.geturl()
+        if isinstance(timeout, six.string_types):
+            timeout = int(timeout)
         self.timeout = timeout
 
     def send(self, data, headers):
@@ -215,6 +217,8 @@ class HTTPTransport(Transport):
 
         server = '%s://%s%s/api/%s/store/' % (
             url.scheme, netloc, path, project)
+        if url.query:
+            server += '?%s' % url.query
         scope.update({
             'SENTRY_SERVERS': [server],
             'SENTRY_PROJECT': project,
