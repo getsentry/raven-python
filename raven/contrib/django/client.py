@@ -15,8 +15,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
-from urlparse import parse_qs
-from urllib import urlencode
+from django.utils.http import urlencode
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
@@ -88,7 +87,7 @@ class DjangoClient(Client):
                 if request.sensitive_post_parameters == '__ALL__':
                     data = '<hidden>'
                 elif data != '<unavailable>':
-                    qs = parse_qs(data)
+                    qs = _urlparse.parse_qs(data)
                     for param in request.sensitive_post_parameters:
                         if param in qs:
                             qs[param] = '<hidden>'
