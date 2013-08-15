@@ -15,6 +15,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
+from django.utils.http import urlencode
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
@@ -81,6 +82,18 @@ class DjangoClient(Client):
                 except Exception:
                     # assume we had a partial read:
                     data = '<unavailable>'
+
+            # hide sensitive data
+            if hasattr(request, 'sensitive_post_parameters'):
+                if request.sensitive_post_parameters == '__ALL__':
+                    data = '<hidden>'
+                elif data != '<unavailable>':
+                    qs = _urlparse.parse_qs(data)
+                    for param in request.sensitive_post_parameters:
+                        if param in qs:
+                            qs[param] = '<hidden>'
+                    data = urlencode(qs, doseq=True)
+
         else:
             data = None
 
@@ -95,6 +108,9 @@ class DjangoClient(Client):
                 'cookies': dict(request.COOKIES),
                 'headers': dict(get_headers(environ)),
                 'env': dict(get_environ(environ)),
+                'sensitive_post_params':
+                    request.sensitive_post_parameters and
+                    request.sensitive_post_parameters or False
             }
         })
 
