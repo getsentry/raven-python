@@ -107,6 +107,9 @@ class DjangoClient(Client):
                 'cookies': dict(request.COOKIES),
                 'headers': dict(get_headers(environ)),
                 'env': dict(get_environ(environ)),
+                'sensitive_post_params':
+                    request.sensitive_post_parameters and
+                    request.sensitive_post_parameters or False
             }
         })
 
