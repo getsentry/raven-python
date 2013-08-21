@@ -178,7 +178,7 @@ class SentryMixin(object):
             'sentry.interfaces.Http': {
                 'url': self.request.full_url(),
                 'method': self.request.method,
-                'data': self.request.arguments,
+                'data': self.request.body,
                 'query_string': self.request.query,
                 'cookies': self.request.headers.get('Cookie', None),
                 'headers': dict(self.request.headers),
