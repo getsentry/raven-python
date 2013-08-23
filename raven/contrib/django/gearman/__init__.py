@@ -51,6 +51,10 @@ class GearmanWorkerCommand(GearmanWorkerBaseCommand):
                                               'raven.contrib.django.client.DjangoClient'))
         return self._client
 
+    @property
+    def exit_after_job(self):
+        return True
+
     def do_job(self, job_data):
         payload = json.loads(job_data)
         return self.client.send_encoded(payload['message'], auth_header=payload['auth_header'])
