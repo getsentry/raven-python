@@ -53,7 +53,7 @@ class GearmanWorkerCommand(GearmanWorkerBaseCommand):
 
     @property
     def exit_after_job(self):
-        return True
+        return getattr(settings, 'SENTRY_GEARMAN_EXIT_AFTER_JOB', False)
 
     def do_job(self, job_data):
         payload = json.loads(job_data)
