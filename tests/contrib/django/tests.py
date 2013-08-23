@@ -21,10 +21,12 @@ from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
 from django.template import TemplateSyntaxError
 from django.test import TestCase
+from django.core.management import call_command
 
 from raven.base import Client
 from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
+from raven.contrib.django.gearman import GearmanClient, GearmanWorkerCommand
 from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import client, get_client, sentry_exception_handler
 from raven.contrib.django.middleware.wsgi import Sentry
@@ -619,6 +621,39 @@ class CeleryIntegratedClientTest(TestCase):
         self.client.captureMessage(message='test')
 
         self.assertEquals(send_encoded.call_count, 1)
+
+
+class GearmanClientTest(TestCase):
+    def setUp(self):
+        self.client = GearmanClient(servers=['http://example.com'])
+
+    @mock.patch('raven.contrib.gearman.submit_job')
+    def test_send_encoded(self, submit_job):
+        self.client.send_encoded('foo')
+        submit_job.assert_called_once_with('raven_gearman', data='{"message": "foo", "auth_header": null}')
+
+
+class GearmanWorkerTest(TestCase):
+    def setUp(self):
+        self.worker = GearmanWorkerCommand()
+
+    @mock.patch('django_gearman_commands.GearmanWorkerBaseCommand.handle')
+    @mock.patch('raven.contrib.django.gearman.get_client')
+    def test_worker_handle_job(self, get_client, handle):
+        """With patching handle method, we disabled worker to connect to and listen on gearman daemon."""
+        get_client.return_value = mock.MagicMock()
+        self.worker.execute()
+        self.worker.do_job('{"message":"foo","auth_header":"bar"}')
+        handle.assert_called_once_with()
+        get_client.assert_call_once_with('raven.contrib.django.client.DjangoClient')
+        self.assertEqual([mock.call.send_encoded(u'foo', auth_header=u'bar')], get_client.return_value.mock_calls)
+
+    def test_worker_client_default_settings(self):
+        self.assertTrue(isinstance(self.worker.client, DjangoClient))
+
+    def test_worker_client_custom_settings(self):
+        with Settings(SENTRY_GEARMAN_CLIENT='raven.contrib.django.gearman.GearmanClient'):
+            self.assertTrue(isinstance(self.worker.client, GearmanClient))
 
 
 class IsValidOriginTestCase(TestCase):

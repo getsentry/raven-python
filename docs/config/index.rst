@@ -11,6 +11,7 @@ This document describes configuration options available to Sentry.
 
    bottle
    celery
+   gearman
    django
    flask
    logbook
