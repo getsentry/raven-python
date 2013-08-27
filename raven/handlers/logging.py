@@ -46,13 +46,17 @@ class SentryHandler(logging.Handler, object):
 
         logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
+    def can_record(self, record):
+        if record.name.startswith(('sentry.errors', 'raven')):
+            return False
+        return True
+
     def emit(self, record):
         try:
             # Beware to python3 bug (see #10805) if exc_info is (None, None, None)
             self.format(record)
 
-            # Avoid typical config issues by overriding loggers behavior
-            if record.name.startswith(('sentry.errors', 'raven')) or record.module.startswith('raven'):
+            if not self.can_record(record):
                 print(to_string(record.message), sys.stderr)
                 return
 
