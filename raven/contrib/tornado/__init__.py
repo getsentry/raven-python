@@ -260,6 +260,6 @@ class SentryMixin(object):
             return super(SentryMixin, self).send_error(status_code, **kwargs)
         else:
             rv = super(SentryMixin, self).send_error(status_code, **kwargs)
-            if 500 =< status_code <= 599:
+            if 500 <= status_code <= 599:
                 self.captureException(exc_info=kwargs.get('exc_info'))
             return rv
