@@ -37,7 +37,7 @@ def create_app(client):
     return SentryApplication(client=client, mapping=urls, fvars=globals())
 
 
-class WebpyTest(TestCase):
+class WebPyTest(TestCase):
     @fixture
     def app(self):
         sys.exc_clear()
