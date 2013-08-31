@@ -121,7 +121,7 @@ class BaseUDPTransport(Transport):
             # silently ignore attempts to send messages without an auth header
             return
 
-        host, port = self._parsed_url.netloc.split(':')
+        host, port = self._parsed_url.netloc.rsplit(':')
         self._send_data(auth_header + '\n\n' + data, (host, int(port)))
 
     def compute_scope(self, url, scope):
