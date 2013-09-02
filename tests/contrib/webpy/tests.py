@@ -1,5 +1,3 @@
-import sys
-
 from exam import fixture
 from paste.fixture import TestApp
 
@@ -28,19 +26,18 @@ class TestEndpoint(object):
         raise TypeError('Potato')
 
 
-urls = {
+urls = (
     '/test', TestEndpoint
-}
+)
 
 
 def create_app(client):
-    return SentryApplication(client=client, mapping=urls, fvars=globals())
+    return SentryApplication(client=client, mapping=urls)
 
 
 class WebPyTest(TestCase):
     @fixture
     def app(self):
-        sys.exc_clear()
         self.store = TempStoreClient()
         return create_app(self.store)
 
@@ -54,8 +51,7 @@ class WebPyTest(TestCase):
         self.assertEquals(resp.status, 500)
         self.assertEquals(len(self.store.events), 1)
 
-        event = self.store.events.pop(0)
-
+        event = self.store.events.pop()
         self.assertTrue('sentry.interfaces.Exception' in event)
         exc = event['sentry.interfaces.Exception']
         self.assertEquals(exc['type'], 'ValueError')
@@ -68,7 +64,7 @@ class WebPyTest(TestCase):
         self.assertEquals(response.status, 500)
         self.assertEquals(len(self.store.events), 1)
 
-        event = self.store.events.pop(0)
+        event = self.store.events.pop()
 
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
