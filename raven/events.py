@@ -73,9 +73,9 @@ class Exception(BaseEvent):
                     'value': to_unicode(exc_value),
                     'type': str(exc_type),
                     'module': to_unicode(exc_module),
-                },
-                'sentry.interfaces.Stacktrace': {
-                    'frames': frames
+                    'stacktrace': {
+                        'frames': frames
+                    }
                 },
             }
         finally:
