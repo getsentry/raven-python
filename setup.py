@@ -67,6 +67,8 @@ tests_require = [
     'webob',
     'webtest',
     'anyjson',
+    'paste',
+    'web.py'
 ] + flask_requires + flask_tests_requires + unittest2_requires
 
 
