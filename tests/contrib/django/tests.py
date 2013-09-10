@@ -430,13 +430,13 @@ class DjangoClientTest(TestCase):
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
 
+    # This test only applies to Django 1.3+
     def test_read_post_data(self):
+        if django.VERSION[:2] < (1, 3):
+            return
         request = make_request()
         request.POST = QueryDict("foo=bar&ham=spam")
-        try:
-            request.read(1)
-        except AttributeError:
-            request.read()
+        request.read(1)
 
         self.raven.captureMessage(message='foo', request=request)
 
