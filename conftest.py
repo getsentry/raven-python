@@ -14,6 +14,11 @@ try:
 except ImportError:
     collect_ignore.append("tests/transport/gevent")
 
+try:
+    import web
+except ImportError:
+    collect_ignore.append("tests/contrib/webpy")
+
 
 INSTALLED_APPS = [
     'django.contrib.auth',
