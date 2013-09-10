@@ -433,7 +433,10 @@ class DjangoClientTest(TestCase):
     def test_read_post_data(self):
         request = make_request()
         request.POST = QueryDict("foo=bar&ham=spam")
-        request.read(1)
+        try:
+            request.read(1)
+        except AttributeError:
+            request.read()
 
         self.raven.captureMessage(message='foo', request=request)
 
@@ -443,7 +446,7 @@ class DjangoClientTest(TestCase):
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
         self.assertEquals(http['method'], 'POST')
-        self.assertEquals(http['data'], {u'foo': u'bar', u'ham': u'spam'})
+        self.assertEquals(http['data'], {'foo': 'bar', 'ham': 'spam'})
 
     # This test only applies to Django 1.3+
     def test_request_capture(self):
