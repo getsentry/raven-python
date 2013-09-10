@@ -79,8 +79,11 @@ class DjangoClient(Client):
                 try:
                     data = request.raw_post_data
                 except Exception:
-                    # assume we had a partial read:
-                    data = request.POST or '<unavailable>'
+                    # assume we had a partial read.
+                    try:
+                        data = request.POST
+                    except Exception:
+                        data = '<unavailable>'
         else:
             data = None
 
