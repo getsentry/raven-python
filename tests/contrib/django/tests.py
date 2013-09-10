@@ -19,7 +19,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
-from django.http.request import QueryDict
+from django.http import QueryDict
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 
