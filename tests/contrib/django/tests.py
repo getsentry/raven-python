@@ -19,6 +19,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
+from django.http.request import QueryDict
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 
@@ -428,6 +429,21 @@ class DjangoClientTest(TestCase):
         http = event['sentry.interfaces.Http']
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
+
+    def test_read_post_data(self):
+        request = make_request()
+        request.POST = QueryDict("foo=bar&ham=spam")
+        request.read(1)
+
+        self.raven.captureMessage(message='foo', request=request)
+
+        self.assertEquals(len(self.raven.events), 1)
+        event = self.raven.events.pop(0)
+
+        self.assertTrue('sentry.interfaces.Http' in event)
+        http = event['sentry.interfaces.Http']
+        self.assertEquals(http['method'], 'POST')
+        self.assertEquals(http['data'], {u'foo': u'bar', u'ham': u'spam'})
 
     # This test only applies to Django 1.3+
     def test_request_capture(self):
