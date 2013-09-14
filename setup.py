@@ -29,7 +29,7 @@ setup_requires = [
 ]
 
 dev_requires = [
-    'flake8>=1.6,<2.0',
+    'flake8>=2.0,<2.1',
 ]
 
 unittest2_requires = ['unittest2']

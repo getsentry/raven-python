@@ -2,6 +2,7 @@ bootstrap:
 	pip install -e . --use-mirrors
 	pip install "file://`pwd`#egg=raven[dev]" --use-mirrors
 	pip install "file://`pwd`#egg=raven[tests]" --use-mirrors
+	make setup-git
 
 test: bootstrap lint
 	@echo "Running Python tests"
@@ -16,3 +17,7 @@ lint:
 coverage:
 	coverage run runtests.py --include=raven/* && \
 	coverage html --omit=*/migrations/* -d cover
+
+setup-git:
+	git config branch.autosetuprebase always
+	cd .git/hooks && ln -sf ../../hooks/* ./
