@@ -11,7 +11,7 @@ test: bootstrap lint
 
 lint:
 	@echo "Linting Python files"
-	flake8 --exclude=migrations --ignore=E501,E225,E121,E123,E124,E125,E127,E128 raven || exit 1
+	PYFLAKES_NODOCTEST=1 flake8 raven || exit 1
 	@echo ""
 
 coverage:
