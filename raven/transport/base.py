@@ -14,7 +14,7 @@ from raven.utils import compat, six
 try:
     # Google App Engine blacklists parts of the socket module, this will prevent
     # it from blowing up.
-    from socket import socket, AF_INET, SOCK_DGRAM, error as socket_error
+    from socket import socket, AF_INET, AF_INET6, SOCK_DGRAM, has_ipv6, getaddrinfo, error as socket_error
     has_socket = True
 except:
     has_socket = False
@@ -114,6 +114,21 @@ class BaseUDPTransport(Transport):
         self.check_scheme(parsed_url)
         self._parsed_url = parsed_url
 
+    def _get_addr_info(self, host, port):
+        """
+        Selects the address to connect to, based on the supplied host/port
+        information. This method prefers v4 addresses, and will only return
+        a v6 address if it's the only option.
+        """
+        addresses = getaddrinfo(host, port)
+        if has_ipv6:
+            v6_addresses = [info for info in addresses if info[0] == AF_INET6]
+            v4_addresses = [info for info in addresses if info[0] == AF_INET]
+            if v6_addresses and not v4_addresses:
+                # The only time we return a v6 address is if it's the only option
+                return v6_addresses[0]
+        return addresses[0]
+
     def send(self, data, headers):
         auth_header = headers.get('X-Sentry-Auth')
 
@@ -121,8 +136,9 @@ class BaseUDPTransport(Transport):
             # silently ignore attempts to send messages without an auth header
             return
 
-        host, port = self._parsed_url.netloc.split(':')
-        self._send_data(auth_header + '\n\n' + data, (host, int(port)))
+        host, port = self._parsed_url.netloc.rsplit(':')
+        addr_info = self._get_addr_info(host, int(port))
+        self._send_data(auth_header + '\n\n' + data, addr_info)
 
     def compute_scope(self, url, scope):
         path_bits = url.path.rsplit('/', 1)
@@ -157,10 +173,12 @@ class UDPTransport(BaseUDPTransport):
         if not has_socket:
             raise ImportError('UDPTransport requires the socket module')
 
-    def _send_data(self, data, addr):
+    def _send_data(self, data, addr_info):
         udp_socket = None
+        af = addr_info[0]
+        addr = addr_info[4]
         try:
-            udp_socket = socket(AF_INET, SOCK_DGRAM)
+            udp_socket = socket(af, SOCK_DGRAM)
             udp_socket.setblocking(False)
             udp_socket.sendto(data, addr)
         except socket_error:
