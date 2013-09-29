@@ -443,7 +443,8 @@ class Client(object):
                            interfaces. Any key which contains a '.' will be
                            assumed to be a data interface.
         :param date: the datetime of this event
-        :param time_spent: a float value representing the duration of the event
+        :param time_spent: a integer value representing the duration of the
+                           event (in milliseconds)
         :param event_id: a 32-length unique string identifying this event
         :param extra: a dictionary of additional standard metadata
         :param culprit: a string representing the cause of this event
