@@ -26,8 +26,8 @@ class LoggingIntegrationTest(TestCase):
         self.client = TempStoreClient(include_paths=['tests', 'raven'])
         self.handler = SentryHandler(self.client)
 
-    def make_record(self, msg, args=(), level=logging.INFO, extra=None, exc_info=None):
-        record = logging.LogRecord('root', level, __file__, 27, msg, args, exc_info, 'make_record')
+    def make_record(self, msg, args=(), level=logging.INFO, extra=None, exc_info=None, name='root', pathname=__file__):
+        record = logging.LogRecord(name, level, pathname, 27, msg, args, exc_info, 'make_record')
         if extra:
             for key, value in six.iteritems(extra):
                 record.__dict__[key] = value
@@ -48,6 +48,19 @@ class LoggingIntegrationTest(TestCase):
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test error')
         self.assertEqual(msg['params'], ())
+
+    def test_can_record(self):
+        tests = [
+            ("raven", False),
+            ("raven.foo", False),
+            ("sentry.errors", False),
+            ("sentry.errors.foo", False),
+            ("raven_utils", True),
+        ]
+
+        for test in tests:
+            record = self.make_record("Test", name=test[0])
+            self.assertEqual(self.handler.can_record(record), test[1])
 
     def test_logger_extra_data(self):
         record = self.make_record('This is a test error', extra={'data': {
