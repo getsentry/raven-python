@@ -46,7 +46,7 @@ def patch_base_command(cls):
             raise
 
     new_execute.__raven_patched = True
-    BaseCommand.execute = new_execute
+    cls.execute = new_execute
 
     return True
 
