@@ -47,9 +47,10 @@ class SentryHandler(logging.Handler, object):
         logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
     def can_record(self, record):
-        if record.name.startswith(('sentry.errors', 'raven')):
-            return False
-        return True
+        return not (
+            record.name == 'raven' or
+            record.name.startswith(('sentry.errors', 'raven.'))
+        )
 
     def emit(self, record):
         try:
