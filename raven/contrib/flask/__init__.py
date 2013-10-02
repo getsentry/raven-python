@@ -97,7 +97,6 @@ class Sentry(object):
             "id": id
         }
 
-
     def init_app(self, app, dsn=None):
         self.app = app
 
