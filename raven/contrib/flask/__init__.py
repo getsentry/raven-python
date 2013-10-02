@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 import os
 
-from flask import request
+from flask import request, g
 from flask.signals import got_request_exception
 from raven.conf import setup_logging
 from raven.base import Client
