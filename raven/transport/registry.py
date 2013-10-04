@@ -9,7 +9,8 @@ from __future__ import absolute_import
 
 from raven.transport.base import (
     HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport,
-    TornadoHTTPTransport, UDPTransport, EventletHTTPTransport)
+    TornadoHTTPTransport, UDPTransport, EventletHTTPTransport,
+    RequestsHTTPTransport)
 from raven.transport.exceptions import DuplicateScheme
 from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils import urlparse
@@ -74,6 +75,7 @@ default_transports = [
     ThreadedHTTPTransport,
     GeventedHTTPTransport,
     TwistedHTTPTransport,
+    RequestsHTTPTransport,
     TornadoHTTPTransport,
     UDPTransport,
     EventletHTTPTransport,
