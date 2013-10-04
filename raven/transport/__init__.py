@@ -8,6 +8,6 @@ raven.transport
 from __future__ import absolute_import
 
 from raven.transport.base import (Transport, AsyncTransport, HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport,  # NOQA
-  TornadoHTTPTransport, UDPTransport, EventletHTTPTransport)  # NOQA
+  TornadoHTTPTransport, RequestsHTTPTransport, UDPTransport, EventletHTTPTransport)  # NOQA
 from raven.transport.exceptions import InvalidScheme, DuplicateScheme  # NOQA
 from raven.transport.registry import TransportRegistry, default_transports  # NOQA

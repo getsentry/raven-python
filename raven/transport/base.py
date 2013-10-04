@@ -38,6 +38,12 @@ except:
     has_twisted = False
 
 try:
+    import requests
+    has_requests = True
+except:
+    has_requests = False
+
+try:
     from tornado import ioloop
     from tornado.httpclient import AsyncHTTPClient, HTTPClient
     has_tornado = True
@@ -338,6 +344,23 @@ class TornadoHTTPTransport(HTTPTransport):
             client = HTTPClient()
 
         client.fetch(self._url, **kwargs)
+
+
+class RequestsHTTPTransport(HTTPTransport):
+
+    scheme = ['requests+http']
+
+    def __init__(self, parsed_url):
+        if not has_requests:
+            raise ImportError('RequestsHTTPTransport requires requests.')
+
+        super(RequestsHTTPTransport, self).__init__(parsed_url)
+
+        # remove the requests+ from the protocol, as it is not a real protocol
+        self._url = self._url.split('+', 1)[-1]
+
+    def send(self, data, headers):
+        requests.post(self._url, data=data, headers=headers)
 
 
 class EventletHTTPTransport(HTTPTransport):
