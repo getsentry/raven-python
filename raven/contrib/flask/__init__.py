@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 import os
 
-from flask import request
+from flask import request, g
 from flask.signals import got_request_exception
 from raven.conf import setup_logging
 from raven.base import Client
@@ -80,13 +80,22 @@ class Sentry(object):
         if not self.client:
             return
 
-        self.client.captureException(
+        result = self.client.captureException(
             exc_info=kwargs.get('exc_info'),
             data=get_data_from_request(request),
             extra={
                 'app': self.app,
             },
         )
+
+        # ToDo: Handle async clients - if_http_request?
+
+        # Notice that we are unpacking the single tuple into a string.
+        id, = result
+
+        g.sentry = {
+            "id": id
+        }
 
     def init_app(self, app, dsn=None):
         self.app = app
