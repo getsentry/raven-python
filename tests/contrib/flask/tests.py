@@ -29,11 +29,14 @@ class User(AnonymousUserMixin):
     get_id = lambda x: 1
 
 
-def create_app():
+def create_app(ignore_exceptions=None):
     import os
 
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.urandom(40)
+
+    if ignore_exceptions:
+        app.config['RAVEN_IGNORE_EXCEPTIONS'] = ignore_exceptions
 
     @app.route('/an-error/', methods=['GET', 'POST'])
     def an_error():
@@ -83,6 +86,12 @@ class BaseTest(TestCase):
     def bind_sentry(self):
         self.raven = TempStoreClient()
         self.middleware = Sentry(self.app, client=self.raven)
+
+    def make_client_and_raven(self, *args, **kwargs):
+        app = create_app(*args, **kwargs)
+        raven = TempStoreClient()
+        Sentry(app, client=raven)
+        return app.test_client(), raven
 
 
 class FlaskTest(BaseTest):
@@ -191,6 +200,27 @@ class FlaskTest(BaseTest):
         self.assertTrue('sentry.interfaces.Http' in event)
         http = event['sentry.interfaces.Http']
         self.assertEqual({}, http.get('data'))
+
+    def test_error_handler_with_ignored_exception(self):
+        client, raven = self.make_client_and_raven(ignore_exceptions=[NameError, ValueError])
+
+        response = client.get('/an-error/')
+        self.assertEquals(response.status_code, 500)
+        self.assertEquals(len(raven.events), 0)
+
+    def test_error_handler_with_exception_not_ignored(self):
+        client, raven = self.make_client_and_raven(ignore_exceptions=[NameError, KeyError])
+
+        response = client.get('/an-error/')
+        self.assertEquals(response.status_code, 500)
+        self.assertEquals(len(raven.events), 1)
+
+    def test_error_handler_with_empty_ignore_exceptions_list(self):
+        client, raven = self.make_client_and_raven(ignore_exceptions=[])
+
+        response = client.get('/an-error/')
+        self.assertEquals(response.status_code, 500)
+        self.assertEquals(len(raven.events), 1)
 
 
 class FlaskLoginTest(BaseTest):
