@@ -8,6 +8,7 @@ raven.contrib.flask
 
 from __future__ import absolute_import
 
+import sys
 import os
 
 from flask import request
@@ -78,6 +79,12 @@ class Sentry(object):
 
     def handle_exception(self, *args, **kwargs):
         if not self.client:
+            return
+
+        ignored_exc_type_list = self.app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
+        exc = sys.exc_info()[1]
+
+        if any((isinstance(exc, ignored_exc_type) for ignored_exc_type in ignored_exc_type_list)):
             return
 
         self.client.captureException(
