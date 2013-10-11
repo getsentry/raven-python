@@ -182,6 +182,7 @@ class Client(object):
         if context is None:
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
+        self.tags = o.get('tags') or {}
 
         self.module_cache = ModuleProxyCache()
 
@@ -339,10 +340,15 @@ class Client(object):
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
 
-        # Add extra context
+        # Add default extra context
         if self.extra:
             for k, v in six.iteritems(self.extra):
                 data['extra'].setdefault(k, v)
+
+        # Add default tag context
+        if self.tags:
+            for k, v in six.iteritems(self.tags):
+                data['tags'].setdefault(k, v)
 
         for k, v in six.iteritems(extra):
             data['extra'][k] = v
