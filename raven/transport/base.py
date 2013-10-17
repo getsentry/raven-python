@@ -282,7 +282,7 @@ class GeventedHTTPTransport(AsyncTransport, HTTPTransport):
         if greenlet.successful():
             success_cb()
         else:
-            failure_cb(greenlet.value)
+            failure_cb(greenlet.exception)
 
 
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
