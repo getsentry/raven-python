@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+import logging
 
 from flask import request
 from flask.signals import got_request_exception
@@ -68,7 +69,7 @@ class Sentry(object):
     >>> sentry.captureMessage('hello, world!')
     """
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False, level=None):
+                 logging=False, level=logging.NOTSET):
         self.dsn = dsn
         self.logging = logging
         self.client_cls = client_cls
@@ -106,10 +107,7 @@ class Sentry(object):
             self.client = make_client(self.client_cls, app, self.dsn)
 
         if self.logging:
-            if self.level is not None:
-                setup_logging(SentryHandler(self.client, level=self.level))
-            else: 
-                setup_logging(SentryHandler(self.client))
+            setup_logging(SentryHandler(self.client, level=self.level))
 
         got_request_exception.connect(self.handle_exception, sender=app)
 
