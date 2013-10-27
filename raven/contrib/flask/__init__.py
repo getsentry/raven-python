@@ -68,11 +68,12 @@ class Sentry(object):
     >>> sentry.captureMessage('hello, world!')
     """
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False):
+                 logging=False, level=None):
         self.dsn = dsn
         self.logging = logging
         self.client_cls = client_cls
         self.client = client
+        self.level = level
 
         if app:
             self.init_app(app)
@@ -105,7 +106,10 @@ class Sentry(object):
             self.client = make_client(self.client_cls, app, self.dsn)
 
         if self.logging:
-            setup_logging(SentryHandler(self.client))
+            if self.level is not None:
+                setup_logging(SentryHandler(self.client, level=self.level))
+            else: 
+                setup_logging(SentryHandler(self.client))
 
         got_request_exception.connect(self.handle_exception, sender=app)
 
