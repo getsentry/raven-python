@@ -58,14 +58,14 @@ class SentryHandler(logging.Handler, object):
             self.format(record)
 
             if not self.can_record(record):
-                print(to_string(record.message), sys.stderr)
+                print(to_string(record.message), file=sys.stderr)
                 return
 
             return self._emit(record)
         except Exception:
-            print("Top level Sentry exception caught - failed creating log record", sys.stderr)
-            print(to_string(record.msg), sys.stderr)
-            print(to_string(traceback.format_exc()), sys.stderr)
+            print("Top level Sentry exception caught - failed creating log record", file=sys.stderr)
+            print(to_string(record.msg), file=sys.stderr)
+            print(to_string(traceback.format_exc()), file=sys.stderr)
 
     def _get_targetted_stack(self, stack):
         # we might need to traverse this multiple times, so coerce it to a list
