@@ -596,7 +596,7 @@ class Client(object):
         If exc_info is not provided, or is set to True, then this method will
         perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
         for you.
-        
+
         ``kwargs`` are passed through to ``.capture``.
         """
         return self.capture(
