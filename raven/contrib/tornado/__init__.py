@@ -178,7 +178,7 @@ class SentryMixin(object):
             'sentry.interfaces.Http': {
                 'url': self.request.full_url(),
                 'method': self.request.method,
-                'data': self.request.arguments,
+                'data': self.request.body,
                 'query_string': self.request.query,
                 'cookies': self.request.headers.get('Cookie', None),
                 'headers': dict(self.request.headers),
@@ -260,5 +260,6 @@ class SentryMixin(object):
             return super(SentryMixin, self).send_error(status_code, **kwargs)
         else:
             rv = super(SentryMixin, self).send_error(status_code, **kwargs)
-            self.captureException(exc_info=kwargs.get('exc_info'))
+            if 500 <= status_code <= 599:
+                self.captureException(exc_info=kwargs.get('exc_info'))
             return rv

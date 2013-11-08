@@ -65,6 +65,14 @@ def get_user_info(request):
 
 
 def get_data_from_request(request):
+    try:
+        from flask.globals import _request_ctx_stack
+    except ImportError:
+        pass
+    else:
+        if not _request_ctx_stack.top:
+            return {}
+
     urlparts = _urlparse.urlsplit(request.url)
 
     try:

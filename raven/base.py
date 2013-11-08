@@ -182,6 +182,7 @@ class Client(object):
         if context is None:
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
+        self.tags = o.get('tags') or {}
 
         self.module_cache = ModuleProxyCache()
 
@@ -339,10 +340,15 @@ class Client(object):
         data.setdefault('extra', {})
         data.setdefault('level', logging.ERROR)
 
-        # Add extra context
+        # Add default extra context
         if self.extra:
             for k, v in six.iteritems(self.extra):
                 data['extra'].setdefault(k, v)
+
+        # Add default tag context
+        if self.tags:
+            for k, v in six.iteritems(self.tags):
+                data['tags'].setdefault(k, v)
 
         for k, v in six.iteritems(extra):
             data['extra'][k] = v
@@ -443,7 +449,8 @@ class Client(object):
                            interfaces. Any key which contains a '.' will be
                            assumed to be a data interface.
         :param date: the datetime of this event
-        :param time_spent: a float value representing the duration of the event
+        :param time_spent: a integer value representing the duration of the
+                           event (in milliseconds)
         :param event_id: a 32-length unique string identifying this event
         :param extra: a dictionary of additional standard metadata
         :param culprit: a string representing the cause of this event
@@ -589,6 +596,8 @@ class Client(object):
         If exc_info is not provided, or is set to True, then this method will
         perform the ``exc_info = sys.exc_info()`` and the requisite clean-up
         for you.
+
+        ``kwargs`` are passed through to ``.capture``.
         """
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)

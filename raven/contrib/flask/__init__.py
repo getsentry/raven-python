@@ -8,7 +8,9 @@ raven.contrib.flask
 
 from __future__ import absolute_import
 
+import sys
 import os
+import logging
 
 from flask import request
 from flask.signals import got_request_exception
@@ -67,17 +69,24 @@ class Sentry(object):
     >>> sentry.captureMessage('hello, world!')
     """
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False):
+                 logging=False, level=logging.NOTSET):
         self.dsn = dsn
         self.logging = logging
         self.client_cls = client_cls
         self.client = client
+        self.level = level
 
         if app:
             self.init_app(app)
 
     def handle_exception(self, *args, **kwargs):
         if not self.client:
+            return
+
+        ignored_exc_type_list = self.app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
+        exc = sys.exc_info()[1]
+
+        if any((isinstance(exc, ignored_exc_type) for ignored_exc_type in ignored_exc_type_list)):
             return
 
         self.client.captureException(
@@ -98,7 +107,7 @@ class Sentry(object):
             self.client = make_client(self.client_cls, app, self.dsn)
 
         if self.logging:
-            setup_logging(SentryHandler(self.client))
+            setup_logging(SentryHandler(self.client, level=self.level))
 
         got_request_exception.connect(self.handle_exception, sender=app)
 

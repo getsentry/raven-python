@@ -6,13 +6,18 @@ import sys
 collect_ignore = []
 if sys.version_info[0] > 2:
     collect_ignore.append("tests/contrib/flask")
-    if sys.version_info[1] == 3:
+    if sys.version_info[1] == 2:
         collect_ignore.append("tests/handlers/logbook")
 
 try:
     import gevent
 except ImportError:
     collect_ignore.append("tests/transport/gevent")
+
+try:
+    import web
+except ImportError:
+    collect_ignore.append("tests/contrib/webpy")
 
 
 INSTALLED_APPS = [

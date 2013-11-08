@@ -29,7 +29,7 @@ setup_requires = [
 ]
 
 dev_requires = [
-    'flake8>=1.6,<2.0',
+    'flake8>=2.0,<2.1',
 ]
 
 unittest2_requires = ['unittest2']
@@ -42,11 +42,18 @@ flask_tests_requires = [
     'Flask-Login>=0.2.0',
 ]
 
-# If it's python3, remove flask & unittest2
+webpy_tests_requires = [
+    'paste',
+    'web.py',
+]
+
+# If it's python3, remove flask, unittest2 & web.py
 if sys.version_info[0] == 3:
     flask_requires = []
     flask_tests_requires = []
     unittest2_requires = []
+    webpy_tests_requires = []
+
 
 tests_require = [
     'bottle',
@@ -67,7 +74,8 @@ tests_require = [
     'webob',
     'webtest',
     'anyjson',
-] + flask_requires + flask_tests_requires + unittest2_requires
+] + (flask_requires + flask_tests_requires + unittest2_requires +
+     webpy_tests_requires)
 
 
 class PyTest(TestCommand):
@@ -85,7 +93,7 @@ class PyTest(TestCommand):
 
 setup(
     name='raven',
-    version='3.4.1',
+    version='3.5.2',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',

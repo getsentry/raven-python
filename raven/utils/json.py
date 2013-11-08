@@ -30,6 +30,8 @@ class BetterJSONEncoder(json.JSONEncoder):
             return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
         elif isinstance(obj, (set, frozenset)):
             return list(obj)
+        elif isinstance(obj, bytes):
+            return obj.decode('utf-8', errors='replace')
         return super(BetterJSONEncoder, self).default(obj)
 
 

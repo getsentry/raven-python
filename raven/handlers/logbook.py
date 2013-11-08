@@ -7,6 +7,7 @@ raven.handlers.logbook
 """
 
 from __future__ import absolute_import
+from __future__ import print_function
 
 import logbook
 import sys
@@ -42,14 +43,14 @@ class SentryHandler(logbook.Handler):
         try:
             # Avoid typical config issues by overriding loggers behavior
             if record.channel.startswith(('sentry.errors', 'raven')):
-                print >> sys.stderr, to_string(self.format(record))
+                print(to_string(self.format(record)), file=sys.stderr)
                 return
 
             return self._emit(record)
         except Exception:
-            print >> sys.stderr, "Top level Sentry exception caught - failed creating log record"
-            print >> sys.stderr, to_string(record.msg)
-            print >> sys.stderr, to_string(traceback.format_exc())
+            print("Top level Sentry exception caught - failed creating log record", file=sys.stderr)
+            print(to_string(record.msg), file=sys.stderr)
+            print(to_string(traceback.format_exc()))
 
             try:
                 self.client.captureException()

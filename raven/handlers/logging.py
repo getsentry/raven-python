@@ -46,21 +46,26 @@ class SentryHandler(logging.Handler, object):
 
         logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
+    def can_record(self, record):
+        return not (
+            record.name == 'raven' or
+            record.name.startswith(('sentry.errors', 'raven.'))
+        )
+
     def emit(self, record):
         try:
             # Beware to python3 bug (see #10805) if exc_info is (None, None, None)
             self.format(record)
 
-            # Avoid typical config issues by overriding loggers behavior
-            if record.name.startswith(('sentry.errors', 'raven')) or record.module.startswith('raven'):
-                print(to_string(record.message), sys.stderr)
+            if not self.can_record(record):
+                print(to_string(record.message), file=sys.stderr)
                 return
 
             return self._emit(record)
         except Exception:
-            print("Top level Sentry exception caught - failed creating log record", sys.stderr)
-            print(to_string(record.msg), sys.stderr)
-            print(to_string(traceback.format_exc()), sys.stderr)
+            print("Top level Sentry exception caught - failed creating log record", file=sys.stderr)
+            print(to_string(record.msg), file=sys.stderr)
+            print(to_string(traceback.format_exc()), file=sys.stderr)
 
     def _get_targetted_stack(self, stack):
         # we might need to traverse this multiple times, so coerce it to a list

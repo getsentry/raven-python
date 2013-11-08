@@ -45,6 +45,15 @@ By default, only the ``id`` (current_user.get_id()), ``is_authenticated``, and `
 
 ``email`` will be captured as ``sentry.interfaces.User.email``, and any additionl attributes will be available under ``sentry.interfaces.User.data``
 
+You can specify the types of exceptions that should not be reported by Sentry client in your application by setting the ``RAVEN_IGNORE_EXCEPTIONS`` configuration value on your Flask app configuration::
+
+    class MyExceptionType(Exception):
+        def __init__(self, message):
+            super(MyExceptionType, self).__init__(message)
+
+    app = Flask(__name__)
+    app.config["RAVEN_IGNORE_EXCEPTIONS"] = [MyExceptionType]
+
 Usage
 -----
 
