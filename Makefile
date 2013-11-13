@@ -21,3 +21,8 @@ coverage:
 setup-git:
 	git config branch.autosetuprebase always
 	cd .git/hooks && ln -sf ../../hooks/* ./
+
+publish:
+	python setup.py sdist bdist_wheel upload
+
+.PHONY: bootstrap test lint coverage setup-git publish
