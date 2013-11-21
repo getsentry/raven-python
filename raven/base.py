@@ -183,6 +183,7 @@ class Client(object):
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
+        self.level = o.get('level') or None
 
         self.module_cache = ModuleProxyCache()
 
@@ -338,7 +339,7 @@ class Client(object):
 
         data['tags'] = tags or {}
         data.setdefault('extra', {})
-        data.setdefault('level', logging.ERROR)
+        data['level'] = self.level or logging.ERROR
 
         # Add default extra context
         if self.extra:
