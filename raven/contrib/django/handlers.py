@@ -13,8 +13,8 @@ from raven.handlers.logging import SentryHandler as BaseSentryHandler
 
 
 class SentryHandler(BaseSentryHandler):
-    def __init__(self):
-        logging.Handler.__init__(self)
+    def __init__(self, level=logging.NOTSET):
+        logging.Handler.__init__(self, level=level)
 
     def _get_client(self):
         from raven.contrib.django.models import client
