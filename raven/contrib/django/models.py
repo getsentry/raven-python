@@ -175,8 +175,13 @@ def register_handlers():
     # HACK: support Sentry's internal communication
     if 'sentry' in django_settings.INSTALLED_APPS:
         from django.db import transaction
+        # Django 1.6
+        if hasattr(transaction, 'atomic'):
+            commit_on_success = transaction.atomic
+        else:
+            commit_on_success = transaction.commit_on_success
 
-        @transaction.commit_on_success
+        @commit_on_success
         def wrap_sentry(request, **kwargs):
             if transaction.is_dirty():
                 transaction.rollback()
