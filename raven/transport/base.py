@@ -133,7 +133,7 @@ class BaseUDPTransport(Transport):
             if v6_addresses and not v4_addresses:
                 # The only time we return a v6 address is if it's the only option
                 return v6_addresses[0]
-        return addresses[0]
+        return v4_addresses[0]
 
     def send(self, data, headers):
         auth_header = headers.get('X-Sentry-Auth')
