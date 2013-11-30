@@ -175,7 +175,7 @@ def iter_stack_frames(frames=None):
         yield frame, lineno
 
 
-def get_stack_info(frames, transformer=transform):
+def get_stack_info(frames, transformer=transform, max_frames=50):
     """
     Given a list of frames, returns a list of stack information
     dictionary objects that are JSON-ready.
@@ -186,8 +186,16 @@ def get_stack_info(frames, transformer=transform):
     """
     __traceback_hide__ = True  # NOQA
 
-    results = []
-    for frame_info in frames:
+    half_max = max_frames / 2
+
+    top_results = []
+    bottom_results = []
+
+    total_frames = 0
+
+# stacktrace['frames_omitted'] = (half_max, frames_len - half_max)
+
+    for frame_no, frame_info in enumerate(frames):
         # Old, terrible API
         if isinstance(frame_info, (list, tuple)):
             frame, lineno = frame_info
@@ -256,5 +264,18 @@ def get_stack_info(frames, transformer=transform):
                 'post_context': post_context,
             })
 
-        results.append(frame_result)
-    return results
+        if frame_no >= half_max:
+            while len(bottom_results) > half_max - 1:
+                bottom_results.pop(0)
+            bottom_results.append(frame_result)
+        else:
+            top_results.append(frame_result)
+        total_frames += 1
+
+    stackinfo = {
+        'frames': top_results + bottom_results,
+    }
+    if total_frames > max_frames:
+        stackinfo['frames_omitted'] = (half_max + 1, total_frames - half_max + 1)
+
+    return stackinfo

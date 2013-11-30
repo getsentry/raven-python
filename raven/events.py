@@ -58,7 +58,7 @@ class Exception(BaseEvent):
         exc_type, exc_value, exc_traceback = exc_info
 
         try:
-            frames = get_stack_info(
+            stack_info = get_stack_info(
                 iter_traceback_frames(exc_traceback),
                 transformer=self.transform)
 
@@ -74,9 +74,7 @@ class Exception(BaseEvent):
                     'type': str(exc_type),
                     'module': to_unicode(exc_module),
                 },
-                'sentry.interfaces.Stacktrace': {
-                    'frames': frames
-                },
+                'sentry.interfaces.Stacktrace': stack_info,
             }
         finally:
             try:

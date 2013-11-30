@@ -299,10 +299,8 @@ class Client(object):
                 frames = stack
 
             data.update({
-                'sentry.interfaces.Stacktrace': {
-                    'frames': get_stack_info(frames,
-                        transformer=self.transform)
-                },
+                'sentry.interfaces.Stacktrace': get_stack_info(
+                    frames, transformer=self.transform),
             })
 
         if 'sentry.interfaces.Stacktrace' in data:
