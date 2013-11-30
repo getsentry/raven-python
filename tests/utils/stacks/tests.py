@@ -58,8 +58,8 @@ class GetStackInfoTest(TestCase):
 
         frames = [(frame, 1)]
         results = get_stack_info(frames)
-        self.assertEquals(len(results), 1)
-        result = results[0]
+        assert len(results['frames']) == 1
+        result = results['frames'][0]
         assert 'vars' in result
         if six.PY3:
             expected = {
@@ -72,6 +72,25 @@ class GetStackInfoTest(TestCase):
                 "u'biz'": "u'baz'",
             }
         assert result['vars'] == expected
+
+    def test_max_frames(self):
+        frames = []
+        for x in xrange(10):
+            frame = Mock()
+            frame.f_locals = {}
+            frame.f_lineno = None
+            frame.f_globals = {}
+            frame.f_code.co_filename = str(x)
+            frame.f_code.co_name = __name__
+            frames.append((frame, 1))
+
+        results = get_stack_info(frames, max_frames=4)
+        assert results['frames_omitted'] == (3, 9)
+        assert len(results['frames']) == 4
+        assert results['frames'][0]['filename'] == '0'
+        assert results['frames'][1]['filename'] == '1'
+        assert results['frames'][2]['filename'] == '8'
+        assert results['frames'][3]['filename'] == '9'
 
 
 class GetLineFromFileTest(TestCase):
