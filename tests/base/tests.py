@@ -83,20 +83,17 @@ class ClientTest(TestCase):
         should_try.return_value = True
 
         client = Client(
-            servers=['http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='sync+http://public:secret@example.com/1'
         )
 
         # test error
         send.side_effect = Exception()
-        client.send_remote('http://example.com/api/store', 'foo')
+        client.send_remote('sync+http://example.com/api/store', 'foo')
         self.assertEquals(client.state.status, client.state.ERROR)
 
         # test recovery
         send.side_effect = None
-        client.send_remote('http://example.com/api/store', 'foo')
+        client.send_remote('sync+http://example.com/api/store', 'foo')
         self.assertEquals(client.state.status, client.state.ONLINE)
 
     @mock.patch('raven.base.Client._registry.get_transport')

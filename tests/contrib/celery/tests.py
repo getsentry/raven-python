@@ -10,7 +10,7 @@ from raven.contrib.celery import CeleryClient
 
 class ClientTest(TestCase):
     def setUp(self):
-        self.client = CeleryClient(servers=['http://example.com'])
+        self.client = CeleryClient(dsn='sync+http://public:secret@example.com/1')
 
     @mock.patch('raven.contrib.celery.CeleryClient.send_raw')
     def test_send_encoded(self, send_raw):
@@ -37,8 +37,9 @@ class ClientTest(TestCase):
         celery_app = app_or_default()
         celery_app.conf.CELERY_ALWAYS_EAGER = True
 
-        self.client.captureMessage(message='test')
+        try:
+            self.client.captureMessage(message='test')
 
-        self.assertEquals(send_encoded.call_count, 1)
-
-        celery_app.conf.CELERY_ALWAYS_EAGER = False
+            self.assertEquals(send_encoded.call_count, 1)
+        finally:
+            celery_app.conf.CELERY_ALWAYS_EAGER = False
