@@ -48,6 +48,9 @@ class Sentry(object):
                 except Exception:
                     self.handle_exception(environ)
 
+    def process_response(self, request, response):
+        self.client.context.clear()
+
     def handle_exception(self, environ):
         event_id = self.client.captureException(
             data={
