@@ -18,6 +18,17 @@ import sys
 logger = logging.getLogger('raven.errors')
 
 
+def merge_dicts(*dicts):
+    out = {}
+    for d in dicts:
+        if not d:
+            continue
+
+        for k, v in six.iteritems(d):
+            out[k] = v
+    return out
+
+
 def varmap(func, var, context=None, name=None):
     """
     Executes ``func(key_name, value)`` on all values

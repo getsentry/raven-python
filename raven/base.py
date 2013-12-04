@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 import base64
 import zlib
-import datetime
 import logging
 import os
 import sys
@@ -18,16 +17,17 @@ import time
 import uuid
 import warnings
 
+from datetime import datetime
+
 import raven
 from raven.conf import defaults
 from raven.context import Context
-from raven.utils import json, get_versions, get_auth_header
+from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
 from raven.utils.compat import HTTPError
-from raven.utils import six
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -42,8 +42,8 @@ class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
 
-        handler = getattr(__import__(module, {},
-                {}, [class_name]), class_name)
+        handler = getattr(__import__(
+            module, {}, {}, [class_name]), class_name)
 
         self[key] = handler
 
@@ -195,6 +195,8 @@ class Client(object):
         if Raven is None:
             Raven = self
 
+        self._context = Context()
+
     @classmethod
     def register_scheme(cls, scheme, transport_class):
         cls._registry.register_scheme(scheme, transport_class)
@@ -266,12 +268,12 @@ class Client(object):
         # create ID client-side so that it can be passed to application
         event_id = uuid.uuid4().hex
 
-        if data is None:
-            data = {}
-        if extra is None:
-            extra = {}
-        if not date:
-            date = datetime.datetime.utcnow()
+        data = merge_dicts(self.context.data, data)
+
+        data.setdefault('tags', {})
+        data.setdefault('extra', {})
+        data.setdefault('level', logging.ERROR)
+
         if stack is None:
             stack = self.auto_log_stacks
 
@@ -336,22 +338,13 @@ class Client(object):
         if not data.get('modules'):
             data['modules'] = self.get_module_versions()
 
-        data['tags'] = tags or {}
-        data.setdefault('extra', {})
-        data.setdefault('level', logging.ERROR)
+        data['tags'] = merge_dicts(self.tags, data['tags'], tags)
+        data['extra'] = merge_dicts(self.extra, data['extra'], extra)
 
-        # Add default extra context
-        if self.extra:
-            for k, v in six.iteritems(self.extra):
-                data['extra'].setdefault(k, v)
-
-        # Add default tag context
-        if self.tags:
-            for k, v in six.iteritems(self.tags):
-                data['tags'].setdefault(k, v)
-
-        for k, v in six.iteritems(extra):
-            data['extra'][k] = v
+        # Legacy support for site attribute
+        site = data.pop('site', None) or self.site
+        if site:
+            data['tags'].setdefault('site', site)
 
         if culprit:
             data['culprit'] = culprit
@@ -363,27 +356,20 @@ class Client(object):
         if 'message' not in data:
             data['message'] = handler.to_string(data)
 
-        data.setdefault('project', self.project)
-
-        # Legacy support for site attribute
-        site = data.pop('site', None) or self.site
-        if site:
-            data['tags'].setdefault('site', site)
-
+        # tags should only be key=>u'value'
         for key, value in six.iteritems(data['tags']):
             data['tags'][key] = to_unicode(value)
 
-        # Make sure custom data is coerced
+        # extra data can be any arbitrary value
         for k, v in six.iteritems(data['extra']):
             data['extra'][k] = self.transform(v)
 
         # It's important date is added **after** we serialize
-        data.update({
-            'timestamp': date,
-            'time_spent': time_spent,
-            'event_id': event_id,
-            'platform': PLATFORM_NAME,
-        })
+        data.setdefault('project', self.project)
+        data.setdefault('timestamp', date or datetime.utcnow())
+        data.setdefault('time_spent', time_spent)
+        data.setdefault('event_id', event_id)
+        data.setdefault('platform', PLATFORM_NAME)
 
         return data
 
@@ -392,18 +378,39 @@ class Client(object):
             data, list_max_length=self.list_max_length,
             string_max_length=self.string_max_length)
 
-    def context(self, **kwargs):
+    @property
+    def context(self):
         """
-        Create default context around a block of code for exception management.
+        Updates this clients thread-local context for future events.
 
-        >>> with client.context(tags={'key': 'value'}) as raven:
-        >>>     # use the context manager's client reference
-        >>>     raven.captureMessage('hello!')
-        >>>
-        >>>     # uncaught exceptions also contain the context
-        >>>     1 / 0
+        >>> def view_handler(view_func, *args, **kwargs):
+        >>>     client.context.merge(tags={'key': 'value'})
+        >>>     try:
+        >>>         return view_func(*args, **kwargs)
+        >>>     finally:
+        >>>         client.context.clear()
         """
-        return Context(self, **kwargs)
+        return self._context
+
+    def user_context(self, data):
+        return self.context.merge({
+            'sentry.interfaces.User': data,
+        })
+
+    def http_context(self, data, **kwargs):
+        return self.context.merge({
+            'sentry.interfaces.Http': data,
+        })
+
+    def extra_context(self, data, **kwargs):
+        return self.context.merge({
+            'extra': data,
+        })
+
+    def tags_context(self, data, **kwargs):
+        return self.context.merge({
+            'tags': data,
+        })
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
                 extra=None, stack=None, tags=None, **kwargs):

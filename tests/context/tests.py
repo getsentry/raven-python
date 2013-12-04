@@ -1,46 +1,37 @@
-import mock
-import sys
-from exam import fixture
 from raven.utils.testutils import TestCase
 
 from raven.context import Context
 
 
 class ContextTest(TestCase):
-    @fixture
-    def client(self):
-        return mock.Mock()
-
-    def context(self, **kwargs):
-        return Context(self.client, **kwargs)
-
-    def test_capture_exception(self):
-        with self.context(tags={'foo': 'bar'}) as client:
-            result = client.captureException('exception')
-            self.assertEquals(result, self.client.captureException.return_value)
-            self.client.captureException.assert_called_once_with('exception', tags={
-                'foo': 'bar',
-            })
-
-    def test_capture_message(self):
-        with self.context(tags={'foo': 'bar'}) as client:
-            result = client.captureMessage('exception')
-            self.assertEquals(result, self.client.captureMessage.return_value)
-            self.client.captureMessage.assert_called_once_with('exception', tags={
-                'foo': 'bar',
-            })
-
-    def test_implicit_exception_handling(self):
-        try:
-            with self.context(tags={'foo': 'bar'}):
-                try:
-                    1 / 0
-                except Exception:
-                    exc_info = sys.exc_info()
-                    raise
-        except Exception:
-            pass
-
-        self.client.captureException.assert_called_once_with(exc_info, tags={
+    def test_simple(self):
+        context = Context()
+        context.merge({'foo': 'bar'})
+        context.merge({'biz': 'baz'})
+        context.merge({'biz': 'boz'})
+        assert context.get() == {
             'foo': 'bar',
-        })
+            'biz': 'boz',
+        }
+
+    def test_tags(self):
+        context = Context()
+        context.merge({'tags': {'foo': 'bar'}})
+        context.merge({'tags': {'biz': 'baz'}})
+        assert context.get() == {
+            'tags': {
+                'foo': 'bar',
+                'biz': 'baz',
+            }
+        }
+
+    def test_extra(self):
+        context = Context()
+        context.merge({'extra': {'foo': 'bar'}})
+        context.merge({'extra': {'biz': 'baz'}})
+        assert context.get() == {
+            'extra': {
+                'foo': 'bar',
+                'biz': 'baz',
+            }
+        }
