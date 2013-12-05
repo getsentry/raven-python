@@ -27,6 +27,10 @@ class Sentry(object):
         self.client = client
 
     def __call__(self, environ, start_response):
+        # TODO(dcramer): ideally this is lazy, but the context helpers must
+        # support callbacks first
+        self.client.http_context(self.get_http_context(environ))
+
         try:
             iterable = self.application(environ, start_response)
         except Exception:
@@ -48,21 +52,19 @@ class Sentry(object):
                 except Exception:
                     self.handle_exception(environ)
 
+    def get_http_context(self, environ):
+        return {
+            'method': environ.get('REQUEST_METHOD'),
+            'url': get_current_url(environ, strip_querystring=True),
+            'query_string': environ.get('QUERY_STRING'),
+            # TODO
+            # 'data': environ.get('wsgi.input'),
+            'headers': dict(get_headers(environ)),
+            'env': dict(get_environ(environ)),
+        }
+
     def process_response(self, request, response):
         self.client.context.clear()
 
-    def handle_exception(self, environ):
-        event_id = self.client.captureException(
-            data={
-                'sentry.interfaces.Http': {
-                    'method': environ.get('REQUEST_METHOD'),
-                    'url': get_current_url(environ, strip_querystring=True),
-                    'query_string': environ.get('QUERY_STRING'),
-                    # TODO
-                    # 'data': environ.get('wsgi.input'),
-                    'headers': dict(get_headers(environ)),
-                    'env': dict(get_environ(environ)),
-                }
-            },
-        )
-        return event_id
+    def handle_exception(self, environ=None):
+        return self.client.captureException()
