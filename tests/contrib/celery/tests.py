@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import mock
+
+from celery.app import app_or_default
+
 from raven.utils.testutils import TestCase
-from celery.tests.utils import with_eager_tasks
 from raven.contrib.celery import CeleryClient
 
 
@@ -26,13 +28,17 @@ class ClientTest(TestCase):
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
-    @with_eager_tasks
     @mock.patch('raven.base.Client.send_encoded')
     def test_with_eager(self, send_encoded):
         """
         Integration test to ensure it propagates all the way down
         and calls the parent client's send_encoded method.
         """
+        celery_app = app_or_default()
+        celery_app.conf.CELERY_ALWAYS_EAGER = True
+
         self.client.captureMessage(message='test')
 
         self.assertEquals(send_encoded.call_count, 1)
+
+        celery_app.conf.CELERY_ALWAYS_EAGER = False
