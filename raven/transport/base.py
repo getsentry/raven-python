@@ -200,7 +200,7 @@ class UDPTransport(BaseUDPTransport):
 
 class HTTPTransport(Transport):
 
-    scheme = ['http', 'https']
+    scheme = ['sync+http', 'sync+https']
 
     def __init__(self, parsed_url, timeout=defaults.TIMEOUT):
         self.check_scheme(parsed_url)
