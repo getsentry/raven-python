@@ -2,7 +2,6 @@
 
 import mock
 from raven.utils.testutils import TestCase
-from celery.tests.utils import with_eager_tasks
 from raven.contrib.celery import CeleryClient
 
 
@@ -26,7 +25,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
-    @with_eager_tasks
+    # @with_eager_tasks
     @mock.patch('raven.base.Client.send_encoded')
     def test_with_eager(self, send_encoded):
         """

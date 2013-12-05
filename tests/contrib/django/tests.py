@@ -12,7 +12,6 @@ import pytest
 import re
 import sys  # NOQA
 from exam import fixture
-from celery.tests.utils import with_eager_tasks
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
@@ -594,7 +593,7 @@ class CeleryIsolatedClientTest(TestCase):
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
-    @with_eager_tasks
+    # @with_eager_tasks
     @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
     def test_with_eager(self, send_encoded):
         """
@@ -628,7 +627,7 @@ class CeleryIntegratedClientTest(TestCase):
 
             self.assertEquals(send_raw.delay.call_count, 1)
 
-    @with_eager_tasks
+    # @with_eager_tasks
     @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
     def test_with_eager(self, send_encoded):
         """
