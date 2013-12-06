@@ -10,9 +10,13 @@ from __future__ import absolute_import
 from raven.contrib.celery import CeleryMixin
 from raven.contrib.django.client import DjangoClient
 try:
-    from celery.task import task
+    from celery.contrib.methods import task
 except ImportError:
-    from celery.decorators import task  # NOQA
+    # Import the pre Celery 3.1 tasks (At some point we'll drop that)
+    try:
+        from celery.task import task
+    except ImportError:
+        from celery.decorators import task  # NOQA
 
 
 class CeleryClient(CeleryMixin, DjangoClient):

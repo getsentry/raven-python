@@ -9,9 +9,13 @@ from __future__ import absolute_import
 
 import logging
 try:
-    from celery.task import task
+    from celery.contrib.methods import task
 except ImportError:
-    from celery.decorators import task  # NOQA
+    # Import the pre Celery 3.1 tasks (At some point we'll drop that)
+    try:
+        from celery.task import task
+    except ImportError:
+        from celery.decorators import task  # NOQA
 from celery.signals import after_setup_logger, task_failure
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
