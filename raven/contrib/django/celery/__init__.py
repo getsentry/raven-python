@@ -10,7 +10,8 @@ from __future__ import absolute_import
 from raven.contrib.celery import CeleryMixin
 from raven.contrib.django.client import DjangoClient
 try:
-    from celery.contrib.methods import task
+    from celery import current_app
+    task = current_app.task
 except ImportError:
     # Import the pre Celery 3.1 tasks (At some point we'll drop that)
     try:

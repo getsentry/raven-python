@@ -9,7 +9,8 @@ from __future__ import absolute_import
 
 import logging
 try:
-    from celery.contrib.methods import task
+    from celery import current_app
+    task = current_app.task
 except ImportError:
     # Import the pre Celery 3.1 tasks (At some point we'll drop that)
     try:
