@@ -12,7 +12,6 @@ import pytest
 import re
 import sys  # NOQA
 from exam import fixture
-from celery.app import app_or_default
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
@@ -594,20 +593,6 @@ class CeleryIsolatedClientTest(TestCase):
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
-    # @with_eager_tasks
-    @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
-    def test_with_eager(self, send_encoded):
-        """
-        Integration test to ensure it propagates all the way down
-        and calls the parent client's send_encoded method.
-        """
-        celery_app = app_or_default()
-        celery_app.conf.CELERY_ALWAYS_EAGER = True
-        self.client.captureMessage(message='test')
-
-        self.assertEquals(send_encoded.call_count, 1)
-        celery_app.conf.CELERY_ALWAYS_EAGER = False
-
 
 class CeleryIntegratedClientTest(TestCase):
     def setUp(self):
@@ -630,20 +615,6 @@ class CeleryIntegratedClientTest(TestCase):
             self.client.captureMessage(message='test')
 
             self.assertEquals(send_raw.delay.call_count, 1)
-
-    # @with_eager_tasks
-    @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
-    def test_with_eager(self, send_encoded):
-        """
-        Integration test to ensure it propagates all the way down
-        and calls the parent client's send_encoded method.
-        """
-        celery_app = app_or_default()
-        celery_app.conf.CELERY_ALWAYS_EAGER = True
-        self.client.captureMessage(message='test')
-
-        self.assertEquals(send_encoded.call_count, 1)
-        celery_app.conf.CELERY_ALWAYS_EAGER = False
 
 
 class IsValidOriginTestCase(TestCase):
