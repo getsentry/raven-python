@@ -12,10 +12,8 @@ import time
 import raven
 from raven.base import Client
 from raven.utils import get_auth_header
-from tornado.httpclient import AsyncHTTPClient, HTTPError
 
-
-class AsyncSentryClient(Client):
+class SentryClient(Client):
     """A mixin class that could be used along with request handlers to
     asynchronously send errors to sentry. The client also captures the
     information from the request handlers
@@ -84,7 +82,7 @@ class AsyncSentryClient(Client):
             self._send_remote(
                 url=url, data=data, headers=headers, callback=callback
             )
-        except HTTPError as e:
+        except self.HTTP_ERROR as e:
             body = e.response.body
             self.error_logger.error(
                 'Unable to reach Sentry log server: %s '
@@ -103,18 +101,30 @@ class AsyncSentryClient(Client):
         else:
             self.state.set_success()
 
-    def _send_remote(self, url, data, headers=None, callback=None):
-        """
-        Initialise a Tornado AsyncClient and send the reuqest to the sentry
-        server. If the callback is a callable, it will be called with the
-        response.
-        """
-        if headers is None:
-            headers = {}
 
-        return AsyncHTTPClient().fetch(
-            url, callback, method="POST", body=data, headers=headers
-        )
+
+try:
+    from tornado.httpclient import AsyncHTTPClient, HTTPError
+except ImportError:
+    AsyncHTTPClient, HTTPError = None, None
+
+if AsyncHTTPClient:
+    class AsyncSentryClient(SentryClient):
+
+        HTTP_ERROR = HTTPError
+
+        def _send_remote(self, url, data, headers=None, callback=None):
+            """
+            Initialise a Tornado AsyncClient and send the request to the sentry
+            server. If the callback is a callable, it will be called with the
+            response.
+            """
+            if headers is None:
+                headers = {}
+
+            return AsyncHTTPClient().fetch(
+                url, callback, method="POST", body=data, headers=headers
+            )
 
 
 class SentryMixin(object):
