@@ -2,37 +2,23 @@
 raven.contrib.celery
 ~~~~~~~~~~~~~~~~~~~~
 
+>>> class CeleryClient(CeleryMixin, Client):
+>>>     def send_encoded(self, *args, **kwargs):
+>>>         "Errors through celery"
+>>>         self.send_raw.delay(*args, **kwargs)
+
+>>> @task(routing_key='sentry')
+>>> def send_raw(*args, **kwargs):
+>>>     return super(client, self).send_encoded(*args, **kwargs)
+
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from __future__ import absolute_import
 
 import logging
-try:
-    from celery.contrib.methods import task
-except ImportError:
-    # Import the pre Celery 3.1 tasks (At some point we'll drop that)
-    try:
-        from celery.task import task
-    except ImportError:
-        from celery.decorators import task  # NOQA
 from celery.signals import after_setup_logger, task_failure
-from raven.base import Client
 from raven.handlers.logging import SentryHandler
-
-
-class CeleryMixin(object):
-    def send_encoded(self, *args, **kwargs):
-        "Errors through celery"
-        self.send_raw.delay(*args, **kwargs)
-
-    @task(routing_key='sentry')
-    def send_raw(self, *args, **kwargs):
-        return super(CeleryMixin, self).send_encoded(*args, **kwargs)
-
-
-class CeleryClient(CeleryMixin, Client):
-    pass
 
 
 class CeleryFilter(logging.Filter):
