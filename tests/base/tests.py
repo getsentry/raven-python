@@ -77,7 +77,7 @@ class ClientTest(TestCase):
         assert base.Raven is client
         assert client is not client2
 
-    @mock.patch('raven.transport.base.HTTPTransport.send')
+    @mock.patch('raven.transport.http.HTTPTransport.send')
     @mock.patch('raven.base.ClientState.should_try')
     def test_send_remote_failover(self, should_try, send):
         should_try.return_value = True

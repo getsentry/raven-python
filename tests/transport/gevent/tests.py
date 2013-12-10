@@ -21,8 +21,8 @@ class GeventTransportTest(TestCase):
         reload(socket)
         reload(time)
 
-    @mock.patch('raven.transport.base.GeventedHTTPTransport._done')
-    @mock.patch('raven.transport.base.HTTPTransport.send')
+    @mock.patch('raven.transport.gevent.GeventedHTTPTransport._done')
+    @mock.patch('raven.transport.http.HTTPTransport.send')
     def test_does_send(self, send, done):
         self.client.captureMessage(message='foo')
         time.sleep(0)

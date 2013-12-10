@@ -152,16 +152,20 @@ class Client(object):
             project = dsn_config['SENTRY_PROJECT']
             public_key = dsn_config['SENTRY_PUBLIC_KEY']
             secret_key = dsn_config['SENTRY_SECRET_KEY']
+            transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
         else:
+            warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
             servers = o.get('servers')
             project = o.get('project')
             public_key = o.get('public_key')
             secret_key = o.get('secret_key')
+            transport_options = {}
 
         self.servers = servers
         self.public_key = public_key
         self.secret_key = secret_key
         self.project = project or defaults.PROJECT
+        self.transport_options = transport_options
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
@@ -525,7 +529,8 @@ class Client(object):
 
         try:
             parsed = urlparse(url)
-            transport = self._registry.get_transport(parsed)
+            transport = self._registry.get_transport(
+                parsed, **self.transport_options)
             if transport.async:
                 transport.async_send(data, headers, self._successful_send,
                                      failed_send)

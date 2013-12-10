@@ -12,9 +12,10 @@ import logging
 import time
 import threading
 import os
-from raven.utils.compat import Queue
 
-from raven.transport.base import HTTPTransport, AsyncTransport
+from raven.transport.base import AsyncTransport
+from raven.transport.http import HTTPTransport
+from raven.utils.compat import Queue
 
 DEFAULT_TIMEOUT = 10
 

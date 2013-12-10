@@ -24,7 +24,7 @@ class ThreadedTransportTest(TestCase):
             dsn="threaded+http://some_username:some_password@localhost:8143/1",
         )
 
-    @mock.patch('raven.transport.base.HTTPTransport.send')
+    @mock.patch('raven.transport.http.HTTPTransport.send')
     def test_does_send(self, send):
         self.client.captureMessage(message='foo')
 
