@@ -50,15 +50,14 @@ class DjangoClient(Client):
         return user_info
 
     def get_data_from_request(self, request):
-        try:
-            from django.contrib.auth.models import AbstractBaseUser as BaseUser
-        except ImportError:
-            from django.contrib.auth.models import User as BaseUser  # NOQA
-
         result = {}
 
-        if hasattr(request, 'user') and isinstance(request.user, BaseUser):
-            result['sentry.interfaces.User'] = self.get_user_info(request.user)
+        user = getattr(request, 'user', None)
+        if user:
+            try:
+                result['sentry.interfaces.User'] = self.get_user_info(user)
+            except AttributeError:
+                pass
 
         try:
             uri = request.build_absolute_uri()
