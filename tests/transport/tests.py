@@ -27,32 +27,6 @@ class DummyScheme(Transport):
         self._data = data
         self._headers = headers
 
-    def compute_scope(self, url, scope):
-        netloc = url.hostname
-        netloc += ':%s' % url.port
-
-        path_bits = url.path.rsplit('/', 1)
-        if len(path_bits) > 1:
-            path = path_bits[0]
-        else:
-            path = ''
-        project = path_bits[-1]
-
-        if not all([netloc, project, url.username, url.password]):
-            raise ValueError('Invalid Sentry DSN: %r' % url.geturl())
-
-        server = '%s://%s%s/api/store/' % (url.scheme, netloc, path)
-
-        # Note that these variables in the scope are not actually used
-        # for anything w.r.t the DummyTransport
-        scope.update({
-            'SENTRY_SERVERS': [server],
-            'SENTRY_PROJECT': project,
-            'SENTRY_PUBLIC_KEY': url.username,
-            'SENTRY_SECRET_KEY': url.password,
-        })
-        return scope
-
 
 class TransportTest(TestCase):
     def setUp(self):
@@ -68,12 +42,13 @@ class TransportTest(TestCase):
         c.send(**data)
 
         expected_message = c.encode(data)
-        self.assertIn('mock://localhost:8143/api/store/', Client._registry._transports)
-        mock_cls = Client._registry._transports['mock://localhost:8143/api/store/']
+        self.assertIn('mock://localhost:8143/api/1/store/', Client._registry._transports)
+        mock_cls = Client._registry._transports['mock://localhost:8143/api/1/store/']
         assert mock_cls._data == expected_message
 
     def test_build_then_send(self):
-        c = Client(dsn="mock://some_username:some_password@localhost:8143/1",
+        c = Client(
+            dsn="mock://some_username:some_password@localhost:8143/1",
             name="test_server")
 
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
