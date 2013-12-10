@@ -37,6 +37,7 @@ try:
 except ImportError:
     from urllib import parse as _urlparse  # NOQA
 
+urlparse = _urlparse
 
 try:
     from unittest2 import TestCase

@@ -59,6 +59,7 @@ except:
 
 from raven.conf import defaults
 from raven.transport.exceptions import InvalidScheme
+from raven.utils.compat import urlparse
 
 
 class Transport(object):
@@ -202,11 +203,15 @@ class HTTPTransport(Transport):
 
     scheme = ['http', 'https']
 
-    def __init__(self, parsed_url, timeout=defaults.TIMEOUT):
+    def __init__(self, parsed_url):
         self.check_scheme(parsed_url)
 
         self._parsed_url = parsed_url
         self._url = parsed_url.geturl()
+
+        opts = urlparse.parse_qs(parsed_url.query)
+
+        timeout = opts.get('timeout', defaults.TIMEOUT)
         if isinstance(timeout, six.string_types):
             timeout = int(timeout)
         self.timeout = timeout
