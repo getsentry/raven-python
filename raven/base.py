@@ -101,15 +101,6 @@ class Client(object):
     >>> # Specify a DSN explicitly
     >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
 
-    >>> # Configure the client manually
-    >>> client = Client(
-    >>>     servers=['http://sentry.local/api/store/'],
-    >>>     include_paths=['my.package'],
-    >>>     project='project_id',
-    >>>     public_key='public_key',
-    >>>     secret_key='secret_key',
-    >>> )
-
     >>> # Record an exception
     >>> try:
     >>>     1/0
