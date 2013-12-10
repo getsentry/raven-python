@@ -8,18 +8,14 @@ from raven.base import Client
 
 
 class GeventTransportTest(TestCase):
-
     def setUp(self):
         gevent.monkey.patch_socket()
+        self.addCleanup(reload, socket)
         gevent.monkey.patch_time()
+        self.addCleanup(reload, time)
         self.client = Client(
             dsn="gevent+http://some_username:some_password@localhost:8143/1",
         )
-
-    def tearDown(self):
-        # Undo gevent monkey patching
-        reload(socket)
-        reload(time)
 
     @mock.patch('raven.transport.gevent.GeventedHTTPTransport._done')
     @mock.patch('raven.transport.http.HTTPTransport.send')
