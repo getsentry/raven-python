@@ -22,7 +22,7 @@ env:
     # travis encrypt S3_BUCKET_NAME=secretvalue S3_CREDENTIALS=accesskey:secretkey
     # - S3_BUCKET_NAME=
     # - S3_CREDENTIALS=
-    - secure: pZ7DtkEu2q/pGINfVT9S+iPRE5ck6mBQmuHTQz3PVXF/UJmpM1LCbC7aqrw4GXWuUhYc50QCnMZJL1yoBORVEfY4nfXHLRc3HMoWE6Srqf0IBDywi6T+UUdLeOYe13EDb4p8WIpnRGlV4WI1WaPXuFlMEdj5tAjlC9ZotLxyVaI=
+    - secure: "QEFKt0HhaMlCW0FCLTz3NDY/P4UuVl1Pw8kSUVKKjbaKn2jZdaLKS68yl3Vyrd9AqrBfRNNLBAnvpZjYL6EwqqnZzpRH3KnAf0WRxE6d5ytrUkwZtOnQaN0Tumuqc3xnoXXalPXvs+abhXZpjfOzx0oPBa2WbtMF/RJZ/bwsTKE="
 before_install:
   # Use closer nameservers
   - printf "nameserver 199.91.168.70\nnameserver 199.91.168.71\n" | sudo tee /etc/resolv.conf
