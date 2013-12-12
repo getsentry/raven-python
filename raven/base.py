@@ -388,21 +388,41 @@ class Client(object):
         return self._context
 
     def user_context(self, data):
+        """
+        Update the user context for future events.
+
+        >>> client.user_context({'email': 'foo@example.com'})
+        """
         return self.context.merge({
             'sentry.interfaces.User': data,
         })
 
     def http_context(self, data, **kwargs):
+        """
+        Update the http context for future events.
+
+        >>> client.http_context({'url': 'http://example.com'})
+        """
         return self.context.merge({
             'sentry.interfaces.Http': data,
         })
 
     def extra_context(self, data, **kwargs):
+        """
+        Update the extra context for future events.
+
+        >>> client.extra_context({'foo': 'bar'})
+        """
         return self.context.merge({
             'extra': data,
         })
 
     def tags_context(self, data, **kwargs):
+        """
+        Update the tags context for future events.
+
+        >>> client.tags_context({'version': '1.0'})
+        """
         return self.context.merge({
             'tags': data,
         })
