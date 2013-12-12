@@ -1,3 +1,19 @@
+Version 3.6.0
+-------------
+
+This changelog does not attempt to account for all changes between 3.6.0 and 3.0.0, but
+rather focuses on recent important changes
+
+* Transport modules paths have been refactored.
+* The threaded transport is now the default.
+* Client.context has changed. Please see documentation for new API.
+* Client.user_context was added.
+* Client.http_context was added.
+* Client.extra_context was added.
+* Client.tags_context was added.
+* Flask support has been greatly improved.
+* raven.contrib.celery.Client has been removed as it was invalid.
+
 Version 3.0.0
 -------------
 
