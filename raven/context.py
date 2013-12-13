@@ -34,6 +34,9 @@ class Context(local, Mapping, Iterable):
     def __iter__(self):
         return iter(self.data)
 
+    def __len__(self):
+        return len(self.data)
+
     def __repr__(self):
         return '<%s: %s>' % (type(self).__name__, self.data)
 
