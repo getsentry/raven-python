@@ -109,7 +109,7 @@ class Client(object):
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
-    protocol_version = '2.0'
+    protocol_version = '4'
 
     _registry = TransportRegistry(transports=default_transports)
 
