@@ -42,7 +42,6 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(event['logger'], 'root')
         self.assertEqual(event['level'], logging.INFO)
         self.assertEqual(event['message'], 'This is a test error')
-        self.assertFalse('sentry.interfaces.Stacktrace' in event)
         self.assertFalse('sentry.interfaces.Exception' in event)
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
@@ -90,7 +89,6 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
 
         self.assertEqual(event['message'], 'This is a test info with an exception')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
         self.assertTrue('sentry.interfaces.Exception' in event)
         exc = event['sentry.interfaces.Exception']
         self.assertEqual(exc['type'], 'ValueError')

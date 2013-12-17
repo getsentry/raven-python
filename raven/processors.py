@@ -47,6 +47,11 @@ class RemoveStackLocalsProcessor(Processor):
             for frame in data['sentry.interfaces.Stacktrace'].get('frames', []):
                 frame.pop('vars', None)
 
+        if 'sentry.interfaces.Exception' in data:
+            if 'stacktrace' in data['sentry.interfaces.Exception']:
+                for frame in data['sentry.interfaces.Exception']['stacktrace'].get('frames', []):
+                    frame.pop('vars', None)
+
         return data
 
 
@@ -106,6 +111,10 @@ class SanitizePasswordsProcessor(Processor):
     def process(self, data, **kwargs):
         if 'sentry.interfaces.Stacktrace' in data:
             self.filter_stacktrace(data['sentry.interfaces.Stacktrace'])
+
+        if 'sentry.interfaces.Exception' in data:
+            if 'stacktrace' in data['sentry.interfaces.Exception']:
+                self.filter_stacktrace(data['sentry.interfaces.Exception']['stacktrace'])
 
         if 'sentry.interfaces.Http' in data:
             self.filter_http(data['sentry.interfaces.Http'])

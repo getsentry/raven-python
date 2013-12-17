@@ -479,7 +479,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        frames = event['sentry.interfaces.Stacktrace']['frames']
+        frames = event['sentry.interfaces.Exception']['stacktrace']['frames']
         for frame in frames:
             if frame['module'].startswith('django.'):
                 assert frame.get('in_app') is False

@@ -106,8 +106,12 @@ class DjangoClient(Client):
     def build_msg(self, *args, **kwargs):
         data = super(DjangoClient, self).build_msg(*args, **kwargs)
 
-        stacktrace = data.get('sentry.interfaces.Stacktrace')
-        if stacktrace:
+        stacks = (
+            data.get('sentry.interfaces.Stacktrace'),
+            data.get('sentry.interfaces.Exception', {}).get('stacktrace'),
+        )
+
+        for stacktrace in filter(bool, stacks):
             for frame in stacktrace['frames']:
                 module = frame.get('module')
                 if not module:

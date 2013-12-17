@@ -321,8 +321,11 @@ class Client(object):
                             any(path.startswith(x) for x in self.exclude_paths)
                         )
 
-            if not culprit:
+        if not culprit:
+            if 'sentry.interfaces.Stacktrace' in data:
                 culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'])
+            elif data.get('sentry.interfaces.Exception', {}).get('stacktrace'):
+                culprit = get_culprit(data['sentry.interfaces.Exception']['stacktrace']['frames'])
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
