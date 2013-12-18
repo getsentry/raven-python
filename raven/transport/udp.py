@@ -31,9 +31,9 @@ class BaseUDPTransport(Transport):
         a v6 address if it's the only option.
         """
         addresses = getaddrinfo(host, port)
+        v4_addresses = [info for info in addresses if info[0] == AF_INET]
         if has_ipv6:
             v6_addresses = [info for info in addresses if info[0] == AF_INET6]
-            v4_addresses = [info for info in addresses if info[0] == AF_INET]
             if v6_addresses and not v4_addresses:
                 # The only time we return a v6 address is if it's the only option
                 return v6_addresses[0]
