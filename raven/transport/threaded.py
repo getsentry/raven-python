@@ -94,8 +94,8 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['http', 'https', 'threaded+http', 'threaded+https']
 
-    def __init__(self, parsed_url):
-        super(ThreadedHTTPTransport, self).__init__(parsed_url)
+    def __init__(self, *args, **kwargs):
+        super(ThreadedHTTPTransport, self).__init__(*args, **kwargs)
 
         # remove the threaded+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
