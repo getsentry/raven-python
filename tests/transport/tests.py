@@ -42,7 +42,7 @@ class TransportTest(TestCase):
             name="test_server"
         )
         assert c.transport_options == {
-            'timeout': 1,
+            'timeout': '1',
         }
 
     def test_custom_transport(self):
