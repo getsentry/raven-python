@@ -16,9 +16,10 @@ class DummyScheme(Transport):
 
     scheme = ['mock']
 
-    def __init__(self, parsed_url):
+    def __init__(self, parsed_url, timeout=5):
         self.check_scheme(parsed_url)
         self._parsed_url = parsed_url
+        self.timeout = timeout
 
     def send(self, data, headers):
         """
@@ -34,6 +35,15 @@ class TransportTest(TestCase):
             Client.register_scheme('mock', DummyScheme)
         except:
             pass
+
+    def test_basic_config(self):
+        c = Client(
+            dsn="mock://some_username:some_password@localhost:8143/1?timeout=1",
+            name="test_server"
+        )
+        assert c.transport_options == {
+            'timeout': 1,
+        }
 
     def test_custom_transport(self):
         c = Client(dsn="mock://some_username:some_password@localhost:8143/1")
