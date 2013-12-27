@@ -12,6 +12,7 @@ from __future__ import print_function
 import logging
 import os
 import sys
+import time
 from optparse import OptionParser
 
 from raven import Client, get_version
@@ -110,3 +111,4 @@ def main():
 
     client = Client(dsn, include_paths=['raven'])
     send_test_message(client, opts.__dict__)
+    time.sleep(3)
