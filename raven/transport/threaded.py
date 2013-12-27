@@ -94,12 +94,6 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['http', 'https', 'threaded+http', 'threaded+https']
 
-    def __init__(self, *args, **kwargs):
-        super(ThreadedHTTPTransport, self).__init__(*args, **kwargs)
-
-        # remove the threaded+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
-
     def get_worker(self):
         if not hasattr(self, '_worker'):
             self._worker = AsyncWorker()
