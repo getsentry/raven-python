@@ -21,8 +21,9 @@ class AsyncSentryClient(Client):
     information from the request handlers
     """
     def __init__(self, *args, **kwargs):
-        self.validate_cert = True
-        Client.__init__(self, *args, **kwargs)
+        self.validate_cert = kwargs.pop('validate_cert', True)
+        super(AsyncSentryClient, self).__init__(*args, **kwargs)
+
     def capture(self, *args, **kwargs):
         """
         Takes the same arguments as the super function in :py:class:`Client`
@@ -105,7 +106,7 @@ class AsyncSentryClient(Client):
             self.state.set_fail()
         else:
             self.state.set_success()
-        
+
     def _send_remote(self, url, data, headers=None, callback=None):
         """
         Initialise a Tornado AsyncClient and send the reuqest to the sentry
@@ -117,7 +118,7 @@ class AsyncSentryClient(Client):
 
         return AsyncHTTPClient().fetch(
             url, callback, method="POST", body=data, headers=headers,
-            validate_cert = self.validate_cert
+            validate_cert=self.validate_cert
         )
 
 
