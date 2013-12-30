@@ -8,6 +8,7 @@ raven.utils.json
 
 from __future__ import absolute_import
 
+import codecs
 import datetime
 import uuid
 
@@ -40,8 +41,60 @@ def better_decoder(data):
 
 
 def dumps(value, **kwargs):
-    return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
-
+    try:
+        return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
+    except:
+        try:
+            kwargs['encoding']='safe-utf-8'
+            return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
+        except:
+            return "could not json encode: %s" % str(value)
 
 def loads(value, **kwargs):
     return json.loads(value, object_hook=better_decoder)
+
+
+_utf8_encoder = codecs.getencoder('utf-8')
+def safe_encode(input, errors='backslashreplace'):
+    return _utf8_encoder(input, errors)
+
+_utf8_decoder = codecs.getdecoder('utf-8')
+def safe_decode(input, errors='replace'):
+    return _utf8_decoder(input, errors)
+
+class Codec(codecs.Codec):
+
+    def encode(self,input, errors='backslashreplace'):
+        return safe_encode(input,errors)
+
+    def decode(self,input, errors='replace'):
+        return safe_decode(input,errors)
+
+class IncrementalEncoder(codecs.IncrementalEncoder):
+    def encode(self, input, final=False):
+        return safe_encode(input, self.errors)[0]
+
+class IncrementalDecoder(codecs.IncrementalDecoder):
+    def decode(self, input, final=False):
+        return safe_decode(input, self.errors)[0]
+
+class StreamWriter(Codec,codecs.StreamWriter):
+    pass
+
+class StreamReader(Codec,codecs.StreamReader):
+    pass
+
+def getregentry(name):
+    if name != 'safe-utf-8':
+        return None
+    return codecs.CodecInfo(
+        name='safe-utf-8',
+        encode=safe_encode,
+        decode=safe_decode,
+        incrementalencoder=IncrementalEncoder,
+        incrementaldecoder=IncrementalDecoder,
+        streamreader=StreamReader,
+        streamwriter=StreamWriter,
+    )
+
+codecs.register(getregentry)
