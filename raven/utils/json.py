@@ -56,11 +56,15 @@ def loads(value, **kwargs):
 
 
 _utf8_encoder = codecs.getencoder('utf-8')
+
+
 def safe_encode(input, errors='backslashreplace'):
     return _utf8_encoder(input, errors)
 
 
 _utf8_decoder = codecs.getdecoder('utf-8')
+
+
 def safe_decode(input, errors='replace'):
     return _utf8_decoder(input, errors)
 
