@@ -81,7 +81,7 @@ class SentryHandler(logbook.Handler):
             data.update(handler.capture(**handler_kwargs))
 
             event_type = 'raven.events.Exception'
-            handler_kwargs = {'exc_info': record.exc_info}
+            handler_kwargs['exc_info'] = record.exc_info
 
         extra = {
             'lineno': record.lineno,
