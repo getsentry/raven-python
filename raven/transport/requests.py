@@ -18,7 +18,7 @@ except:
 
 class RequestsHTTPTransport(HTTPTransport):
 
-    scheme = ['requests+http']
+    scheme = ['requests+http', 'requests+https']
 
     def __init__(self, parsed_url):
         if not has_requests:
