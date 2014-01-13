@@ -526,6 +526,17 @@ class DjangoClientTest(TestCase):
         assert 'sentry.interfaces.Http' in result
         assert result['sentry.interfaces.Http']['url'] == 'http://example.com/'
 
+    def test_query_string_encoding(self):
+        with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
+            client = TestClient(REMOTE_ADDR='127.0.0.1')
+            client.handler = MockSentryMiddleware(MockClientHandler())
+
+            self.assertRaises(Exception, client.get, reverse('sentry-raise-exc') + u"?s=ö".encode('latin-1'))
+            self.raven.encode(self.raven.events[0])
+
+            self.raven.events.pop()
+            self.raven.events.pop()
+
 
 class DjangoTemplateTagTest(TestCase):
     @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
