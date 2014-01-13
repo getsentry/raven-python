@@ -531,7 +531,7 @@ class DjangoClientTest(TestCase):
             client = TestClient(REMOTE_ADDR='127.0.0.1')
             client.handler = MockSentryMiddleware(MockClientHandler())
 
-            self.assertRaises(Exception, client.get, reverse('sentry-raise-exc') + u"?s=ö".encode('latin-1'))
+            self.assertRaises(Exception, client.get, reverse('sentry-raise-exc') + "?s=ö".encode('latin-1'))
             self.raven.encode(self.raven.events[0])
 
             self.raven.events.pop()
