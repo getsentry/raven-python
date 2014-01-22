@@ -64,6 +64,8 @@ def get_version_from_app(module_name, app):
             version = get_version
     elif hasattr(app, 'VERSION'):
         version = app.VERSION
+    elif hasattr(app, 'version'):
+        version = app.version
     elif hasattr(app, '__version__'):
         version = app.__version__
     elif pkg_resources:
