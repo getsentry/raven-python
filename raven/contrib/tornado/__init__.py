@@ -78,7 +78,10 @@ class AsyncSentryClient(Client):
                 callback=kwargs.get('callback', None)
             )
 
-    def send_remote(self, url, data, headers={}, callback=None):
+    def send_remote(self, url, data, headers=None, callback=None):
+        if headers is None:
+            headers = {}
+
         if not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)

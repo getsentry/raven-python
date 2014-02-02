@@ -531,7 +531,9 @@ class Client(object):
         self.error_logger.error('Failed to submit message: %r', message)
         self.state.set_fail()
 
-    def send_remote(self, url, data, headers={}):
+    def send_remote(self, url, data, headers=None):
+        if headers is None:
+            headers = {}
         if not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)
