@@ -35,10 +35,10 @@ ENCODER_BY_TYPE = {
 class BetterJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         try:
-            return ENCODER_BY_TYPE[type(obj)](obj)
+            encoder = ENCODER_BY_TYPE[type(obj)]
         except KeyError:
-            pass
-        return super(BetterJSONEncoder, self).default(obj)
+            return super(BetterJSONEncoder, self).default(obj)
+        return encoder(obj)
 
 
 def better_decoder(data):
