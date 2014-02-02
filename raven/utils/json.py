@@ -48,11 +48,8 @@ def dumps(value, **kwargs):
     try:
         return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
     except Exception:
-        try:
-            kwargs['encoding'] = 'safe-utf-8'
-            return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
-        except Exception:
-            return "could not json encode: %s" % str(value)
+        kwargs['encoding'] = 'safe-utf-8'
+        return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
 
 
 def loads(value, **kwargs):
