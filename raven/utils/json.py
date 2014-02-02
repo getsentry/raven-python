@@ -43,11 +43,11 @@ def better_decoder(data):
 def dumps(value, **kwargs):
     try:
         return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
-    except:
+    except Exception:
         try:
             kwargs['encoding'] = 'safe-utf-8'
             return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
-        except:
+        except Exception:
             return "could not json encode: %s" % str(value)
 
 
