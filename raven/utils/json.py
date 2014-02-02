@@ -23,16 +23,21 @@ except AttributeError:
     JSONDecodeError = ValueError
 
 
+ENCODER_BY_TYPE = {
+    uuid.UUID: lambda o: o.hex,
+    datetime.datetime: lambda o: o.strftime('%Y-%m-%dT%H:%M:%SZ'),
+    set: list,
+    frozenset: list,
+    bytes: lambda o: o.decode('utf-8', errors='replace'),
+}
+
+
 class BetterJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, uuid.UUID):
-            return obj.hex
-        elif isinstance(obj, datetime.datetime):
-            return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
-        elif isinstance(obj, (set, frozenset)):
-            return list(obj)
-        elif isinstance(obj, bytes):
-            return obj.decode('utf-8', errors='replace')
+        try:
+            return ENCODER_BY_TYPE[type(obj)](obj)
+        except KeyError:
+            pass
         return super(BetterJSONEncoder, self).default(obj)
 
 
