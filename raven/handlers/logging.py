@@ -19,7 +19,11 @@ from raven.utils import six
 from raven.utils.encoding import to_string
 from raven.utils.stacks import iter_stack_frames, label_from_frame
 
-RESERVED = ('stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno', 'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs', 'relativeCreated', 'tags')
+RESERVED = frozenset((
+    'stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno',
+    'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs',
+    'relativeCreated', 'tags',
+))
 
 
 class SentryHandler(logging.Handler, object):
