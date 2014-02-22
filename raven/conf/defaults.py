@@ -59,4 +59,4 @@ PROCESSORS = (
 # Default Project ID
 PROJECT = 1
 
-CA_BUNDLE = os.path.join(ROOT, 'data', 'getsentry.com.crt')
+CA_BUNDLE = os.path.join(ROOT, 'data', 'cacert.pem')
