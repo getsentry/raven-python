@@ -13,13 +13,12 @@ import ssl
 import sys
 
 from raven.conf import defaults
-from raven.utils import six
 from raven.utils.compat import urllib2
 from raven.utils.ssl_match_hostname import match_hostname
 
 
-def urlopen_py2(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
-                verify_ssl=False, assert_hostname=None):
+def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
+            verify_ssl=False, assert_hostname=None):
 
     class ValidHTTPSConnection(httplib.HTTPConnection):
         default_port = httplib.HTTPS_PORT
@@ -62,15 +61,3 @@ def urlopen_py2(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
         finally:
             socket.setdefaulttimeout(default_timeout)
     return opener.open(url, data, timeout)
-
-
-def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
-            verify_ssl=False):
-    if not six.PY3:
-        return urlopen_py2(url, data, timeout, ca_certs, verify_ssl)
-
-    return urllib2.urlopen(
-        url, data, timeout,
-        cafile=ca_certs,
-        cadefault=verify_ssl,
-    )
