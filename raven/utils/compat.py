@@ -15,10 +15,12 @@ except ImportError:
 
 
 try:
-    from urllib.request import Request, urlopen
+    import urllib.request as urllib2
 except ImportError:
-    from urllib2 import Request, urlopen  # NOQA
+    import urllib2
 
+Request = urllib2.Request
+urlopen = urllib2.urlopen
 
 try:
     from urllib import quote as urllib_quote
