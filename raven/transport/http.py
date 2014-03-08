@@ -7,19 +7,19 @@ raven.transport.http
 """
 from __future__ import absolute_import
 
-import sys
-
 from raven.conf import defaults
 from raven.transport.base import Transport
 from raven.utils import six
-from raven.utils.compat import urlopen, Request
+from raven.utils.http import urlopen
+from raven.utils.compat import urllib2
 
 
 class HTTPTransport(Transport):
 
     scheme = ['sync+http', 'sync+https']
 
-    def __init__(self, parsed_url, timeout=defaults.TIMEOUT):
+    def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=False,
+                 ca_certs=defaults.CA_BUNDLE):
         self.check_scheme(parsed_url)
 
         self._parsed_url = parsed_url
@@ -27,16 +27,24 @@ class HTTPTransport(Transport):
 
         if isinstance(timeout, six.string_types):
             timeout = int(timeout)
+        if isinstance(verify_ssl, six.string_types):
+            verify_ssl = bool(int(verify_ssl))
+
         self.timeout = timeout
+        self.verify_ssl = verify_ssl
+        self.ca_certs = ca_certs
 
     def send(self, data, headers):
         """
         Sends a request to a remote webserver using HTTP POST.
         """
-        req = Request(self._url, headers=headers)
+        req = urllib2.Request(self._url, headers=headers)
 
-        if sys.version_info < (2, 6):
-            response = urlopen(req, data).read()
-        else:
-            response = urlopen(req, data, self.timeout).read()
+        response = urlopen(
+            url=req,
+            data=data,
+            timeout=self.timeout,
+            verify_ssl=self.verify_ssl,
+            ca_certs=self.ca_certs,
+        ).read()
         return response
