@@ -17,7 +17,6 @@ else:
 
 import sys
 import os
-import logging
 
 from flask import request, current_app
 from flask.signals import got_request_exception
@@ -68,7 +67,7 @@ class Sentry(object):
 
     Automatically configure logging::
 
-    >>> sentry = Sentry(app, logging=True, level=logging.ERROR)
+    >>> sentry = Sentry(app, logging=True)
 
     Capture an exception::
 
@@ -90,13 +89,11 @@ class Sentry(object):
     - Capture information from Flask-Login (if available).
     """
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False, level=logging.NOTSET, wrap_wsgi=True,
-                 register_signal=True):
+                 logging=False, wrap_wsgi=True, register_signal=True):
         self.dsn = dsn
         self.logging = logging
         self.client_cls = client_cls
         self.client = client
-        self.level = level
         self.wrap_wsgi = wrap_wsgi
         self.register_signal = register_signal
 
@@ -165,13 +162,13 @@ class Sentry(object):
             'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
             'query_string': urlparts.query,
             'method': request.method,
-            'data': formdata,
+            'data': dict(formdata),
             'headers': dict(get_headers(request.environ)),
             'env': dict(get_environ(request.environ)),
         }
 
     def before_request(self, *args, **kwargs):
-        self.client.http_context(self.get_http_info(request))
+        self.client.add_http(self.get_http_info(request))
         self.client.user_context(self.get_user_info(request))
 
     def init_app(self, app, dsn=None):
@@ -182,7 +179,7 @@ class Sentry(object):
             self.client = make_client(self.client_cls, app, self.dsn)
 
         if self.logging:
-            setup_logging(SentryHandler(self.client, level=self.level))
+            setup_logging(SentryHandler(self.client))
 
         if self.wrap_wsgi:
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)

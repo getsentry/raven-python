@@ -51,10 +51,11 @@ class WebPyTest(TestCase):
         self.assertEquals(resp.status, 500)
         self.assertEquals(len(self.store.events), 1)
 
-        event = self.store.events.pop()
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
+        event = self.store.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 1)
+        exc = timeline[0]
+        self.assertEquals(exc['exc_type'], 'ValueError')
         self.assertEquals(exc['value'], 'That\'s what she said')
         self.assertEquals(event['message'], 'ValueError: That\'s what she said')
         self.assertEquals(event['culprit'], 'tests.contrib.webpy.tests in GET')

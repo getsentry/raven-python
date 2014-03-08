@@ -87,8 +87,18 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
+        import pprint
+        pprint.pprint(args)
+        pprint.pprint(kwargs)
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
+        # timeline = event['events']
+        # self.assertEqual(len(timeline), 2)
+
+        # http = timeline[0]
+        # self.assertEqual(http['type'], 'http_request')
+        # exc = timeline[1]
+
+        self.assertIn('user', kwargs)
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Exception' in kwargs))
 

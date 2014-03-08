@@ -24,6 +24,7 @@ class SentryHandler(BaseSentryHandler):
     client = property(_get_client)
 
     def _emit(self, record):
-        request = getattr(record, 'request', None)
-
-        return super(SentryHandler, self)._emit(record, request=request)
+        request = getattr(record, 'request', getattr(record, 'extra', {}).get('request'))
+        if request is not None:
+            self.client.add_request(request)
+        return super(SentryHandler, self)._emit(record)

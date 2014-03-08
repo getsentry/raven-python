@@ -26,14 +26,12 @@ def get_data_from_request(request):
         formdata = {}
 
     data = {
-        'sentry.interfaces.Http': {
-            'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
-            'query_string': urlparts.query,
-            'method': request.method,
-            'data': formdata,
-            'headers': dict(get_headers(request.environ)),
-            'env': dict(get_environ(request.environ)),
-        }
+        'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
+        'query_string': urlparts.query,
+        'method': request.method,
+        'data': formdata,
+        'headers': dict(get_headers(request.environ)),
+        'env': dict(get_environ(request.environ)),
     }
 
     return data

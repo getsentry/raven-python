@@ -48,7 +48,6 @@ class Sentry(object):
     def handle_exception(self, *args, **kwargs):
         self.client.captureException(
             exc_info=kwargs.get('exc_info'),
-            data=get_data_from_request(request),
             extra={
                 'app': self.app,
             },
@@ -60,6 +59,8 @@ class Sentry(object):
                 self.handle_exception(exc_info=exc_info)
             return start_response(status, headers, exc_info)
 
+        self.client.add_http(get_data_from_request(request))
+
         try:
             return self.app(environ, session_start_response)
         # catch ANY exception that goes through...
@@ -69,22 +70,8 @@ class Sentry(object):
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
-        data = kwargs.get('data')
-        if data is None:
-            try:
-                kwargs['data'] = get_data_from_request(request)
-            except RuntimeError:
-                # app is probably not configured yet
-                pass
         return self.client.captureException(*args, **kwargs)
 
     def captureMessage(self, *args, **kwargs):
         assert self.client, 'captureMessage called before application configured'
-        data = kwargs.get('data')
-        if data is None:
-            try:
-                kwargs['data'] = get_data_from_request(request)
-            except RuntimeError:
-                # app is probably not configured yet
-                pass
         return self.client.captureMessage(*args, **kwargs)

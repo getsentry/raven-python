@@ -39,7 +39,7 @@ class AsyncSentryClient(Client):
 
         self.send(callback=kwargs.get('callback', None), **data)
 
-        return (data['event_id'],)
+        return (data['id'],)
 
     def send(self, auth_header=None, callback=None, **data):
         """
@@ -202,7 +202,7 @@ class SentryMixin(object):
         Truth calue testing
         """
         return {
-            'sentry.interfaces.User': {
+            'user': {
                 'is_authenticated': True if self.get_current_user() else False
             }
         }

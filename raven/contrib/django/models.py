@@ -160,8 +160,10 @@ def sentry_exception_handler(request=None, **kwargs):
             exc_info=sys.exc_info())
         return
 
+    if request is not None:
+        client.add_request(request)
     try:
-        client.captureException(exc_info=sys.exc_info(), request=request)
+        client.captureException(exc_info=sys.exc_info())
     except Exception as exc:
         try:
             logger.exception('Unable to process log entry: %s' % (exc,))

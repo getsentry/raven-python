@@ -26,7 +26,7 @@ except AttributeError:
 class BetterJSONEncoder(json.JSONEncoder):
     ENCODER_BY_TYPE = {
         uuid.UUID: lambda o: o.hex,
-        datetime.datetime: lambda o: o.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        datetime.datetime: lambda o: o.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
         set: list,
         frozenset: list,
         bytes: lambda o: o.decode('utf-8', errors='replace'),

@@ -63,12 +63,14 @@ class TransportTest(TestCase):
 
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
         d = calendar.timegm(mydate.timetuple())
-        msg = c.build_msg('raven.events.Message', message='foo', date=d)
+        c.add_message('foo')
+        msg = c.build_msg(date=d)
         expected = {
             'project': '1',
-            'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
+            'events': [
+                {'type': 'message', 'message': 'foo', 'params': ()},
+            ],
             'server_name': 'test_server',
-            'level': 40,
             'modules': {},
             'tags': {},
             'time_spent': None,
@@ -77,6 +79,9 @@ class TransportTest(TestCase):
         }
 
         # The event_id is always overridden
-        del msg['event_id']
+        del msg['id']
+
+        # Timestamps are unique
+        del msg['events'][0]['timestamp']
 
         self.assertDictContainsSubset(expected, msg)

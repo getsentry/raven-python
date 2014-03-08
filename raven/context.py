@@ -12,6 +12,8 @@ from threading import local
 
 from raven.utils import six
 
+TAGS_EXTRA = set(('tags', 'extra'))
+
 
 class Context(local, Mapping, Iterable):
     """
@@ -42,8 +44,9 @@ class Context(local, Mapping, Iterable):
 
     def merge(self, data):
         d = self.data
+
         for key, value in six.iteritems(data):
-            if key in ('tags', 'extra'):
+            if key in TAGS_EXTRA:
                 d.setdefault(key, {})
                 for t_key, t_value in six.iteritems(value):
                     d[key][t_key] = t_value
@@ -58,3 +61,23 @@ class Context(local, Mapping, Iterable):
 
     def clear(self):
         self.data = {}
+
+
+class Timeline(local):
+    def __init__(self):
+        self.clear()
+
+    def __iter__(self):
+        return iter(self.timeline)
+
+    def __len__(self):
+        return len(self.timeline)
+
+    def __getitem__(self, index):
+        return self.timeline[index]
+
+    def append(self, what):
+        self.timeline.append(what)
+
+    def clear(self):
+        self.timeline = []

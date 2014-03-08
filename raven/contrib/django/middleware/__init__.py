@@ -9,9 +9,11 @@ raven.contrib.django.middleware
 from __future__ import absolute_import
 
 import threading
-import logging
 
 from django.conf import settings
+from raven.contrib.django.models import client
+
+IGNORABLE_404_URLS = getattr(settings, 'IGNORABLE_404_URLS', ())
 
 
 def is_ignorable_404(uri):
@@ -20,22 +22,22 @@ def is_ignorable_404(uri):
     """
     return any(
         pattern.search(uri)
-        for pattern in getattr(settings, 'IGNORABLE_404_URLS', ())
+        for pattern in IGNORABLE_404_URLS
     )
 
 
 class Sentry404CatchMiddleware(object):
-    def process_response(self, request, response):
-        from raven.contrib.django.models import client
+    def process_request(self, request):
+        client.add_request(request)
 
+    def process_response(self, request, response):
         if response.status_code != 404 or is_ignorable_404(request.get_full_path()) or not client.is_enabled():
             return response
 
-        data = client.get_data_from_request(request)
-        data.update({
-            'level': logging.INFO,
+        # data = client.get_data_from_request(request)
+        data = {
             'logger': 'http404',
-        })
+        }
         result = client.captureMessage(message='Page Not Found: %s' % request.build_absolute_uri(), data=data)
         request.sentry = {
             'project_id': data.get('project', client.project),
@@ -64,3 +66,4 @@ class SentryLogMiddleware(object):
 
     def process_request(self, request):
         self.thread.request = request
+        client.add_request(request)

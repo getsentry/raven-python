@@ -11,9 +11,23 @@ import logging
 import sys
 
 from raven.utils.encoding import to_unicode
-from raven.utils.stacks import get_stack_info, iter_traceback_frames
+from raven.utils.stacks import (
+    get_stack_info, iter_traceback_frames, iter_stack_frames,
+)
 
-__all__ = ('BaseEvent', 'Exception', 'Message', 'Query')
+
+__all__ = ('BaseEvent', 'Exception', 'Message', 'Query', 'get_handler')
+
+handlers = {}
+
+
+def register(cls):
+    handlers[cls.__name__.lower()] = cls
+    return cls
+
+
+def get_handler(name):
+    return handlers[name]
 
 
 class BaseEvent(object):
@@ -24,14 +38,58 @@ class BaseEvent(object):
     def to_string(self, data):
         raise NotImplementedError
 
+    def handle(self, stack=None, **kwargs):
+        data = self.capture(**kwargs)
+        data.setdefault('timestamp', kwargs['timestamp']),
+        if 'data' in kwargs:
+            data.update(**kwargs['data'])
+
+        if stack and 'stacktrace' not in kwargs:
+            if stack is True:
+                frames = iter_stack_frames()
+            else:
+                frames = stack
+
+            data.update({
+                'stacktrace': {
+                    'frames': get_stack_info(
+                        frames, transformer=self.transform)
+                },
+            })
+
+        if 'stacktrace' in kwargs:
+            if self.client.include_paths:
+                for frame in kwargs['stacktrace']['frames']:
+                    if frame.get('in_app') is not None:
+                        continue
+
+                    module = frame.get('module')
+                    abs_path = frame.get('abs_path')
+
+                    if module and module[:6] == 'raven.':
+                        frame['in_app'] = False
+                    elif abs_path and '/site-packages/' in abs_path:
+                        frame['in_app'] = False
+                    elif module:
+                        frame['in_app'] = (
+                            any(module.startswith(x) for x in self.client.include_paths)
+                            and not
+                            any(module.startswith(x) for x in self.client.exclude_paths)
+                        )
+
+            data.update({
+                'stacktrace': kwargs['stacktrace'],
+            })
+        return data
+
     def capture(self, **kwargs):
-        return {
-        }
+        raise NotImplementedError
 
     def transform(self, value):
         return self.client.transform(value)
 
 
+@register
 class Exception(BaseEvent):
     """
     Exceptions store the following metadata:
@@ -43,12 +101,11 @@ class Exception(BaseEvent):
     """
 
     def to_string(self, data):
-        exc = data['sentry.interfaces.Exception']
-        if exc['value']:
-            return '%s: %s' % (exc['type'], exc['value'])
-        return exc['type']
+        if data['value']:
+            return '%s: %s' % (data['exc_type'], data['value'])
+        return data['exc_type']
 
-    def capture(self, exc_info=None, **kwargs):
+    def capture(self, exc_info=None, stack=None, **kwargs):
         if not exc_info or exc_info is True:
             exc_info = sys.exc_info()
 
@@ -68,14 +125,12 @@ class Exception(BaseEvent):
             exc_type = getattr(exc_type, '__name__', '<unknown>')
 
             return {
-                'level': kwargs.get('level', logging.ERROR),
-                'sentry.interfaces.Exception': {
-                    'value': to_unicode(exc_value),
-                    'type': str(exc_type),
-                    'module': to_unicode(exc_module),
-                    'stacktrace': {
-                        'frames': frames
-                    }
+                'type': 'exception',
+                'value': to_unicode(exc_value),
+                'exc_type': str(exc_type),
+                'module': to_unicode(exc_module),
+                'stacktrace': {
+                    'frames': frames
                 },
             }
         finally:
@@ -85,6 +140,7 @@ class Exception(BaseEvent):
                 self.logger.exception(e)
 
 
+@register
 class Message(BaseEvent):
     """
     Messages store the following metadata:
@@ -92,19 +148,22 @@ class Message(BaseEvent):
     - message: 'My message from %s about %s'
     - params: ('foo', 'bar')
     """
+    def to_string(self, data):
+        return data['message']
+
     def capture(self, message, params=(), formatted=None, **kwargs):
         message = to_unicode(message)
         data = {
-            'sentry.interfaces.Message': {
-                'message': message,
-                'params': self.transform(params),
-            },
+            'type': 'message',
+            'message': message,
+            'params': self.transform(params),
         }
         if 'message' not in data:
             data['message'] = formatted or message
         return data
 
 
+@register
 class Query(BaseEvent):
     """
     Messages store the following metadata:

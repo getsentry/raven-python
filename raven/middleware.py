@@ -29,7 +29,8 @@ class Sentry(object):
     def __call__(self, environ, start_response):
         # TODO(dcramer): ideally this is lazy, but the context helpers must
         # support callbacks first
-        self.client.http_context(self.get_http_context(environ))
+        self.client.start_transaction()
+        self.client.add_http(self.get_http_context(environ))
 
         try:
             iterable = self.application(environ, start_response)
@@ -51,7 +52,7 @@ class Sentry(object):
                     iterable.close()
                 except Exception:
                     self.handle_exception(environ)
-            self.client.context.clear()
+            self.client.reset()
 
     def get_http_context(self, environ):
         return {

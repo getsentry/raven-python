@@ -34,24 +34,25 @@ class LogbookHandlerTest(TestCase):
 
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
+            timeline = event['events']
+            self.assertEqual(len(timeline), 1)
+            msg = timeline[0]
+            self.assertEqual(msg['type'], 'message')
+
             self.assertEquals(event['logger'], __name__)
-            self.assertEquals(event['level'], 'error')
             self.assertEquals(event['message'], 'This is a test error')
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test error')
             self.assertEquals(msg['params'], ())
 
             logger.warning('This is a test warning')
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
+            timeline = event['events']
+            self.assertEqual(len(timeline), 1)
+            msg = timeline[0]
+            self.assertEqual(msg['type'], 'message')
             self.assertEquals(event['logger'], __name__)
-            self.assertEquals(event['level'], 'warning')
             self.assertEquals(event['message'], 'This is a test warning')
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test warning')
             self.assertEquals(msg['params'], ())
 
@@ -60,14 +61,14 @@ class LogbookHandlerTest(TestCase):
             ))
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
+            timeline = event['events']
+            self.assertEqual(len(timeline), 1)
+            msg = timeline[0]
             if six.PY3:
                 expected = "'http://example.com'"
             else:
                 expected = "u'http://example.com'"
             self.assertEquals(event['extra']['url'], expected)
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test info with a url')
             self.assertEquals(msg['params'], ())
 
@@ -78,14 +79,16 @@ class LogbookHandlerTest(TestCase):
 
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
+            timeline = event['events']
+            self.assertEqual(len(timeline), 2)
+            msg = timeline[0]
+            self.assertEqual(msg['type'], 'message')
+            exc = timeline[1]
+            self.assertEqual(exc['type'], 'exception')
 
             self.assertEquals(event['message'], 'This is a test info with an exception')
-            self.assertTrue('sentry.interfaces.Exception' in event)
-            exc = event['sentry.interfaces.Exception']
-            self.assertEquals(exc['type'], 'ValueError')
+            self.assertEquals(exc['exc_type'], 'ValueError')
             self.assertEquals(exc['value'], 'This is a test ValueError')
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test info with an exception')
             self.assertEquals(msg['params'], ())
 
@@ -93,10 +96,11 @@ class LogbookHandlerTest(TestCase):
             logger.info('This is a test of {0}', 'args')
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
+            timeline = event['events']
+            self.assertEqual(len(timeline), 1)
+            msg = timeline[0]
+            self.assertEqual(msg['type'], 'message')
             self.assertEquals(event['message'], 'This is a test of args')
-            self.assertFalse('sentry.interfaces.Exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
             self.assertEquals(msg['message'], 'This is a test of {0}')
             expected = ("'args'",) if six.PY3 else ("u'args'",)
             self.assertEquals(msg['params'], expected)

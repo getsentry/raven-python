@@ -59,11 +59,11 @@ class SentryHandler(logbook.Handler):
 
     def _emit(self, record):
         data = {
-            'level': logbook.get_level_name(record.level).lower(),
             'logger': record.channel,
         }
 
-        event_type = 'raven.events.Message'
+        if 'tags' in record.kwargs:
+            data['tags'] = record.kwargs['tags']
 
         handler_kwargs = {
             'message': record.msg,
@@ -71,17 +71,14 @@ class SentryHandler(logbook.Handler):
             'formatted': self.format(record),
         }
 
-        if 'tags' in record.kwargs:
-            handler_kwargs['tags'] = record.kwargs['tags']
+        data['message'] = handler_kwargs['formatted']
+
+        self.client.add_message(**handler_kwargs)
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info is True or (record.exc_info and all(record.exc_info)):
-            handler = self.client.get_handler(event_type)
-            data.update(handler.capture(**handler_kwargs))
-
-            event_type = 'raven.events.Exception'
-            handler_kwargs['exc_info'] = record.exc_info
+            self.client.add_exception(exc_info=record.exc_info)
 
         extra = {
             'lineno': record.lineno,
@@ -92,8 +89,7 @@ class SentryHandler(logbook.Handler):
         }
         extra.update(record.extra)
 
-        return self.client.capture(event_type,
+        return self.client.capture(
             data=data,
             extra=extra,
-            **handler_kwargs
         )

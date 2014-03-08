@@ -1,5 +1,3 @@
-import logging
-
 from exam import before, fixture
 from mock import patch
 
@@ -46,7 +44,7 @@ def create_app(ignore_exceptions=None):
     def capture_exception():
         try:
             raise ValueError('Boom')
-        except:
+        except Exception:
             current_app.extensions['sentry'].captureException()
         return 'Hello'
 
@@ -105,12 +103,16 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+        self.assertEqual(exc['type'], 'exception')
+
+        self.assertEquals(exc['exc_type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
-        self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
         self.assertEquals(event['culprit'], 'tests.contrib.flask.tests in an_error')
 
@@ -120,9 +122,14 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+        self.assertEqual(exc['type'], 'exception')
+
         self.assertEquals(http['url'], 'http://localhost/an-error/')
         self.assertEquals(http['query_string'], 'foo=bar')
         self.assertEquals(http['method'], 'GET')
@@ -147,13 +154,15 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
         self.assertEquals(http['url'], 'http://localhost/an-error/')
         self.assertEquals(http['query_string'], 'biz=baz')
         self.assertEquals(http['method'], 'POST')
-        self.assertEquals(http['data'], {'foo': 'bar'})
+        self.assertEquals(http['data'], {'foo': ['bar']})
         self.assertTrue('headers' in http)
         headers = http['headers']
         self.assertTrue('Content-Length' in headers, headers.keys())
@@ -174,10 +183,14 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+        self.assertEqual(exc['type'], 'exception')
         assert event['message'] == 'ValueError: Boom'
-        assert 'sentry.interfaces.Http' in event
-        assert 'sentry.interfaces.Exception' in event
 
     def test_captureMessage_captures_http(self):
         response = self.client.get('/message/?foo=bar')
@@ -185,9 +198,13 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertTrue('sentry.interfaces.Http' in event)
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        msg = timeline[1]
+        self.assertEqual(msg['type'], 'message')
 
     @patch('flask.wrappers.RequestBase._load_form_data')
     def test_get_data_handles_disconnected_client(self, lfd):
@@ -196,9 +213,12 @@ class FlaskTest(BaseTest):
         self.client.post('/capture/?foo=bar', data={'baz': 'foo'})
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+
         self.assertEqual({}, http.get('data'))
 
     def test_error_handler_with_ignored_exception(self):
@@ -231,6 +251,10 @@ class FlaskLoginTest(BaseTest):
     def test_user(self):
         self.client.get('/an-error-logged-in/')
         event = self.raven.events.pop(0)
-        assert event['message'] == 'ValueError: hello world'
-        assert 'sentry.interfaces.Http' in event
-        assert 'sentry.interfaces.User' in event
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
+
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        self.assertEqual(event['message'], 'ValueError: hello world')
+        self.assertIn('user', event)

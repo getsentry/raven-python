@@ -14,18 +14,20 @@ import logging
 import os
 import sys
 import time
-import uuid
 import warnings
 
+from uuid import uuid4
 from datetime import datetime
+from threading import local
 
 import raven
 from raven.conf import defaults
-from raven.context import Context
+from raven.context import Context, Timeline
+from raven.events import get_handler
 from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
+from raven.utils.stacks import get_culprit
 from raven.utils.urlparse import urlparse
 from raven.utils.compat import HTTPError
 from raven.transport.registry import TransportRegistry, default_transports
@@ -33,6 +35,7 @@ from raven.transport.registry import TransportRegistry, default_transports
 __all__ = ('Client',)
 
 PLATFORM_NAME = 'python'
+DEFAULT_ENVIRONMENT = 'production'
 
 # singleton for the client
 Raven = None
@@ -109,7 +112,7 @@ class Client(object):
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
-    protocol_version = '4'
+    protocol_version = '6'
 
     _registry = TransportRegistry(transports=default_transports)
 
@@ -126,6 +129,7 @@ class Client(object):
         self.logger = logging.getLogger(
             '%s.%s' % (cls.__module__, cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
+        self._local = local()
 
         if dsn is None and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
@@ -192,6 +196,19 @@ class Client(object):
             Raven = self
 
         self._context = Context()
+        self._timeline = Timeline()
+
+    @property
+    def transaction(self):
+        try:
+            return self._local.transaction
+        except AttributeError:
+            self.start_transaction()
+            return self._local.transaction
+
+    def reset(self):
+        self._context.clear()
+        self._timeline.clear()
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
@@ -224,7 +241,10 @@ class Client(object):
         return '$'.join(result)
 
     def get_handler(self, name):
-        return self.module_cache[name](self)
+        try:
+            return get_handler(name)(self)
+        except KeyError:
+            return None
 
     def _get_public_dsn(self):
         url = urlparse(self.servers[0])
@@ -251,7 +271,7 @@ class Client(object):
             return url
         return '%s:%s' % (scheme, url)
 
-    def build_msg(self, event_type, data=None, date=None,
+    def build_msg(self, data=None, date=None,
                   time_spent=None, extra=None, stack=None, public_key=None,
                   tags=None, **kwargs):
         """
@@ -260,76 +280,41 @@ class Client(object):
         The result of ``build_msg`` should be a standardized dict, with
         all default values available.
         """
-
-        # create ID client-side so that it can be passed to application
-        event_id = uuid.uuid4().hex
-
         data = merge_dicts(self.context.data, data)
 
+        data.setdefault('events', list(self._timeline))
         data.setdefault('tags', {})
         data.setdefault('extra', {})
-        data.setdefault('level', logging.ERROR)
 
         if stack is None:
             stack = self.auto_log_stacks
 
-        if '.' not in event_type:
-            # Assume it's a builtin
-            event_type = 'raven.events.%s' % event_type
+        events = []
+        for event in data['events']:
+            event_type = event.get('type', 'message')
+            handler = self.get_handler(event_type)
+            log_stack = event.pop('stack', stack)
+            if handler is None:
+                events.append(event)
+            else:
+                events.append(handler.handle(stack=log_stack, **event))
 
-        handler = self.get_handler(event_type)
-        result = handler.capture(**kwargs)
+        data['events'] = events
+
+        # Last event is considered significant
+        if not len(events):
+            raise Exception('No events to be sent')
+
+        significant_event = events[-1]
 
         # data (explicit) culprit takes over auto event detection
-        culprit = result.pop('culprit', None)
+        culprit = significant_event.pop('culprit', None)
         if data.get('culprit'):
             culprit = data['culprit']
 
-        for k, v in six.iteritems(result):
-            if k not in data:
-                data[k] = v
-
-        if stack and 'sentry.interfaces.Stacktrace' not in data:
-            if stack is True:
-                frames = iter_stack_frames()
-
-            else:
-                frames = stack
-
-            data.update({
-                'sentry.interfaces.Stacktrace': {
-                    'frames': get_stack_info(frames,
-                        transformer=self.transform)
-                },
-            })
-
-        if 'sentry.interfaces.Stacktrace' in data:
-            if self.include_paths:
-                for frame in data['sentry.interfaces.Stacktrace']['frames']:
-                    if frame.get('in_app') is not None:
-                        continue
-
-                    path = frame.get('module')
-                    if not path:
-                        continue
-
-                    if path.startswith('raven.'):
-                        frame['in_app'] = False
-                    else:
-                        frame['in_app'] = (
-                            any(path.startswith(x) for x in self.include_paths)
-                            and not
-                            any(path.startswith(x) for x in self.exclude_paths)
-                        )
-
         if not culprit:
-            if 'sentry.interfaces.Stacktrace' in data:
-                culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'])
-            elif data.get('sentry.interfaces.Exception', {}).get('stacktrace'):
-                culprit = get_culprit(data['sentry.interfaces.Exception']['stacktrace']['frames'])
-
-        if not data.get('level'):
-            data['level'] = kwargs.get('level') or logging.ERROR
+            if significant_event['type'] == 'exception' and 'stacktrace' in significant_event:
+                culprit = get_culprit(significant_event['stacktrace']['frames'])
 
         if not data.get('server_name'):
             data['server_name'] = self.name
@@ -353,7 +338,7 @@ class Client(object):
             data.update(processor.process(data))
 
         if 'message' not in data:
-            data['message'] = handler.to_string(data)
+            data['message'] = handler.to_string(significant_event)
 
         # tags should only be key=>u'value'
         for key, value in six.iteritems(data['tags']):
@@ -363,12 +348,16 @@ class Client(object):
         for k, v in six.iteritems(data['extra']):
             data['extra'][k] = self.transform(v)
 
+        # create ID client-side so that it can be passed to application
+        data.setdefault('id', uuid4().hex)
+        data.setdefault('transaction', self.transaction)
+
         # It's important date is added **after** we serialize
         data.setdefault('project', self.project)
         data.setdefault('timestamp', date or datetime.utcnow())
         data.setdefault('time_spent', time_spent)
-        data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
+        data.setdefault('environment', DEFAULT_ENVIRONMENT)
 
         return data
 
@@ -391,6 +380,61 @@ class Client(object):
         """
         return self._context
 
+    def pre_add_action(self, action, **kwargs):
+        """
+        Hook for subclasses to do something before adding an action to
+        the timeline.
+        """
+        pass
+
+    def add_action(self, action, **kwargs):
+        """
+        Appends an arbitrary action to the timeline.
+
+        >>> client.add_event({'message': 'sup sentry'})
+        """
+        # Pop off tags and extra so they don't get carried through
+        kwargs.pop('tags', None)
+        kwargs.pop('extra', None)
+
+        action.setdefault('type', 'message')
+        action.setdefault('timestamp', datetime.utcnow())
+        action.update(**kwargs)
+        self.pre_add_action(action)
+        self._timeline.append(action)
+
+    def add_http(self, data, **kwargs):
+        """
+        Appends an http action to the timeline.
+
+        >>> client.add_http({'url': 'http://example.com'})
+        """
+        data['type'] = 'http_request'
+        data.setdefault('method', 'GET')
+        kwargs['stack'] = False  # Don't capture stack for http
+        if len(self._timeline) and self._timeline[0]['type'] == 'http_request':
+            self._timeline[0].update(data)
+        else:
+            self.add_action(data, **kwargs)
+
+    def add_message(self, message, **kwargs):
+        """
+        Appends a message event to the timeline.
+
+        >>> client.add_message('sup sentry')
+        """
+        if isinstance(message, six.string_types):
+            data = {'message': message}
+        data['type'] = 'message'
+        self.add_action(data, **kwargs)
+
+    def add_exception(self, exc_info=None, **kwargs):
+        data = {
+            'type': 'exception',
+            'exc_info': exc_info,
+        }
+        self.add_action(data, **kwargs)
+
     def user_context(self, data):
         """
         Update the user context for future events.
@@ -398,7 +442,7 @@ class Client(object):
         >>> client.user_context({'email': 'foo@example.com'})
         """
         return self.context.merge({
-            'sentry.interfaces.User': data,
+            'user': data,
         })
 
     def http_context(self, data, **kwargs):
@@ -407,9 +451,7 @@ class Client(object):
 
         >>> client.http_context({'url': 'http://example.com'})
         """
-        return self.context.merge({
-            'sentry.interfaces.Http': data,
-        })
+        return self.add_http(data, **kwargs)
 
     def extra_context(self, data, **kwargs):
         """
@@ -431,7 +473,10 @@ class Client(object):
             'tags': data,
         })
 
-    def capture(self, event_type, data=None, date=None, time_spent=None,
+    def start_transaction(self, tx_id=None):
+        self._local.transaction = tx_id or uuid4().hex
+
+    def capture(self, data=None, date=None, time_spent=None,
                 extra=None, stack=None, tags=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
@@ -468,9 +513,6 @@ class Client(object):
         >>>     }
         >>> }
 
-        :param event_type: the module path to the Event class. Builtins can use
-                           shorthand class notation and exclude the full module
-                           path.
         :param data: the data base, useful for specifying structured data
                            interfaces. Any key which contains a '.' will be
                            assumed to be a data interface.
@@ -488,12 +530,14 @@ class Client(object):
             return
 
         data = self.build_msg(
-            event_type, data, date, time_spent, extra, stack, tags=tags,
+            data, date, time_spent, extra, stack, tags=tags,
             **kwargs)
 
         self.send(**data)
+        # timeline starts back at 0
+        self._timeline.clear()
 
-        return (data.get('event_id'),)
+        return (data.get('id'),)
 
     def _get_log_message(self, data):
         # decode message so we can show the actual event
@@ -610,7 +654,8 @@ class Client(object):
 
         >>> client.captureMessage('My event just happened!')
         """
-        return self.capture('raven.events.Message', message=message, **kwargs)
+        self.add_message(message, **kwargs)
+        return self.capture(**kwargs)
 
     def captureException(self, exc_info=None, **kwargs):
         """
@@ -628,8 +673,8 @@ class Client(object):
 
         ``kwargs`` are passed through to ``.capture``.
         """
-        return self.capture(
-            'raven.events.Exception', exc_info=exc_info, **kwargs)
+        self.add_exception(exc_info=exc_info)
+        return self.capture(**kwargs)
 
     def captureQuery(self, query, params=(), engine=None, **kwargs):
         """

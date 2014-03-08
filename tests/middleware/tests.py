@@ -1,6 +1,5 @@
 from __future__ import with_statement
 
-import logging
 import webob
 from exam import fixture
 from raven.utils.testutils import TestCase
@@ -64,16 +63,17 @@ class MiddlewareTestCase(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+
+        self.assertEquals(exc['exc_type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
-        self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
         self.assertEquals(http['url'], 'http://localhost/an-error')
         self.assertEquals(http['query_string'], 'foo=bar')
         self.assertEquals(http['method'], 'GET')

@@ -130,7 +130,6 @@ class SentryHandler(logging.Handler, object):
             stack = self._get_targetted_stack(stack)
 
         date = datetime.datetime.utcfromtimestamp(record.created)
-        event_type = 'raven.events.Message'
         handler_kwargs = {
             'params': record.args,
         }
@@ -146,25 +145,21 @@ class SentryHandler(logging.Handler, object):
             # Handle binary strings where it should be unicode...
             handler_kwargs['formatted'] = repr(record.message)[1:-1]
 
+        data['message'] = handler_kwargs['formatted']
+
+        self.client.add_message(**handler_kwargs)
+
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info and all(record.exc_info):
-            # capture the standard message first so that we ensure
-            # the event is recorded as an exception, in addition to having our
-            # message interface attached
-            handler = self.client.get_handler(event_type)
-            data.update(handler.capture(**handler_kwargs))
-
-            event_type = 'raven.events.Exception'
-            handler_kwargs = {'exc_info': record.exc_info}
+            self.client.add_exception(exc_info=record.exc_info)
 
         # HACK: discover a culprit when we normally couldn't
-        elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
+        elif not data.get('culprit') and (record.name or record.funcName):
             culprit = label_from_frame({'module': record.name, 'function': record.funcName})
             if culprit:
                 data['culprit'] = culprit
 
-        data['level'] = record.levelno
         data['logger'] = record.name
 
         if hasattr(record, 'tags'):
@@ -173,5 +168,5 @@ class SentryHandler(logging.Handler, object):
         kwargs.update(handler_kwargs)
 
         return self.client.capture(
-            event_type, stack=stack, data=data,
+            stack=stack, data=data,
             extra=extra, date=date, **kwargs)

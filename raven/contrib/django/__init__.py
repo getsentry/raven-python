@@ -7,4 +7,8 @@ raven.contrib.django
 """
 from __future__ import absolute_import
 
+# Importing just to register the Django specific Exception handler
+from .events import Exception  # NOQA
+del Exception  # NOQA
+
 from .client import DjangoClient  # NOQA

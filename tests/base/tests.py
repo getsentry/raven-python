@@ -149,7 +149,7 @@ class ClientTest(TestCase):
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': (
                     'Sentry sentry_timestamp=1328055286.51, '
-                    'sentry_client=raven-python/%s, sentry_version=4, '
+                    'sentry_client=raven-python/%s, sentry_version=6, '
                     'sentry_key=public, '
                     'sentry_secret=secret' % (raven.VERSION,))
             },
@@ -237,18 +237,20 @@ class ClientTest(TestCase):
     def test_exception_event(self):
         try:
             raise ValueError('foo')
-        except:
+        except Exception:
             self.client.captureException()
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'ValueError: foo')
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
+        timeline = event['events']
+        self.assertEquals(len(timeline), 1)
+        exc = timeline[0]
+        self.assertEquals(exc['type'], 'exception')
+        self.assertEquals(exc['exc_type'], 'ValueError')
         self.assertEquals(exc['value'], 'foo')
         self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
-        assert 'sentry.interfaces.Stacktrace' not in event
+        assert 'stacktrace' not in event
         stacktrace = exc['stacktrace']
         self.assertEquals(len(stacktrace['frames']), 1)
         frame = stacktrace['frames'][0]
@@ -293,9 +295,10 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        self.assertEquals(len(frames), len(event['sentry.interfaces.Stacktrace']['frames']))
-        for frame, frame_i in zip(frames, event['sentry.interfaces.Stacktrace']['frames']):
+        exc = event['events'][0]
+        self.assertTrue('stacktrace' in exc)
+        self.assertEquals(len(frames), len(exc['stacktrace']['frames']))
+        for frame, frame_i in zip(frames, exc['stacktrace']['frames']):
             self.assertEquals(frame[0].f_code.co_filename, frame_i['abs_path'])
             self.assertEquals(frame[0].f_code.co_name, frame_i['function'])
 
@@ -304,8 +307,11 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
+        timeline = event['events']
+        self.assertEquals(len(timeline), 1)
+        message = timeline[0]
         self.assertEquals(event['message'], 'test')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('stacktrace' in message)
         self.assertTrue('timestamp' in event)
 
     def test_site(self):

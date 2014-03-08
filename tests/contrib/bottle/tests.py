@@ -1,5 +1,3 @@
-import logging
-
 from exam import fixture
 
 from webtest import TestApp
@@ -37,7 +35,7 @@ def create_app(raven):
     def capture_exception():
         try:
             raise ValueError('Boom')
-        except:
+        except Exception:
             tapp.app.captureException()
         return 'Hello'
 
@@ -66,12 +64,15 @@ class BottleTest(BaseTest):
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.Exception' in event)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        exc = event['sentry.interfaces.Exception']
-        self.assertEquals(exc['type'], 'ValueError')
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+        self.assertEqual(exc['type'], 'exception')
+        self.assertEquals(exc['exc_type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
-        self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
         self.assertEquals(event['culprit'], 'tests.contrib.bottle.tests in an_error')
 
@@ -81,10 +82,15 @@ class BottleTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        assert event['message'] == 'ValueError: Boom'
-        assert 'sentry.interfaces.Http' in event
-        assert 'sentry.interfaces.Exception' in event
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+        self.assertEqual(exc['type'], 'exception')
+
+        self.assertEqual(event['message'], 'ValueError: Boom')
 
     def test_captureMessage_captures_http(self):
         response = self.client.get('/message/?foo=bar')
@@ -92,6 +98,10 @@ class BottleTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        timeline = event['events']
+        self.assertEqual(len(timeline), 2)
 
-        self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertTrue('sentry.interfaces.Http' in event)
+        http = timeline[0]
+        self.assertEqual(http['type'], 'http_request')
+        exc = timeline[1]
+        self.assertEqual(exc['type'], 'message')
