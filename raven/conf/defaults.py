@@ -51,8 +51,8 @@ MAX_LENGTH_STRING = 400
 # Automatically log frame stacks from all ``logging`` messages.
 AUTO_LOG_STACKS = False
 
-# Don't collect locals variables and send to sentry
-STACKS_WITHOUT_LOCALS = False
+# Collect locals variables
+CAPTURE_LOCALS = True
 
 # Client-side data processors to apply
 PROCESSORS = (
