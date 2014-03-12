@@ -164,6 +164,8 @@ class Client(object):
         self.name = six.text_type(o.get('name') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
+        self.capture_locals = bool(
+            o.get('capture_locals', defaults.CAPTURE_LOCALS))
         self.string_max_length = int(
             o.get('string_max_length') or defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(
@@ -296,10 +298,13 @@ class Client(object):
             else:
                 frames = stack
 
+            if self.capture_locals:
+                frames = get_stack_info(frames, transformer=self.transform)
+            else:
+                frames = get_stack_info(frames, transformer=lambda x: {})
             data.update({
                 'sentry.interfaces.Stacktrace': {
-                    'frames': get_stack_info(frames,
-                        transformer=self.transform)
+                    'frames': frames
                 },
             })
 
