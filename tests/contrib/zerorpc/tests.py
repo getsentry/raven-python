@@ -27,14 +27,12 @@ class TempStoreClient(Client):
 class ZeroRPCTest(TestCase):
     def setUp(self):
         self._socket_dir = tempfile.mkdtemp(prefix='ravenzerorpcunittest')
-        self._server_endpoint = 'ipc://{0}'.format(os.path.join(
-                    self._socket_dir, 'random_zeroserver'
-        ))
+        self._server_endpoint = 'ipc://{0}'.format(
+            os.path.join(self._socket_dir, 'random_zeroserver'))
 
         self._sentry = TempStoreClient()
-        zerorpc.Context.get_instance().register_middleware(SentryMiddleware(
-                    client=self._sentry
-        ))
+        zerorpc.Context.get_instance().register_middleware(
+            SentryMiddleware(client=self._sentry))
 
     def test_zerorpc_middleware_with_reqrep(self):
         self._server = zerorpc.Server(random)
@@ -51,12 +49,11 @@ class ZeroRPCTest(TestCase):
             self.assertEqual(len(self._sentry.events), 1)
             exc = self._sentry.events[0]['sentry.interfaces.Exception']
             self.assertEqual(exc['type'], 'IndexError')
-            frames = self._sentry.events[0]['sentry.interfaces.Stacktrace']['frames']
+            frames = self._sentry.events[0]['sentry.interfaces.Exception']['stacktrace']['frames']
             self.assertEqual(frames[0]['function'], 'choice')
             self.assertEqual(frames[0]['module'], 'random')
-            return
-
-        self.fail('An IndexError exception should have been raised an catched')
+        else:
+            self.fail('An IndexError exception should have been raised an catched')
 
     def test_zerorpc_middleware_with_pushpull(self):
         self._server = zerorpc.Puller(random)
@@ -73,7 +70,7 @@ class ZeroRPCTest(TestCase):
             if len(self._sentry.events):
                 exc = self._sentry.events[0]['sentry.interfaces.Exception']
                 self.assertEqual(exc['type'], 'IndexError')
-                frames = self._sentry.events[0]['sentry.interfaces.Stacktrace']['frames']
+                frames = self._sentry.events[0]['sentry.interfaces.Exception']['stacktrace']['frames']
                 self.assertEqual(frames[0]['function'], 'choice')
                 self.assertEqual(frames[0]['module'], 'random')
                 return

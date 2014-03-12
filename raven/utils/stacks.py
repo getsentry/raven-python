@@ -175,7 +175,8 @@ def iter_stack_frames(frames=None):
         yield frame, lineno
 
 
-def get_stack_info(frames, transformer=transform, max_frames=50):
+def get_stack_info(frames, transformer=transform, capture_locals=True,
+                   max_frames=50):
     """
     Given a list of frames, returns a list of stack information
     dictionary objects that are JSON-ready.
@@ -192,8 +193,6 @@ def get_stack_info(frames, transformer=transform, max_frames=50):
     bottom_results = []
 
     total_frames = 0
-
-# stacktrace['frames_omitted'] = (half_max, frames_len - half_max)
 
     for frame_no, frame_info in enumerate(frames):
         # Old, terrible API
@@ -241,13 +240,13 @@ def get_stack_info(frames, transformer=transform, max_frames=50):
         if not filename:
             filename = abs_path
 
-        if f_locals is not None and not isinstance(f_locals, dict):
+        if capture_locals and not isinstance(f_locals, dict):
             # XXX: Genshi (and maybe others) have broken implementations of
             # f_locals that are not actually dictionaries
             try:
                 f_locals = to_dict(f_locals)
             except Exception:
-                f_locals = '<invalid local scope>'
+                f_locals = None
 
         frame_result = {
             'abs_path': abs_path,
@@ -255,8 +254,10 @@ def get_stack_info(frames, transformer=transform, max_frames=50):
             'module': module_name or None,
             'function': function or '<unknown>',
             'lineno': lineno + 1,
-            'vars': transformer(f_locals),
         }
+        if capture_locals:
+            frame_result['vars'] = transformer(f_locals)
+
         if context_line is not None:
             frame_result.update({
                 'pre_context': pre_context,

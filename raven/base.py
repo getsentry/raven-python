@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 import base64
 import zlib
-import datetime
 import logging
 import os
 import sys
@@ -18,16 +17,17 @@ import time
 import uuid
 import warnings
 
+from datetime import datetime
+
 import raven
 from raven.conf import defaults
 from raven.context import Context
-from raven.utils import json, get_versions, get_auth_header
+from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
 from raven.utils.compat import HTTPError
-from raven.utils import six
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -42,8 +42,8 @@ class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
 
-        handler = getattr(__import__(module, {},
-                {}, [class_name]), class_name)
+        handler = getattr(__import__(
+            module, {}, {}, [class_name]), class_name)
 
         self[key] = handler
 
@@ -101,15 +101,6 @@ class Client(object):
     >>> # Specify a DSN explicitly
     >>> client = Client(dsn='https://public_key:secret_key@sentry.local/project_id')
 
-    >>> # Configure the client manually
-    >>> client = Client(
-    >>>     servers=['http://sentry.local/api/store/'],
-    >>>     include_paths=['my.package'],
-    >>>     project='project_id',
-    >>>     public_key='public_key',
-    >>>     secret_key='secret_key',
-    >>> )
-
     >>> # Record an exception
     >>> try:
     >>>     1/0
@@ -118,7 +109,7 @@ class Client(object):
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
-    protocol_version = '2.0'
+    protocol_version = '4'
 
     _registry = TransportRegistry(transports=default_transports)
 
@@ -152,22 +143,29 @@ class Client(object):
             project = dsn_config['SENTRY_PROJECT']
             public_key = dsn_config['SENTRY_PUBLIC_KEY']
             secret_key = dsn_config['SENTRY_SECRET_KEY']
+            transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
         else:
+            if o.get('servers'):
+                warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
             servers = o.get('servers')
             project = o.get('project')
             public_key = o.get('public_key')
             secret_key = o.get('secret_key')
+            transport_options = {}
 
         self.servers = servers
         self.public_key = public_key
         self.secret_key = secret_key
         self.project = project or defaults.PROJECT
+        self.transport_options = transport_options
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
         self.name = six.text_type(o.get('name') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
+        self.capture_locals = bool(
+            o.get('capture_locals', defaults.CAPTURE_LOCALS))
         self.string_max_length = int(
             o.get('string_max_length') or defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(
@@ -194,6 +192,8 @@ class Client(object):
 
         if Raven is None:
             Raven = self
+
+        self._context = Context()
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
@@ -266,12 +266,12 @@ class Client(object):
         # create ID client-side so that it can be passed to application
         event_id = uuid.uuid4().hex
 
-        if data is None:
-            data = {}
-        if extra is None:
-            extra = {}
-        if not date:
-            date = datetime.datetime.utcnow()
+        data = merge_dicts(self.context.data, data)
+
+        data.setdefault('tags', {})
+        data.setdefault('extra', {})
+        data.setdefault('level', logging.ERROR)
+
         if stack is None:
             stack = self.auto_log_stacks
 
@@ -298,9 +298,13 @@ class Client(object):
             else:
                 frames = stack
 
+            stack_info = get_stack_info(
+                frames,
+                transformer=self.transform,
+                capture_locals=self.capture_locals,
+            )
             data.update({
-                'sentry.interfaces.Stacktrace': get_stack_info(
-                    frames, transformer=self.transform),
+                'sentry.interfaces.Stacktrace': stack_info,
             })
 
         if 'sentry.interfaces.Stacktrace' in data:
@@ -322,8 +326,11 @@ class Client(object):
                             any(path.startswith(x) for x in self.exclude_paths)
                         )
 
-            if not culprit:
+        if not culprit:
+            if 'sentry.interfaces.Stacktrace' in data:
                 culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'])
+            elif data.get('sentry.interfaces.Exception', {}).get('stacktrace'):
+                culprit = get_culprit(data['sentry.interfaces.Exception']['stacktrace']['frames'])
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
@@ -334,22 +341,13 @@ class Client(object):
         if not data.get('modules'):
             data['modules'] = self.get_module_versions()
 
-        data['tags'] = tags or {}
-        data.setdefault('extra', {})
-        data.setdefault('level', logging.ERROR)
+        data['tags'] = merge_dicts(self.tags, data['tags'], tags)
+        data['extra'] = merge_dicts(self.extra, data['extra'], extra)
 
-        # Add default extra context
-        if self.extra:
-            for k, v in six.iteritems(self.extra):
-                data['extra'].setdefault(k, v)
-
-        # Add default tag context
-        if self.tags:
-            for k, v in six.iteritems(self.tags):
-                data['tags'].setdefault(k, v)
-
-        for k, v in six.iteritems(extra):
-            data['extra'][k] = v
+        # Legacy support for site attribute
+        site = data.pop('site', None) or self.site
+        if site:
+            data['tags'].setdefault('site', site)
 
         if culprit:
             data['culprit'] = culprit
@@ -361,27 +359,20 @@ class Client(object):
         if 'message' not in data:
             data['message'] = handler.to_string(data)
 
-        data.setdefault('project', self.project)
-
-        # Legacy support for site attribute
-        site = data.pop('site', None) or self.site
-        if site:
-            data['tags'].setdefault('site', site)
-
+        # tags should only be key=>u'value'
         for key, value in six.iteritems(data['tags']):
             data['tags'][key] = to_unicode(value)
 
-        # Make sure custom data is coerced
+        # extra data can be any arbitrary value
         for k, v in six.iteritems(data['extra']):
             data['extra'][k] = self.transform(v)
 
         # It's important date is added **after** we serialize
-        data.update({
-            'timestamp': date,
-            'time_spent': time_spent,
-            'event_id': event_id,
-            'platform': PLATFORM_NAME,
-        })
+        data.setdefault('project', self.project)
+        data.setdefault('timestamp', date or datetime.utcnow())
+        data.setdefault('time_spent', time_spent)
+        data.setdefault('event_id', event_id)
+        data.setdefault('platform', PLATFORM_NAME)
 
         return data
 
@@ -390,18 +381,59 @@ class Client(object):
             data, list_max_length=self.list_max_length,
             string_max_length=self.string_max_length)
 
-    def context(self, **kwargs):
+    @property
+    def context(self):
         """
-        Create default context around a block of code for exception management.
+        Updates this clients thread-local context for future events.
 
-        >>> with client.context(tags={'key': 'value'}) as raven:
-        >>>     # use the context manager's client reference
-        >>>     raven.captureMessage('hello!')
-        >>>
-        >>>     # uncaught exceptions also contain the context
-        >>>     1 / 0
+        >>> def view_handler(view_func, *args, **kwargs):
+        >>>     client.context.merge(tags={'key': 'value'})
+        >>>     try:
+        >>>         return view_func(*args, **kwargs)
+        >>>     finally:
+        >>>         client.context.clear()
         """
-        return Context(self, **kwargs)
+        return self._context
+
+    def user_context(self, data):
+        """
+        Update the user context for future events.
+
+        >>> client.user_context({'email': 'foo@example.com'})
+        """
+        return self.context.merge({
+            'sentry.interfaces.User': data,
+        })
+
+    def http_context(self, data, **kwargs):
+        """
+        Update the http context for future events.
+
+        >>> client.http_context({'url': 'http://example.com'})
+        """
+        return self.context.merge({
+            'sentry.interfaces.Http': data,
+        })
+
+    def extra_context(self, data, **kwargs):
+        """
+        Update the extra context for future events.
+
+        >>> client.extra_context({'foo': 'bar'})
+        """
+        return self.context.merge({
+            'extra': data,
+        })
+
+    def tags_context(self, data, **kwargs):
+        """
+        Update the tags context for future events.
+
+        >>> client.tags_context({'version': '1.0'})
+        """
+        return self.context.merge({
+            'tags': data,
+        })
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
                 extra=None, stack=None, tags=None, **kwargs):
@@ -503,7 +535,9 @@ class Client(object):
         self.error_logger.error('Failed to submit message: %r', message)
         self.state.set_fail()
 
-    def send_remote(self, url, data, headers={}):
+    def send_remote(self, url, data, headers=None):
+        if headers is None:
+            headers = {}
         if not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)
@@ -516,7 +550,8 @@ class Client(object):
 
         try:
             parsed = urlparse(url)
-            transport = self._registry.get_transport(parsed)
+            transport = self._registry.get_transport(
+                parsed, **self.transport_options)
             if transport.async:
                 transport.async_send(data, headers, self._successful_send,
                                      failed_send)

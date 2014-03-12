@@ -22,9 +22,8 @@ class TempStoreClient(Client):
     def send(self, **kwargs):
         self.events.append(kwargs)
 
-def create_app(raven):
-    import os
 
+def create_app(raven):
     app = bottle.app()
     app.catchall = False
     app = Sentry(app, client=raven)
@@ -49,6 +48,7 @@ def create_app(raven):
 
     return tapp
 
+
 class BaseTest(TestCase):
     @fixture
     def app(self):
@@ -58,6 +58,7 @@ class BaseTest(TestCase):
     @fixture
     def client(self):
         return self.app
+
 
 class BottleTest(BaseTest):
     def test_error(self):

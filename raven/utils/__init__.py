@@ -18,6 +18,17 @@ import sys
 logger = logging.getLogger('raven.errors')
 
 
+def merge_dicts(*dicts):
+    out = {}
+    for d in dicts:
+        if not d:
+            continue
+
+        for k, v in six.iteritems(d):
+            out[k] = v
+    return out
+
+
 def varmap(func, var, context=None, name=None):
     """
     Executes ``func(key_name, value)`` on all values
@@ -53,6 +64,8 @@ def get_version_from_app(module_name, app):
             version = get_version
     elif hasattr(app, 'VERSION'):
         version = app.VERSION
+    elif hasattr(app, 'version'):
+        version = app.version
     elif hasattr(app, '__version__'):
         version = app.__version__
     elif pkg_resources:
@@ -65,7 +78,7 @@ def get_version_from_app(module_name, app):
         return None
 
     if isinstance(version, (list, tuple)):
-        version = '.'.join(str(o) for o in version)
+        version = '.'.join(map(str, version))
 
     return str(version)
 

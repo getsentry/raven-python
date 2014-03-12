@@ -12,9 +12,10 @@ import logging
 import time
 import threading
 import os
-from raven.utils.compat import Queue
 
-from raven.transport.base import HTTPTransport, AsyncTransport
+from raven.transport.base import AsyncTransport
+from raven.transport.http import HTTPTransport
+from raven.utils.compat import Queue
 
 DEFAULT_TIMEOUT = 10
 
@@ -91,13 +92,7 @@ class AsyncWorker(object):
 
 class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
 
-    scheme = ['threaded+http', 'threaded+https']
-
-    def __init__(self, parsed_url):
-        super(ThreadedHTTPTransport, self).__init__(parsed_url)
-
-        # remove the threaded+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
+    scheme = ['http', 'https', 'threaded+http', 'threaded+https']
 
     def get_worker(self):
         if not hasattr(self, '_worker'):
@@ -113,5 +108,5 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
             success_cb()
 
     def async_send(self, data, headers, success_cb, failure_cb):
-        self.get_worker().queue(self.send_sync, data, headers, success_cb,
-            failure_cb)
+        self.get_worker().queue(
+            self.send_sync, data, headers, success_cb, failure_cb)

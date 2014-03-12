@@ -12,7 +12,6 @@ import pytest
 import re
 import sys  # NOQA
 from exam import fixture
-from celery.tests.utils import with_eager_tasks
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
@@ -480,7 +479,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        frames = event['sentry.interfaces.Stacktrace']['frames']
+        frames = event['sentry.interfaces.Exception']['stacktrace']['frames']
         for frame in frames:
             if frame['module'].startswith('django.'):
                 assert frame.get('in_app') is False
@@ -594,17 +593,6 @@ class CeleryIsolatedClientTest(TestCase):
 
         self.assertEquals(send_raw.delay.call_count, 1)
 
-    @with_eager_tasks
-    @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
-    def test_with_eager(self, send_encoded):
-        """
-        Integration test to ensure it propagates all the way down
-        and calls the parent client's send_encoded method.
-        """
-        self.client.captureMessage(message='test')
-
-        self.assertEquals(send_encoded.call_count, 1)
-
 
 class CeleryIntegratedClientTest(TestCase):
     def setUp(self):
@@ -627,17 +615,6 @@ class CeleryIntegratedClientTest(TestCase):
             self.client.captureMessage(message='test')
 
             self.assertEquals(send_raw.delay.call_count, 1)
-
-    @with_eager_tasks
-    @mock.patch('raven.contrib.django.DjangoClient.send_encoded')
-    def test_with_eager(self, send_encoded):
-        """
-        Integration test to ensure it propagates all the way down
-        and calls the parent client's send_encoded method.
-        """
-        self.client.captureMessage(message='test')
-
-        self.assertEquals(send_encoded.call_count, 1)
 
 
 class IsValidOriginTestCase(TestCase):

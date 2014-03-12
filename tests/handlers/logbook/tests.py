@@ -37,7 +37,6 @@ class LogbookHandlerTest(TestCase):
             self.assertEquals(event['logger'], __name__)
             self.assertEquals(event['level'], 'error')
             self.assertEquals(event['message'], 'This is a test error')
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']
@@ -50,7 +49,6 @@ class LogbookHandlerTest(TestCase):
             self.assertEquals(event['logger'], __name__)
             self.assertEquals(event['level'], 'warning')
             self.assertEquals(event['message'], 'This is a test warning')
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']
@@ -67,7 +65,6 @@ class LogbookHandlerTest(TestCase):
             else:
                 expected = "u'http://example.com'"
             self.assertEquals(event['extra']['url'], expected)
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']
@@ -83,7 +80,6 @@ class LogbookHandlerTest(TestCase):
             event = client.events.pop(0)
 
             self.assertEquals(event['message'], 'This is a test info with an exception')
-            self.assertTrue('sentry.interfaces.Stacktrace' in event)
             self.assertTrue('sentry.interfaces.Exception' in event)
             exc = event['sentry.interfaces.Exception']
             self.assertEquals(exc['type'], 'ValueError')
@@ -98,7 +94,6 @@ class LogbookHandlerTest(TestCase):
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
             self.assertEquals(event['message'], 'This is a test of args')
-            self.assertFalse('sentry.interfaces.Stacktrace' in event)
             self.assertFalse('sentry.interfaces.Exception' in event)
             self.assertTrue('sentry.interfaces.Message' in event)
             msg = event['sentry.interfaces.Message']

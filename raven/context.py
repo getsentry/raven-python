@@ -7,41 +7,54 @@ raven.context
 """
 from __future__ import absolute_import
 
+from collections import Mapping, Iterable
+from threading import local
+
 from raven.utils import six
 
 
-class Context(object):
+class Context(local, Mapping, Iterable):
     """
-    Create default context around a block of code for exception management.
+    Stores context until cleared.
 
-    >>> with Context(client, tags={'key': 'value'}) as raven:
-    >>>     # use the context manager's client reference
-    >>>     raven.captureMessage('hello!')
-    >>>
-    >>>     # uncaught exceptions also contain the context
-    >>>     1 / 0
+    >>> def view_handler(view_func, *args, **kwargs):
+    >>>     context = Context()
+    >>>     context.merge(tags={'key': 'value'})
+    >>>     try:
+    >>>         return view_func(*args, **kwargs)
+    >>>     finally:
+    >>>         context.clear()
     """
-    def __init__(self, client, **defaults):
-        self.client = client
-        self.defaults = defaults
-        self.result = None
+    def __init__(self):
+        self.data = {}
 
-    def __enter__(self):
-        return self
+    def __getitem__(self, key):
+        return self.data[key]
 
-    def __exit__(self, *exc_info):
-        if all(exc_info):
-            self.result = self.captureException(exc_info)
+    def __iter__(self):
+        return iter(self.data)
 
-    def __call(self, function, *args, **kwargs):
-        for key, value in six.iteritems(self.defaults):
-            if key not in kwargs:
-                kwargs[key] = value
+    def __len__(self):
+        return len(self.data)
 
-        return function(*args, **kwargs)
+    def __repr__(self):
+        return '<%s: %s>' % (type(self).__name__, self.data)
 
-    def captureException(self, *args, **kwargs):
-        return self.__call(self.client.captureException, *args, **kwargs)
+    def merge(self, data):
+        d = self.data
+        for key, value in six.iteritems(data):
+            if key in ('tags', 'extra'):
+                d.setdefault(key, {})
+                for t_key, t_value in six.iteritems(value):
+                    d[key][t_key] = t_value
+            else:
+                d[key] = value
 
-    def captureMessage(self, *args, **kwargs):
-        return self.__call(self.client.captureMessage, *args, **kwargs)
+    def set(self, data):
+        self.data = data
+
+    def get(self):
+        return self.data
+
+    def clear(self):
+        self.data = {}

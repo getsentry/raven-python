@@ -7,12 +7,16 @@ raven.transport.registry
 """
 from __future__ import absolute_import
 
-from raven.transport.base import (
-    HTTPTransport, GeventedHTTPTransport, TwistedHTTPTransport,
-    TornadoHTTPTransport, UDPTransport, EventletHTTPTransport,
-    RequestsHTTPTransport)
+# TODO(dcramer): we really should need to import all of these by default
+from raven.transport.eventlet import EventletHTTPTransport
 from raven.transport.exceptions import DuplicateScheme
+from raven.transport.http import HTTPTransport
+from raven.transport.gevent import GeventedHTTPTransport
+from raven.transport.requests import RequestsHTTPTransport
 from raven.transport.threaded import ThreadedHTTPTransport
+from raven.transport.twisted import TwistedHTTPTransport
+from raven.transport.tornado import TornadoHTTPTransport
+from raven.transport.udp import UDPTransport
 from raven.utils import urlparse
 
 
@@ -47,15 +51,9 @@ class TransportRegistry(object):
     def supported_scheme(self, scheme):
         return scheme in self._schemes
 
-    def get_transport(self, parsed_url):
+    def get_transport(self, parsed_url, **options):
         full_url = parsed_url.geturl()
         if full_url not in self._transports:
-            # Grab options from the querystring to pass to the transport
-            # e.g. ?timeout=30
-            if parsed_url.query:
-                options = dict(q.split('=', 1) for q in parsed_url.query.split('&'))
-            else:
-                options = dict()
             # Remove the options from the parsed_url
             parsed_url = urlparse.urlparse(full_url.split('?')[0])
             self._transports[full_url] = self._schemes[parsed_url.scheme](parsed_url, **options)

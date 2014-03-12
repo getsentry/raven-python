@@ -89,7 +89,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         args, kwargs = send.call_args
 
         self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Exception' in kwargs))
 
@@ -110,7 +109,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         args, kwargs = send.call_args
 
         self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Exception' in kwargs))
         self.assertTrue(('extra' in kwargs))
@@ -139,7 +137,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         args, kwargs = send.call_args
 
         self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Exception' in kwargs))
         self.assertTrue(('extra' in kwargs))
@@ -190,7 +187,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         args, kwargs = send.call_args
 
         self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Exception' in kwargs))
 
@@ -211,7 +207,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         args, kwargs = send.call_args
 
         self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Stacktrace' in kwargs))
         self.assertTrue(('sentry.interfaces.Http' in kwargs))
         self.assertTrue(('sentry.interfaces.Exception' in kwargs))
 

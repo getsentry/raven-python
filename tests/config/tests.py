@@ -15,6 +15,7 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['https://sentry.local/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
     def test_path(self):
@@ -26,6 +27,7 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['https://sentry.local/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
     def test_port(self):
@@ -37,6 +39,7 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['https://sentry.local:9000/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
     def test_scope_is_optional(self):
@@ -47,6 +50,7 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['https://sentry.local/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
     def test_http(self):
@@ -58,6 +62,7 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['http://sentry.local/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
     def test_http_with_port(self):
@@ -69,28 +74,7 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['http://sentry.local:9000/app/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
-        })
-
-    def test_https_port_443(self):
-        dsn = 'https://foo:bar@sentry.local:443/app/1'
-        res = {}
-        load(dsn, res)
-        self.assertEquals(res, {
-            'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local/app/api/1/store/'],
-            'SENTRY_PUBLIC_KEY': 'foo',
-            'SENTRY_SECRET_KEY': 'bar',
-        })
-
-    def test_https_port_80(self):
-        dsn = 'https://foo:bar@sentry.local:80/app/1'
-        res = {}
-        load(dsn, res)
-        self.assertEquals(res, {
-            'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['https://sentry.local:80/app/api/1/store/'],
-            'SENTRY_PUBLIC_KEY': 'foo',
-            'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
     def test_udp(self):
@@ -102,6 +86,19 @@ class LoadTest(TestCase):
             'SENTRY_SERVERS': ['udp://sentry.local:9001/api/1/store/'],
             'SENTRY_PUBLIC_KEY': 'foo',
             'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {},
+        })
+
+    def test_options(self):
+        dsn = 'http://foo:bar@sentry.local:9001/1?timeout=1'
+        res = {}
+        load(dsn, res)
+        self.assertEquals(res, {
+            'SENTRY_PROJECT': '1',
+            'SENTRY_SERVERS': ['http://sentry.local:9001/api/1/store/'],
+            'SENTRY_PUBLIC_KEY': 'foo',
+            'SENTRY_SECRET_KEY': 'bar',
+            'SENTRY_TRANSPORT_OPTIONS': {'timeout': '1'},
         })
 
     def test_missing_netloc(self):

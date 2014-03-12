@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from optparse import make_option
 from raven.scripts.runner import store_json, send_test_message
 import sys
+import time
 
 
 class Command(BaseCommand):
@@ -33,3 +34,4 @@ class Command(BaseCommand):
         from raven.contrib.django.models import client
 
         send_test_message(client, options)
+        time.sleep(3)

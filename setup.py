@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Raven
-======
+=====
 
 Raven is a Python client for `Sentry <http://getsentry.com/>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
@@ -93,7 +93,7 @@ class PyTest(TestCommand):
 
 setup(
     name='raven',
-    version='3.5.2',
+    version='4.0.4',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',
