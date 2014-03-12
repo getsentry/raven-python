@@ -9,8 +9,6 @@ web application.
 Your application doesn't live on the web? No problem! Raven is easy to use in
 any Python application.
 
-**Raven 1.0 requires at least version 2.0 of Sentry to be installed on the server**
-
 Resources
 ---------
 
