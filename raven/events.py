@@ -59,10 +59,11 @@ class Exception(BaseEvent):
 
         try:
             frames_gen = iter_traceback_frames(exc_traceback)
-            if self.client.capture_locals:
-                frames = get_stack_info(frames_gen, transformer=self.transform)
-            else:
-                frames = get_stack_info(frames_gen, transformer=lambda x: {})
+            frames = get_stack_info(
+                frames_gen,
+                transformer=self.transform,
+                capture_locals=self.client.capture_locals,
+            )
 
             exc_module = getattr(exc_type, '__module__', None)
             if exc_module:

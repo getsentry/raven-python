@@ -298,10 +298,11 @@ class Client(object):
             else:
                 frames = stack
 
-            if self.capture_locals:
-                frames = get_stack_info(frames, transformer=self.transform)
-            else:
-                frames = get_stack_info(frames, transformer=lambda x: {})
+            frames = get_stack_info(
+                frames,
+                transformer=self.transform,
+                capture_locals=self.capture_locals,
+            )
             data.update({
                 'sentry.interfaces.Stacktrace': {
                     'frames': frames
