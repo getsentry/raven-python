@@ -191,14 +191,6 @@ Should Raven automatically log frame stacks (including locals) all calls as it w
 
     auto_log_stacks = True
 
-timeout
-~~~~~~~
-
-If supported, the timeout value for sending messages to remote.
-
-::
-
-    timeout = 1
 
 processors
 ~~~~~~~~~~
