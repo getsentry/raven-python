@@ -18,6 +18,8 @@ import uuid
 import warnings
 
 from datetime import datetime
+from functools import wraps
+from types import FunctionType
 
 import raven
 from raven.conf import defaults
@@ -634,6 +636,40 @@ class Client(object):
         """
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)
+
+    def capture_exceptions(self, function_or_exceptions, **kwargs):
+        """
+        Wrap a function in try/except and automatically call ``.captureException``
+        if it raises an exception, then the exception is reraised.
+
+        By default, it will capture ``Exception``
+
+        >>> @client.capture_exceptions
+        >>> def foo():
+        >>>     raise Exception()
+
+        You can also specify exceptions to be caught specifically
+
+        >>> @client.capture_exceptions((IOError, LookupError))
+        >>> def bar():
+        >>>     ...
+
+        ``kwargs`` are passed through to ``.captureException``.
+        """
+        def make_decorator(exceptions):
+            def decorator(func):
+                @wraps(func)
+                def wrapper(*funcargs, **funckwargs):
+                    try:
+                        return func(*funcargs, **funckwargs)
+                    except exceptions:
+                        self.captureException(**kwargs)
+                        raise
+                return wrapper
+            return decorator
+        if isinstance(function_or_exceptions, FunctionType):
+            return make_decorator((Exception,))(function_or_exceptions)
+        return make_decorator(function_or_exceptions)
 
     def captureQuery(self, query, params=(), engine=None, **kwargs):
         """
