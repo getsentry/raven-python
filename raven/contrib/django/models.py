@@ -141,10 +141,18 @@ def get_client(client=None):
 
         class_name = str(class_name)
 
-        instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
-        if not tmp_client:
-            _client = (client, instance)
-        return instance
+        try:
+            instance = getattr(__import__(module, {}, {}, class_name), class_name)(**options)
+        except ImportError:
+            logger.exception('Failed to import client: %s', client)
+            if not _client[1]:
+                # If there is no previous client, set the default one.
+                client = 'raven.contrib.django.DjangoClient'
+                _client = (client, get_client(client))
+        else:
+            if not tmp_client:
+                _client = (client, instance)
+            return instance
     return _client[1]
 
 
