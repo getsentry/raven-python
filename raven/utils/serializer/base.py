@@ -9,10 +9,12 @@ raven.utils.serializer.base
 from __future__ import absolute_import
 
 import itertools
+import uuid
+import types
+
 from raven.utils import six
 from raven.utils.encoding import to_unicode
-from raven.utils.serializer.manager import register
-from uuid import UUID
+from .manager import manager as serialization_manager
 
 __all__ = ('Serializer',)
 
@@ -73,7 +75,7 @@ class IterableSerializer(Serializer):
 
 
 class UUIDSerializer(Serializer):
-    types = (UUID,)
+    types = (uuid.UUID,)
 
     def serialize(self, value, **kwargs):
         return repr(value)
@@ -157,6 +159,13 @@ class IntegerSerializer(Serializer):
         return int(value)
 
 
+class FunctionSerializer(Serializer):
+    types = (types.FunctionType,)
+
+    def serialize(self, value, **kwargs):
+        return '<function %s from %s at 0x%x>' % (value.__name__, value.__module__, id(value))
+
+
 if not six.PY3:
     class LongSerializer(Serializer):
         types = (long,)  # noqa
@@ -165,14 +174,7 @@ if not six.PY3:
             return long(value)  # noqa
 
 
-register(IterableSerializer)
-register(UUIDSerializer)
-register(DictSerializer)
-register(UnicodeSerializer)
-register(StringSerializer)
-register(TypeSerializer)
-register(BooleanSerializer)
-register(FloatSerializer)
-register(IntegerSerializer)
-if not six.PY3:
-    register(LongSerializer)
+# register all serializers
+for obj in globals().values():
+    if (isinstance(obj, type) and issubclass(obj, Serializer) and obj is not Serializer):
+        serialization_manager.register(obj)
