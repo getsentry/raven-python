@@ -357,7 +357,7 @@ class Client(object):
             data.update(processor.process(data))
 
         if 'message' not in data:
-            data['message'] = handler.to_string(data)
+            data['message'] = kwargs.get('message', handler.to_string(data))
 
         # tags should only be key=>u'value'
         for key, value in six.iteritems(data['tags']):
