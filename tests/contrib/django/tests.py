@@ -406,10 +406,7 @@ class DjangoClientTest(TestCase):
             self.raven)
         self.assertEquals(get_client(), self.raven)
 
-    # This test only applies to Django 1.3+
     def test_raw_post_data_partial_read(self):
-        if django.VERSION[:2] < (1, 3):
-            return
         v = '{"foo": "bar"}'
         request = make_request()
         request.environ.update({
@@ -429,10 +426,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
 
-    # This test only applies to Django 1.3+
     def test_read_post_data(self):
-        if django.VERSION[:2] < (1, 3):
-            return
         request = make_request()
         request.POST = QueryDict("foo=bar&ham=spam")
         request.read(1)
@@ -447,10 +441,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], {'foo': 'bar', 'ham': 'spam'})
 
-    # This test only applies to Django 1.3+
     def test_request_capture(self):
-        if django.VERSION[:2] < (1, 3):
-            return
         request = make_request()
         request.read(1)
 

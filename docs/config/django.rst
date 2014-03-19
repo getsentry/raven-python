@@ -1,6 +1,11 @@
 Configuring Django
 ==================
 
+Support
+-------
+
+While older versions of Django will likely work, officially only version 1.4 and newer are supported.
+
 Setup
 -----
 
@@ -53,9 +58,6 @@ Integration with :mod:`logging`
 
 To integrate with the standard library's :mod:`logging` module:
 
-Django 1.3 or Newer
-~~~~~~~~~~~~~~~~~~~
-
 ::
 
     LOGGING = {
@@ -99,17 +101,6 @@ Django 1.3 or Newer
             },
         },
     }
-
-
-Older Versions
-~~~~~~~~~~~~~~
-
-::
-
-    from raven.conf import setup_logging
-    from raven.contrib.django.raven_compat.handlers import SentryHandler
-
-    setup_logging(SentryHandler())
 
 Usage
 ~~~~~
@@ -193,7 +184,7 @@ level of your Django application::
 
     from raven.contrib.django.raven_compat.middleware.wsgi import Sentry
     from django.core.handlers.wsgi import WSGIHandler
-    
+
     application = Sentry(WSGIHandler())
 
 
@@ -272,13 +263,13 @@ to add a hook to circus to activate Raven::
     def run_raven(*args, **kwargs):
         """Set up raven for django by running a django command.
         It is necessary because chaussette doesn't run a django command.
-    
+
         """
         from django.conf import settings
         from django.core.management import call_command
         if not settings.configured:
             settings.configure()
-            
+
         call_command('validate')
         return True
 
