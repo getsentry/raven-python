@@ -385,6 +385,19 @@ class DjangoClientTest(TestCase):
             assert resp.status_code == 404
             assert self.raven.events == []
 
+    def test_invalid_client(self):
+        extra_settings = {
+            'SENTRY_CLIENT': 'raven.contrib.django.DjangoClient',  # default
+        }
+        # Should return fallback client (TempStoreClient)
+        client = get_client('nonexistant.and.invalid')
+
+        # client should be valid, and the same as with the next call.
+        assert client is get_client()
+
+        with Settings(**extra_settings):
+            assert isinstance(get_client(), DjangoClient)
+
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
         with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
