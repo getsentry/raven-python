@@ -63,11 +63,13 @@ class RemoveStackLocalsProcessor(Processor):
 
 class SanitizePasswordsProcessor(Processor):
     """
-    Asterisk out things that look like passwords and credit
-    card numbers in frames, http, and basic extra data.
+    Asterisk out things that look like passwords, credit card numbers,
+    and API keys in frames, http, and basic extra data.
     """
     MASK = '*' * 8
-    FIELDS = frozenset(['password', 'secret', 'passwd', 'authorization'])
+    FIELDS = frozenset([
+        'password', 'secret', 'passwd', 'authorization', 'api_key', 'apikey'
+    ])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 
     def sanitize(self, key, value):

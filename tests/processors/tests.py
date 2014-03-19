@@ -2,24 +2,43 @@
 
 from mock import Mock
 from raven.utils.testutils import TestCase
-from raven.processors import SanitizePasswordsProcessor, RemovePostDataProcessor, \
-  RemoveStackLocalsProcessor
+from raven.processors import SanitizePasswordsProcessor, \
+    RemovePostDataProcessor, RemoveStackLocalsProcessor
+
+
+VARS = {
+    'foo': 'bar',
+    'password': 'hello',
+    'the_secret': 'hello',
+    'a_password_here': 'hello',
+    'api_key': 'secret_key',
+    'apiKey': 'secret_key',
+}
 
 
 class SantizePasswordsProcessorTest(TestCase):
+
+    def _check_vars_sanitized(self, vars, proc):
+        """
+        Helper to check that keys have been sanitized.
+        """
+        self.assertTrue('foo' in vars)
+        self.assertEquals(vars['foo'], 'bar')
+        self.assertTrue('password' in vars)
+        self.assertEquals(vars['password'], proc.MASK)
+        self.assertTrue('the_secret' in vars)
+        self.assertEquals(vars['the_secret'], proc.MASK)
+        self.assertTrue('a_password_here' in vars)
+        self.assertEquals(vars['a_password_here'], proc.MASK)
+        self.assertTrue('api_key' in vars)
+        self.assertEquals(vars['api_key'], proc.MASK)
+        self.assertTrue('apiKey' in vars)
+        self.assertEquals(vars['apiKey'], proc.MASK)
+
     def test_stacktrace(self):
         data = {
             'sentry.interfaces.Stacktrace': {
-                'frames': [
-                    {
-                        'vars': {
-                            'foo': 'bar',
-                            'password': 'hello',
-                            'the_secret': 'hello',
-                            'a_password_here': 'hello',
-                        },
-                    }
-                ]
+                'frames': [{'vars': VARS}],
             }
         }
 
@@ -32,43 +51,15 @@ class SantizePasswordsProcessorTest(TestCase):
         self.assertEquals(len(stack['frames']), 1)
         frame = stack['frames'][0]
         self.assertTrue('vars' in frame)
-        vars = frame['vars']
-        self.assertTrue('foo' in vars)
-        self.assertEquals(vars['foo'], 'bar')
-        self.assertTrue('password' in vars)
-        self.assertEquals(vars['password'], proc.MASK)
-        self.assertTrue('the_secret' in vars)
-        self.assertEquals(vars['the_secret'], proc.MASK)
-        self.assertTrue('a_password_here' in vars)
-        self.assertEquals(vars['a_password_here'], proc.MASK)
+        self._check_vars_sanitized(frame['vars'], proc)
 
     def test_http(self):
         data = {
             'sentry.interfaces.Http': {
-                'data': {
-                    'foo': 'bar',
-                    'password': 'hello',
-                    'the_secret': 'hello',
-                    'a_password_here': 'hello',
-                },
-                'env': {
-                    'foo': 'bar',
-                    'password': 'hello',
-                    'the_secret': 'hello',
-                    'a_password_here': 'hello',
-                },
-                'headers': {
-                    'foo': 'bar',
-                    'password': 'hello',
-                    'the_secret': 'hello',
-                    'a_password_here': 'hello',
-                },
-                'cookies': {
-                    'foo': 'bar',
-                    'password': 'hello',
-                    'the_secret': 'hello',
-                    'a_password_here': 'hello',
-                },
+                'data': VARS,
+                'env': VARS,
+                'headers': VARS,
+                'cookies': VARS,
             }
         }
 
@@ -79,20 +70,14 @@ class SantizePasswordsProcessorTest(TestCase):
         http = result['sentry.interfaces.Http']
         for n in ('data', 'env', 'headers', 'cookies'):
             self.assertTrue(n in http)
-            vars = http[n]
-            self.assertTrue('foo' in vars)
-            self.assertEquals(vars['foo'], 'bar')
-            self.assertTrue('password' in vars)
-            self.assertEquals(vars['password'], proc.MASK)
-            self.assertTrue('the_secret' in vars)
-            self.assertEquals(vars['the_secret'], proc.MASK)
-            self.assertTrue('a_password_here' in vars)
-            self.assertEquals(vars['a_password_here'], proc.MASK)
+            self._check_vars_sanitized(http[n], proc)
 
     def test_querystring_as_string(self):
         data = {
             'sentry.interfaces.Http': {
-                'query_string': 'foo=bar&password=hello&the_secret=hello&a_password_here=hello',
+                'query_string':
+                    'foo=bar&password=hello&the_secret=hello'
+                    '&a_password_here=hello&api_key=secret_key',
             }
         }
 
@@ -101,7 +86,10 @@ class SantizePasswordsProcessorTest(TestCase):
 
         self.assertTrue('sentry.interfaces.Http' in result)
         http = result['sentry.interfaces.Http']
-        self.assertEquals(http['query_string'], 'foo=bar&password=%(m)s&the_secret=%(m)s&a_password_here=%(m)s' % dict(m=proc.MASK))
+        self.assertEquals(
+            http['query_string'],
+            'foo=bar&password=%(m)s&the_secret=%(m)s'
+            '&a_password_here=%(m)s&api_key=%(m)s' % dict(m=proc.MASK))
 
     def test_querystring_as_string_with_partials(self):
         data = {
@@ -149,16 +137,7 @@ class RemoveStackLocalsProcessorTest(TestCase):
     def test_does_remove_data(self):
         data = {
             'sentry.interfaces.Stacktrace': {
-                'frames': [
-                    {
-                        'vars': {
-                            'foo': 'bar',
-                            'password': 'hello',
-                            'the_secret': 'hello',
-                            'a_password_here': 'hello',
-                        },
-                    }
-                ]
+                'frames': [{'vars': VARS,}],
             }
         }
         proc = RemoveStackLocalsProcessor(Mock())
