@@ -224,6 +224,16 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'foo')
 
+    def test_message_from_kwargs(self):
+        try:
+            raise ValueError('foo')
+        except:
+            self.client.captureException(message='test', data={})
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'test')
+
     def test_explicit_message_on_exception_event(self):
         try:
             raise ValueError('foo')
