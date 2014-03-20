@@ -117,7 +117,7 @@ class SentryHandler(logging.Handler, object):
                 continue
             if k.startswith('_'):
                 continue
-            if '.' not in k and k not in ('culprit',):
+            if '.' not in k and k not in ('culprit', 'server_name'):
                 extra[k] = v
             else:
                 data[k] = v
