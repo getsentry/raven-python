@@ -175,6 +175,6 @@ if not six.PY3:
 
 
 # register all serializers
-for obj in globals().values():
+for obj in tuple(globals().values()):
     if (isinstance(obj, type) and issubclass(obj, Serializer) and obj is not Serializer):
         serialization_manager.register(obj)
