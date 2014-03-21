@@ -75,7 +75,7 @@ class GetStackInfoTest(TestCase):
 
     def test_max_frames(self):
         frames = []
-        for x in xrange(10):
+        for x in range(10):
             frame = Mock()
             frame.f_locals = {}
             frame.f_lineno = None
