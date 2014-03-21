@@ -15,6 +15,12 @@ except ImportError:
 
 
 try:
+    import httplib  # NOQA
+except ImportError:
+    from http import client as httplib  # NOQA
+
+
+try:
     import urllib.request as urllib2
 except ImportError:
     import urllib2

@@ -7,13 +7,12 @@ raven.utils.http
 """
 from __future__ import absolute_import
 
-import httplib
 import socket
 import ssl
 import sys
 
 from raven.conf import defaults
-from raven.utils.compat import urllib2
+from raven.utils.compat import urllib2, httplib
 from raven.utils.ssl_match_hostname import match_hostname
 
 
