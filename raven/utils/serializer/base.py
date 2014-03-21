@@ -174,7 +174,16 @@ if not six.PY3:
             return long(value)  # noqa
 
 
-# register all serializers
-for obj in tuple(globals().values()):
-    if (isinstance(obj, type) and issubclass(obj, Serializer) and obj is not Serializer):
-        serialization_manager.register(obj)
+# register all serializers, order matters
+serialization_manager.register(IterableSerializer)
+serialization_manager.register(UUIDSerializer)
+serialization_manager.register(DictSerializer)
+serialization_manager.register(UnicodeSerializer)
+serialization_manager.register(StringSerializer)
+serialization_manager.register(TypeSerializer)
+serialization_manager.register(BooleanSerializer)
+serialization_manager.register(FloatSerializer)
+serialization_manager.register(IntegerSerializer)
+serialization_manager.register(FunctionSerializer)
+if not six.PY3:
+    serialization_manager.register(LongSerializer)
