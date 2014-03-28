@@ -268,6 +268,51 @@ class ClientTest(TestCase):
         self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
 
+    def test_decorator_preserves_function(self):
+        @self.client.capture_exceptions
+        def test1():
+            return 'foo'
+
+        self.assertEquals(test1(), 'foo')
+
+    class DecoratorTestException(Exception):
+        pass
+
+    def test_decorator_functionality(self):
+        @self.client.capture_exceptions
+        def test2():
+            raise self.DecoratorTestException()
+
+        try:
+            test2()
+        except self.DecoratorTestException:
+            pass
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'DecoratorTestException')
+        exc = event['sentry.interfaces.Exception']
+        self.assertEquals(exc['type'], 'DecoratorTestException')
+        self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
+        stacktrace = exc['stacktrace']
+        # this is a wrapped function so two frames are expected
+        self.assertEquals(len(stacktrace['frames']), 2)
+        frame = stacktrace['frames'][1]
+        self.assertEquals(frame['module'], __name__)
+        self.assertEquals(frame['function'], 'test2')
+
+    def test_decorator_filtering(self):
+        @self.client.capture_exceptions(self.DecoratorTestException)
+        def test3():
+            raise Exception()
+
+        try:
+            test3()
+        except:
+            pass
+
+        self.assertEquals(len(self.client.events), 0)
+
     def test_message_event(self):
         self.client.captureMessage(message='test')
 
