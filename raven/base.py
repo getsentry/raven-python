@@ -272,7 +272,6 @@ class Client(object):
 
         data.setdefault('tags', {})
         data.setdefault('extra', {})
-        data.setdefault('level', logging.ERROR)
 
         if stack is None:
             stack = self.auto_log_stacks
