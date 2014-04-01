@@ -14,6 +14,7 @@ Users Guide
    install/index
    config/index
    usage
+   transports/index
 
 Developers
 ----------
