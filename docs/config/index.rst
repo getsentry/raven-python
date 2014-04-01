@@ -224,32 +224,3 @@ Several processors are included with Raven to assist in data sanitiziation. Thes
 .. data:: raven.processors.RemovePostDataProcessor
 
    Removes the ``body`` of all HTTP data.
-
-Testing the Client
-------------------
-
-Once you've got your server configured, you can test the Raven client by using it's CLI::
-
-  raven test <DSN value>
-
-If you've configured your environment to have SENTRY_DSN available, you can simply drop
-the optional DSN argument::
-
-  raven test
-
-You should get something like the following, assuming you're configured everything correctly::
-
-  $ raven test sync+http://dd2c825ff9b1417d88a99573903ebf80:91631495b10b45f8a1cdbc492088da6a@localhost:9000/1
-  Using DSN configuration:
-    sync+http://dd2c825ff9b1417d88a99573903ebf80:91631495b10b45f8a1cdbc492088da6a@localhost:9000/1
-
-  Client configuration:
-    servers        : ['http://localhost:9000/api/store/']
-    project        : 1
-    public_key     : dd2c825ff9b1417d88a99573903ebf80
-    secret_key     : 91631495b10b45f8a1cdbc492088da6a
-
-  Sending a test message... success!
-
-  The test message can be viewed at the following URL:
-    http://localhost:9000/1/search/?q=c988bf5cb7db4653825c92f6864e7206$b8a6fbd29cc9113a149ad62cf7e0ddd5
