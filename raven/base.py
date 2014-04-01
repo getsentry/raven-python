@@ -24,6 +24,7 @@ from types import FunctionType
 import raven
 from raven.conf import defaults
 from raven.context import Context
+from raven.exceptions import APIError
 from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
@@ -521,7 +522,9 @@ class Client(object):
         self.state.set_success()
 
     def _failed_send(self, e, url, data):
-        if isinstance(e, HTTPError):
+        if isinstance(e, APIError):
+            self.error_logger.error('Unable to capture event: %s', e.message)
+        elif isinstance(e, HTTPError):
             body = e.read()
             self.error_logger.error(
                 'Unable to reach Sentry log server: %s (url: %s, body: %s)',

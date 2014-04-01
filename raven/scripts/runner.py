@@ -43,17 +43,17 @@ def get_uid():
 
 
 def send_test_message(client, options):
-    print("Client configuration:")
+    sys.stdout.write("Client configuration:\n")
     for k in ('servers', 'project', 'public_key', 'secret_key'):
-        print('  %-15s: %s' % (k, getattr(client, k)))
-    print()
+        sys.stdout.write('  %-15s: %s\n' % (k, getattr(client, k)))
+    sys.stdout.write('\n')
 
     if not all([client.servers, client.project, client.public_key, client.secret_key]):
-        print("Error: All values must be set!")
+        sys.stdout.write("Error: All values must be set!\n")
         sys.exit(1)
 
     if not client.is_enabled():
-        print('Error: Client reports as being disabled!')
+        sys.stdout.write('Error: Client reports as being disabled!\n')
         sys.exit(1)
 
     data = options.get('data', {
@@ -65,7 +65,8 @@ def send_test_message(client, options):
         }
     })
 
-    print('Sending a test message...',)
+    sys.stdout.write('Sending a test message... ')
+    sys.stdout.flush()
 
     ident = client.get_ident(client.captureMessage(
         message='This is a test message generated using ``raven test``',
@@ -80,17 +81,19 @@ def send_test_message(client, options):
     ))
 
     if client.state.did_fail():
-        print('error!')
+        sys.stdout.write('error!\n')
         return False
 
-    print('success!')
-    print('Event ID was %r' % (ident,))
+    sys.stdout.write('success!\n')
+
+    sys.stdout.write('Event ID was %r\n' % (ident,))
 
 
 def main():
     root = logging.getLogger('sentry.errors')
     root.setLevel(logging.DEBUG)
-    root.addHandler(logging.StreamHandler())
+    # if len(root.handlers) == 0:
+    #     root.addHandler(logging.StreamHandler())
 
     parser = OptionParser(version=get_version())
     parser.add_option("--data", action="callback", callback=store_json,
