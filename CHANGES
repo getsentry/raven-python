@@ -1,7 +1,7 @@
 Version 4.1.0
 -------------
 
-* Added ssl_verify option to HTTP transport (defaults to False).
+* Added verify_ssl option to HTTP transport (defaults to False).
 * Added capture_locals option (defaults to True).
 * message can now be passed to capture* functions.
 * Django <1.4 is no longer supported.
