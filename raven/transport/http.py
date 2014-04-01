@@ -16,7 +16,6 @@ from raven.utils.compat import urllib2
 
 
 class HTTPTransport(Transport):
-
     scheme = ['sync+http', 'sync+https']
 
     def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=True,

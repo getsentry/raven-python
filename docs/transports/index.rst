@@ -18,6 +18,12 @@ verify_ssl = 1
 ca_certs = [raven]/data/cacert.pem
   A certificate bundle to use when validating SSL conections.
 
+For example, to increase the timeout and to disable SSL verification:
+
+::
+
+	SENTRY_DSN = 'http://public:secret@example.com/1?timeout=5&verify_ssl=0'
+
 
 Eventlet
 --------
