@@ -5,6 +5,20 @@ A transport is the mechanism in which Raven sends the HTTP request to the Sentry
 
 Transport registration is done via the URL prefix, so for example, a synchronous transport is as simple as prefixing your ``SENTRY_DSN`` with the ``sync+`` value.
 
+Options are passed to transports via the querystring.
+
+All transports should support at least the following options:
+
+timeout = 1
+  The time to wait for a response from the server, in seconds.
+
+verify_ssl = 1
+  If the connection is HTTPS, validate the certificate and hostname.
+
+ca_certs = [raven]/data/cacert.pem
+  A certificate bundle to use when validating SSL conections.
+
+
 Eventlet
 --------
 
