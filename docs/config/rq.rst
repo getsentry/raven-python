@@ -8,7 +8,7 @@ Usage
 
 The simplest way is passing your ``SENTRY_DSN`` through ``rqworker``::
 
-    $ rqworker --sentry-dsn="https://foo:bar@app.getsentry.com/1"
+    $ rqworker --sentry-dsn="http://public:secret@example.com/1"
 
 Custom Client
 -------------
