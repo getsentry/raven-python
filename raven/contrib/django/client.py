@@ -75,7 +75,7 @@ class DjangoClient(Client):
         if request.method != 'GET':
             try:
                 data = request.body
-            except AttributeError:
+            except Exception:
                 try:
                     data = request.raw_post_data
                 except Exception:
