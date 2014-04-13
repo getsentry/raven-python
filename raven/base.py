@@ -61,27 +61,30 @@ class ClientState(object):
         self.status = self.ONLINE
         self.last_check = None
         self.retry_number = 0
+        self.retry_after = 0
 
     def should_try(self):
         if self.status == self.ONLINE:
             return True
 
-        interval = min(self.retry_number, 6) ** 2
+        interval = self.retry_after or min(self.retry_number, 6) ** 2
 
         if time.time() - self.last_check > interval:
             return True
 
         return False
 
-    def set_fail(self):
+    def set_fail(self, retry_after=0):
         self.status = self.ERROR
         self.retry_number += 1
         self.last_check = time.time()
+        self.retry_after = retry_after
 
     def set_success(self):
         self.status = self.ONLINE
         self.last_check = None
         self.retry_number = 0
+        self.retry_after = 0
 
     def did_fail(self):
         return self.status == self.ERROR
@@ -522,10 +525,15 @@ class Client(object):
         self.state.set_success()
 
     def _failed_send(self, e, url, data):
+        retry_after = 0
         if isinstance(e, APIError):
             self.error_logger.error('Unable to capture event: %s', e.message)
         elif isinstance(e, HTTPError):
             body = e.read()
+            try:
+                retry_after = int(e.headers.get('Retry-After'))
+            except (ValueError, TypeError):
+                pass
             self.error_logger.error(
                 'Unable to reach Sentry log server: %s (url: %s, body: %s)',
                 e, url, body, exc_info=True,
@@ -537,7 +545,7 @@ class Client(object):
 
         message = self._get_log_message(data)
         self.error_logger.error('Failed to submit message: %r', message)
-        self.state.set_fail()
+        self.state.set_fail(retry_after=retry_after)
 
     def send_remote(self, url, data, headers=None):
         if headers is None:

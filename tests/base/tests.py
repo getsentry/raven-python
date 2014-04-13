@@ -6,12 +6,14 @@ import mock
 import pytest
 import raven
 import time
+from StringIO import StringIO
 from socket import socket, AF_INET, SOCK_DGRAM
 from raven.base import Client, ClientState
 from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils import six
 from raven.utils.testutils import TestCase
+from raven.utils.compat import HTTPError
 
 
 class TempStoreClient(Client):
@@ -62,6 +64,22 @@ class ClientStateTest(TestCase):
         self.assertEquals(state.last_check, None)
         self.assertEquals(state.retry_number, 0)
 
+    def test_should_try_retry_after(self):
+        state = ClientState()
+        state.status = state.ERROR
+        state.last_check = time.time()
+        state.retry_number = 1
+        state.retry_after = 1
+        self.assertFalse(state.should_try())
+
+    def test_should_try_retry_after_passed(self):
+        state = ClientState()
+        state.status = state.ERROR
+        state.last_check = time.time() - 1
+        state.retry_number = 1
+        state.retry_after = 1
+        self.assertTrue(state.should_try())
+
 
 class ClientTest(TestCase):
     def setUp(self):
@@ -95,6 +113,31 @@ class ClientTest(TestCase):
         send.side_effect = None
         client.send_remote('sync+http://example.com/api/store', 'foo')
         self.assertEquals(client.state.status, client.state.ONLINE)
+
+    @mock.patch('raven.transport.http.HTTPTransport.send')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_send_remote_failover_with_retry_after(self, should_try, send):
+        should_try.return_value = True
+
+        client = Client(
+            dsn='sync+http://public:secret@example.com/1'
+        )
+
+        e = HTTPError(
+            'http://example.com/api/store', 429, 'oops',
+            {'Retry-After': '5'}, StringIO())
+
+        # test error
+        send.side_effect = e
+        client.send_remote('sync+http://example.com/api/store', 'foo')
+        self.assertEquals(client.state.status, client.state.ERROR)
+        self.assertEqual(client.state.retry_after, 5)
+
+        # test recovery
+        send.side_effect = None
+        client.send_remote('sync+http://example.com/api/store', 'foo')
+        self.assertEquals(client.state.status, client.state.ONLINE)
+        self.assertEqual(client.state.retry_after, 0)
 
     @mock.patch('raven.base.Client._registry.get_transport')
     @mock.patch('raven.base.ClientState.should_try')
