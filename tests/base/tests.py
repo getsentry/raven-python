@@ -6,7 +6,6 @@ import mock
 import pytest
 import raven
 import time
-from StringIO import StringIO
 from socket import socket, AF_INET, SOCK_DGRAM
 from raven.base import Client, ClientState
 from raven.transport import AsyncTransport
@@ -125,7 +124,7 @@ class ClientTest(TestCase):
 
         e = HTTPError(
             'http://example.com/api/store', 429, 'oops',
-            {'Retry-After': '5'}, StringIO())
+            {'Retry-After': '5'}, six.StringIO())
 
         # test error
         send.side_effect = e
@@ -270,7 +269,7 @@ class ClientTest(TestCase):
     def test_message_from_kwargs(self):
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException(message='test', data={})
 
         self.assertEquals(len(self.client.events), 1)
@@ -280,7 +279,7 @@ class ClientTest(TestCase):
     def test_explicit_message_on_exception_event(self):
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException(data={'message': 'foobar'})
 
         self.assertEquals(len(self.client.events), 1)
@@ -290,7 +289,7 @@ class ClientTest(TestCase):
     def test_exception_event(self):
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException()
 
         self.assertEquals(len(self.client.events), 1)
@@ -351,7 +350,7 @@ class ClientTest(TestCase):
 
         try:
             test3()
-        except:
+        except Exception:
             pass
 
         self.assertEquals(len(self.client.events), 0)
@@ -371,7 +370,7 @@ class ClientTest(TestCase):
         })
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException()
         else:
             self.fail('Exception should have been raised')
