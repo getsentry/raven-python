@@ -174,6 +174,7 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        self.assertEquals(event['event_id'], response.headers['X-Sentry-ID'])
 
         assert event['message'] == 'ValueError: Boom'
         assert 'sentry.interfaces.Http' in event
@@ -185,6 +186,7 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        self.assertEquals(event['event_id'], response.headers['X-Sentry-ID'])
 
         self.assertTrue('sentry.interfaces.Message' in event)
         self.assertTrue('sentry.interfaces.Http' in event)
