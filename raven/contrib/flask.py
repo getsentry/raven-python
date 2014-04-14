@@ -89,6 +89,8 @@ class Sentry(object):
       `wrap_wsgi=False`.
     - Capture information from Flask-Login (if available).
     """
+    # TODO(dcramer): the client isnt using local context and therefore
+    # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
                  logging=False, level=logging.NOTSET, wrap_wsgi=True,
                  register_signal=True):
@@ -171,6 +173,7 @@ class Sentry(object):
         }
 
     def before_request(self, *args, **kwargs):
+        self.last_event_id = None
         self.client.http_context(self.get_http_info(request))
         self.client.user_context(self.get_user_info(request))
 
@@ -198,8 +201,12 @@ class Sentry(object):
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
-        return self.client.captureException(*args, **kwargs)
+        result = self.client.captureException(*args, **kwargs)
+        self.last_event_id = self.client.get_ident(result)
+        return result
 
     def captureMessage(self, *args, **kwargs):
         assert self.client, 'captureMessage called before application configured'
-        return self.client.captureMessage(*args, **kwargs)
+        result = self.client.captureMessage(*args, **kwargs)
+        self.last_event_id = self.client.get_ident(result)
+        return result

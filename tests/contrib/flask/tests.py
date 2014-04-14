@@ -222,6 +222,21 @@ class FlaskTest(BaseTest):
         self.assertEquals(response.status_code, 500)
         self.assertEquals(len(raven.events), 1)
 
+    def test_captureException_sets_last_event_id(self):
+        try:
+            raise ValueError
+        except Exception:
+            self.middleware.captureException()
+        else:
+            self.fail()
+
+        assert self.middleware.last_event_id == self.raven.events.pop(0)['event_id']
+
+    def test_captureMessage_sets_last_event_id(self):
+        self.middleware.captureMessage('foo')
+
+        assert self.middleware.last_event_id == self.raven.events.pop(0)['event_id']
+
 
 class FlaskLoginTest(BaseTest):
     @before
