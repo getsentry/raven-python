@@ -8,6 +8,7 @@ raven.transport.http
 from __future__ import absolute_import
 
 from raven.conf import defaults
+from raven.exceptions import APIError, RateLimited
 from raven.transport.base import Transport
 from raven.utils import six
 from raven.utils.http import urlopen
@@ -15,10 +16,9 @@ from raven.utils.compat import urllib2
 
 
 class HTTPTransport(Transport):
-
     scheme = ['sync+http', 'sync+https']
 
-    def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=False,
+    def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=True,
                  ca_certs=defaults.CA_BUNDLE):
         self.check_scheme(parsed_url)
 
@@ -40,11 +40,21 @@ class HTTPTransport(Transport):
         """
         req = urllib2.Request(self._url, headers=headers)
 
-        response = urlopen(
-            url=req,
-            data=data,
-            timeout=self.timeout,
-            verify_ssl=self.verify_ssl,
-            ca_certs=self.ca_certs,
-        ).read()
+        try:
+            response = urlopen(
+                url=req,
+                data=data,
+                timeout=self.timeout,
+                verify_ssl=self.verify_ssl,
+                ca_certs=self.ca_certs,
+            )
+        except urllib2.HTTPError as exc:
+            msg = exc.headers.get('x-sentry-error')
+            code = exc.getcode()
+            if code == 429:
+                raise RateLimited(msg, code)
+            elif msg:
+                raise APIError(msg, code)
+            else:
+                raise
         return response

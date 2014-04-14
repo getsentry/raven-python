@@ -3,7 +3,7 @@ Raven
 
 Raven is a standalone (and the official) Python client for `Sentry <http://www.getsentry.com/>`_.
 
-This version of Raven requires Sentry 5.1 or newer.
+This version of Raven requires Sentry 6.4 or newer.
 
 Users Guide
 -----------
@@ -14,6 +14,7 @@ Users Guide
    install/index
    config/index
    usage
+   transports/index
 
 Developers
 ----------
