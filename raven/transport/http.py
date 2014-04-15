@@ -52,7 +52,8 @@ class HTTPTransport(Transport):
             msg = exc.headers.get('x-sentry-error')
             code = exc.getcode()
             if code == 429:
-                raise RateLimited(msg, code)
+                retry_after = int(exc.headers.get('retry-after', 0))
+                raise RateLimited(msg, retry_after)
             elif msg:
                 raise APIError(msg, code)
             else:
