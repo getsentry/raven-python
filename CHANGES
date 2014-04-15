@@ -3,6 +3,7 @@ Version 4.2.0
 
 * SSL verification is now on by default.
 * Rate limits and other valid API errors are now handled more gracefully.
+* Added ``last_event_id`` and ``X-Sentry-ID`` header to Flask.
 
 Version 4.1.0
 -------------
