@@ -68,7 +68,7 @@ tests_require = [
     'pytz',
     'pytest',
     'pytest-cov>=1.4',
-    'pytest-django-lite',
+    'pytest-django',
     'python-coveralls',
     'tornado',
     'webob',
@@ -107,6 +107,9 @@ setup(
     },
     license='BSD',
     tests_require=tests_require,
+    dependency_links=[
+        'https://github.com/pelme/pytest_django/archive/21327e1b1f254dcec2e870114719ea279b479506.zip#egg=pytest-django',
+    ],
     cmdclass={'test': PyTest},
     include_package_data=True,
     entry_points={
