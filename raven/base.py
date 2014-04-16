@@ -226,7 +226,7 @@ class Client(object):
         """
         Returns a searchable string representing a message.
 
-        >>> result = client.process(**kwargs)
+        >>> result = client.capture(**kwargs)
         >>> ident = client.get_ident(result)
         """
         return '$'.join(result)
