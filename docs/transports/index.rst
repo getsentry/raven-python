@@ -52,7 +52,7 @@ Requires the ``requests`` library. Synchronous.
 
 ::
 
-    SENTRY_DSN = 'gevent+http://public:secret@example.com/1'
+    SENTRY_DSN = 'requests+http://public:secret@example.com/1'
 
 
 Sync
