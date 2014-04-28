@@ -62,12 +62,12 @@ def get_version_from_app(module_name, app):
             version = get_version()
         else:
             version = get_version
+    elif hasattr(app, '__version__'):
+        version = app.__version__
     elif hasattr(app, 'VERSION'):
         version = app.VERSION
     elif hasattr(app, 'version'):
         version = app.version
-    elif hasattr(app, '__version__'):
-        version = app.__version__
     elif pkg_resources:
         # pull version from pkg_resources if distro exists
         try:
