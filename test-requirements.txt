@@ -1,0 +1,2 @@
+git+https://github.com/pelme/pytest_django.git@21327e1b1f254dcec2e870114719ea279b479506#egg=pytest-django
+-e .[dev,tests]

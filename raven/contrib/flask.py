@@ -20,7 +20,7 @@ import os
 import logging
 
 from flask import request, current_app
-from flask.signals import got_request_exception
+from flask.signals import got_request_exception, request_finished
 from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
@@ -89,6 +89,8 @@ class Sentry(object):
       `wrap_wsgi=False`.
     - Capture information from Flask-Login (if available).
     """
+    # TODO(dcramer): the client isnt using local context and therefore
+    # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
                  logging=False, level=logging.NOTSET, wrap_wsgi=True,
                  register_signal=True):
@@ -171,8 +173,13 @@ class Sentry(object):
         }
 
     def before_request(self, *args, **kwargs):
+        self.last_event_id = None
         self.client.http_context(self.get_http_info(request))
         self.client.user_context(self.get_user_info(request))
+
+    def add_sentry_id_header(self, sender, response, *args, **kwargs):
+        response.headers['X-Sentry-ID'] = self.last_event_id
+        return response
 
     def init_app(self, app, dsn=None):
         if dsn is not None:
@@ -191,6 +198,7 @@ class Sentry(object):
 
         if self.register_signal:
             got_request_exception.connect(self.handle_exception, sender=app)
+            request_finished.connect(self.add_sentry_id_header, sender=app)
 
         if not hasattr(app, 'extensions'):
             app.extensions = {}
@@ -198,8 +206,12 @@ class Sentry(object):
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
-        return self.client.captureException(*args, **kwargs)
+        result = self.client.captureException(*args, **kwargs)
+        self.last_event_id = self.client.get_ident(result)
+        return result
 
     def captureMessage(self, *args, **kwargs):
         assert self.client, 'captureMessage called before application configured'
-        return self.client.captureMessage(*args, **kwargs)
+        result = self.client.captureMessage(*args, **kwargs)
+        self.last_event_id = self.client.get_ident(result)
+        return result

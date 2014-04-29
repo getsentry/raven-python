@@ -174,6 +174,7 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        self.assertEquals(event['event_id'], response.headers['X-Sentry-ID'])
 
         assert event['message'] == 'ValueError: Boom'
         assert 'sentry.interfaces.Http' in event
@@ -185,6 +186,7 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(self.raven.events), 1)
 
         event = self.raven.events.pop(0)
+        self.assertEquals(event['event_id'], response.headers['X-Sentry-ID'])
 
         self.assertTrue('sentry.interfaces.Message' in event)
         self.assertTrue('sentry.interfaces.Http' in event)
@@ -221,6 +223,21 @@ class FlaskTest(BaseTest):
         response = client.get('/an-error/')
         self.assertEquals(response.status_code, 500)
         self.assertEquals(len(raven.events), 1)
+
+    def test_captureException_sets_last_event_id(self):
+        try:
+            raise ValueError
+        except Exception:
+            self.middleware.captureException()
+        else:
+            self.fail()
+
+        assert self.middleware.last_event_id == self.raven.events.pop(0)['event_id']
+
+    def test_captureMessage_sets_last_event_id(self):
+        self.middleware.captureMessage('foo')
+
+        assert self.middleware.last_event_id == self.raven.events.pop(0)['event_id']
 
 
 class FlaskLoginTest(BaseTest):

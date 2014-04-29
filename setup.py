@@ -68,7 +68,7 @@ tests_require = [
     'pytz',
     'pytest',
     'pytest-cov>=1.4',
-    'pytest-django-lite',
+    'pytest-django',
     'python-coveralls',
     'tornado',
     'webob',
@@ -92,7 +92,7 @@ class PyTest(TestCommand):
 
 setup(
     name='raven',
-    version='4.2.0',
+    version='4.2.1',
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='http://github.com/getsentry/raven-python',

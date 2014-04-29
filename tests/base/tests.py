@@ -6,14 +6,13 @@ import mock
 import pytest
 import raven
 import time
-from StringIO import StringIO
 from socket import socket, AF_INET, SOCK_DGRAM
 from raven.base import Client, ClientState
+from raven.exceptions import RateLimited
 from raven.transport import AsyncTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils import six
 from raven.utils.testutils import TestCase
-from raven.utils.compat import HTTPError
 
 
 class TempStoreClient(Client):
@@ -123,12 +122,8 @@ class ClientTest(TestCase):
             dsn='sync+http://public:secret@example.com/1'
         )
 
-        e = HTTPError(
-            'http://example.com/api/store', 429, 'oops',
-            {'Retry-After': '5'}, StringIO())
-
         # test error
-        send.side_effect = e
+        send.side_effect = RateLimited('foo', 5)
         client.send_remote('sync+http://example.com/api/store', 'foo')
         self.assertEquals(client.state.status, client.state.ERROR)
         self.assertEqual(client.state.retry_after, 5)
@@ -270,7 +265,7 @@ class ClientTest(TestCase):
     def test_message_from_kwargs(self):
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException(message='test', data={})
 
         self.assertEquals(len(self.client.events), 1)
@@ -280,7 +275,7 @@ class ClientTest(TestCase):
     def test_explicit_message_on_exception_event(self):
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException(data={'message': 'foobar'})
 
         self.assertEquals(len(self.client.events), 1)
@@ -290,7 +285,7 @@ class ClientTest(TestCase):
     def test_exception_event(self):
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException()
 
         self.assertEquals(len(self.client.events), 1)
@@ -351,7 +346,7 @@ class ClientTest(TestCase):
 
         try:
             test3()
-        except:
+        except Exception:
             pass
 
         self.assertEquals(len(self.client.events), 0)
@@ -371,7 +366,7 @@ class ClientTest(TestCase):
         })
         try:
             raise ValueError('foo')
-        except:
+        except ValueError:
             self.client.captureException()
         else:
             self.fail('Exception should have been raised')

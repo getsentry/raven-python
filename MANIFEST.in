@@ -1,3 +1,4 @@
 include setup.py README.rst MANIFEST.in LICENSE *.txt
-recursive-include raven/contrib/zope *.xml raven/data
+recursive-include raven/contrib/zope *.xml
+recursive-include raven/data *
 global-exclude *~
