@@ -89,7 +89,7 @@ class Sentry(object):
       `wrap_wsgi=False`.
     - Capture information from Flask-Login (if available).
     """
-    # TODO(dcramer): the client isnt using local context and therefore
+    # TODO(dcramer): the client isn't using local context and therefore
     # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
                  logging=False, level=logging.NOTSET, wrap_wsgi=True,

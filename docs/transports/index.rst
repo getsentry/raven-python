@@ -16,7 +16,7 @@ All transports should support at least the following options:
   If the connection is HTTPS, validate the certificate and hostname.
 
 ``ca_certs = [raven]/data/cacert.pem``
-  A certificate bundle to use when validating SSL conections.
+  A certificate bundle to use when validating SSL connections.
 
 For example, to increase the timeout and to disable SSL verification:
 

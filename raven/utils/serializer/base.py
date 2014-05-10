@@ -103,7 +103,7 @@ class UnicodeSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         # try to return a reasonable string that can be decoded
-        # correctly by the server so it doesnt show up as \uXXX for each
+        # correctly by the server so it doesn't show up as \uXXX for each
         # unicode character
         # e.g. we want the output to be like: "u'רונית מגן'"
         string_max_length = kwargs.get('string_max_length', None)

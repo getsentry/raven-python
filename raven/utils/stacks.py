@@ -94,7 +94,7 @@ def label_from_frame(frame):
 def get_culprit(frames, *args, **kwargs):
     # We iterate through each frame looking for a deterministic culprit
     # When one is found, we mark it as last "best guess" (best_guess) and then
-    # check it against ``exclude_paths``. If it isnt listed, then we
+    # check it against ``exclude_paths``. If it isn't listed, then we
     # use this option. If nothing is found, we use the "best guess".
     if args or kwargs:
         warnings.warn('get_culprit no longer does application detection')
@@ -121,7 +121,7 @@ def get_culprit(frames, *args, **kwargs):
 def _getitem_from_frame(f_locals, key, default=None):
     """
     f_locals is not guaranteed to have .get(), but it will always
-    support __getitem__. Even if it doesnt, we return ``default``.
+    support __getitem__. Even if it doesn't, we return ``default``.
     """
     try:
         return f_locals[key]

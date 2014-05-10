@@ -25,7 +25,7 @@ class SerializationManager(object):
 
     @property
     def serializers(self):
-        # XXX: Would serializers ever need state that we shouldnt cache them?
+        # XXX: Would serializers ever need state that we shouldn't cache them?
         for serializer in self.__registry:
             yield serializer
 

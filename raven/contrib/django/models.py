@@ -35,7 +35,7 @@ _client = (None, None)
 
 class ProxyClient(object):
     """
-    A proxy which represents the currenty client at all times.
+    A proxy which represents the currently client at all times.
     """
     # introspection support:
     __members__ = property(lambda x: x.__dir__())

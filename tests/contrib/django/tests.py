@@ -55,13 +55,13 @@ def make_request():
 
 class MockClientHandler(TestClientHandler):
     def __call__(self, environ, start_response=[]):
-        # this pretends doesnt require start_response
+        # this pretends doesn't require start_response
         return super(MockClientHandler, self).__call__(environ)
 
 
 class MockSentryMiddleware(Sentry):
     def __call__(self, environ, start_response=[]):
-        # this pretends doesnt require start_response
+        # this pretends doesn't require start_response
         return list(super(MockSentryMiddleware, self).__call__(environ, start_response))
 
 
@@ -359,7 +359,7 @@ class DjangoClientTest(TestCase):
 
     def test_404_middleware(self):
         with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.Sentry404CatchMiddleware']):
-            resp = self.client.get('/non-existant-page')
+            resp = self.client.get('/non-existent-page')
             self.assertEquals(resp.status_code, 404)
 
             self.assertEquals(len(self.raven.events), 1)
@@ -370,7 +370,7 @@ class DjangoClientTest(TestCase):
 
             self.assertTrue('sentry.interfaces.Http' in event)
             http = event['sentry.interfaces.Http']
-            self.assertEquals(http['url'], 'http://testserver/non-existant-page')
+            self.assertEquals(http['url'], 'http://testserver/non-existent-page')
             self.assertEquals(http['method'], 'GET')
             self.assertEquals(http['query_string'], '')
             self.assertEquals(http['data'], None)
@@ -381,7 +381,7 @@ class DjangoClientTest(TestCase):
             'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledTempStoreClient',
         }
         with Settings(**extra_settings):
-            resp = self.client.get('/non-existant-page')
+            resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
             assert self.raven.events == []
 
@@ -390,7 +390,7 @@ class DjangoClientTest(TestCase):
             'SENTRY_CLIENT': 'raven.contrib.django.DjangoClient',  # default
         }
         # Should return fallback client (TempStoreClient)
-        client = get_client('nonexistant.and.invalid')
+        client = get_client('nonexistent.and.invalid')
 
         # client should be valid, and the same as with the next call.
         assert client is get_client()
@@ -402,7 +402,7 @@ class DjangoClientTest(TestCase):
         # TODO: test with 500s
         with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
                 'raven.contrib.django.middleware.Sentry404CatchMiddleware']):
-            resp = self.client.get('/non-existant-page')
+            resp = self.client.get('/non-existent-page')
             self.assertEquals(resp.status_code, 404)
             headers = dict(resp.items())
             self.assertTrue('X-Sentry-ID' in headers)
@@ -499,7 +499,7 @@ class DjangoClientTest(TestCase):
         assert tags['site'] == 'example.com'
 
     def test_adds_site_to_tags_fallback(self):
-        with Settings(SITE_ID=12345):  # nonexistant site, should fallback to SITE_ID
+        with Settings(SITE_ID=12345):  # nonexistent site, should fallback to SITE_ID
             self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
             self.assertEquals(len(self.raven.events), 1)
