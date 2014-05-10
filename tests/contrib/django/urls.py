@@ -4,7 +4,7 @@ from django.conf import settings
 try:
     from django.conf.urls import url, patterns
 except ImportError:
-    # for Django version less then 1.4
+    # for Django version less than 1.4
     from django.conf.urls.defaults import url, patterns  # NOQA
 
 from django.http import HttpResponse

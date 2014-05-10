@@ -34,7 +34,7 @@ class PromiseSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         # EPIC HACK
-        # handles lazy model instances (which are proxy values that dont easily give you the actual function)
+        # handles lazy model instances (which are proxy values that don't easily give you the actual function)
         pre = value.__class__.__name__[1:]
         if hasattr(value, '%s__func' % pre):
             value = getattr(value, '%s__func' % pre)(*getattr(value, '%s__args' % pre), **getattr(value, '%s__kw' % pre))

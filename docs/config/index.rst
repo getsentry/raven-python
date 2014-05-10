@@ -26,7 +26,7 @@ This document describes configuration options available to Sentry.
 Configuring the Client
 ----------------------
 
-Settings are specified as part of the intialization of the client.
+Settings are specified as part of the initialization of the client.
 
 As of Raven 1.2.0, you can now configure all clients through a standard DSN
 string. This can be specified as a default using the ``SENTRY_DSN`` environment
