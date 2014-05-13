@@ -37,6 +37,9 @@ class Sentry404CatchMiddleware(object):
             'logger': 'http404',
         })
         result = client.captureMessage(message='Page Not Found: %s' % request.build_absolute_uri(), data=data)
+        if not result:
+            return
+
         request.sentry = {
             'project_id': data.get('project', client.project),
             'id': client.get_ident(result),
