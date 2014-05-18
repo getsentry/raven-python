@@ -207,11 +207,17 @@ class Sentry(object):
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
         result = self.client.captureException(*args, **kwargs)
-        self.last_event_id = self.client.get_ident(result)
+        if result:
+            self.last_event_id = self.client.get_ident(result)
+        else:
+            self.last_event_id = None
         return result
 
     def captureMessage(self, *args, **kwargs):
         assert self.client, 'captureMessage called before application configured'
         result = self.client.captureMessage(*args, **kwargs)
-        self.last_event_id = self.client.get_ident(result)
+        if result:
+            self.last_event_id = self.client.get_ident(result)
+        else:
+            self.last_event_id = None
         return result
