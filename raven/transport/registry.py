@@ -6,6 +6,7 @@ raven.transport.registry
 :license: BSD, see LICENSE for more details.
 """
 from __future__ import absolute_import
+import sys
 
 # TODO(dcramer): we really should need to import all of these by default
 from raven.transport.eventlet import EventletHTTPTransport
@@ -18,6 +19,9 @@ from raven.transport.twisted import TwistedHTTPTransport
 from raven.transport.tornado import TornadoHTTPTransport
 from raven.transport.udp import UDPTransport
 from raven.utils import urlparse
+
+if sys.version_info() >= (3.3):
+    from raven.transport.asyncio import AsyncioHttpTransport
 
 
 class TransportRegistry(object):
@@ -78,3 +82,6 @@ default_transports = [
     UDPTransport,
     EventletHTTPTransport,
 ]
+
+if sys.version_info() >= (3.3):
+    default_transports += [AsyncioHttpTransport,]
