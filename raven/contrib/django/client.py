@@ -58,7 +58,7 @@ class DjangoClient(Client):
         result = {}
 
         if hasattr(request, 'user') and isinstance(request.user, BaseUser):
-            result['sentry.interfaces.User'] = self.get_user_info(request.user)
+            result['user'] = self.get_user_info(request.user)
 
         try:
             uri = request.build_absolute_uri()
@@ -90,7 +90,7 @@ class DjangoClient(Client):
         environ = request.META
 
         result.update({
-            'sentry.interfaces.Http': {
+            'request': {
                 'method': request.method,
                 'url': uri,
                 'query_string': request.META.get('QUERY_STRING'),
@@ -106,10 +106,11 @@ class DjangoClient(Client):
     def build_msg(self, *args, **kwargs):
         data = super(DjangoClient, self).build_msg(*args, **kwargs)
 
-        stacks = (
-            data.get('sentry.interfaces.Stacktrace'),
-            data.get('sentry.interfaces.Exception', {}).get('stacktrace'),
-        )
+        stacks = [
+            data.get('stacktrace'),
+        ]
+        if 'exception' in data:
+            stacks.append(data['exception']['values'][0]['stacktrace'])
 
         for stacktrace in filter(bool, stacks):
             for frame in stacktrace['frames']:

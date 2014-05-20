@@ -47,9 +47,9 @@ class ZeroRPCTest(TestCase):
         except zerorpc.exceptions.RemoteError as ex:
             self.assertEqual(ex.name, 'IndexError')
             self.assertEqual(len(self._sentry.events), 1)
-            exc = self._sentry.events[0]['sentry.interfaces.Exception']
+            exc = self._sentry.events[0]['exception']
             self.assertEqual(exc['type'], 'IndexError')
-            frames = self._sentry.events[0]['sentry.interfaces.Exception']['stacktrace']['frames']
+            frames = exc['stacktrace']['frames']
             self.assertEqual(frames[0]['function'], 'choice')
             self.assertEqual(frames[0]['module'], 'random')
         else:
@@ -68,9 +68,9 @@ class ZeroRPCTest(TestCase):
         for attempt in xrange(0, 10):
             gevent.sleep(0.1)
             if len(self._sentry.events):
-                exc = self._sentry.events[0]['sentry.interfaces.Exception']
+                exc = self._sentry.events[0]['exception']
                 self.assertEqual(exc['type'], 'IndexError')
-                frames = self._sentry.events[0]['sentry.interfaces.Exception']['stacktrace']['frames']
+                frames = exc['stacktrace']['frames']
                 self.assertEqual(frames[0]['function'], 'choice')
                 self.assertEqual(frames[0]['module'], 'random')
                 return

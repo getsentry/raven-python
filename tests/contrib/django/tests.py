@@ -147,8 +147,8 @@ class DjangoClientTest(TestCase):
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], "invalid literal for int() with base 10: 'hello'")
         self.assertEquals(event['level'], logging.ERROR)
@@ -160,8 +160,8 @@ class DjangoClientTest(TestCase):
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'Exception')
         self.assertEquals(exc['value'], 'view exception')
         self.assertEquals(event['level'], logging.ERROR)
@@ -178,7 +178,7 @@ class DjangoClientTest(TestCase):
 
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        assert 'sentry.interfaces.User' not in event
+        assert 'user' not in event
 
         assert self.client.login(username='admin', password='admin')
 
@@ -186,8 +186,8 @@ class DjangoClientTest(TestCase):
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        assert 'sentry.interfaces.User' in event
-        user_info = event['sentry.interfaces.User']
+        assert 'user' in event
+        user_info = event['user']
         assert user_info == {
             'is_authenticated': True,
             'username': user.username,
@@ -226,8 +226,8 @@ class DjangoClientTest(TestCase):
             self.assertEquals(len(self.raven.events), 1)
             event = self.raven.events.pop(0)
 
-            self.assertTrue('sentry.interfaces.Exception' in event)
-            exc = event['sentry.interfaces.Exception']
+            assert 'exception' in event
+            exc = event['exception']['values'][0]
             self.assertEquals(exc['type'], 'ImportError')
             self.assertEquals(exc['value'], 'request')
             self.assertEquals(event['level'], logging.ERROR)
@@ -243,8 +243,8 @@ class DjangoClientTest(TestCase):
             self.assertEquals(len(self.raven.events), 1)
             event = self.raven.events.pop(0)
 
-            self.assertTrue('sentry.interfaces.Exception' in event)
-            exc = event['sentry.interfaces.Exception']
+            assert 'exception' in event
+            exc = event['exception']['values'][0]
             self.assertEquals(exc['type'], 'ImportError')
             self.assertEquals(exc['value'], 'response')
             self.assertEquals(event['level'], logging.ERROR)
@@ -261,8 +261,8 @@ class DjangoClientTest(TestCase):
             assert len(self.raven.events) == 2
             event = self.raven.events.pop(0)
 
-            self.assertTrue('sentry.interfaces.Exception' in event)
-            exc = event['sentry.interfaces.Exception']
+            assert 'exception' in event
+            exc = event['exception']['values'][0]
             self.assertEquals(exc['type'], 'Exception')
             self.assertEquals(exc['value'], 'view exception')
             self.assertEquals(event['level'], logging.ERROR)
@@ -271,8 +271,8 @@ class DjangoClientTest(TestCase):
 
             event = self.raven.events.pop(0)
 
-            self.assertTrue('sentry.interfaces.Exception' in event)
-            exc = event['sentry.interfaces.Exception']
+            assert 'exception' in event
+            exc = event['exception']['values'][0]
             self.assertEquals(exc['type'], 'ValueError')
             self.assertEquals(exc['value'], 'handler500')
             self.assertEquals(event['level'], logging.ERROR)
@@ -286,8 +286,8 @@ class DjangoClientTest(TestCase):
             self.assertEquals(len(self.raven.events), 1)
             event = self.raven.events.pop(0)
 
-            self.assertTrue('sentry.interfaces.Exception' in event)
-            exc = event['sentry.interfaces.Exception']
+            assert 'exception' in event
+            exc = event['exception']['values'][0]
             self.assertEquals(exc['type'], 'ImportError')
             self.assertEquals(exc['value'], 'view')
             self.assertEquals(event['level'], logging.ERROR)
@@ -368,8 +368,8 @@ class DjangoClientTest(TestCase):
             self.assertEquals(event['level'], logging.INFO)
             self.assertEquals(event['logger'], 'http404')
 
-            self.assertTrue('sentry.interfaces.Http' in event)
-            http = event['sentry.interfaces.Http']
+            assert 'request' in event
+            http = event['request']
             self.assertEquals(http['url'], 'http://testserver/non-existent-page')
             self.assertEquals(http['method'], 'GET')
             self.assertEquals(http['query_string'], '')
@@ -434,8 +434,8 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        assert 'request' in event
+        http = event['request']
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
 
@@ -449,8 +449,8 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        assert 'request' in event
+        http = event['request']
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], {'foo': 'bar', 'ham': 'spam'})
 
@@ -463,8 +463,8 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        assert 'request' in event
+        http = event['request']
         self.assertEquals(http['method'], 'POST')
         self.assertEquals(http['data'], '<unavailable>')
         self.assertTrue('headers' in http)
@@ -483,7 +483,7 @@ class DjangoClientTest(TestCase):
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
 
-        frames = event['sentry.interfaces.Exception']['stacktrace']['frames']
+        frames = event['exception']['values'][0]['stacktrace']['frames']
         for frame in frames:
             if frame['module'].startswith('django.'):
                 assert frame.get('in_app') is False
@@ -527,8 +527,8 @@ class DjangoClientTest(TestCase):
         request.META['HTTP_HOST'] = 'example.com'
         result = self.raven.get_data_from_request(request)
         build_absolute_uri.assert_called_once_with()
-        assert 'sentry.interfaces.Http' in result
-        assert result['sentry.interfaces.Http']['url'] == 'http://example.com/'
+        assert 'request' in result
+        assert result['request']['url'] == 'http://example.com/'
 
 
 class DjangoTemplateTagTest(TestCase):
@@ -568,8 +568,8 @@ class DjangoLoggingTest(TestCase):
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        assert 'request' in event
+        http = event['request']
         self.assertEquals(http['method'], 'POST')
 
 

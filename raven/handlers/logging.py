@@ -159,7 +159,7 @@ class SentryHandler(logging.Handler, object):
             handler_kwargs = {'exc_info': record.exc_info}
 
         # HACK: discover a culprit when we normally couldn't
-        elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
+        elif not (data.get('stacktrace') or data.get('culprit')) and (record.name or record.funcName):
             culprit = label_from_frame({'module': record.name, 'function': record.funcName})
             if culprit:
                 data['culprit'] = culprit

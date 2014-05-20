@@ -26,7 +26,7 @@ def get_data_from_request(request):
         formdata = {}
 
     data = {
-        'sentry.interfaces.Http': {
+        'request': {
             'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
             'query_string': urlparts.query,
             'method': request.method,

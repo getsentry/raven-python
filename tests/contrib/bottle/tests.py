@@ -1,5 +1,3 @@
-import logging
-
 from exam import fixture
 
 from webtest import TestApp
@@ -66,14 +64,10 @@ class BottleTest(BaseTest):
 
         self.assertEquals(len(self.raven.events), 1)
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.Exception' in event)
+        assert 'exception' in event
 
-        exc = event['sentry.interfaces.Exception']
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'ValueError')
-        self.assertEquals(exc['value'], 'hello world')
-        self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'ValueError: hello world')
-        self.assertEquals(event['culprit'], 'tests.contrib.bottle.tests in an_error')
 
     def test_captureException_captures_http(self):
         response = self.client.get('/capture/?foo=bar')
@@ -83,8 +77,8 @@ class BottleTest(BaseTest):
         event = self.raven.events.pop(0)
 
         assert event['message'] == 'ValueError: Boom'
-        assert 'sentry.interfaces.Http' in event
-        assert 'sentry.interfaces.Exception' in event
+        assert 'request' in event
+        assert 'exception' in event
 
     def test_captureMessage_captures_http(self):
         response = self.client.get('/message/?foo=bar')
@@ -93,5 +87,5 @@ class BottleTest(BaseTest):
 
         event = self.raven.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertTrue('sentry.interfaces.Http' in event)
+        assert 'sentry.interfaces.Message' in event
+        assert 'request' in event

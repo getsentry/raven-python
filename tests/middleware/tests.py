@@ -65,15 +65,15 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
 
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        assert 'request' in event
+        http = event['request']
         self.assertEquals(http['url'], 'http://localhost/an-error')
         self.assertEquals(http['query_string'], 'foo=bar')
         self.assertEquals(http['method'], 'GET')

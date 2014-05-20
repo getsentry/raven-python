@@ -41,7 +41,7 @@ def get_data_from_template(source):
     context_line = source_lines[lineno]
 
     return {
-        'sentry.interfaces.Template': {
+        'template': {
             'filename': origin.loadname,
             'abs_path': origin.name,
             'pre_context': pre_context,

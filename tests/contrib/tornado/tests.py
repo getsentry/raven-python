@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-    tests
-
-    Test the tornado Async Client
-"""
 from __future__ import unicode_literals
 
-import unittest
 from mock import patch
 from tornado import web, gen, testing
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
@@ -88,17 +82,17 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Http' in kwargs))
-        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
 
-        http_data = kwargs['sentry.interfaces.Http']
+        http_data = kwargs['request']
         self.assertEqual(http_data['cookies'], None)
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], 'qs=qs')
         self.assertEqual(http_data['method'], 'GET')
 
-        user_data = kwargs['sentry.interfaces.User']
+        user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
@@ -108,18 +102,18 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Http' in kwargs))
-        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
-        self.assertTrue(('extra' in kwargs))
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
+        assert 'extra' in kwargs
 
-        http_data = kwargs['sentry.interfaces.Http']
+        http_data = kwargs['request']
         self.assertEqual(http_data['cookies'], None)
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], 'qs=qs')
         self.assertEqual(http_data['method'], 'GET')
 
-        user_data = kwargs['sentry.interfaces.User']
+        user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
@@ -136,18 +130,18 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Http' in kwargs))
-        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
-        self.assertTrue(('extra' in kwargs))
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
+        assert 'extra' in kwargs
 
-        http_data = kwargs['sentry.interfaces.Http']
+        http_data = kwargs['request']
         self.assertEqual(http_data['cookies'], None)
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], 'qs=qs')
         self.assertEqual(http_data['method'], 'GET')
 
-        user_data = kwargs['sentry.interfaces.User']
+        user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
@@ -166,17 +160,17 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Http' in kwargs))
-        self.assertTrue(('sentry.interfaces.Message' in kwargs))
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'sentry.interfaces.Message' in kwargs
 
-        http_data = kwargs['sentry.interfaces.Http']
+        http_data = kwargs['request']
         self.assertEqual(http_data['cookies'], None)
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], 'qs=qs')
         self.assertEqual(http_data['method'], 'GET')
 
-        user_data = kwargs['sentry.interfaces.User']
+        user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], True)
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
@@ -186,17 +180,17 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Http' in kwargs))
-        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
 
-        http_data = kwargs['sentry.interfaces.Http']
+        http_data = kwargs['request']
         self.assertEqual(http_data['cookies'], None)
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], 'qs=qs')
         self.assertEqual(http_data['method'], 'GET')
 
-        user_data = kwargs['sentry.interfaces.User']
+        user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
@@ -206,19 +200,15 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(send.call_count, 1)
         args, kwargs = send.call_args
 
-        self.assertTrue(('sentry.interfaces.User' in kwargs))
-        self.assertTrue(('sentry.interfaces.Http' in kwargs))
-        self.assertTrue(('sentry.interfaces.Exception' in kwargs))
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
 
-        http_data = kwargs['sentry.interfaces.Http']
+        http_data = kwargs['request']
         self.assertEqual(http_data['cookies'], None)
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], 'qs=qs')
         self.assertEqual(http_data['method'], 'GET')
 
-        user_data = kwargs['sentry.interfaces.User']
+        user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
-
-
-if __name__ == '__main__':
-    unittest.main()

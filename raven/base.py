@@ -296,7 +296,7 @@ class Client(object):
             if k not in data:
                 data[k] = v
 
-        if stack and 'sentry.interfaces.Stacktrace' not in data:
+        if stack and 'stacktrace' not in data:
             if stack is True:
                 frames = iter_stack_frames()
 
@@ -309,12 +309,12 @@ class Client(object):
                 capture_locals=self.capture_locals,
             )
             data.update({
-                'sentry.interfaces.Stacktrace': stack_info,
+                'stacktrace': stack_info,
             })
 
-        if 'sentry.interfaces.Stacktrace' in data:
+        if 'stacktrace' in data:
             if self.include_paths:
-                for frame in data['sentry.interfaces.Stacktrace']['frames']:
+                for frame in data['stacktrace']['frames']:
                     if frame.get('in_app') is not None:
                         continue
 
@@ -332,10 +332,12 @@ class Client(object):
                         )
 
         if not culprit:
-            if 'sentry.interfaces.Stacktrace' in data:
-                culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'])
-            elif data.get('sentry.interfaces.Exception', {}).get('stacktrace'):
-                culprit = get_culprit(data['sentry.interfaces.Exception']['stacktrace']['frames'])
+            if 'stacktrace' in data:
+                culprit = get_culprit(data['stacktrace']['frames'])
+            elif 'exception' in data:
+                stacktrace = data['exception']['values'][0].get('stacktrace')
+                if stacktrace:
+                    culprit = get_culprit(stacktrace['frames'])
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
@@ -407,7 +409,7 @@ class Client(object):
         >>> client.user_context({'email': 'foo@example.com'})
         """
         return self.context.merge({
-            'sentry.interfaces.User': data,
+            'user': data,
         })
 
     def http_context(self, data, **kwargs):
@@ -417,7 +419,7 @@ class Client(object):
         >>> client.http_context({'url': 'http://example.com'})
         """
         return self.context.merge({
-            'sentry.interfaces.Http': data,
+            'request': data,
         })
 
     def extra_context(self, data, **kwargs):
@@ -448,7 +450,7 @@ class Client(object):
         To use structured data (interfaces) with capture:
 
         >>> capture('raven.events.Message', message='foo', data={
-        >>>     'sentry.interfaces.Http': {
+        >>>     'request': {
         >>>         'url': '...',
         >>>         'data': {},
         >>>         'query_string': '...',

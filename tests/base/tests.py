@@ -291,12 +291,12 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'ValueError: foo')
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        self.assertTrue('exception' in event)
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'foo')
         self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
-        assert 'sentry.interfaces.Stacktrace' not in event
+        assert 'stacktrace' not in event
         stacktrace = exc['stacktrace']
         self.assertEquals(len(stacktrace['frames']), 1)
         frame = stacktrace['frames'][0]
@@ -329,7 +329,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'DecoratorTestException')
-        exc = event['sentry.interfaces.Exception']
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
         stacktrace = exc['stacktrace']
@@ -357,7 +357,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        self.assertFalse('sentry.interfaces.Stacktrace' in event)
+        assert 'stacktrace' not in event
         self.assertTrue('timestamp' in event)
 
     def test_context(self):
@@ -386,9 +386,9 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        self.assertEquals(len(frames), len(event['sentry.interfaces.Stacktrace']['frames']))
-        for frame, frame_i in zip(frames, event['sentry.interfaces.Stacktrace']['frames']):
+        assert 'stacktrace' in event
+        self.assertEquals(len(frames), len(event['stacktrace']['frames']))
+        for frame, frame_i in zip(frames, event['stacktrace']['frames']):
             self.assertEquals(frame[0].f_code.co_filename, frame_i['abs_path'])
             self.assertEquals(frame[0].f_code.co_name, frame_i['function'])
 
@@ -398,7 +398,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'test')
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
+        self.assertTrue('stacktrace' in event)
         self.assertTrue('timestamp' in event)
 
     def test_site(self):

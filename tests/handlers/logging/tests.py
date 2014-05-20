@@ -42,7 +42,7 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(event['logger'], 'root')
         self.assertEqual(event['level'], logging.INFO)
         self.assertEqual(event['message'], 'This is a test error')
-        self.assertFalse('sentry.interfaces.Exception' in event)
+        assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test error')
@@ -89,8 +89,8 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
 
         self.assertEqual(event['message'], 'This is a test info with an exception')
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
         self.assertEqual(exc['type'], 'ValueError')
         self.assertEqual(exc['value'], 'This is a test ValueError')
         self.assertTrue('sentry.interfaces.Message' in event)
@@ -116,12 +116,12 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        frames = event['sentry.interfaces.Stacktrace']['frames']
+        self.assertTrue('stacktrace' in event)
+        frames = event['stacktrace']['frames']
         self.assertNotEquals(len(frames), 1)
         frame = frames[0]
         self.assertEqual(frame['module'], 'raven.handlers.logging')
-        self.assertFalse('sentry.interfaces.Exception' in event)
+        assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         self.assertEqual(event['culprit'], 'root in make_record')
         self.assertEqual(event['message'], 'This is a test of stacks')
@@ -141,12 +141,12 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        assert 'sentry.interfaces.Stacktrace' in event
+        assert 'stacktrace' in event
         assert 'culprit' in event
         assert event['culprit'] == 'root in make_record'
         self.assertTrue('message' in event, event)
         self.assertEqual(event['message'], 'This is a test of stacks')
-        self.assertFalse('sentry.interfaces.Exception' in event)
+        assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test of stacks')

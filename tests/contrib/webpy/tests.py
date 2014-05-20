@@ -52,8 +52,8 @@ class WebPyTest(TestCase):
         self.assertEquals(len(self.store.events), 1)
 
         event = self.store.events.pop()
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'That\'s what she said')
         self.assertEquals(event['message'], 'ValueError: That\'s what she said')
@@ -66,8 +66,8 @@ class WebPyTest(TestCase):
 
         event = self.store.events.pop()
 
-        self.assertTrue('sentry.interfaces.Http' in event)
-        http = event['sentry.interfaces.Http']
+        assert 'request' in event
+        http = event['request']
         self.assertEquals(http['url'], 'http://localhost/test')
         self.assertEquals(http['query_string'], '?biz=baz')
         self.assertEquals(http['method'], 'POST')

@@ -25,15 +25,15 @@ class Processor(object):
         if resp:
             data = resp
 
-        if 'sentry.interfaces.Stacktrace' in data:
-            self.filter_stacktrace(data['sentry.interfaces.Stacktrace'])
+        if 'stacktrace' in data:
+            self.filter_stacktrace(data['stacktrace'])
 
-        if 'sentry.interfaces.Exception' in data:
-            if 'stacktrace' in data['sentry.interfaces.Exception']:
-                self.filter_stacktrace(data['sentry.interfaces.Exception']['stacktrace'])
+        if 'exception' in data:
+            if 'stacktrace' in data['exception']:
+                self.filter_stacktrace(data['exception']['stacktrace'])
 
-        if 'sentry.interfaces.Http' in data:
-            self.filter_http(data['sentry.interfaces.Http'])
+        if 'request' in data:
+            self.filter_http(data['request'])
 
         return data
 
