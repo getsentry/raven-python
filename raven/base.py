@@ -119,12 +119,14 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, **options):
+    def __init__(self, dsn=None, raise_send_errors=False, **options):
         global Raven
 
         o = options
 
         self.configure_logging()
+
+        self.raise_send_errors = raise_send_errors
 
         # configure loggers first
         cls = self.__class__
@@ -548,9 +550,12 @@ class Client(object):
         self.state.set_fail(retry_after=retry_after)
 
     def send_remote(self, url, data, headers=None):
+        # If the client is configured to raise errors on sending,
+        # the implication is that the backoff and retry strategies
+        # will be handled by the calling application
         if headers is None:
             headers = {}
-        if not self.state.should_try():
+        if not self.raise_send_errors and not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)
             return
@@ -571,6 +576,8 @@ class Client(object):
                 transport.send(data, headers)
                 self._successful_send()
         except Exception as e:
+            if self.raise_send_errors:
+                raise
             failed_send(e)
 
     def send(self, auth_header=None, **data):

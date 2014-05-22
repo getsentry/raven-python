@@ -2,11 +2,13 @@ from __future__ import unicode_literals
 
 import logging
 import sys
-from raven.utils.testutils import TestCase
-from raven.utils import six
+import mock
+
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
+from raven.utils import six
 from raven.utils.stacks import iter_stack_frames
+from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
@@ -60,6 +62,37 @@ class LoggingIntegrationTest(TestCase):
         for test in tests:
             record = self.make_record("Test", name=test[0])
             self.assertEqual(self.handler.can_record(record), test[1])
+
+    @mock.patch('raven.transport.http.HTTPTransport.send')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_exception_on_emit(self, should_try, _send_remote):
+        should_try.return_value = True
+        # Test for the default behaviour in which an exception is handled by the client or handler
+        client = Client(
+            servers=['sync+http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+        handler = SentryHandler(client)
+        _send_remote.side_effect = Exception()
+        record = self.make_record('This is a test error')
+        handler.emit(record)
+        self.assertEquals(handler.client.state.status, handler.client.state.ERROR)
+
+        # Test for the case in which a send error is raised to the calling frame.
+        client = Client(
+            servers=['sync+http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+            raise_send_errors=True,
+        )
+        handler = SentryHandler(client)
+        _send_remote.side_effect = Exception()
+        with self.assertRaises(Exception):
+            record = self.make_record('This is a test error')
+            handler.emit(record)
 
     def test_logger_extra_data(self):
         record = self.make_record('This is a test error', extra={'data': {

@@ -67,6 +67,8 @@ class SentryHandler(logging.Handler, object):
 
             return self._emit(record)
         except Exception:
+            if self.client.raise_send_errors:
+                raise
             print("Top level Sentry exception caught - failed creating log record", file=sys.stderr)
             print(to_string(record.msg), file=sys.stderr)
             print(to_string(traceback.format_exc()), file=sys.stderr)

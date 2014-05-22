@@ -182,6 +182,8 @@ class DjangoClient(Client):
             try:
                 return self.send_integrated(kwargs)
             except Exception as e:
+                if self.raise_send_errors:
+                    raise
                 self.error_logger.error(
                     'Unable to record event: %s\nEvent was: %r', e,
                     kwargs['message'], exc_info=True)
