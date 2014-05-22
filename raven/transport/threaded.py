@@ -9,9 +9,10 @@ from __future__ import absolute_import
 
 import atexit
 import logging
-import time
 import threading
 import os
+
+from time import sleep, time
 
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
@@ -60,10 +61,12 @@ class AsyncWorker(object):
                 print("Sentry is attempting to send %i pending error messages"
                       % size)
                 print("Waiting up to %s seconds" % timeout)
+
                 if os.name == 'nt':
                     print("Press Ctrl-Break to quit")
                 else:
                     print("Press Ctrl-C to quit")
+
                 self._timed_queue_join(timeout - initial_timeout)
 
             self._thread = None
@@ -77,14 +80,14 @@ class AsyncWorker(object):
 
         returns true on success, false on timeout
         """
-        deadline = time.time() + timeout
+        deadline = time() + timeout
         queue = self._queue
 
         queue.all_tasks_done.acquire()
         try:
             while queue.unfinished_tasks:
-                delay = deadline - time.time()
-                if(delay <= 0):
+                delay = deadline - time()
+                if delay <= 0:
                     # timed out
                     return False
 
@@ -126,7 +129,7 @@ class AsyncWorker(object):
         self._queue.put_nowait((callback, args, kwargs))
 
     def _target(self):
-        while 1:
+        while True:
             record = self._queue.get()
             try:
                 if record is self._terminator:
@@ -139,7 +142,7 @@ class AsyncWorker(object):
             finally:
                 self._queue.task_done()
 
-            time.sleep(0)
+            sleep(0)
 
 
 class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
