@@ -19,19 +19,22 @@ except:
 
 class TornadoHTTPTransport(HTTPTransport):
 
-    scheme = ['tornado+http']
+    scheme = ['tornado+http', 'tornado+https']
 
-    def __init__(self, parsed_url):
+    def __init__(self, parsed_url, **kwargs):
         if not has_tornado:
             raise ImportError('TornadoHTTPTransport requires tornado.')
 
-        super(TornadoHTTPTransport, self).__init__(parsed_url)
+        super(TornadoHTTPTransport, self).__init__(parsed_url, **kwargs)
 
         # remove the tornado+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
     def send(self, data, headers):
         kwargs = dict(method='POST', headers=headers, body=data)
+        kwargs["validate_cert"] = self.verify_ssl
+        kwargs["connect_timeout"] = self.timeout
+        kwargs["ca_certs"] = self.ca_certs
 
         # only use async if ioloop is running, otherwise it will never send
         if ioloop.IOLoop.initialized():
