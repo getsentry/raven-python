@@ -187,7 +187,7 @@ class ClientTest(TestCase):
                 'Content-Type': 'application/octet-stream',
                 'X-Sentry-Auth': (
                     'Sentry sentry_timestamp=1328055286.51, '
-                    'sentry_client=raven-python/%s, sentry_version=4, '
+                    'sentry_client=raven-python/%s, sentry_version=5, '
                     'sentry_key=public, '
                     'sentry_secret=secret' % (raven.VERSION,))
             },
