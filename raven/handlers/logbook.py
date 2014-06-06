@@ -23,7 +23,7 @@ class SentryHandler(logbook.Handler):
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, six.string_types):
-                self.client = kwargs.pop('client_cls', Client)(dsn=arg)
+                self.client = kwargs.pop('client_cls', Client)(dsn=arg, **kwargs)
             elif isinstance(arg, Client):
                 self.client = arg
             else:

@@ -32,7 +32,7 @@ class SentryHandler(logging.Handler, object):
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, six.string_types):
-                self.client = client(dsn=arg)
+                self.client = client(dsn=arg, **kwargs)
             elif isinstance(arg, Client):
                 self.client = arg
             else:
