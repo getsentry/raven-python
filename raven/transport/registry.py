@@ -20,8 +20,8 @@ from raven.transport.tornado import TornadoHTTPTransport
 from raven.transport.udp import UDPTransport
 from raven.utils import urlparse
 
-if sys.version_info() >= (3.3):
-    from raven.transport.asyncio import AsyncioHttpTransport
+if sys.version_info >= (3, 3):
+    from raven.transport.aiohttp import AioHttpTransport
 
 
 class TransportRegistry(object):
@@ -83,5 +83,5 @@ default_transports = [
     EventletHTTPTransport,
 ]
 
-if sys.version_info() >= (3.3):
-    default_transports += [AsyncioHttpTransport,]
+if sys.version_info >= (3, 3):
+    default_transports += [AioHttpTransport]

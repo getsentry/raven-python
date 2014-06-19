@@ -9,6 +9,8 @@ This document describes configuration options available to Sentry.
 .. toctree::
    :maxdepth: 2
 
+   aiohttp
+   asyncio
    bottle
    celery
    django
@@ -62,7 +64,11 @@ It is composed of six important pieces:
 
 * The project ID which the authenticated user is bound to.
 
-.. note:: Protocol may also contain transporter type: gevent+http, gevent+https, twisted+http, tornado+http, eventlet+http, eventlet+https
+.. note::
+
+   Protocol may also contain transporter type: gevent+http, gevent+https, twisted+http, tornado+http, eventlet+http, eventlet+https
+
+   For *Python 3.3+* also available: aiohttp+http, aiohttp+https, asycio+udp
 
 Client Arguments
 ----------------
