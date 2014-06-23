@@ -62,4 +62,9 @@ PROCESSORS = (
 # Default Project ID
 PROJECT = 1
 
-CA_BUNDLE = os.path.join(ROOT, 'data', 'cacert.pem')
+try:
+    # Try for certifi first since they likely keep their bundle more up to date
+    import certifi
+    CA_BUNDLE = certifi.where()
+except ImportError:
+    CA_BUNDLE = os.path.join(ROOT, 'data', 'cacert.pem')

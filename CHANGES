@@ -1,3 +1,9 @@
+Version 5.0.0
+-------------
+
+* Sentry client protocol is now version 5.
+* Various improvements to threaded transport.
+
 Version 4.2.0
 -------------
 

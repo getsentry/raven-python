@@ -23,7 +23,7 @@ class SentryHandler(logbook.Handler):
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, six.string_types):
-                self.client = kwargs.pop('client_cls', Client)(dsn=arg)
+                self.client = kwargs.pop('client_cls', Client)(dsn=arg, **kwargs)
             elif isinstance(arg, Client):
                 self.client = arg
             else:
@@ -48,6 +48,8 @@ class SentryHandler(logbook.Handler):
 
             return self._emit(record)
         except Exception:
+            if self.client.raise_send_errors:
+                raise
             print("Top level Sentry exception caught - failed creating log record", file=sys.stderr)
             print(to_string(record.msg), file=sys.stderr)
             print(to_string(traceback.format_exc()))

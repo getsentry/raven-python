@@ -56,7 +56,7 @@ Add the following lines to your project's `.ini` file to setup `SentryHandler`:
 
     [handler_sentry]
     class = raven.handlers.logging.SentryHandler
-    args = ('SENTRY_DSN')
+    args = ('SENTRY_DSN',)
     level = NOTSET
     formatter = generic
 

@@ -2,11 +2,13 @@ from __future__ import unicode_literals
 
 import logging
 import sys
-from raven.utils.testutils import TestCase
-from raven.utils import six
+import mock
+
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
+from raven.utils import six
 from raven.utils.stacks import iter_stack_frames
+from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
@@ -42,7 +44,7 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(event['logger'], 'root')
         self.assertEqual(event['level'], logging.INFO)
         self.assertEqual(event['message'], 'This is a test error')
-        self.assertFalse('sentry.interfaces.Exception' in event)
+        assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test error')
@@ -60,6 +62,37 @@ class LoggingIntegrationTest(TestCase):
         for test in tests:
             record = self.make_record("Test", name=test[0])
             self.assertEqual(self.handler.can_record(record), test[1])
+
+    @mock.patch('raven.transport.http.HTTPTransport.send')
+    @mock.patch('raven.base.ClientState.should_try')
+    def test_exception_on_emit(self, should_try, _send_remote):
+        should_try.return_value = True
+        # Test for the default behaviour in which an exception is handled by the client or handler
+        client = Client(
+            servers=['sync+http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+        )
+        handler = SentryHandler(client)
+        _send_remote.side_effect = Exception()
+        record = self.make_record('This is a test error')
+        handler.emit(record)
+        self.assertEquals(handler.client.state.status, handler.client.state.ERROR)
+
+        # Test for the case in which a send error is raised to the calling frame.
+        client = Client(
+            servers=['sync+http://example.com'],
+            public_key='public',
+            secret_key='secret',
+            project=1,
+            raise_send_errors=True,
+        )
+        handler = SentryHandler(client)
+        _send_remote.side_effect = Exception()
+        with self.assertRaises(Exception):
+            record = self.make_record('This is a test error')
+            handler.emit(record)
 
     def test_logger_extra_data(self):
         record = self.make_record('This is a test error', extra={'data': {
@@ -89,8 +122,8 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
 
         self.assertEqual(event['message'], 'This is a test info with an exception')
-        self.assertTrue('sentry.interfaces.Exception' in event)
-        exc = event['sentry.interfaces.Exception']
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
         self.assertEqual(exc['type'], 'ValueError')
         self.assertEqual(exc['value'], 'This is a test ValueError')
         self.assertTrue('sentry.interfaces.Message' in event)
@@ -116,12 +149,12 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertTrue('sentry.interfaces.Stacktrace' in event)
-        frames = event['sentry.interfaces.Stacktrace']['frames']
+        self.assertTrue('stacktrace' in event)
+        frames = event['stacktrace']['frames']
         self.assertNotEquals(len(frames), 1)
         frame = frames[0]
         self.assertEqual(frame['module'], 'raven.handlers.logging')
-        self.assertFalse('sentry.interfaces.Exception' in event)
+        assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         self.assertEqual(event['culprit'], 'root in make_record')
         self.assertEqual(event['message'], 'This is a test of stacks')
@@ -141,12 +174,12 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        assert 'sentry.interfaces.Stacktrace' in event
+        assert 'stacktrace' in event
         assert 'culprit' in event
         assert event['culprit'] == 'root in make_record'
         self.assertTrue('message' in event, event)
         self.assertEqual(event['message'], 'This is a test of stacks')
-        self.assertFalse('sentry.interfaces.Exception' in event)
+        assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test of stacks')

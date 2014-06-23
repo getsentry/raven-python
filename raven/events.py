@@ -41,9 +41,10 @@ class Exception(BaseEvent):
     - module '__builtin__' (i.e. __builtin__.TypeError)
     - frames: a list of serialized frames (see _get_traceback_frames)
     """
+    name = 'exception'
 
     def to_string(self, data):
-        exc = data['sentry.interfaces.Exception']
+        exc = data[self.name]['values'][0]
         if exc['value']:
             return '%s: %s' % (exc['type'], exc['value'])
         return exc['type']
@@ -71,11 +72,13 @@ class Exception(BaseEvent):
 
             return {
                 'level': kwargs.get('level', logging.ERROR),
-                'sentry.interfaces.Exception': {
-                    'value': to_unicode(exc_value),
-                    'type': str(exc_type),
-                    'module': to_unicode(exc_module),
-                    'stacktrace': stack_info,
+                self.name: {
+                    'values': [{
+                        'value': to_unicode(exc_value),
+                        'type': str(exc_type),
+                        'module': to_unicode(exc_module),
+                        'stacktrace': stack_info,
+                    }],
                 },
             }
         finally:
@@ -92,10 +95,12 @@ class Message(BaseEvent):
     - message: 'My message from %s about %s'
     - params: ('foo', 'bar')
     """
+    name = 'sentry.interfaces.Message'
+
     def capture(self, message, params=(), formatted=None, **kwargs):
         message = to_unicode(message)
         data = {
-            'sentry.interfaces.Message': {
+            self.name: {
                 'message': message,
                 'params': self.transform(params),
             },
@@ -112,13 +117,15 @@ class Query(BaseEvent):
     - query: 'SELECT * FROM table'
     - engine: 'postgesql_psycopg2'
     """
+    name = 'sentry.interfaces.Query'
+
     def to_string(self, data):
-        sql = data['sentry.interfaces.Query']
+        sql = data[self.name]
         return sql['query']
 
     def capture(self, query, engine, **kwargs):
         return {
-            'sentry.interfaces.Query': {
+            self.name: {
                 'query': to_unicode(query),
                 'engine': str(engine),
             }

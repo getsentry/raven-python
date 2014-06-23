@@ -6,6 +6,7 @@ raven.transport.udp
 :license: BSD, see LICENSE for more details.
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from raven.transport.base import Transport
 
@@ -48,7 +49,7 @@ class BaseUDPTransport(Transport):
 
         host, port = self._parsed_url.netloc.rsplit(':')
         addr_info = self._get_addr_info(host, int(port))
-        self._send_data(auth_header + '\n\n' + data, addr_info)
+        self._send_data(auth_header.encode('utf-8') + b'\n\n' + data, addr_info)
 
 
 class UDPTransport(BaseUDPTransport):

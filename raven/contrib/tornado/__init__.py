@@ -183,7 +183,7 @@ class SentryMixin(object):
         :param return: A dictionary.
         """
         return {
-            'sentry.interfaces.Http': {
+            'request': {
                 'url': self.request.full_url(),
                 'method': self.request.method,
                 'data': self.request.body,
@@ -202,7 +202,7 @@ class SentryMixin(object):
         Truth calue testing
         """
         return {
-            'sentry.interfaces.User': {
+            'user': {
                 'is_authenticated': True if self.get_current_user() else False
             }
         }

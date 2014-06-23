@@ -32,7 +32,7 @@ class SentryHandler(logging.Handler, object):
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, six.string_types):
-                self.client = client(dsn=arg)
+                self.client = client(dsn=arg, **kwargs)
             elif isinstance(arg, Client):
                 self.client = arg
             else:
@@ -67,6 +67,8 @@ class SentryHandler(logging.Handler, object):
 
             return self._emit(record)
         except Exception:
+            if self.client.raise_send_errors:
+                raise
             print("Top level Sentry exception caught - failed creating log record", file=sys.stderr)
             print(to_string(record.msg), file=sys.stderr)
             print(to_string(traceback.format_exc()), file=sys.stderr)
@@ -159,7 +161,7 @@ class SentryHandler(logging.Handler, object):
             handler_kwargs = {'exc_info': record.exc_info}
 
         # HACK: discover a culprit when we normally couldn't
-        elif not (data.get('sentry.interfaces.Stacktrace') or data.get('culprit')) and (record.name or record.funcName):
+        elif not (data.get('stacktrace') or data.get('culprit')) and (record.name or record.funcName):
             culprit = label_from_frame({'module': record.name, 'function': record.funcName})
             if culprit:
                 data['culprit'] = culprit

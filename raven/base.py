@@ -115,16 +115,18 @@ class Client(object):
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
-    protocol_version = '4'
+    protocol_version = '5'
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, **options):
+    def __init__(self, dsn=None, raise_send_errors=False, **options):
         global Raven
 
         o = options
 
         self.configure_logging()
+
+        self.raise_send_errors = raise_send_errors
 
         # configure loggers first
         cls = self.__class__
@@ -296,7 +298,7 @@ class Client(object):
             if k not in data:
                 data[k] = v
 
-        if stack and 'sentry.interfaces.Stacktrace' not in data:
+        if stack and 'stacktrace' not in data:
             if stack is True:
                 frames = iter_stack_frames()
 
@@ -309,12 +311,12 @@ class Client(object):
                 capture_locals=self.capture_locals,
             )
             data.update({
-                'sentry.interfaces.Stacktrace': stack_info,
+                'stacktrace': stack_info,
             })
 
-        if 'sentry.interfaces.Stacktrace' in data:
+        if 'stacktrace' in data:
             if self.include_paths:
-                for frame in data['sentry.interfaces.Stacktrace']['frames']:
+                for frame in data['stacktrace']['frames']:
                     if frame.get('in_app') is not None:
                         continue
 
@@ -332,10 +334,12 @@ class Client(object):
                         )
 
         if not culprit:
-            if 'sentry.interfaces.Stacktrace' in data:
-                culprit = get_culprit(data['sentry.interfaces.Stacktrace']['frames'])
-            elif data.get('sentry.interfaces.Exception', {}).get('stacktrace'):
-                culprit = get_culprit(data['sentry.interfaces.Exception']['stacktrace']['frames'])
+            if 'stacktrace' in data:
+                culprit = get_culprit(data['stacktrace']['frames'])
+            elif 'exception' in data:
+                stacktrace = data['exception']['values'][0].get('stacktrace')
+                if stacktrace:
+                    culprit = get_culprit(stacktrace['frames'])
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
@@ -407,7 +411,7 @@ class Client(object):
         >>> client.user_context({'email': 'foo@example.com'})
         """
         return self.context.merge({
-            'sentry.interfaces.User': data,
+            'user': data,
         })
 
     def http_context(self, data, **kwargs):
@@ -417,7 +421,7 @@ class Client(object):
         >>> client.http_context({'url': 'http://example.com'})
         """
         return self.context.merge({
-            'sentry.interfaces.Http': data,
+            'request': data,
         })
 
     def extra_context(self, data, **kwargs):
@@ -448,7 +452,7 @@ class Client(object):
         To use structured data (interfaces) with capture:
 
         >>> capture('raven.events.Message', message='foo', data={
-        >>>     'sentry.interfaces.Http': {
+        >>>     'request': {
         >>>         'url': '...',
         >>>         'data': {},
         >>>         'query_string': '...',
@@ -546,9 +550,12 @@ class Client(object):
         self.state.set_fail(retry_after=retry_after)
 
     def send_remote(self, url, data, headers=None):
+        # If the client is configured to raise errors on sending,
+        # the implication is that the backoff and retry strategies
+        # will be handled by the calling application
         if headers is None:
             headers = {}
-        if not self.state.should_try():
+        if not self.raise_send_errors and not self.state.should_try():
             message = self._get_log_message(data)
             self.error_logger.error(message)
             return
@@ -569,6 +576,8 @@ class Client(object):
                 transport.send(data, headers)
                 self._successful_send()
         except Exception as e:
+            if self.raise_send_errors:
+                raise
             failed_send(e)
 
     def send(self, auth_header=None, **data):

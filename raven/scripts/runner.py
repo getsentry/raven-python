@@ -59,7 +59,7 @@ def send_test_message(client, options):
     data = options.get('data', {
         'culprit': 'raven.scripts.runner',
         'logger': 'raven.test',
-        'sentry.interfaces.Http': {
+        'request': {
             'method': 'GET',
             'url': 'http://example.com',
         }

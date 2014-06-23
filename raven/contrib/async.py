@@ -26,4 +26,4 @@ class AsyncClient(Client):
         super(AsyncClient, self).send(**kwargs)
 
     def send(self, **kwargs):
-        self.worker.queue(self.send_sync, kwargs)
+        self.worker.queue(self.send_sync, **kwargs)

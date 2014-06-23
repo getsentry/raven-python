@@ -15,7 +15,7 @@ from raven.utils.wsgi import get_headers, get_environ
 def get_data_from_request():
     """Returns request data extracted from web.ctx."""
     return {
-        'sentry.interfaces.Http': {
+        'request': {
             'url': '%s://%s%s' % (web.ctx['protocol'], web.ctx['host'], web.ctx['path']),
             'query_string': web.ctx.query,
             'method': web.ctx.method,
