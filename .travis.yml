@@ -43,6 +43,9 @@ notifications:
     on_success: change
     on_failure: change
 matrix:
+  allow_failures:
+    - env: 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
+    - python: "3.4"
   exclude:
     - python: "3.2"
       env: DJANGO=Django==1.4.10
