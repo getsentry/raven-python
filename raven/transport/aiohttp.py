@@ -32,16 +32,11 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
         if not has_aiohttp:
             raise ImportError('AioHttpTransport requires asyncio and aiohttp.')
 
-        self.check_scheme(parsed_url)
-
         if loop is None:
             loop = asyncio.get_event_loop()
         self._loop = loop
 
         super().__init__(parsed_url)
-
-        # remove the aiohttp+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
 
         if keepalive:
             self._connector = aiohttp.TCPConnector(verify_ssl=verify_ssl,
