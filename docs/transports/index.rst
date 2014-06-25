@@ -28,7 +28,8 @@ For example, to increase the timeout and to disable SSL verification:
 aiohttp
 -------
 
-Should only be used within a Tornado IO loop.
+Should only be used within a :pep:`3156` compatible event loops
+(*asyncio* itself and others).
 
 ::
 

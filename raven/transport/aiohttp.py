@@ -9,8 +9,11 @@ raven.transport.aiohttp
 # flake8: noqa
 from __future__ import absolute_import
 
+from raven.exceptions import APIError, RateLimited
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
+
+import socket
 
 try:
     import aiohttp
@@ -24,9 +27,12 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['aiohttp+http', 'aiohttp+https']
 
-    def __init__(self, parsed_url, *, loop=None):
+    def __init__(self, parsed_url, *, verify_ssl=True, resolve=True,
+                 keepalive=True, family=socket.AF_INET, loop=None):
         if not has_aiohttp:
             raise ImportError('AioHttpTransport requires asyncio and aiohttp.')
+
+        self.check_scheme(parsed_url)
 
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -37,6 +43,12 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
         # remove the aiohttp+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 
+        if keepalive:
+            self._connector = aiohttp.TCPConnector(verify_ssl=verify_ssl,
+                                                   resolve=resolve)
+        else:
+            self._connector = None
+
     def async_send(self, data, headers, success_cb, failure_cb):
         @asyncio.coroutine
         def f():
@@ -44,9 +56,23 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
                 resp = yield from aiohttp.request('POST',
                                                   self._url, data=data,
                                                   headers=headers,
+                                                  connector=self._connector,
                                                   loop=self._loop)
                 resp.close()
-                success_cb()
+                code = resp.status
+                if code != 200:
+                    msg = resp.headers.get('x-sentry-error')
+                    if code == 429:
+                        try:
+                            retry_after = int(resp.headers.get('retry-after'))
+                        except (ValueError, TypeError):
+                            retry_after = 0
+                        failure_cb(RateLimited(msg, retry_after))
+                    else:
+                        failure_cb(APIError(msg, code))
+                else:
+                    success_cb()
             except Exception as exc:
                 failure_cb(exc)
+
         asyncio.async(f(), loop=self._loop)

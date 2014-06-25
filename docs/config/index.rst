@@ -68,7 +68,7 @@ It is composed of six important pieces:
 
    Protocol may also contain transporter type: gevent+http, gevent+https, twisted+http, tornado+http, eventlet+http, eventlet+https
 
-   For *Python 3.3+* also available: aiohttp+http, aiohttp+https, asycio+udp
+   For *Python 3.3+* also available: aiohttp+http and aiohttp+https
 
 Client Arguments
 ----------------
