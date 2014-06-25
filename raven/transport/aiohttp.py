@@ -40,9 +40,6 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
 
         super().__init__(parsed_url)
 
-        # remove the aiohttp+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
-
         if keepalive:
             self._connector = aiohttp.TCPConnector(verify_ssl=verify_ssl,
                                                    resolve=resolve)
