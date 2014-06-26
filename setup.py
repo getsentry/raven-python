@@ -54,6 +54,11 @@ if sys.version_info[0] == 3:
     unittest2_requires = []
     webpy_tests_requires = []
 
+if sys.version_info >= (3, 3):
+    aiohttp_requires = ['aiohttp']
+else:
+    aiohttp_requires = []
+
 
 tests_require = [
     'bottle',
@@ -74,8 +79,8 @@ tests_require = [
     'webob',
     'webtest',
     'anyjson',
-] + (flask_requires + flask_tests_requires + unittest2_requires +
-     webpy_tests_requires)
+] + (aiohttp_requires + flask_requires + flask_tests_requires +
+     unittest2_requires + webpy_tests_requires)
 
 
 class PyTest(TestCommand):
