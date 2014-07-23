@@ -40,7 +40,9 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
 
         if keepalive:
             self._connector = aiohttp.TCPConnector(verify_ssl=verify_ssl,
-                                                   resolve=resolve)
+                                                   resolve=resolve,
+                                                   family=family,
+                                                   loop=loop)
         else:
             self._connector = None
 
