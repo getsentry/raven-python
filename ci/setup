@@ -1,7 +1,6 @@
 #!/bin/bash -eu
 
 sudo apt-get install libevent-dev
-pip install $DJANGO
 make bootstrap
 if [[ ${TRAVIS_PYTHON_VERSION::1} == '2' ]]; then
 	pip install gevent --use-mirrors
