@@ -63,7 +63,6 @@ else:
 tests_require = [
     'bottle',
     'celery>=2.5',
-    'Django>=1.4',
     'django-celery>=2.5',
     'exam>=0.5.2',
     'logbook',

@@ -1,4 +1,3 @@
-from django.conf import settings
 import os.path
 import sys
 
@@ -36,6 +35,7 @@ INSTALLED_APPS = [
 use_djcelery = True
 try:
     import djcelery
+    from django.conf import settings
     INSTALLED_APPS.append('djcelery')
 except ImportError:
     use_djcelery = False
@@ -44,7 +44,7 @@ except ImportError:
 def pytest_configure(config):
     where_am_i = os.path.dirname(os.path.abspath(__file__))
 
-    if not settings.configured:
+    if use_djcelery and not settings.configured:
         settings.configure(
             DATABASE_ENGINE='sqlite3',
             DATABASES={
