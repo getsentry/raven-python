@@ -17,6 +17,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 def patch_base_command(cls):
     """
     Patches ``cls.execute``, returning a boolean describing if the

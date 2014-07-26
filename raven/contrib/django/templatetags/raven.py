@@ -16,6 +16,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 @register.simple_tag
 def sentry_public_dsn(scheme=None):
     from raven.contrib.django.models import client

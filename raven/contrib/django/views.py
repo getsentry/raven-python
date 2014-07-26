@@ -23,6 +23,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 def is_valid_origin(origin):
     if not settings.SENTRY_ALLOW_ORIGIN:
         return False

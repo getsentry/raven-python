@@ -14,6 +14,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 def linebreak_iter(template_source):
     yield 0
     p = template_source.find('\n')

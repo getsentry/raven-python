@@ -17,6 +17,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 def is_ignorable_404(uri):
     """
     Returns True if a 404 at the given URL *shouldn't* notify the site managers.

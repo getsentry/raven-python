@@ -20,6 +20,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 class PromiseSerializer(Serializer):
     types = (Promise,)
 

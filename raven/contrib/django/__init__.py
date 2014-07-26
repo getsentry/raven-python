@@ -12,4 +12,3 @@ import warnings
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 from .client import DjangoClient  # NOQA
-

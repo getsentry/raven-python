@@ -28,6 +28,7 @@ import warnings
 
 warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
+
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
 
