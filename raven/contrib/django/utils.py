@@ -10,6 +10,9 @@ from __future__ import absolute_import
 
 from django.conf import settings
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 def linebreak_iter(template_source):
     yield 0

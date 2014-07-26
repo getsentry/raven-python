@@ -9,3 +9,7 @@ raven.contrib.django.raven_compat.models
 from __future__ import absolute_import
 
 from raven.contrib.django.models import *  # NOQA
+
+import warnings
+
+warnings.warn('raven.contrib.django.raven_compat is deprecated. Use raven_django instead.', DeprecationWarning)

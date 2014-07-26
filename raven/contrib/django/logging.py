@@ -10,8 +10,12 @@ from __future__ import absolute_import
 
 import warnings
 
-warnings.warn('raven.contrib.django.logging is deprecated. Use raven.contrib.django.handlers instead.', DeprecationWarning)
+warnings.warn('raven.contrib.django.logging is deprecated. Use raven_django.handlers instead.', DeprecationWarning)
 
 from raven.contrib.django.handlers import SentryHandler  # NOQA
 
 __all__ = ('SentryHandler',)
+
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)

@@ -13,6 +13,10 @@ from raven.scripts.runner import store_json, send_test_message
 import sys
 import time
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
+
 
 class Command(BaseCommand):
     help = 'Commands to interact with the Sentry client'

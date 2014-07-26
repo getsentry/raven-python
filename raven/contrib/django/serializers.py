@@ -16,6 +16,9 @@ from raven.utils import six
 
 __all__ = ('PromiseSerializer',)
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 class PromiseSerializer(Serializer):
     types = (Promise,)

@@ -12,6 +12,9 @@ from django import template
 
 register = template.Library()
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 @register.simple_tag
 def sentry_public_dsn(scheme=None):

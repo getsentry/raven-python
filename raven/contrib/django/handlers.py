@@ -11,6 +11,10 @@ from __future__ import absolute_import
 import logging
 from raven.handlers.logging import SentryHandler as BaseSentryHandler
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
+
 
 class SentryHandler(BaseSentryHandler):
     def __init__(self, level=logging.NOTSET):

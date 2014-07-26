@@ -9,3 +9,7 @@ raven.contrib.django.raven_compat.templatetags.raven
 from __future__ import absolute_import
 
 from raven.contrib.django.templatetags.raven import *  # NOQA
+
+import warnings
+
+warnings.warn('raven.contrib.django.templatetags is deprecated. Use raven_django instead.', DeprecationWarning)

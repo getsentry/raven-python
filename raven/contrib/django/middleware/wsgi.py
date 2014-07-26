@@ -9,6 +9,10 @@ from __future__ import absolute_import
 
 from raven.middleware import Sentry
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
+
 
 class Sentry(Sentry):
     """

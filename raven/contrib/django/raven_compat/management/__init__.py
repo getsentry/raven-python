@@ -8,3 +8,7 @@ raven.contrib.django.raven_compat.management
 from __future__ import absolute_import, print_function
 
 from raven.contrib.django.management import *  # NOQA
+
+import warnings
+
+warnings.warn('raven.contrib.django.raven_compat is deprecated. Use raven_django instead.', DeprecationWarning)

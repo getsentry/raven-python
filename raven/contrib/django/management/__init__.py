@@ -13,6 +13,9 @@ from functools import wraps
 
 from django.conf import settings
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 def patch_base_command(cls):
     """

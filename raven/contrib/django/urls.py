@@ -7,6 +7,10 @@ raven.contrib.django.urls
 """
 from __future__ import absolute_import
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
+
 try:
     from django.conf.urls import patterns, url
 except ImportError:

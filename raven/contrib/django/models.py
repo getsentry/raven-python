@@ -22,6 +22,9 @@ from django.conf import settings as django_settings
 
 logger = logging.getLogger('sentry.errors.client')
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 def get_installed_apps():
     """

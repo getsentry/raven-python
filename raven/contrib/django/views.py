@@ -19,6 +19,9 @@ from raven.contrib.django.models import client
 from raven.utils import json
 from raven.utils import six
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 def is_valid_origin(origin):
     if not settings.SENTRY_ALLOW_ORIGIN:

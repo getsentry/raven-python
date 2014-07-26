@@ -13,6 +13,9 @@ import logging
 
 from django.conf import settings
 
+import warnings
+
+warnings.warn('raven.contrib.django is deprecated. Use raven_django instead.', DeprecationWarning)
 
 def is_ignorable_404(uri):
     """
