@@ -279,9 +279,6 @@ class Client(object):
         data.setdefault('tags', {})
         data.setdefault('extra', {})
 
-        if stack is None:
-            stack = self.auto_log_stacks
-
         if '.' not in event_type:
             # Assume it's a builtin
             event_type = 'raven.events.%s' % event_type
@@ -297,6 +294,12 @@ class Client(object):
         for k, v in six.iteritems(result):
             if k not in data:
                 data[k] = v
+
+        # auto_log_stacks only applies to events that are not exceptions
+        # due to confusion about which stack is which and the automatic
+        # application of stacktrace to exception objects by Sentry
+        if stack is None and 'exception' not in data:
+            stack = self.auto_log_stacks
 
         if stack and 'stacktrace' not in data:
             if stack is True:
