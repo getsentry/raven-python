@@ -19,7 +19,7 @@ import sys
 import os
 import logging
 
-from flask import request, current_app
+from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
 from raven.conf import setup_logging
 from raven.base import Client
@@ -44,6 +44,7 @@ def make_client(client_cls, app, dsn=None):
         processors=app.config.get('SENTRY_PROCESSORS'),
         string_max_length=app.config.get('SENTRY_MAX_LENGTH_STRING'),
         list_max_length=app.config.get('SENTRY_MAX_LENGTH_LIST'),
+        auto_log_stacks=app.config.get('SENTRY_AUTO_LOG_STACKS'),
         extra={
             'app': app,
         },
@@ -104,6 +105,18 @@ class Sentry(object):
 
         if app:
             self.init_app(app)
+
+    @property
+    def last_event_id(self):
+        return getattr(self, '_last_event_id')
+
+    @last_event_id.setter
+    def last_event_id(self, value):
+        self._last_event_id = value
+        try:
+            g.sentry_event_id = value
+        except:
+            pass
 
     def handle_exception(self, *args, **kwargs):
         if not self.client:
@@ -181,9 +194,19 @@ class Sentry(object):
         response.headers['X-Sentry-ID'] = self.last_event_id
         return response
 
-    def init_app(self, app, dsn=None):
+    def init_app(self, app, dsn=None, logging=None, level=None, wrap_wsgi=None,
+                 register_signal=None):
         if dsn is not None:
             self.dsn = dsn
+
+        if level is not None:
+            self.level = level
+
+        if wrap_wsgi is not None:
+            self.wrap_wsgi = wrap_wsgi
+
+        if register_signal is not None:
+            self.register_signal = register_signal
 
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)

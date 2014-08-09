@@ -19,6 +19,12 @@ The first thing you'll need to do is to initialize Raven under your application:
 If you don't specify the ``dsn`` value, we will attempt to read it from your environment under
 the ``SENTRY_DSN`` key.
 
+You can optionnaly configure logging too::
+
+    import logging
+    from raven.contrib.flask import Sentry
+    sentry = Sentry(app, logging=True, level=logging.ERROR)
+
 Building applications on the fly? You can use Raven's ``init_app`` hook::
 
     sentry = Sentry(dsn='http://public_key:secret_key@example.com/1')
@@ -27,6 +33,17 @@ Building applications on the fly? You can use Raven's ``init_app`` hook::
         app = Flask(__name__)
         sentry.init_app(app)
         return app
+
+You can pass parameters in the ``init_app`` hook::
+
+    sentry = Sentry()
+
+    def create_app():
+        app = Flask(__name__)
+        sentry.init_app(app, dsn='http://public_key:secret_key@example.com/1',
+                        logging=True, level=logging.ERROR)
+        return app
+
 
 Settings
 --------
@@ -70,3 +87,16 @@ Capture an arbitrary exception by calling ``captureException``::
 Log a generic message with ``captureMessage``::
 
     >>> sentry.captureMessage('hello, world!')
+
+Getting the last event id
+-------------------------
+
+If possible, the last Sentry event ID is stored in the request context ``g.sentry_event_id`` variable.
+This allow to present the user an error ID if have done a custom error 500 page.
+
+.. code-block:: html+jinja
+
+    <h2>Error 500</h2>
+    {% if g.sentry_event_id %}
+    <p>The error identifier is {{ g.sentry_event_id }}</p>
+    {% endif %}
