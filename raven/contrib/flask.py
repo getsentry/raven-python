@@ -182,9 +182,19 @@ class Sentry(object):
         response.headers['X-Sentry-ID'] = self.last_event_id
         return response
 
-    def init_app(self, app, dsn=None):
+    def init_app(self, app, dsn=None, logging=None, level=None, wrap_wsgi=None,
+                 register_signal=None):
         if dsn is not None:
             self.dsn = dsn
+
+        if level is not None:
+            self.level = level
+
+        if wrap_wsgi is not None:
+            self.wrap_wsgi = wrap_wsgi
+
+        if register_signal is not None:
+            self.register_signal = register_signal
 
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)
