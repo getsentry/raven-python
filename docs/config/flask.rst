@@ -87,3 +87,16 @@ Capture an arbitrary exception by calling ``captureException``::
 Log a generic message with ``captureMessage``::
 
     >>> sentry.captureMessage('hello, world!')
+
+Getting the last event id
+-------------------------
+
+If possible, the last Sentry event ID is stored in the request context ``g.sentry_event_id`` variable.
+This allow to present the user an error ID if have done a custom error 500 page.
+
+.. code-block:: html+jinja
+
+    <h2>Error 500</h2>
+    {% if g.sentry_event_id %}
+    <p>The error identifier is {{ g.sentry_event_id }}</p>
+    {% endif %}
