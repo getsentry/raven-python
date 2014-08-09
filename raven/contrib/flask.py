@@ -19,7 +19,7 @@ import sys
 import os
 import logging
 
-from flask import request, current_app
+from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
 from raven.conf import setup_logging
 from raven.base import Client
@@ -105,6 +105,18 @@ class Sentry(object):
 
         if app:
             self.init_app(app)
+
+    @property
+    def last_event_id(self):
+        return getattr(self, '_last_event_id')
+
+    @last_event_id.setter
+    def last_event_id(self, value):
+        self._last_event_id = value
+        try:
+            g.sentry_event_id = value
+        except:
+            pass
 
     def handle_exception(self, *args, **kwargs):
         if not self.client:

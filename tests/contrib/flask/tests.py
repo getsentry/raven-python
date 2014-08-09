@@ -3,7 +3,7 @@ import logging
 from exam import before, fixture
 from mock import patch
 
-from flask import Flask, current_app
+from flask import Flask, current_app, g
 from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
 
 from raven.base import Client
@@ -225,19 +225,25 @@ class FlaskTest(BaseTest):
         self.assertEquals(len(raven.events), 1)
 
     def test_captureException_sets_last_event_id(self):
-        try:
-            raise ValueError
-        except Exception:
-            self.middleware.captureException()
-        else:
-            self.fail()
+        with self.app.test_request_context('/'):
+            try:
+                raise ValueError
+            except Exception:
+                self.middleware.captureException()
+            else:
+                self.fail()
 
-        assert self.middleware.last_event_id == self.raven.events.pop(0)['event_id']
+            event_id = self.raven.events.pop(0)['event_id']
+            assert self.middleware.last_event_id == event_id
+            assert g.sentry_event_id == event_id
 
     def test_captureMessage_sets_last_event_id(self):
-        self.middleware.captureMessage('foo')
+        with self.app.test_request_context('/'):
+            self.middleware.captureMessage('foo')
 
-        assert self.middleware.last_event_id == self.raven.events.pop(0)['event_id']
+            event_id = self.raven.events.pop(0)['event_id']
+            assert self.middleware.last_event_id == event_id
+            assert g.sentry_event_id == event_id
 
 
 class FlaskLoginTest(BaseTest):
