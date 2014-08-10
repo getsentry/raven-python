@@ -9,8 +9,11 @@ from __future__ import absolute_import
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from celery import VERSION
 
-if 'djcelery' not in settings.INSTALLED_APPS:
+djcelery_required = not (VERSION[0] == 3 and VERSION[1] >= 1)
+
+if djcelery_required and 'djcelery' not in settings.INSTALLED_APPS:
     raise ImproperlyConfigured(
         "Put 'djcelery' in your INSTALLED_APPS setting in order to use the "
         "sentry celery client.")
