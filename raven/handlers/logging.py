@@ -73,7 +73,7 @@ class SentryHandler(logging.Handler, object):
             print(to_string(record.msg), file=sys.stderr)
             print(to_string(traceback.format_exc()), file=sys.stderr)
 
-    def _get_targetted_stack(self, stack):
+    def _get_targetted_stack(self, stack, record):
         # we might need to traverse this multiple times, so coerce it to a list
         stack = list(stack)
         frames = []
@@ -129,7 +129,7 @@ class SentryHandler(logging.Handler, object):
             stack = iter_stack_frames()
 
         if stack:
-            stack = self._get_targetted_stack(stack)
+            stack = self._get_targetted_stack(stack, record)
 
         date = datetime.datetime.utcfromtimestamp(record.created)
         event_type = 'raven.events.Message'
