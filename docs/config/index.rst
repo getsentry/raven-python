@@ -191,7 +191,8 @@ If a string is longer than the given length, it will be truncated down to the sp
 auto_log_stacks
 ~~~~~~~~~~~~~~~
 
-Should Raven automatically log frame stacks (including locals) all calls as it would for exceptions.
+Should Raven automatically log frame stacks (including locals) for all calls as
+it would for exceptions.
 
 ::
 
