@@ -108,7 +108,7 @@ class Sentry(object):
 
     @property
     def last_event_id(self):
-        return getattr(self, '_last_event_id')
+        return getattr(self, '_last_event_id', None)
 
     @last_event_id.setter
     def last_event_id(self, value):
