@@ -58,7 +58,7 @@ class Serializer(object):
                 import traceback
                 traceback.print_exc()
                 self.manager.logger.exception(e)
-                return type(value)
+                return six.text_type(type(value))
         return self.manager.transform(value, max_depth=max_depth, _depth=_depth, **kwargs)
 
 
