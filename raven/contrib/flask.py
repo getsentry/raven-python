@@ -207,6 +207,9 @@ class Sentry(object):
 
         if register_signal is not None:
             self.register_signal = register_signal
+            
+        if logging is not None:
+            self.logging = logging
 
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)
