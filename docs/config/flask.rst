@@ -19,7 +19,7 @@ The first thing you'll need to do is to initialize Raven under your application:
 If you don't specify the ``dsn`` value, we will attempt to read it from your environment under
 the ``SENTRY_DSN`` key.
 
-You can optionnaly configure logging too::
+You can optionally configure logging too::
 
     import logging
     from raven.contrib.flask import Sentry
