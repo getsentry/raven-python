@@ -139,8 +139,8 @@ class DjangoClientTest(TestCase):
 
     def test_signal_integration(self):
         try:
-            int('hello')
-        except:
+            int(None)
+        except Exception:
             got_request_exception.send(sender=self.__class__, request=None)
         else:
             self.fail('Expected an exception.')
@@ -149,10 +149,10 @@ class DjangoClientTest(TestCase):
         event = self.raven.events.pop(0)
         assert 'exception' in event
         exc = event['exception']['values'][0]
-        self.assertEquals(exc['type'], 'ValueError')
-        self.assertEquals(exc['value'], "invalid literal for int() with base 10: 'hello'")
+        self.assertEquals(exc['type'], 'TypeError')
+        self.assertEquals(exc['value'], "int() argument must be a string or a number, not 'NoneType'")
         self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], "ValueError: invalid literal for int() with base 10: 'hello'")
+        self.assertEquals(event['message'], "TypeError: int() argument must be a string or a number, not 'NoneType'")
         self.assertEquals(event['culprit'], 'tests.contrib.django.tests in test_signal_integration')
 
     def test_view_exception(self):
