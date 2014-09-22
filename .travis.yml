@@ -8,10 +8,10 @@ python:
   - "pypy"
 env:
   matrix:
-    - DJANGO=Django==1.4.10
-    - DJANGO=Django==1.5.5
-    - DJANGO=Django==1.6
-    - DJANGO="https://www.djangoproject.com/download/1.7b1/tarball/"
+    - DJANGO=Django==1.4.15
+    - DJANGO=Django==1.5.10
+    - DJANGO=Django==1.6.7
+    - DJANGO=Django==1.7
     - 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
   global:
     - 'PIP_DOWNLOAD_CACHE=".pip_download_cache"'
@@ -48,13 +48,13 @@ matrix:
     - python: "3.4"
   exclude:
     - python: "3.2"
-      env: DJANGO=Django==1.4.10
+      env: DJANGO=Django==1.4.15
     - python: "3.3"
-      env: DJANGO=Django==1.4.10
+      env: DJANGO=Django==1.4.15
     - python: "3.4"
-      env: DJANGO=Django==1.4.10
+      env: DJANGO=Django==1.4.15
     - python: "2.6"
       env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
     - python: "2.6"
-      env: DJANGO="https://www.djangoproject.com/download/1.7b1/tarball/"
+      env: DJANGO=Django==1.7
 
