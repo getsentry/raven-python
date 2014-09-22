@@ -47,10 +47,8 @@ webpy_tests_requires = [
     'web.py',
 ]
 
-# If it's python3, remove flask, unittest2 & web.py
+# If it's python3, remove unittest2 & web.py
 if sys.version_info[0] == 3:
-    flask_requires = []
-    flask_tests_requires = []
     unittest2_requires = []
     webpy_tests_requires = []
 
