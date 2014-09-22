@@ -115,7 +115,7 @@ class Sentry(object):
         self._last_event_id = value
         try:
             g.sentry_event_id = value
-        except:
+        except Exception:
             pass
 
     def handle_exception(self, *args, **kwargs):
@@ -207,7 +207,7 @@ class Sentry(object):
 
         if register_signal is not None:
             self.register_signal = register_signal
-            
+
         if logging is not None:
             self.logging = logging
 
