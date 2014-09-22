@@ -14,6 +14,7 @@ import sys  # NOQA
 from exam import fixture
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
@@ -169,31 +170,33 @@ class DjangoClientTest(TestCase):
         assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
     def test_user_info(self):
-        from django.contrib.auth.models import User
-        user = User(username='admin', email='admin@example.com')
-        user.set_password('admin')
-        user.save()
+        with Settings(MIDDLEWARE_CLASSES=[
+                'django.contrib.sessions.middleware.SessionMiddleware',
+                'django.contrib.auth.middleware.AuthenticationMiddleware']):
+            user = User(username='admin', email='admin@example.com')
+            user.set_password('admin')
+            user.save()
 
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-        assert 'user' not in event
+            assert len(self.raven.events) == 1
+            event = self.raven.events.pop(0)
+            assert 'user' not in event
 
-        assert self.client.login(username='admin', password='admin')
+            assert self.client.login(username='admin', password='admin')
 
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-        assert 'user' in event
-        user_info = event['user']
-        assert user_info == {
-            'is_authenticated': True,
-            'username': user.username,
-            'id': user.id,
-            'email': user.email,
-        }
+            assert len(self.raven.events) == 1
+            event = self.raven.events.pop(0)
+            assert 'user' in event
+            user_info = event['user']
+            assert user_info == {
+                'is_authenticated': True,
+                'username': user.username,
+                'id': user.id,
+                'email': user.email,
+            }
 
     @pytest.mark.skipif(str('not DJANGO_15'))
     def test_get_user_info_abstract_user(self):
