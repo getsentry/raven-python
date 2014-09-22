@@ -409,7 +409,7 @@ class DjangoClientTest(TestCase):
             resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
             headers = dict(resp.items())
-            self.assertTrue('X-Sentry-ID' in headers)
+            assert 'X-Sentry-ID' in headers
             assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
             assert event['event_id'] == headers['X-Sentry-ID']
@@ -470,14 +470,14 @@ class DjangoClientTest(TestCase):
         http = event['request']
         assert http['method'] == 'POST'
         assert http['data'] == '<unavailable>'
-        self.assertTrue('headers' in http)
+        assert 'headers' in http
         headers = http['headers']
-        self.assertTrue('Content-Type' in headers, headers.keys())
+        assert 'Content-Type' in headers, headers.keys()
         assert headers['Content-Type'] == 'text/html'
         env = http['env']
-        self.assertTrue('SERVER_NAME' in env, env.keys())
+        assert 'SERVER_NAME' in env, env.keys()
         assert env['SERVER_NAME'] == 'testserver'
-        self.assertTrue('SERVER_PORT' in env, env.keys())
+        assert 'SERVER_PORT' in env, env.keys()
         assert env['SERVER_PORT'] == '80'
 
     def test_marks_django_frames_correctly(self):
@@ -627,19 +627,19 @@ class CeleryIntegratedClientTest(TestCase):
 class IsValidOriginTestCase(TestCase):
     def test_setting_empty(self):
         with Settings(SENTRY_ALLOW_ORIGIN=None):
-            self.assertFalse(is_valid_origin('http://example.com'))
+            assert not is_valid_origin('http://example.com')
 
     def test_setting_all(self):
         with Settings(SENTRY_ALLOW_ORIGIN='*'):
-            self.assertTrue(is_valid_origin('http://example.com'))
+            assert is_valid_origin('http://example.com')
 
     def test_setting_uri(self):
         with Settings(SENTRY_ALLOW_ORIGIN=['http://example.com']):
-            self.assertTrue(is_valid_origin('http://example.com'))
+            assert is_valid_origin('http://example.com')
 
     def test_setting_regexp(self):
         with Settings(SENTRY_ALLOW_ORIGIN=[re.compile('https?\://(.*\.)?example\.com')]):
-            self.assertTrue(is_valid_origin('http://example.com'))
+            assert is_valid_origin('http://example.com')
 
 
 class ReportViewTest(TestCase):
@@ -725,7 +725,7 @@ class PromiseSerializerTestCase(TestCase):
         fake_gettext_lazy = lazy(fake_gettext, six.text_type)
 
         result = transform(fake_gettext_lazy("something"))
-        self.assertTrue(isinstance(result, six.string_types))
+        assert isinstance(result, six.string_types)
         expected = "'Igpay Atinlay'" if six.PY3 else "u'Igpay Atinlay'"
         assert result == expected
 
@@ -735,7 +735,7 @@ class ModelInstanceSerializerTestCase(TestCase):
         instance = TestModel()
 
         result = transform(instance)
-        self.assertTrue(isinstance(result, six.string_types))
+        assert isinstance(result, six.string_types)
         assert result == '<TestModel: TestModel object>'
 
 
@@ -745,7 +745,7 @@ class QuerySetSerializerTestCase(TestCase):
         obj = QuerySet(model=TestModel)
 
         result = transform(obj)
-        self.assertTrue(isinstance(result, six.string_types))
+        assert isinstance(result, six.string_types)
         assert result == '<QuerySet: model=TestModel>'
 
 
