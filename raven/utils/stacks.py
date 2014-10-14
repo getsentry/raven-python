@@ -246,7 +246,7 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
             try:
                 f_locals = to_dict(f_locals)
             except Exception:
-                f_locals = None
+                capture_locals = False
 
         frame_result = {
             'abs_path': abs_path,
@@ -256,7 +256,10 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
             'lineno': lineno + 1,
         }
         if capture_locals:
-            frame_result['vars'] = transformer(f_locals)
+            frame_result['vars'] = dict(
+                (k, transformer(v))
+                for k, v in six.iteritems(f_locals)
+            )
 
         if context_line is not None:
             frame_result.update({
