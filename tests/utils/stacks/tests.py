@@ -63,13 +63,13 @@ class GetStackInfoTest(TestCase):
         assert 'vars' in result
         if six.PY3:
             expected = {
-                "'foo'": "'bar'",
-                "'biz'": "'baz'",
+                "foo": "'bar'",
+                "biz": "'baz'",
             }
         else:
             expected = {
-                "u'foo'": "u'bar'",
-                "u'biz'": "u'baz'",
+                "foo": "u'bar'",
+                "biz": "u'baz'",
             }
         assert result['vars'] == expected
 
