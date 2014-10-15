@@ -25,12 +25,11 @@ class Processor(object):
         if resp:
             data = resp
 
-        if 'stacktrace' in data:
-            self.filter_stacktrace(data['stacktrace'])
-
         if 'exception' in data:
-            if 'stacktrace' in data['exception']:
-                self.filter_stacktrace(data['exception']['stacktrace'])
+            if 'values' in data['exception']:
+                for value in data['exception'].get('values', []):
+                    if 'stacktrace' in value:
+                        self.filter_stacktrace(value['stacktrace'])
 
         if 'request' in data:
             self.filter_http(data['request'])
@@ -90,9 +89,7 @@ class SanitizePasswordsProcessor(Processor):
         return value
 
     def filter_stacktrace(self, data):
-        if 'frames' not in data:
-            return
-        for frame in data['frames']:
+        for frame in data.get('frames', []):
             if 'vars' not in frame:
                 continue
             frame['vars'] = varmap(self.sanitize, frame['vars'])
