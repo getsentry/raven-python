@@ -1,3 +1,13 @@
+Version 5.1.0
+-------------
+
+* Added aiohttp transport.
+* Corrected behavior with auto_log_stacks and exceptions.
+* Add support for certifi.
+* Expanded Flask support.
+* Expanded Django support.
+* Corrected an issue where processors were not correctly applying.
+
 Version 5.0.0
 -------------
 
