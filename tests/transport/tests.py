@@ -63,7 +63,7 @@ class TransportTest(TestCase):
         actual_message = zlib.decompress(base64.b64decode(mock_cls._data))
 
         # These loads()/dumps() pairs order the dict keys before comparing the string.
-        # See GH503
+        # See GH504
         self.assertEqual(
             json.dumps(json.loads(expected_message.decode('utf-8')), sort_keys=True),
             json.dumps(json.loads(actual_message.decode('utf-8')), sort_keys=True)
