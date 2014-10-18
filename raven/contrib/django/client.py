@@ -15,11 +15,6 @@ from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
-try:
-    from django.contrib.auth.models import AbstractBaseUser as BaseUser
-except ImportError:
-    from django.contrib.auth.models import User as BaseUser  # NOQA
-
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
@@ -55,6 +50,11 @@ class DjangoClient(Client):
         return user_info
 
     def get_data_from_request(self, request):
+        try:
+            from django.contrib.auth.models import AbstractBaseUser as BaseUser
+        except ImportError:
+            from django.contrib.auth.models import User as BaseUser  # NOQA
+
         result = {}
 
         if hasattr(request, 'user') and isinstance(request.user, BaseUser):
