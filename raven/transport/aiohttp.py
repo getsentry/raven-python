@@ -55,7 +55,7 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
                                                   headers=headers,
                                                   connector=self._connector,
                                                   loop=self._loop)
-                resp.close()
+                yield from resp.release()
                 code = resp.status
                 if code != 200:
                     msg = resp.headers.get('x-sentry-error')
