@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from raven.exceptions import APIError, RateLimited
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
+from raven.conf import defaults
 
 import socket
 
@@ -28,6 +29,7 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
     scheme = ['aiohttp+http', 'aiohttp+https']
 
     def __init__(self, parsed_url, *, verify_ssl=True, resolve=True,
+                 timeout=defaults.TIMEOUT,
                  keepalive=True, family=socket.AF_INET, loop=None):
         if not has_aiohttp:
             raise ImportError('AioHttpTransport requires asyncio and aiohttp.')
@@ -36,7 +38,7 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
             loop = asyncio.get_event_loop()
         self._loop = loop
 
-        super().__init__(parsed_url)
+        super().__init__(parsed_url, timeout, verify_ssl)
 
         if keepalive:
             self._connector = aiohttp.TCPConnector(verify_ssl=verify_ssl,
@@ -50,12 +52,15 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
         @asyncio.coroutine
         def f():
             try:
-                resp = yield from aiohttp.request('POST',
-                                                  self._url, data=data,
-                                                  headers=headers,
-                                                  connector=self._connector,
-                                                  loop=self._loop)
-                resp.close()
+                resp = yield from asyncio.wait_for(
+                    aiohttp.request('POST',
+                                    self._url, data=data,
+                                    headers=headers,
+                                    connector=self._connector,
+                                    loop=self._loop),
+                    self.timeout,
+                    loop=self._loop)
+                yield from resp.release()
                 code = resp.status
                 if code != 200:
                     msg = resp.headers.get('x-sentry-error')
