@@ -45,6 +45,7 @@ def make_client(client_cls, app, dsn=None):
         string_max_length=app.config.get('SENTRY_MAX_LENGTH_STRING'),
         list_max_length=app.config.get('SENTRY_MAX_LENGTH_LIST'),
         auto_log_stacks=app.config.get('SENTRY_AUTO_LOG_STACKS'),
+        tags=app.config.get('SENTRY_TAGS'),
         extra={
             'app': app,
         },
