@@ -536,7 +536,7 @@ class Client(object):
         if isinstance(e, APIError):
             if isinstance(e, RateLimited):
                 retry_after = e.retry_after
-            self.error_logger.error('Unable to capture event: %s', e.message)
+            self.error_logger.error('Unable to capture event: %s(%s)', e.__class__.__name__, e.message)
         elif isinstance(e, HTTPError):
             body = e.read()
             self.error_logger.error(
