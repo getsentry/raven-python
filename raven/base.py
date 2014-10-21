@@ -135,37 +135,8 @@ class Client(object):
             '%s.%s' % (cls.__module__, cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
 
-        if dsn is None and os.environ.get('SENTRY_DSN'):
-            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
-            self.logger.debug(msg)
-            dsn = os.environ['SENTRY_DSN']
-
-        if dsn:
-            # TODO: should we validate other options weren't sent?
-            urlparts = urlparse(dsn)
-            self.logger.debug(
-                "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
-                urlparts.netloc, urlparts.path))
-            dsn_config = raven.load(dsn, transport_registry=self._registry)
-            servers = dsn_config['SENTRY_SERVERS']
-            project = dsn_config['SENTRY_PROJECT']
-            public_key = dsn_config['SENTRY_PUBLIC_KEY']
-            secret_key = dsn_config['SENTRY_SECRET_KEY']
-            transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
-        else:
-            if o.get('servers'):
-                warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
-            servers = o.get('servers')
-            project = o.get('project')
-            public_key = o.get('public_key')
-            secret_key = o.get('secret_key')
-            transport_options = {}
-
-        self.servers = servers
-        self.public_key = public_key
-        self.secret_key = secret_key
-        self.project = project or defaults.PROJECT
-        self.transport_options = transport_options
+        self.dsns = {}
+        self.set_dsn(dsn, **options)
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
@@ -202,6 +173,45 @@ class Client(object):
             Raven = self
 
         self._context = Context()
+
+    def set_dsn(self, dsn=None, **options):
+        o = options
+
+        if dsn is None and os.environ.get('SENTRY_DSN'):
+            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+            self.logger.debug(msg)
+            dsn = os.environ['SENTRY_DSN']
+
+        try:
+            servers, public_key, secret_key, project, transport_options = self.dsns[dsn]
+        except KeyError:
+            if dsn:
+                # TODO: should we validate other options weren't sent?
+                urlparts = urlparse(dsn)
+                self.logger.debug(
+                    "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
+                    urlparts.netloc, urlparts.path))
+                dsn_config = raven.load(dsn, transport_registry=self._registry)
+                servers = dsn_config['SENTRY_SERVERS']
+                project = dsn_config['SENTRY_PROJECT']
+                public_key = dsn_config['SENTRY_PUBLIC_KEY']
+                secret_key = dsn_config['SENTRY_SECRET_KEY']
+                transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
+            else:
+                if o.get('servers'):
+                    warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
+                servers = o.get('servers')
+                project = o.get('project')
+                public_key = o.get('public_key')
+                secret_key = o.get('secret_key')
+                transport_options = {}
+            self.dsns[dsn] = servers, public_key, secret_key, project, transport_options
+
+        self.servers = servers
+        self.public_key = public_key
+        self.secret_key = secret_key
+        self.project = project or defaults.PROJECT
+        self.transport_options = transport_options
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
