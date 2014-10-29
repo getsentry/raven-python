@@ -8,11 +8,27 @@ raven.contrib.tornado
 from __future__ import absolute_import
 
 import time
+import uuid
+import zlib
+import base64
+import datetime
 
 import raven
 from raven.base import Client
-from raven.utils import get_auth_header
+from raven.utils import json, get_auth_header
 from tornado.httpclient import AsyncHTTPClient, HTTPError
+from tornado.concurrent import Future
+
+
+class TornadoJSONEncoder(json.BetterJSONEncoder):
+    ENCODER_BY_TYPE = {
+        uuid.UUID: lambda o: o.hex,
+        datetime.datetime: lambda o: o.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        set: list,
+        frozenset: list,
+        bytes: lambda o: o.decode('utf-8', errors='replace'),
+        Future: lambda o: None,
+    }
 
 
 class AsyncSentryClient(Client):
@@ -77,6 +93,10 @@ class AsyncSentryClient(Client):
                 url=url, data=message, headers=headers,
                 callback=kwargs.get('callback', None)
             )
+
+    def encode(self, data):
+        dumped = json.dumps(data, cls=TornadoJSONEncoder).encode('utf-8')
+        return base64.b64encode(zlib.compress(dumped))
 
     def send_remote(self, url, data, headers=None, callback=None):
         if headers is None:

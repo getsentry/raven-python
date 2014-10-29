@@ -44,9 +44,9 @@ def better_decoder(data):
     return data
 
 
-def dumps(value, **kwargs):
+def dumps(value, cls=BetterJSONEncoder, **kwargs):
     try:
-        return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
+        return json.dumps(value, cls=cls, **kwargs)
     except Exception:
         kwargs['encoding'] = 'safe-utf-8'
         return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
