@@ -507,7 +507,7 @@ class Client(object):
         :param extra: a dictionary of additional standard metadata
         :param culprit: a string representing the cause of this event
                         (generally a path to a function)
-        :return: a 32-length string identifying this event
+        :return: a tuple with a 32-length string identifying this event
         """
 
         if not self.is_enabled():
