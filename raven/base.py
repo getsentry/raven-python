@@ -135,37 +135,8 @@ class Client(object):
             '%s.%s' % (cls.__module__, cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
 
-        if dsn is None and os.environ.get('SENTRY_DSN'):
-            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
-            self.logger.debug(msg)
-            dsn = os.environ['SENTRY_DSN']
-
-        if dsn:
-            # TODO: should we validate other options weren't sent?
-            urlparts = urlparse(dsn)
-            self.logger.debug(
-                "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
-                urlparts.netloc, urlparts.path))
-            dsn_config = raven.load(dsn, transport_registry=self._registry)
-            servers = dsn_config['SENTRY_SERVERS']
-            project = dsn_config['SENTRY_PROJECT']
-            public_key = dsn_config['SENTRY_PUBLIC_KEY']
-            secret_key = dsn_config['SENTRY_SECRET_KEY']
-            transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
-        else:
-            if o.get('servers'):
-                warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
-            servers = o.get('servers')
-            project = o.get('project')
-            public_key = o.get('public_key')
-            secret_key = o.get('secret_key')
-            transport_options = {}
-
-        self.servers = servers
-        self.public_key = public_key
-        self.secret_key = secret_key
-        self.project = project or defaults.PROJECT
-        self.transport_options = transport_options
+        self.dsns = {}
+        self.set_dsn(dsn, **options)
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
@@ -202,6 +173,45 @@ class Client(object):
             Raven = self
 
         self._context = Context()
+
+    def set_dsn(self, dsn=None, **options):
+        o = options
+
+        if dsn is None and os.environ.get('SENTRY_DSN'):
+            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+            self.logger.debug(msg)
+            dsn = os.environ['SENTRY_DSN']
+
+        try:
+            servers, public_key, secret_key, project, transport_options = self.dsns[dsn]
+        except KeyError:
+            if dsn:
+                # TODO: should we validate other options weren't sent?
+                urlparts = urlparse(dsn)
+                self.logger.debug(
+                    "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
+                    urlparts.netloc, urlparts.path))
+                dsn_config = raven.load(dsn, transport_registry=self._registry)
+                servers = dsn_config['SENTRY_SERVERS']
+                project = dsn_config['SENTRY_PROJECT']
+                public_key = dsn_config['SENTRY_PUBLIC_KEY']
+                secret_key = dsn_config['SENTRY_SECRET_KEY']
+                transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
+            else:
+                if o.get('servers'):
+                    warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
+                servers = o.get('servers')
+                project = o.get('project')
+                public_key = o.get('public_key')
+                secret_key = o.get('secret_key')
+                transport_options = {}
+            self.dsns[dsn] = servers, public_key, secret_key, project, transport_options
+
+        self.servers = servers
+        self.public_key = public_key
+        self.secret_key = secret_key
+        self.project = project or defaults.PROJECT
+        self.transport_options = transport_options
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
@@ -279,9 +289,6 @@ class Client(object):
         data.setdefault('tags', {})
         data.setdefault('extra', {})
 
-        if stack is None:
-            stack = self.auto_log_stacks
-
         if '.' not in event_type:
             # Assume it's a builtin
             event_type = 'raven.events.%s' % event_type
@@ -297,6 +304,12 @@ class Client(object):
         for k, v in six.iteritems(result):
             if k not in data:
                 data[k] = v
+
+        # auto_log_stacks only applies to events that are not exceptions
+        # due to confusion about which stack is which and the automatic
+        # application of stacktrace to exception objects by Sentry
+        if stack is None and 'exception' not in data:
+            stack = self.auto_log_stacks
 
         if stack and 'stacktrace' not in data:
             if stack is True:
@@ -490,11 +503,10 @@ class Client(object):
         :param date: the datetime of this event
         :param time_spent: a integer value representing the duration of the
                            event (in milliseconds)
-        :param event_id: a 32-length unique string identifying this event
         :param extra: a dictionary of additional standard metadata
-        :param culprit: a string representing the cause of this event
-                        (generally a path to a function)
-        :return: a 32-length string identifying this event
+        :param stack: a stacktrace for the event
+        :param tags: list of extra tags
+        :return: a tuple with a 32-length string identifying this event
         """
 
         if not self.is_enabled():
@@ -533,7 +545,7 @@ class Client(object):
         if isinstance(e, APIError):
             if isinstance(e, RateLimited):
                 retry_after = e.retry_after
-            self.error_logger.error('Unable to capture event: %s', e.message)
+            self.error_logger.error('Unable to capture event: %s(%s)', e.__class__.__name__, e.message)
         elif isinstance(e, HTTPError):
             body = e.read()
             self.error_logger.error(

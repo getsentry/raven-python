@@ -25,6 +25,16 @@ For example, to increase the timeout and to disable SSL verification:
 	SENTRY_DSN = 'http://public:secret@example.com/1?timeout=5&verify_ssl=0'
 
 
+aiohttp
+-------
+
+Should only be used within a :pep:`3156` compatible event loops
+(*asyncio* itself and others).
+
+::
+
+    SENTRY_DSN = 'aiohttp+http://public:secret@example.com/1'
+
 Eventlet
 --------
 

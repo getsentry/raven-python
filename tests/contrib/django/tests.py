@@ -14,6 +14,7 @@ import sys  # NOQA
 from exam import fixture
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
@@ -111,7 +112,7 @@ class Settings(object):
 
 class ClientProxyTest(TestCase):
     def test_proxy_responds_as_client(self):
-        self.assertEquals(get_client(), client)
+        assert get_client() == client
 
     @mock.patch.object(TempStoreClient, 'captureMessage')
     def test_basic(self, captureMessage):
@@ -128,72 +129,74 @@ class DjangoClientTest(TestCase):
 
     def test_basic(self):
         self.raven.captureMessage(message='foo')
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        self.assertTrue('sentry.interfaces.Message' in event)
+        assert 'sentry.interfaces.Message' in event
         message = event['sentry.interfaces.Message']
-        self.assertEquals(message['message'], 'foo')
-        self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'foo')
-        self.assertEquals(type(event['timestamp']), datetime.datetime)
+        assert message['message'] == 'foo'
+        assert event['level'] == logging.ERROR
+        assert event['message'] == 'foo'
+        assert isinstance(event['timestamp'], datetime.datetime)
 
     def test_signal_integration(self):
         try:
-            int('hello')
-        except:
+            int(None)
+        except Exception:
             got_request_exception.send(sender=self.__class__, request=None)
         else:
             self.fail('Expected an exception.')
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
         exc = event['exception']['values'][0]
-        self.assertEquals(exc['type'], 'ValueError')
-        self.assertEquals(exc['value'], "invalid literal for int() with base 10: 'hello'")
-        self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], "ValueError: invalid literal for int() with base 10: 'hello'")
-        self.assertEquals(event['culprit'], 'tests.contrib.django.tests in test_signal_integration')
+        assert exc['type'] == 'TypeError'
+        assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
+        assert event['level'] == logging.ERROR
+        assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
+        assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
         exc = event['exception']['values'][0]
-        self.assertEquals(exc['type'], 'Exception')
-        self.assertEquals(exc['value'], 'view exception')
-        self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'Exception: view exception')
-        self.assertEquals(event['culprit'], 'tests.contrib.django.views in raise_exc')
+        assert exc['type'] == 'Exception'
+        assert exc['value'] == 'view exception'
+        assert event['level'] == logging.ERROR
+        assert event['message'] == 'Exception: view exception'
+        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
     def test_user_info(self):
-        from django.contrib.auth.models import User
-        user = User(username='admin', email='admin@example.com')
-        user.set_password('admin')
-        user.save()
+        with Settings(MIDDLEWARE_CLASSES=[
+                'django.contrib.sessions.middleware.SessionMiddleware',
+                'django.contrib.auth.middleware.AuthenticationMiddleware']):
+            user = User(username='admin', email='admin@example.com')
+            user.set_password('admin')
+            user.save()
 
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-        assert 'user' not in event
+            assert len(self.raven.events) == 1
+            event = self.raven.events.pop(0)
+            assert 'user' not in event
 
-        assert self.client.login(username='admin', password='admin')
+            assert self.client.login(username='admin', password='admin')
 
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+            self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
-        event = self.raven.events.pop(0)
-        assert 'user' in event
-        user_info = event['user']
-        assert user_info == {
-            'is_authenticated': True,
-            'username': user.username,
-            'id': user.id,
-            'email': user.email,
-        }
+            assert len(self.raven.events) == 1
+            event = self.raven.events.pop(0)
+            assert 'user' in event
+            user_info = event['user']
+            assert user_info == {
+                'is_authenticated': True,
+                'username': user.username,
+                'id': user.id,
+                'email': user.email,
+            }
 
     @pytest.mark.skipif(str('not DJANGO_15'))
     def test_get_user_info_abstract_user(self):
@@ -223,16 +226,16 @@ class DjangoClientTest(TestCase):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenRequestMiddleware']):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-raise-exc'))
 
-            self.assertEquals(len(self.raven.events), 1)
+            assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
             exc = event['exception']['values'][0]
-            self.assertEquals(exc['type'], 'ImportError')
-            self.assertEquals(exc['value'], 'request')
-            self.assertEquals(event['level'], logging.ERROR)
-            self.assertEquals(event['message'], 'ImportError: request')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware in process_request')
+            assert exc['type'] == 'ImportError'
+            assert exc['value'] == 'request'
+            assert event['level'] == logging.ERROR
+            assert event['message'] == 'ImportError: request'
+            assert event['culprit'] == 'tests.contrib.django.middleware in process_request'
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -240,16 +243,16 @@ class DjangoClientTest(TestCase):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenResponseMiddleware']):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-no-error'))
 
-            self.assertEquals(len(self.raven.events), 1)
+            assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
             exc = event['exception']['values'][0]
-            self.assertEquals(exc['type'], 'ImportError')
-            self.assertEquals(exc['value'], 'response')
-            self.assertEquals(event['level'], logging.ERROR)
-            self.assertEquals(event['message'], 'ImportError: response')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware in process_response')
+            assert exc['type'] == 'ImportError'
+            assert exc['value'] == 'response'
+            assert event['level'] == logging.ERROR
+            assert event['message'] == 'ImportError: response'
+            assert event['culprit'] == 'tests.contrib.django.middleware in process_response'
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
@@ -263,46 +266,46 @@ class DjangoClientTest(TestCase):
 
             assert 'exception' in event
             exc = event['exception']['values'][0]
-            self.assertEquals(exc['type'], 'Exception')
-            self.assertEquals(exc['value'], 'view exception')
-            self.assertEquals(event['level'], logging.ERROR)
-            self.assertEquals(event['message'], 'Exception: view exception')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.views in raise_exc')
+            assert exc['type'] == 'Exception'
+            assert exc['value'] == 'view exception'
+            assert event['level'] == logging.ERROR
+            assert event['message'] == 'Exception: view exception'
+            assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
             exc = event['exception']['values'][0]
-            self.assertEquals(exc['type'], 'ValueError')
-            self.assertEquals(exc['value'], 'handler500')
-            self.assertEquals(event['level'], logging.ERROR)
-            self.assertEquals(event['message'], 'ValueError: handler500')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.urls in handler500')
+            assert exc['type'] == 'ValueError'
+            assert exc['value'] == 'handler500'
+            assert event['level'] == logging.ERROR
+            assert event['message'] == 'ValueError: handler500'
+            assert event['culprit'] == 'tests.contrib.django.urls in handler500'
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-raise-exc'))
 
-            self.assertEquals(len(self.raven.events), 1)
+            assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
             exc = event['exception']['values'][0]
-            self.assertEquals(exc['type'], 'ImportError')
-            self.assertEquals(exc['value'], 'view')
-            self.assertEquals(event['level'], logging.ERROR)
-            self.assertEquals(event['message'], 'ImportError: view')
-            self.assertEquals(event['culprit'], 'tests.contrib.django.middleware in process_view')
+            assert exc['type'] == 'ImportError'
+            assert exc['value'] == 'view'
+            assert event['level'] == logging.ERROR
+            assert event['message'] == 'ImportError: view'
+            assert event['culprit'] == 'tests.contrib.django.middleware in process_view'
 
     def test_exclude_modules_view(self):
         exclude_paths = self.raven.exclude_paths
         self.raven.exclude_paths = ['tests.views']
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
-        self.assertEquals(event['culprit'], 'tests.contrib.django.views in raise_exc')
+        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
         self.raven.exclude_paths = exclude_paths
 
     def test_include_modules(self):
@@ -311,7 +314,7 @@ class DjangoClientTest(TestCase):
 
         self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         assert event['culprit'].startswith('django.shortcuts in ')
@@ -320,20 +323,20 @@ class DjangoClientTest(TestCase):
     def test_template_name_as_view(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
-        self.assertEquals(event['culprit'], 'error.html')
+        assert event['culprit'] == 'error.html'
 
     # def test_request_in_logging(self):
     #     resp = self.client.get(reverse('sentry-log-request-exc'))
-    #     self.assertEquals(resp.status_code, 200)
+    #     assert resp.status_code == 200
 
-    #     self.assertEquals(len(self.raven.events), 1)
+    #     assert len(self.raven.events) == 1
     #     event = self.raven.events.pop(0)
 
-    #     self.assertEquals(event['culprit'], 'tests.contrib.django.views in logging_request_exc')
-    #     self.assertEquals(event['data']['META']['REMOTE_ADDR'], '127.0.0.1')
+    #     assert event['culprit'] == 'tests.contrib.django.views in logging_request_exc'
+    #     assert event['data']['META']['REMOTE_ADDR'] == '127.0.0.1'
 
     # TODO: Python bug #10805
     @pytest.mark.skipif(str('six.PY3'))
@@ -353,27 +356,27 @@ class DjangoClientTest(TestCase):
         handler = SentryHandler()
         handler.emit(record)
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        self.assertEquals(event['message'], 'test')
+        assert event['message'] == 'test'
 
     def test_404_middleware(self):
         with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.Sentry404CatchMiddleware']):
             resp = self.client.get('/non-existent-page')
-            self.assertEquals(resp.status_code, 404)
+            assert resp.status_code == 404
 
-            self.assertEquals(len(self.raven.events), 1)
+            assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
 
-            self.assertEquals(event['level'], logging.INFO)
-            self.assertEquals(event['logger'], 'http404')
+            assert event['level'] == logging.INFO
+            assert event['logger'] == 'http404'
 
             assert 'request' in event
             http = event['request']
-            self.assertEquals(http['url'], 'http://testserver/non-existent-page')
-            self.assertEquals(http['method'], 'GET')
-            self.assertEquals(http['query_string'], '')
-            self.assertEquals(http['data'], None)
+            assert http['url'] == 'http://testserver/non-existent-page'
+            assert http['method'] == 'GET'
+            assert http['query_string'] == ''
+            assert http['data'] is None
 
     def test_404_middleware_when_disabled(self):
         extra_settings = {
@@ -400,24 +403,24 @@ class DjangoClientTest(TestCase):
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
-        with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
+        with Settings(MIDDLEWARE_CLASSES=[
+                'raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
                 'raven.contrib.django.middleware.Sentry404CatchMiddleware']):
             resp = self.client.get('/non-existent-page')
-            self.assertEquals(resp.status_code, 404)
+            assert resp.status_code == 404
             headers = dict(resp.items())
-            self.assertTrue('X-Sentry-ID' in headers)
-            self.assertEquals(len(self.raven.events), 1)
+            assert 'X-Sentry-ID' in headers
+            assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
             assert event['event_id'] == headers['X-Sentry-ID']
 
     def test_get_client(self):
-        self.assertEquals(get_client(), get_client())
-        self.assertEquals(get_client('raven.base.Client').__class__, Client)
-        self.assertEquals(get_client(), self.raven)
+        assert get_client() == get_client()
+        assert get_client('raven.base.Client').__class__ == Client
+        assert get_client() == self.raven
 
-        self.assertEquals(get_client('%s.%s' % (self.raven.__class__.__module__, self.raven.__class__.__name__)),
-            self.raven)
-        self.assertEquals(get_client(), self.raven)
+        assert get_client('%s.%s' % (type(self.raven).__module__, type(self.raven).__name__)) == self.raven
+        assert get_client() == self.raven
 
     def test_raw_post_data_partial_read(self):
         v = '{"foo": "bar"}'
@@ -431,13 +434,13 @@ class DjangoClientTest(TestCase):
 
         self.raven.captureMessage(message='foo', request=request)
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         assert 'request' in event
         http = event['request']
-        self.assertEquals(http['method'], 'POST')
-        self.assertEquals(http['data'], '<unavailable>')
+        assert http['method'] == 'POST'
+        assert http['data'] == '<unavailable>'
 
     def test_read_post_data(self):
         request = make_request()
@@ -446,13 +449,13 @@ class DjangoClientTest(TestCase):
 
         self.raven.captureMessage(message='foo', request=request)
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         assert 'request' in event
         http = event['request']
-        self.assertEquals(http['method'], 'POST')
-        self.assertEquals(http['data'], {'foo': 'bar', 'ham': 'spam'})
+        assert http['method'] == 'POST'
+        assert http['data'] == {'foo': 'bar', 'ham': 'spam'}
 
     def test_request_capture(self):
         request = make_request()
@@ -460,27 +463,27 @@ class DjangoClientTest(TestCase):
 
         self.raven.captureMessage(message='foo', request=request)
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         assert 'request' in event
         http = event['request']
-        self.assertEquals(http['method'], 'POST')
-        self.assertEquals(http['data'], '<unavailable>')
-        self.assertTrue('headers' in http)
+        assert http['method'] == 'POST'
+        assert http['data'] == '<unavailable>'
+        assert 'headers' in http
         headers = http['headers']
-        self.assertTrue('Content-Type' in headers, headers.keys())
-        self.assertEquals(headers['Content-Type'], 'text/html')
+        assert 'Content-Type' in headers, headers.keys()
+        assert headers['Content-Type'] == 'text/html'
         env = http['env']
-        self.assertTrue('SERVER_NAME' in env, env.keys())
-        self.assertEquals(env['SERVER_NAME'], 'testserver')
-        self.assertTrue('SERVER_PORT' in env, env.keys())
-        self.assertEquals(env['SERVER_PORT'], '80')
+        assert 'SERVER_NAME' in env, env.keys()
+        assert env['SERVER_NAME'] == 'testserver'
+        assert 'SERVER_PORT' in env, env.keys()
+        assert env['SERVER_PORT'] == '80'
 
     def test_marks_django_frames_correctly(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         frames = event['exception']['values'][0]['stacktrace']['frames']
@@ -491,7 +494,7 @@ class DjangoClientTest(TestCase):
     def test_adds_site_to_tags(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         tags = event['tags']
@@ -502,7 +505,7 @@ class DjangoClientTest(TestCase):
         with Settings(SITE_ID=12345):  # nonexistent site, should fallback to SITE_ID
             self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
-            self.assertEquals(len(self.raven.events), 1)
+            assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
 
             tags = event['tags']
@@ -513,7 +516,7 @@ class DjangoClientTest(TestCase):
         self.raven.site = 'FOO'
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
         tags = event['tags']
@@ -566,11 +569,11 @@ class DjangoLoggingTest(TestCase):
             })
         })
 
-        self.assertEquals(len(self.raven.events), 1)
+        assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'request' in event
         http = event['request']
-        self.assertEquals(http['method'], 'POST')
+        assert http['method'] == 'POST'
 
 
 class CeleryIsolatedClientTest(TestCase):
@@ -595,7 +598,7 @@ class CeleryIsolatedClientTest(TestCase):
         """
         self.client.captureMessage(message='test')
 
-        self.assertEquals(send_raw.delay.call_count, 1)
+        assert send_raw.delay.call_count == 1
 
 
 class CeleryIntegratedClientTest(TestCase):
@@ -618,25 +621,25 @@ class CeleryIntegratedClientTest(TestCase):
         with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
             self.client.captureMessage(message='test')
 
-            self.assertEquals(send_raw.delay.call_count, 1)
+            assert send_raw.delay.call_count == 1
 
 
 class IsValidOriginTestCase(TestCase):
     def test_setting_empty(self):
         with Settings(SENTRY_ALLOW_ORIGIN=None):
-            self.assertFalse(is_valid_origin('http://example.com'))
+            assert not is_valid_origin('http://example.com')
 
     def test_setting_all(self):
         with Settings(SENTRY_ALLOW_ORIGIN='*'):
-            self.assertTrue(is_valid_origin('http://example.com'))
+            assert is_valid_origin('http://example.com')
 
     def test_setting_uri(self):
         with Settings(SENTRY_ALLOW_ORIGIN=['http://example.com']):
-            self.assertTrue(is_valid_origin('http://example.com'))
+            assert is_valid_origin('http://example.com')
 
     def test_setting_regexp(self):
         with Settings(SENTRY_ALLOW_ORIGIN=[re.compile('https?\://(.*\.)?example\.com')]):
-            self.assertTrue(is_valid_origin('http://example.com'))
+            assert is_valid_origin('http://example.com')
 
 
 class ReportViewTest(TestCase):
@@ -658,50 +661,50 @@ class ReportViewTest(TestCase):
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=False))
     def test_fails_on_invalid_origin(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
-        self.assertEquals(resp.status_code, 403)
+        assert resp.status_code == 403
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_options_call_sends_headers(self):
         resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
-        self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp['Access-Control-Allow-Origin'], 'http://example.com')
-        self.assertEquals(resp['Access-Control-Allow-Methods'], 'GET, POST, OPTIONS')
+        assert resp.status_code == 200
+        assert resp['Access-Control-Allow-Origin'] == 'http://example.com'
+        assert resp['Access-Control-Allow-Methods'], 'GET, POST == OPTIONS'
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_missing_data(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
-        self.assertEquals(resp.status_code, 400)
+        assert resp.status_code == 400
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_invalid_data(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
             data='[1', content_type='application/octet-stream')
-        self.assertEquals(resp.status_code, 400)
+        assert resp.status_code == 400
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_data(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
             data='{}', content_type='application/octet-stream')
-        self.assertEquals(resp.status_code, 200)
+        assert resp.status_code == 200
         event = client.events.pop(0)
-        self.assertEquals(event, {'auth_header': None})
+        assert event == {'auth_header': None}
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_authorization_header(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
             HTTP_AUTHORIZATION='Sentry foo/bar', data='{}', content_type='application/octet-stream')
-        self.assertEquals(resp.status_code, 200)
+        assert resp.status_code == 200
         event = client.events.pop(0)
-        self.assertEquals(event, {'auth_header': 'Sentry foo/bar'})
+        assert event == {'auth_header': 'Sentry foo/bar'}
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_x_sentry_auth_header(self):
         resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
             HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}',
             content_type='application/octet-stream')
-        self.assertEquals(resp.status_code, 200)
+        assert resp.status_code == 200
         event = client.events.pop(0)
-        self.assertEquals(event, {'auth_header': 'Sentry foo/bar'})
+        assert event == {'auth_header': 'Sentry foo/bar'}
 
 
 class PromiseSerializerTestCase(TestCase):
@@ -711,7 +714,7 @@ class PromiseSerializerTestCase(TestCase):
         obj = lazy(lambda: 'bar', six.text_type)()
         res = transform(obj)
         expected = "'bar'" if six.PY3 else "u'bar'"
-        self.assertEquals(res, expected)
+        assert res == expected
 
     def test_handles_gettext_lazy(self):
         from django.utils.functional import lazy
@@ -722,9 +725,9 @@ class PromiseSerializerTestCase(TestCase):
         fake_gettext_lazy = lazy(fake_gettext, six.text_type)
 
         result = transform(fake_gettext_lazy("something"))
-        self.assertTrue(isinstance(result, six.string_types))
+        assert isinstance(result, six.string_types)
         expected = "'Igpay Atinlay'" if six.PY3 else "u'Igpay Atinlay'"
-        self.assertEquals(result, expected)
+        assert result == expected
 
 
 class ModelInstanceSerializerTestCase(TestCase):
@@ -732,8 +735,8 @@ class ModelInstanceSerializerTestCase(TestCase):
         instance = TestModel()
 
         result = transform(instance)
-        self.assertTrue(isinstance(result, six.string_types))
-        self.assertEquals(result, '<TestModel: TestModel object>')
+        assert isinstance(result, six.string_types)
+        assert result == '<TestModel: TestModel object>'
 
 
 class QuerySetSerializerTestCase(TestCase):
@@ -742,8 +745,8 @@ class QuerySetSerializerTestCase(TestCase):
         obj = QuerySet(model=TestModel)
 
         result = transform(obj)
-        self.assertTrue(isinstance(result, six.string_types))
-        self.assertEquals(result, '<QuerySet: model=TestModel>')
+        assert isinstance(result, six.string_types)
+        assert result == '<QuerySet: model=TestModel>'
 
 
 class SentryExceptionHandlerTest(TestCase):

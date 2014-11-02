@@ -23,10 +23,10 @@ class EventletHTTPTransport(HTTPTransport):
 
     scheme = ['eventlet+http', 'eventlet+https']
 
-    def __init__(self, parsed_url, pool_size=100):
+    def __init__(self, parsed_url, pool_size=100, **kwargs):
         if not has_eventlet:
             raise ImportError('EventletHTTPTransport requires eventlet.')
-        super(EventletHTTPTransport, self).__init__(parsed_url)
+        super(EventletHTTPTransport, self).__init__(parsed_url, **kwargs)
         # remove the eventlet+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
 

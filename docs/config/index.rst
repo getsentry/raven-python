@@ -9,6 +9,8 @@ This document describes configuration options available to Sentry.
 .. toctree::
    :maxdepth: 2
 
+   aiohttp
+   asyncio
    bottle
    celery
    django
@@ -62,7 +64,11 @@ It is composed of six important pieces:
 
 * The project ID which the authenticated user is bound to.
 
-.. note:: Protocol may also contain transporter type: gevent+http, gevent+https, twisted+http, tornado+http, eventlet+http, eventlet+https
+.. note::
+
+   Protocol may also contain transporter type: gevent+http, gevent+https, twisted+http, tornado+http, eventlet+http, eventlet+https
+
+   For *Python 3.3+* also available: aiohttp+http and aiohttp+https
 
 Client Arguments
 ----------------
@@ -185,7 +191,8 @@ If a string is longer than the given length, it will be truncated down to the sp
 auto_log_stacks
 ~~~~~~~~~~~~~~~
 
-Should Raven automatically log frame stacks (including locals) all calls as it would for exceptions.
+Should Raven automatically log frame stacks (including locals) for all calls as
+it would for exceptions.
 
 ::
 

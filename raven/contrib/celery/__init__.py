@@ -50,9 +50,9 @@ def register_logger_signal(client, logger=None):
 
     if logger is None:
         logger = logging.getLogger()
-        handler = SentryHandler(client)
-        handler.setLevel(logging.ERROR)
-        handler.addFilter(filter_)
+    handler = SentryHandler(client)
+    handler.setLevel(logging.ERROR)
+    handler.addFilter(filter_)
 
     def process_logger_event(sender, logger, loglevel, logfile, format,
                              colorize, **kw):

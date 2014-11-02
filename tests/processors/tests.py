@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from mock import Mock
+
+import raven
 from raven.utils.testutils import TestCase
 from raven.processors import SanitizePasswordsProcessor, \
     RemovePostDataProcessor, RemoveStackLocalsProcessor
@@ -16,14 +18,61 @@ VARS = {
 }
 
 
-class SantizePasswordsProcessorTest(TestCase):
+def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
+    def _will_throw_type_error(foo, **kwargs):
+        password = "you should not see this"    # NOQA F841
+        the_secret = "nor this"                 # NOQA F841
+        a_password_here = "Don't look at me!"   # NOQA F841
+        api_key = "I'm hideous!"                # NOQA F841
+        apiKey = "4567000012345678"             # NOQA F841
+
+        # TypeError: unsupported operand type(s) for /: 'str' and 'str'
+        raise exception_class()
+
+    client = raven.Client('http://public:secret@sentry.local/1')
+    try:
+        _will_throw_type_error('bar')
+    except exception_class:
+        data = client.build_msg('raven.events.Exception')
+
+    return data
+
+
+def get_http_data():
+    """
+    This is not so real as the data retrieved
+    from the `get_stack_trace_data_real()`
+    because we're still injecting HTTP data.
+    Otherwise, we have to hard code the structure of a traceback, and this goes
+    out of date when the format of data returned by
+    ``raven.base.Client/build_msg`` changes. In that case, the tests pass, but
+    the data is still dirty.  This is a dangerous situation to be in.
+    """
+    data = get_stack_trace_data_real()
+
+    data['request'] = {
+        'cookies': {},
+        'data': VARS,
+        'env': VARS,
+        'headers': VARS,
+        'method': 'GET',
+        'query_string': '',
+        'url': 'http://localhost/',
+        'cookies': VARS,
+    }
+    return data
+
+
+class SanitizePasswordsProcessorTest(TestCase):
 
     def _check_vars_sanitized(self, vars, proc):
         """
         Helper to check that keys have been sanitized.
         """
         self.assertTrue('foo' in vars)
-        self.assertEquals(vars['foo'], 'bar')
+        self.assertIn(vars['foo'], (
+            VARS['foo'], "'%s'" % VARS['foo'], '"%s"' % VARS['foo'])
+        )
         self.assertTrue('password' in vars)
         self.assertEquals(vars['password'], proc.MASK)
         self.assertTrue('the_secret' in vars)
@@ -35,50 +84,45 @@ class SantizePasswordsProcessorTest(TestCase):
         self.assertTrue('apiKey' in vars)
         self.assertEquals(vars['apiKey'], proc.MASK)
 
-    def test_stacktrace(self):
-        data = {
-            'stacktrace': {
-                'frames': [{'vars': VARS}],
-            }
-        }
-
+    def test_stacktrace(self, *args, **kwargs):
+        """
+        Check whether sensitive variables are properly stripped from stack-trace
+        messages.
+        """
+        data = get_stack_trace_data_real()
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
 
-        self.assertTrue('stacktrace' in result)
-        stack = result['stacktrace']
+        # data['exception']['values'][0]['stacktrace']['frames'][0]['vars']
+        self.assertTrue('exception' in result)
+        exception = result['exception']
+        self.assertTrue('values' in exception)
+        values = exception['values']
+        stack = values[0]['stacktrace']
         self.assertTrue('frames' in stack)
-        self.assertEquals(len(stack['frames']), 1)
-        frame = stack['frames'][0]
+
+        self.assertEquals(len(stack['frames']), 2)
+        frame = stack['frames'][1]  # frame of will_throw_type_error()
         self.assertTrue('vars' in frame)
         self._check_vars_sanitized(frame['vars'], proc)
 
     def test_http(self):
-        data = {
-            'request': {
-                'data': VARS,
-                'env': VARS,
-                'headers': VARS,
-                'cookies': VARS,
-            }
-        }
+        data = get_http_data()
 
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
 
         self.assertTrue('request' in result)
         http = result['request']
+
         for n in ('data', 'env', 'headers', 'cookies'):
             self.assertTrue(n in http)
             self._check_vars_sanitized(http[n], proc)
 
     def test_querystring_as_string(self):
-        data = {
-            'request': {
-                'query_string': 'foo=bar&password=hello&the_secret=hello'
-                                '&a_password_here=hello&api_key=secret_key',
-            }
-        }
+        data = get_http_data()
+        data['request']['query_string'] = 'foo=bar&password=hello&the_secret=hello'\
+            '&a_password_here=hello&api_key=secret_key'
 
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
@@ -91,11 +135,8 @@ class SantizePasswordsProcessorTest(TestCase):
             '&a_password_here=%(m)s&api_key=%(m)s' % dict(m=proc.MASK))
 
     def test_querystring_as_string_with_partials(self):
-        data = {
-            'request': {
-                'query_string': 'foo=bar&password&baz=bar',
-            }
-        }
+        data = get_http_data()
+        data['request']['query_string'] = 'foo=bar&password&baz=bar'
 
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
@@ -118,11 +159,8 @@ class SantizePasswordsProcessorTest(TestCase):
 
 class RemovePostDataProcessorTest(TestCase):
     def test_does_remove_data(self):
-        data = {
-            'request': {
-                'data': 'foo',
-            }
-        }
+        data = get_http_data()
+        data['request']['data'] = 'foo'
 
         proc = RemovePostDataProcessor(Mock())
         result = proc.process(data)
@@ -134,15 +172,10 @@ class RemovePostDataProcessorTest(TestCase):
 
 class RemoveStackLocalsProcessorTest(TestCase):
     def test_does_remove_data(self):
-        data = {
-            'stacktrace': {
-                'frames': [{'vars': VARS}],
-            }
-        }
+        data = get_stack_trace_data_real()
         proc = RemoveStackLocalsProcessor(Mock())
         result = proc.process(data)
 
-        assert 'stacktrace' in result
-        stack = result['stacktrace']
-        for frame in stack['frames']:
-            self.assertFalse('vars' in frame)
+        for value in result['exception']['values']:
+            for frame in value['stacktrace']['frames']:
+                self.assertFalse('vars' in frame)

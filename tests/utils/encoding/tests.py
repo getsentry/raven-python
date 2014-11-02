@@ -2,7 +2,7 @@
 import pytest
 import uuid
 
-from raven.utils import six
+from raven.utils import six, json
 from raven.utils.testutils import TestCase
 from raven.utils.serializer import transform
 
@@ -119,6 +119,16 @@ class TransformTest(TestCase):
         x = uuid.uuid4()
         result = transform(x)
         assert result == repr(x)
+
+    @pytest.mark.skipif('six.PY3')
+    def test_recurse_exception(self):
+        class NonAsciiRepr(object):
+            def __repr__(self):
+                return six.b('中文')
+
+        x = [NonAsciiRepr()]
+        result = transform(x, max_depth=1)
+        self.assertEqual(json.dumps(result), six.b('["<class \'tests.utils.encoding.tests.NonAsciiRepr\'>"]'))
 
     def test_recursive(self):
         x = []
