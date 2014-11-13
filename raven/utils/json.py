@@ -36,7 +36,10 @@ class BetterJSONEncoder(json.JSONEncoder):
         try:
             encoder = self.ENCODER_BY_TYPE[type(obj)]
         except KeyError:
-            return super(BetterJSONEncoder, self).default(obj)
+            try:
+                return super(BetterJSONEncoder, self).default(obj)
+            except TypeError:
+                return repr(obj)
         return encoder(obj)
 
 
