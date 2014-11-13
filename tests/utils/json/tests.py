@@ -23,3 +23,12 @@ class JSONTest(TestCase):
     def test_frozenset(self):
         res = frozenset(['foo', 'bar'])
         assert json.dumps(res) in ('["foo", "bar"]', '["bar", "foo"]')
+
+    def test_unknown_type(self):
+
+        class Unknown(object):
+            def __repr__(self):
+                return 'Unknown object'
+
+        obj = Unknown()
+        assert json.dumps(obj) == '"Unknown object"'

@@ -503,11 +503,10 @@ class Client(object):
         :param date: the datetime of this event
         :param time_spent: a integer value representing the duration of the
                            event (in milliseconds)
-        :param event_id: a 32-length unique string identifying this event
         :param extra: a dictionary of additional standard metadata
-        :param culprit: a string representing the cause of this event
-                        (generally a path to a function)
-        :return: a 32-length string identifying this event
+        :param stack: a stacktrace for the event
+        :param tags: list of extra tags
+        :return: a tuple with a 32-length string identifying this event
         """
 
         if not self.is_enabled():

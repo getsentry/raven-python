@@ -7,9 +7,14 @@ from raven.base import Client
 # Some internal stuff to extend the transport layer
 from raven.transport import Transport
 
+# Simplify comparing dicts with primitive values:
+from raven.utils import json
+
 import datetime
 import calendar
 import pytz
+import base64
+import zlib
 
 
 class DummyScheme(Transport):
@@ -51,10 +56,18 @@ class TransportTest(TestCase):
         data = dict(a=42, b=55, c=list(range(50)))
         c.send(**data)
 
-        expected_message = c.encode(data)
+        expected_message = zlib.decompress(base64.b64decode(c.encode(data)))
         self.assertIn('mock://localhost:8143/api/1/store/', Client._registry._transports)
         mock_cls = Client._registry._transports['mock://localhost:8143/api/1/store/']
-        assert mock_cls._data == expected_message
+
+        actual_message = zlib.decompress(base64.b64decode(mock_cls._data))
+
+        # These loads()/dumps() pairs order the dict keys before comparing the string.
+        # See GH504
+        self.assertEqual(
+            json.dumps(json.loads(expected_message.decode('utf-8')), sort_keys=True),
+            json.dumps(json.loads(actual_message.decode('utf-8')), sort_keys=True)
+        )
 
     def test_build_then_send(self):
         c = Client(
