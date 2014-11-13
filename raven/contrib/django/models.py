@@ -18,6 +18,7 @@ import warnings
 
 from raven.utils import six
 
+from celery import VERSION as CELERY_VERSION
 from django.conf import settings as django_settings
 
 logger = logging.getLogger('sentry.errors.client')
@@ -203,8 +204,10 @@ def register_handlers():
     # Connect to Django's internal signal handler
     got_request_exception.connect(exception_handler, weak=False)
 
+    djcelery_not_required = CELERY_VERSION[0] == 3 and CELERY_VERSION[1] >= 1
+
     # If Celery is installed, register a signal handler
-    if 'djcelery' in django_settings.INSTALLED_APPS:
+    if djcelery_not_required or 'djcelery' in django_settings.INSTALLED_APPS:
         try:
             # Celery < 2.5? is not supported
             from raven.contrib.celery import (
