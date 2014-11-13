@@ -15,6 +15,7 @@ from raven.transport.http import HTTPTransport
 from raven.transport.gevent import GeventedHTTPTransport
 from raven.transport.requests import RequestsHTTPTransport
 from raven.transport.threaded import ThreadedHTTPTransport
+from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
 from raven.transport.twisted import TwistedHTTPTransport
 from raven.transport.tornado import TornadoHTTPTransport
 from raven.transport.udp import UDPTransport
@@ -78,6 +79,7 @@ default_transports = [
     GeventedHTTPTransport,
     TwistedHTTPTransport,
     RequestsHTTPTransport,
+    ThreadedRequestsHTTPTransport,
     TornadoHTTPTransport,
     UDPTransport,
     EventletHTTPTransport,
