@@ -12,7 +12,7 @@ from raven.transport.http import HTTPTransport
 try:
     import requests
     has_requests = True
-except:
+except ImportError:
     has_requests = False
 
 
