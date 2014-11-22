@@ -34,12 +34,18 @@ class Processor(object):
         if 'request' in data:
             self.filter_http(data['request'])
 
+        if 'extra' in data:
+            self.filter_extra(data)
+
         return data
 
     def filter_stacktrace(self, data):
         pass
 
     def filter_http(self, data):
+        pass
+
+    def filter_extra(self, data):
         pass
 
 
@@ -112,3 +118,6 @@ class SanitizePasswordsProcessor(Processor):
                 data[n] = '&'.join('='.join(k) for k in querybits)
             else:
                 data[n] = varmap(self.sanitize, data[n])
+
+    def filter_extra(self, data):
+        data['extra'] = varmap(self.sanitize, data['extra'])
