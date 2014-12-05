@@ -160,6 +160,7 @@ class Client(object):
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
+        self.release = o.get('release')
 
         self.module_cache = ModuleProxyCache()
 
@@ -362,6 +363,13 @@ class Client(object):
 
         if not data.get('modules'):
             data['modules'] = self.get_module_versions()
+
+        # XXX(dcramer): the release parameter is informally available in newer
+        # versions of Sentry. It will be officially introduced in Protocol 6,
+        # however we want to support users who want to go ahead and begin
+        # sending it to a compatible server
+        if self.release is not None:
+            data['release'] = self.release
 
         data['tags'] = merge_dicts(self.tags, data['tags'], tags)
         data['extra'] = merge_dicts(self.extra, data['extra'], extra)
