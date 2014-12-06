@@ -51,14 +51,13 @@ def get_http_data():
     data = get_stack_trace_data_real()
 
     data['request'] = {
-        'cookies': {},
+        'cookies': VARS,
         'data': VARS,
         'env': VARS,
         'headers': VARS,
         'method': 'GET',
         'query_string': '',
         'url': 'http://localhost/',
-        'cookies': VARS,
     }
     return data
 
@@ -144,6 +143,47 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertTrue('request' in result)
         http = result['request']
         self.assertEquals(http['query_string'], 'foo=bar&password&baz=bar' % dict(m=proc.MASK))
+
+    def test_cookie_as_string(self):
+        data = get_http_data()
+        data['request']['cookies'] = 'foo=bar;password=hello;the_secret=hello'\
+            ';a_password_here=hello;api_key=secret_key'
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(
+            http['cookies'],
+            'foo=bar;password=%(m)s;the_secret=%(m)s'
+            ';a_password_here=%(m)s;api_key=%(m)s' % dict(m=proc.MASK))
+
+    def test_cookie_as_string_with_partials(self):
+        data = get_http_data()
+        data['request']['cookies'] = 'foo=bar;password;baz=bar'
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(http['cookies'], 'foo=bar;password;baz=bar' % dict(m=proc.MASK))
+
+    def test_cookie_header(self):
+        data = get_http_data()
+        data['request']['headers']['Cookie'] = 'foo=bar;password=hello'\
+                ';the_secret=hello;a_password_here=hello;api_key=secret_key'
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(
+            http['headers']['Cookie'],
+            'foo=bar;password=%(m)s'
+            ';the_secret=%(m)s;a_password_here=%(m)s;api_key=%(m)s' % dict(m=proc.MASK))
 
     def test_sanitize_credit_card(self):
         proc = SanitizePasswordsProcessor(Mock())
