@@ -21,7 +21,7 @@ __all__ = ('Serializer',)
 
 def has_sentry_metadata(value):
     try:
-        return callable(value.__getattribute__('__sentry__'))
+        return callable(getattr(value, '__sentry__'))
     except Exception:
         return False
 
