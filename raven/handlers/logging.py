@@ -22,7 +22,7 @@ from raven.utils.stacks import iter_stack_frames, label_from_frame
 RESERVED = frozenset((
     'stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno',
     'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs',
-    'relativeCreated', 'tags',
+    'relativeCreated', 'tags', 'message',
 ))
 
 
