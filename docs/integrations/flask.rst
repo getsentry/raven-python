@@ -1,5 +1,5 @@
-Configuring Flask
-=================
+Flask
+=====
 
 Installation
 ------------

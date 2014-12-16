@@ -1,5 +1,5 @@
-Configuring ``WSGI`` Middleware
-===============================
+WSGI Middleware
+===============
 
 Raven includes a simple to use WSGI middleware.
 

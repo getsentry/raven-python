@@ -1,5 +1,5 @@
-Configuring Bottle
-=================
+Bottle
+======
 
 Setup
 -----

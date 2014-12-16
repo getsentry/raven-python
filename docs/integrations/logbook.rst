@@ -1,5 +1,5 @@
-Configuring ``logbook``
-=======================
+Logbook
+=======
 
 Raven provides a `logbook <http://logbook.pocoo.org>`_ handler which will pipe
 messages to Sentry.

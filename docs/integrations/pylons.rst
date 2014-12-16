@@ -1,5 +1,5 @@
-Configuring Pylons
-==================
+Pylons
+======
 
 WSGI Middleware
 ---------------

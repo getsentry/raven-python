@@ -1,5 +1,5 @@
-Configuring Pyramid
-===================
+Pyramid
+=======
 
 PasteDeploy Filter
 ------------------

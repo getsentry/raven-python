@@ -1,5 +1,5 @@
-Raven
-=====
+raven-python
+============
 
 Raven is a standalone (and the official) Python client for `Sentry <http://www.getsentry.com/>`_.
 
@@ -13,6 +13,7 @@ Users Guide
 
    install/index
    config/index
+   integrations/index
    usage
    transports/index
 

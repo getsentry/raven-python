@@ -1,5 +1,5 @@
-Configuring Django
-==================
+Django
+======
 
 Support
 -------
