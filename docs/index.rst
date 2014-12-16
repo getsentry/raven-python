@@ -13,8 +13,8 @@ Users Guide
 
    install/index
    config/index
-   integrations/index
    usage
+   integrations/index
    transports/index
 
 Developers
