@@ -1,7 +1,7 @@
 Celery
 ======
 
-.. code-style: python
+.. code-block: python
 
     from raven import Client
     from raven.contrib.celery import register_signal
