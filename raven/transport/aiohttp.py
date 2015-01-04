@@ -28,9 +28,9 @@ class AioHttpTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['aiohttp+http', 'aiohttp+https']
 
-    def __init__(self, parsed_url, *, verify_ssl=True, resolve=True,
+    def __init__(self, parsed_url, verify_ssl=True, resolve=True,
                  timeout=defaults.TIMEOUT,
-                 keepalive=True, family=socket.AF_INET, loop=None):
+                 keepalive=True, family=socket.AF_INET, loop=None, *args, **kwargs):
         if not has_aiohttp:
             raise ImportError('AioHttpTransport requires asyncio and aiohttp.')
 
