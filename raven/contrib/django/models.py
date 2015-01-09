@@ -8,17 +8,17 @@ Acts as an implicit hook for Django installs.
 :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-from hashlib import md5
 import logging
 import sys
 import warnings
 
+from django.conf import settings as django_settings
+from hashlib import md5
+
 from raven.utils import six
 
-from django.conf import settings as django_settings
 
 logger = logging.getLogger('sentry.errors.client')
 
