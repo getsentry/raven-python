@@ -138,6 +138,7 @@ def get_client(client=None):
         options.setdefault('processors', ga('PROCESSORS'))
         options.setdefault('dsn', ga('DSN'))
         options.setdefault('context', ga('CONTEXT'))
+        options.setdefault('release', ga('RELEASE'))
 
         class_name = str(class_name)
 
