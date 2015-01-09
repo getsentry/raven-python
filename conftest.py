@@ -68,6 +68,7 @@ def pytest_configure(config):
             SENTRY_ALLOW_ORIGIN='*',
             CELERY_ALWAYS_EAGER=True,
             TEMPLATE_DEBUG=True,
+            PROJECT_ROOT=where_am_i,
             TEMPLATE_DIRS=[os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates')],
             ALLOWED_HOSTS=['*'],
         )

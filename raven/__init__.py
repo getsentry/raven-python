@@ -11,6 +11,7 @@ import os
 import os.path
 from raven.base import *  # NOQA
 from raven.conf import *  # NOQA
+from raven.versioning import *  # NOQA
 
 
 __all__ = ('VERSION', 'Client', 'load', 'get_version')
