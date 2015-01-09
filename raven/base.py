@@ -115,7 +115,7 @@ class Client(object):
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
-    protocol_version = '5'
+    protocol_version = '6'
 
     _registry = TransportRegistry(transports=default_transports)
 
@@ -364,10 +364,6 @@ class Client(object):
         if not data.get('modules'):
             data['modules'] = self.get_module_versions()
 
-        # XXX(dcramer): the release parameter is informally available in newer
-        # versions of Sentry. It will be officially introduced in Protocol 6,
-        # however we want to support users who want to go ahead and begin
-        # sending it to a compatible server
         if self.release is not None:
             data['release'] = self.release
 
