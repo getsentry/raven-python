@@ -19,8 +19,10 @@ Using the Django integration is as simple as adding :mod:`raven.contrib.django.r
 
 Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::
 
+    import raven
     RAVEN_CONFIG = {
         'dsn': 'http://public:secret@example.com/1',
+        'release': raven.fetch_git_sha(os.path.dirname(__file__)),
     }
 
 Once you've configured the client, you can test it using the standard Django
