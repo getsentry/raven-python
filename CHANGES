@@ -1,3 +1,8 @@
+Version 5.2.0
+-------------
+
+* Protocol version is now 6 (requires Sentry 7.0 or newer)
+
 Version 5.1.0
 -------------
 
