@@ -10,6 +10,7 @@ Acts as an implicit hook for Django installs.
 
 from __future__ import absolute_import, unicode_literals
 
+import copy
 import logging
 import sys
 import warnings
@@ -120,7 +121,7 @@ def get_client(client=None):
         module, class_name = client.rsplit('.', 1)
 
         ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-        options = getattr(django_settings, 'RAVEN_CONFIG', {})
+        options = copy.deepcopy(getattr(django_settings, 'RAVEN_CONFIG', {}))
         options.setdefault('servers', ga('SERVERS'))
         options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
         options['include_paths'] = set(options['include_paths']) | get_installed_apps()
