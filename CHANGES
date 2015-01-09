@@ -1,7 +1,10 @@
 Version 5.2.0
 -------------
 
-* Protocol version is now 6 (requires Sentry 7.0 or newer)
+* Protocol version is now 6 (requires Sentry 7.0 or newer).
+* Added ``release`` option to Client.
+* Added ``fetch_git_sha`` helper.
+* Added ``fetch_package_version`` helper.
 
 Version 5.1.0
 -------------
