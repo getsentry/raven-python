@@ -218,7 +218,12 @@ def register_handlers():
                 logger.exception('Failed to install Celery error handler')
 
             try:
-                register_logger_signal(client)
+                ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
+                options = getattr(django_settings, 'RAVEN_CONFIG', {})
+                loglevel = options.get('celery_loglevel',
+                                       ga('CELERY_LOGLEVEL', logging.ERROR))
+
+                register_logger_signal(client, loglevel=loglevel)
             except Exception:
                 logger.exception('Failed to install Celery error handler')
 
