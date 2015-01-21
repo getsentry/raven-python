@@ -45,7 +45,8 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
 
     def async_send(self, data, headers, success_cb, failure_cb):
         d = self._agent.request(
-            "POST", self._url, bodyProducer=FileBodyProducer(io.BytesIO(data)),
+            b"POST", self._url,
+            bodyProducer=FileBodyProducer(io.BytesIO(data)),
             headers=Headers(dict((k, [v]) for k, v in headers.items()))
         )
         d.addCallback(lambda r: success_cb())
