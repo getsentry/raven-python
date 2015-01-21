@@ -16,7 +16,6 @@ from raven.transport.udp import BaseUDPTransport
 
 try:
     import twisted.internet.protocol
-    from twisted.internet import reactor
     from twisted.web.client import Agent, FileBodyProducer, HTTPConnectionPool
     from twisted.web.http_headers import Headers
     has_twisted = True
@@ -37,11 +36,15 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
 
         # remove the twisted+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
+
+        # Import reactor as late as possible.
+        from twisted.internet import reactor
+
         # Use a persistent connection pool.
-        self._pool = HTTPConnectionPool(reactor)
+        self._agent = Agent(reactor, pool=HTTPConnectionPool(reactor))
 
     def async_send(self, data, headers, success_cb, failure_cb):
-        d = Agent(reactor, pool=self._pool).request(
+        d = self._agent.request(
             "POST", self._url, bodyProducer=FileBodyProducer(io.BytesIO(data)),
             headers=Headers(dict((k, [v]) for k, v in headers.items()))
         )
