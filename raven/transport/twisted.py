@@ -16,7 +16,10 @@ from raven.transport.udp import BaseUDPTransport
 
 try:
     import twisted.internet.protocol
-    from twisted.web.client import Agent, FileBodyProducer, HTTPConnectionPool
+    from twisted.web.client import (
+        Agent, FileBodyProducer, HTTPConnectionPool, ResponseNeverReceived,
+        readBody,
+    )
     from twisted.web.http_headers import Headers
     has_twisted = True
 except:
@@ -49,8 +52,35 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
             bodyProducer=FileBodyProducer(io.BytesIO(data)),
             headers=Headers(dict((k, [v]) for k, v in headers.items()))
         )
-        d.addCallback(lambda r: success_cb())
-        d.addErrback(lambda f: failure_cb(f.value))
+
+        def on_failure(failure):
+            ex = failure.check(ResponseNeverReceived)
+            if ex:
+                # ResponseNeverReceived wraps the actual error(s).
+                failure_cb([f.value for f in failure.value.reasons])
+            else:
+                failure_cb(failure.value)
+
+        def on_success(response):
+            """
+            Success only means that the request succeeded, *not* that the
+            actual submission was successful.
+            """
+            if response.code == 200:
+                success_cb()
+            else:
+                def on_error_body(body):
+                    failure_cb(Exception(response.code, response.phrase, body))
+
+                return readBody(response).addCallback(
+                    on_error_body,
+                )
+
+        d.addCallback(
+            on_success,
+        ).addErrback(
+            on_failure,
+        )
 
 
 class TwistedUDPTransport(BaseUDPTransport):
