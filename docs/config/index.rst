@@ -43,6 +43,9 @@ A reasonably configured client should generally include a few additional setting
         release=raven.fetch_git_sha(os.path.dirname(__file__)),
     )
 
+.. versionadded:: 5.2.0
+   The *fetch_package_version* and *fetch_git_sha* helpers.
+
 
 The Sentry DSN
 --------------
