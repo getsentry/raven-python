@@ -78,7 +78,7 @@ A synchronous blocking transport.
 Threaded (Default)
 ------------------
 
-Spawns a async worked for processing messages.
+Spawns an async worker for processing messages.
 
 ::
 
