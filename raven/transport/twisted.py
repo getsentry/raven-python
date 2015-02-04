@@ -63,5 +63,6 @@ class TwistedUDPTransport(BaseUDPTransport):
         self.protocol = twisted.internet.protocol.DatagramProtocol()
         twisted.internet.reactor.listenUDP(0, self.protocol)
 
-    def _send_data(self, data, addr):
+    def _send_data(self, data, addr_info):
+        addr = addr_info[4]
         self.protocol.transport.write(data, addr)
