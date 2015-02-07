@@ -104,9 +104,10 @@ This allow to present the user an error ID if have done a custom error 500 page.
 Dealing with proxies
 --------------------
 
-When the Flask app is behind a proxy such as nginx, Sentry will use the remote address from the proxy, rather than from the actual requesting computer.
-By using ``ProxyFix`` from ```werkzeug.contrib.fixers`` <http://werkzeug.pocoo.org/docs/0.10/contrib/fixers/#werkzeug.contrib.fixers.ProxyFix>`_ the Flask ``.wsgi_app`` can be `modified <http://flask.pocoo.org/docs/0.10/deploying/wsgi-standalone/#proxy-setups>`_.
-This may also require changes to the proxy configuration to pass the right headers if it isn't doing so already.
+When your Flask application is behind a proxy such as nginx, Sentry will use the remote address from the proxy, rather than from the actual requesting computer.
+By using ``ProxyFix`` from `werkzeug.contrib.fixers <http://werkzeug.pocoo.org/docs/0.10/contrib/fixers/#werkzeug.contrib.fixers.ProxyFix>`_ the Flask ``.wsgi_app`` can be modified to send the actual ``REMOTE_ADDR`` along to Sentry. ::
 
     from werkzeug.contrib.fixers import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)
+
+This may also require `changes <http://flask.pocoo.org/docs/0.10/deploying/wsgi-standalone/#proxy-setups>`_ to the proxy configuration to pass the right headers if it isn't doing so already.
