@@ -244,3 +244,9 @@ Several processors are included with Raven to assist in data sanitiziation. Thes
 .. data:: raven.processors.RemovePostDataProcessor
 
    Removes the ``body`` of all HTTP data.
+
+
+A Note on uWSGI
+---------------
+
+If you're using uWSGI you will need to add ``enable-threads`` to the default invocation, or you will need to switch off of the threaded transport.
