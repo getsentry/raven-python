@@ -101,14 +101,27 @@ class SanitizePasswordsProcessor(Processor):
 
             if isinstance(data[n], six.string_types) and '=' in data[n]:
                 # at this point we've assumed it's a standard HTTP query
-                querybits = []
-                for bit in data[n].split('&'):
-                    chunk = bit.split('=')
-                    if len(chunk) == 2:
-                        querybits.append((chunk[0], self.sanitize(*chunk)))
-                    else:
-                        querybits.append(chunk)
+                # or cookie
+                if n == 'cookies':
+                    delimiter = ';'
+                else:
+                    delimiter = '&'
 
-                data[n] = '&'.join('='.join(k) for k in querybits)
+                data[n] = self._sanitize_keyvals(data[n], delimiter)
             else:
                 data[n] = varmap(self.sanitize, data[n])
+                if n == 'headers' and 'Cookie' in data[n]:
+                    data[n]['Cookie'] = self._sanitize_keyvals(
+                        data[n]['Cookie'], ';'
+                    )
+
+    def _sanitize_keyvals(self, keyvals, delimiter):
+        sanitized_keyvals = []
+        for keyval in keyvals.split(delimiter):
+            keyval = keyval.split('=')
+            if len(keyval) == 2:
+                sanitized_keyvals.append((keyval[0], self.sanitize(*keyval)))
+            else:
+                sanitized_keyvals.append(keyval)
+
+        return delimiter.join('='.join(keyval) for keyval in sanitized_keyvals)
