@@ -15,9 +15,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from raven.contrib.django.models import client
 from raven.utils import json
 from raven.utils import six
+
+from .models import client
 
 
 def is_valid_origin(origin):

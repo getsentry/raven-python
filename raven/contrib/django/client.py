@@ -17,9 +17,10 @@ from django.template import TemplateSyntaxError
 from django.template.loader import LoaderOrigin
 
 from raven.base import Client
-from raven.contrib.django.utils import get_data_from_template, get_host
-from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.wsgi import get_headers, get_environ
+
+from .utils import get_data_from_template, get_host
+from .middleware import SentryLogMiddleware
 
 __all__ = ('DjangoClient',)
 
