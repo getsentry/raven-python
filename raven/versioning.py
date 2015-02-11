@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
-__all__ = ('fetch_git_sha', 'fetch_package_version')
-
 import os.path
 import pkg_resources
 
 from .exceptions import InvalidGitRepository
+
+__all__ = ('fetch_git_sha', 'fetch_package_version')
 
 
 def fetch_git_sha(path, head='master'):
