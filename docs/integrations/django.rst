@@ -200,6 +200,18 @@ client::
 
     SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
 
+SENTRY_CELERY_LOGLEVEL
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you are also using Celery, there is a handler being automatically registered
+for you that captures the errors from workers. The default logging level for
+that handler is ``logging.ERROR`` and can be customized using this setting::
+
+    SENTRY_CELERY_LOGLEVEL = logging.INFO
+    RAVEN_CONFIG = {
+        'CELERY_LOGLEVEL': logging.INFO
+    }
+
 Caveats
 -------
 
