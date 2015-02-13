@@ -82,17 +82,20 @@ tests_require = [
 
 
 class PyTest(TestCommand):
+
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.test_suite = 'tests'
+        self.pytest_args = []
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
 
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
-        errno = pytest.main(self.test_args)
+        errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
 
