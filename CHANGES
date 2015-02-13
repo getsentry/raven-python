@@ -5,6 +5,8 @@ Version 5.2.0
 * Added ``release`` option to Client.
 * Added ``fetch_git_sha`` helper.
 * Added ``fetch_package_version`` helper.
+* Added cookie string sanatizing.
+* Added threaded request transport: "threaded+requests+http(s)".
 
 Version 5.1.0
 -------------
