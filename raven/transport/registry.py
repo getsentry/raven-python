@@ -29,7 +29,6 @@ class TransportRegistry(object):
     def __init__(self, transports=None):
         # setup a default list of senders
         self._schemes = {}
-        self._transports = {}
 
         if transports:
             for transport in transports:
@@ -58,11 +57,9 @@ class TransportRegistry(object):
 
     def get_transport(self, parsed_url, **options):
         full_url = parsed_url.geturl()
-        if full_url not in self._transports:
-            # Remove the options from the parsed_url
-            parsed_url = urlparse.urlparse(full_url.split('?')[0])
-            self._transports[full_url] = self._schemes[parsed_url.scheme](parsed_url, **options)
-        return self._transports[full_url]
+        # Remove the options from the parsed_url
+        parsed_url = urlparse.urlparse(full_url.split('?')[0])
+        return self._schemes[parsed_url.scheme](parsed_url, **options)
 
     def compute_scope(self, url, scope):
         """

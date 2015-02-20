@@ -22,10 +22,9 @@ class RequestsHTTPTransport(HTTPTransport):
     scheme = ['requests+http', 'requests+https']
 
     def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=True,
-                 ca_certs=defaults.CA_BUNDLE):
+                 ca_certs=defaults.CA_BUNDLE, proxy=None):
         if not has_requests:
             raise ImportError('RequestsHTTPTransport requires requests.')
-
         super(RequestsHTTPTransport, self).__init__(parsed_url,
                                                     timeout=timeout,
                                                     verify_ssl=verify_ssl,
@@ -33,11 +32,17 @@ class RequestsHTTPTransport(HTTPTransport):
 
         # remove the requests+ from the protocol, as it is not a real protocol
         self._url = self._url.split('+', 1)[-1]
+        self.proxy = proxy
 
     def send(self, data, headers):
         if self.verify_ssl:
             # If SSL verification is enabled use the provided CA bundle to
             # perform the verification.
             self.verify_ssl = self.ca_certs
+        if self.proxy:
+            proxies = {self._url.split('://', 1)[0]: self.proxy}
+        else:
+            proxies = {}
         requests.post(self._url, data=data, headers=headers,
-                      verify=self.verify_ssl, timeout=self.timeout)
+                      verify=self.verify_ssl, timeout=self.timeout,
+                      proxies=proxies)

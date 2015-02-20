@@ -73,6 +73,7 @@ tests_require = [
     'pytest-cov>=1.4',
     'pytest-django',
     'requests',
+    'responses',
     'tornado',
     'webob',
     'webtest',
