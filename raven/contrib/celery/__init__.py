@@ -2,15 +2,6 @@
 raven.contrib.celery
 ~~~~~~~~~~~~~~~~~~~~
 
->>> class CeleryClient(CeleryMixin, Client):
->>>     def send_encoded(self, *args, **kwargs):
->>>         "Errors through celery"
->>>         self.send_raw.delay(*args, **kwargs)
-
->>> @task(routing_key='sentry')
->>> def send_raw(*args, **kwargs):
->>>     return super(client, self).send_encoded(*args, **kwargs)
-
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """

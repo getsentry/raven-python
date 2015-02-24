@@ -1,5 +1,5 @@
-Configuring ``logging``
-=======================
+Logging
+=======
 
 Sentry supports the ability to directly tie into the :mod:`logging` module.  To
 use it simply add :class:`SentryHandler` to your logger.

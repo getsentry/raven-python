@@ -3,27 +3,6 @@ Configuration
 
 This document describes configuration options available to Sentry.
 
-.. note:: Some integrations allow specifying these in a standard configuration, otherwise they are generally passed upon
-          instantiation of the Sentry client.
-
-.. toctree::
-   :maxdepth: 2
-
-   aiohttp
-   asyncio
-   bottle
-   celery
-   django
-   flask
-   logbook
-   logging
-   pylons
-   pyramid
-   wsgi
-   zerorpc
-   zope
-   tornado
-
 
 Configuring the Client
 ----------------------
@@ -34,7 +13,7 @@ As of Raven 1.2.0, you can now configure all clients through a standard DSN
 string. This can be specified as a default using the ``SENTRY_DSN`` environment
 variable, as well as passed to all clients by using the ``dsn`` argument.
 
-::
+.. code-block:: python
 
     from raven import Client
 
@@ -43,6 +22,29 @@ variable, as well as passed to all clients by using the ``dsn`` argument.
 
     # Manually specify a DSN
     client = Client('http://public:secret@example.com/1')
+
+
+A reasonably configured client should generally include a few additional settings:
+
+.. code-block:: python
+
+    import raven
+
+    client = raven.Client(
+        dsn='http://public:secret@example.com/1'
+
+        # inform the client which parts of code are yours
+        # include_paths=['my.app']
+        include_paths=[__name__.rsplit('.', 1)[0]],
+
+        # pass along the version of your application
+        # release='1.0.0'
+        # release=raven.fetch_package_version('my-app')
+        release=raven.fetch_git_sha(os.path.dirname(__file__)),
+    )
+
+.. versionadded:: 5.2.0
+   The *fetch_package_version* and *fetch_git_sha* helpers.
 
 
 The Sentry DSN
@@ -135,6 +137,17 @@ This will override the ``server_name`` value for this installation. Defaults to 
 ::
 
     name = 'sentry_rocks_' + socket.gethostname()
+
+
+release
+~~~~~~~~
+
+The version of your application. This will map up into a Release in Sentry.
+
+::
+
+    release = '1.0.3'
+
 
 exclude_paths
 ~~~~~~~~~~~~~
@@ -231,3 +244,9 @@ Several processors are included with Raven to assist in data sanitiziation. Thes
 .. data:: raven.processors.RemovePostDataProcessor
 
    Removes the ``body`` of all HTTP data.
+
+
+A Note on uWSGI
+---------------
+
+If you're using uWSGI you will need to add ``enable-threads`` to the default invocation, or you will need to switch off of the threaded transport.

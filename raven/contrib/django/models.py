@@ -7,18 +7,20 @@ Acts as an implicit hook for Django installs.
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# flake8: noqa
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-from hashlib import md5
+import copy
 import logging
 import sys
 import warnings
 
+from django.conf import settings as django_settings
+from hashlib import md5
+
 from raven.utils import six
 
-from django.conf import settings as django_settings
 
 logger = logging.getLogger('sentry.errors.client')
 
@@ -120,7 +122,7 @@ def get_client(client=None):
         module, class_name = client.rsplit('.', 1)
 
         ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-        options = getattr(django_settings, 'RAVEN_CONFIG', {})
+        options = copy.deepcopy(getattr(django_settings, 'RAVEN_CONFIG', {}))
         options.setdefault('servers', ga('SERVERS'))
         options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
         options['include_paths'] = set(options['include_paths']) | get_installed_apps()
@@ -138,6 +140,7 @@ def get_client(client=None):
         options.setdefault('processors', ga('PROCESSORS'))
         options.setdefault('dsn', ga('DSN'))
         options.setdefault('context', ga('CONTEXT'))
+        options.setdefault('release', ga('RELEASE'))
 
         class_name = str(class_name)
 

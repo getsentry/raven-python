@@ -1,5 +1,5 @@
-Configuring Zope/Plone
-======================
+Zope/Plone
+==========
 
 zope.conf
 ---------
@@ -35,7 +35,7 @@ To add the equivalent configuration, you would do this:
     [instance]
     recipe = plone.recipe.zope2instance
     ...
-    event-log-custom = 
+    event-log-custom =
         %import raven.contrib.zope
         <logfile>
           path ${buildout:directory}/var/instance.log

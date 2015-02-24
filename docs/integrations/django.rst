@@ -1,5 +1,5 @@
-Configuring Django
-==================
+Django
+======
 
 Support
 -------
@@ -19,8 +19,10 @@ Using the Django integration is as simple as adding :mod:`raven.contrib.django.r
 
 Additional settings for the client are configured using the ``RAVEN_CONFIG`` dictionary::
 
+    import raven
     RAVEN_CONFIG = {
         'dsn': 'http://public:secret@example.com/1',
+        'release': raven.fetch_git_sha(os.path.dirname(__file__)),
     }
 
 Once you've configured the client, you can test it using the standard Django
@@ -120,10 +122,14 @@ addition of an optional ``request`` key in the extra data::
 In certain conditions you may wish to log 404 events to the Sentry server. To
 do this, you simply need to enable a Django middleware::
 
-    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+    MIDDLEWARE_CLASSES = (
       'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
       ...,
-    )
+    ) + MIDDLEWARE_CLASSES
+    
+It is recommended to put the middleware at the top, so that any only 404s 
+that bubbled all the way up get logged. Certain middlewares (e.g. flatpages)
+capture 404s and replace the response.
 
 Message References
 ------------------

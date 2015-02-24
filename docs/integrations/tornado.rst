@@ -1,5 +1,5 @@
-Configuring Tornado
-===================
+Tornado
+=======
 
 Setup
 -----

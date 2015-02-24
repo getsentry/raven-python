@@ -115,7 +115,7 @@ class Client(object):
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
-    protocol_version = '5'
+    protocol_version = '6'
 
     _registry = TransportRegistry(transports=default_transports)
 
@@ -160,6 +160,7 @@ class Client(object):
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
+        self.release = o.get('release')
 
         self.module_cache = ModuleProxyCache()
 
@@ -362,6 +363,9 @@ class Client(object):
 
         if not data.get('modules'):
             data['modules'] = self.get_module_versions()
+
+        if self.release is not None:
+            data['release'] = self.release
 
         data['tags'] = merge_dicts(self.tags, data['tags'], tags)
         data['extra'] = merge_dicts(self.extra, data['extra'], extra)

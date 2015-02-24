@@ -1,5 +1,5 @@
-Configuring ZeroRPC
-===================
+ZeroRPC
+=======
 
 Setup
 -----
