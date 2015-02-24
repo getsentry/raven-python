@@ -35,7 +35,7 @@ class Processor(object):
             self.filter_http(data['request'])
 
         if 'extra' in data:
-            self.filter_extra(data)
+            data['extra'] = self.filter_extra(data['extra'])
 
         return data
 
@@ -46,7 +46,7 @@ class Processor(object):
         pass
 
     def filter_extra(self, data):
-        pass
+        return data
 
 
 class RemovePostDataProcessor(Processor):
@@ -120,4 +120,4 @@ class SanitizePasswordsProcessor(Processor):
                 data[n] = varmap(self.sanitize, data[n])
 
     def filter_extra(self, data):
-        data['extra'] = varmap(self.sanitize, data['extra'])
+        return varmap(self.sanitize, data)
