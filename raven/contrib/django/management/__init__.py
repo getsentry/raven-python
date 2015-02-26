@@ -50,8 +50,8 @@ def patch_base_command(cls):
 
     return True
 
-if ('raven.contrib.django' in settings.INSTALLED_APPS
-        or 'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS):
+if ('raven.contrib.django' in settings.INSTALLED_APPS or
+        'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS):
 
     try:
         from django.core.management.base import BaseCommand
