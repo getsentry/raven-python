@@ -9,7 +9,10 @@ from __future__ import absolute_import
 
 from exam import Exam
 
-from .compat import TestCase as BaseTestCase
+try:
+    from unittest2 import TestCase as BaseTestCase
+except ImportError:
+    from unittest import TestCase as BaseTestCase  # NOQA
 
 
 class TestCase(Exam, BaseTestCase):
