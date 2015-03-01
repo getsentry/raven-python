@@ -62,6 +62,13 @@ def get_http_data():
     return data
 
 
+def get_extra_data():
+    data = get_stack_trace_data_real()
+
+    data['extra'] = VARS
+    return data
+
+
 class SanitizePasswordsProcessorTest(TestCase):
 
     def _check_vars_sanitized(self, vars, proc):
@@ -117,6 +124,17 @@ class SanitizePasswordsProcessorTest(TestCase):
         for n in ('data', 'env', 'headers', 'cookies'):
             self.assertTrue(n in http)
             self._check_vars_sanitized(http[n], proc)
+
+    def test_extra(self):
+        data = get_extra_data()
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('extra' in result)
+        extra = result['extra']
+
+        self._check_vars_sanitized(extra, proc)
 
     def test_querystring_as_string(self):
         data = get_http_data()

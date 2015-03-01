@@ -34,6 +34,9 @@ class Processor(object):
         if 'request' in data:
             self.filter_http(data['request'])
 
+        if 'extra' in data:
+            data['extra'] = self.filter_extra(data['extra'])
+
         return data
 
     def filter_stacktrace(self, data):
@@ -41,6 +44,9 @@ class Processor(object):
 
     def filter_http(self, data):
         pass
+
+    def filter_extra(self, data):
+        return data
 
 
 class RemovePostDataProcessor(Processor):
@@ -114,6 +120,9 @@ class SanitizePasswordsProcessor(Processor):
                     data[n]['Cookie'] = self._sanitize_keyvals(
                         data[n]['Cookie'], ';'
                     )
+
+    def filter_extra(self, data):
+        return varmap(self.sanitize, data)
 
     def _sanitize_keyvals(self, keyvals, delimiter):
         sanitized_keyvals = []
