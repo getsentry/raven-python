@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 
 import os.path
-import pkg_resources
+try:
+    import pkg_resources
+except ImportError:
+    # pkg_resource is not available on Google App Engine
+    pkg_resources = None
 
 from .exceptions import InvalidGitRepository
 
@@ -29,5 +33,7 @@ def fetch_package_version(dist_name):
     """
     >>> fetch_package_version('sentry')
     """
+    if pkg_resources is None:
+        raise NotImplementedError('pkg_resources is not available on this Python install')
     dist = pkg_resources.get_distribution(dist_name)
     return dist.version

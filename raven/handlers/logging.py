@@ -89,8 +89,8 @@ class SentryHandler(logging.Handler, object):
             if not started:
                 f_globals = getattr(frame, 'f_globals', {})
                 module_name = f_globals.get('__name__', '')
-                if ((last_mod and last_mod.startswith('logging'))
-                        and not module_name.startswith('logging')):
+                if ((last_mod and last_mod.startswith('logging')) and
+                        not module_name.startswith('logging')):
                     started = True
                 else:
                     last_mod = module_name

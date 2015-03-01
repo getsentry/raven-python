@@ -328,24 +328,22 @@ class Client(object):
                 'stacktrace': stack_info,
             })
 
-        if 'stacktrace' in data:
-            if self.include_paths:
-                for frame in data['stacktrace']['frames']:
-                    if frame.get('in_app') is not None:
-                        continue
+        if 'stacktrace' in data and self.include_paths:
+            for frame in data['stacktrace']['frames']:
+                if frame.get('in_app') is not None:
+                    continue
 
-                    path = frame.get('module')
-                    if not path:
-                        continue
+                path = frame.get('module')
+                if not path:
+                    continue
 
-                    if path.startswith('raven.'):
-                        frame['in_app'] = False
-                    else:
-                        frame['in_app'] = (
-                            any(path.startswith(x) for x in self.include_paths)
-                            and not
-                            any(path.startswith(x) for x in self.exclude_paths)
-                        )
+                if path.startswith('raven.'):
+                    frame['in_app'] = False
+                else:
+                    frame['in_app'] = (
+                        any(path.startswith(x) for x in self.include_paths) and
+                        not any(path.startswith(x) for x in self.exclude_paths)
+                    )
 
         if not culprit:
             if 'stacktrace' in data:

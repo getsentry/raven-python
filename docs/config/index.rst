@@ -233,8 +233,8 @@ Several processors are included with Raven to assist in data sanitiziation. Thes
 .. data:: raven.processors.SanitizePasswordsProcessor
 
    Removes all keys which resemble ``password``, ``secret``, or ``api_key``
-   within stacktrace contexts and HTTP bits (such as cookies, POST data,
-   the querystring, and environment).
+   within stacktrace contexts, HTTP bits (such as cookies, POST data,
+   the querystring, and environment), and extra data.
 
 .. data:: raven.processors.RemoveStackLocalsProcessor
 

@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
 
     'raven.contrib.django',
+    'tests.contrib.django',
 ]
 
 

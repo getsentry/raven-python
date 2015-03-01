@@ -45,8 +45,14 @@ class ZopeSentryHandler(SentryHandler):
         level = kw.get('level', logging.ERROR)
         self.setLevel(level)
 
+    def can_record(self, record):
+        return not (
+            record.name == 'raven' or
+            record.name.startswith(('sentry.errors', 'raven.'))
+        )
+
     def emit(self, record):
-        if record.levelno <= logging.ERROR:
+        if record.levelno <= logging.ERROR and self.can_record(record):
             request = None
             exc_info = None
             for frame_info in getouterframes(currentframe()):

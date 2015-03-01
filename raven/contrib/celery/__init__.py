@@ -36,13 +36,13 @@ def register_signal(client):
     task_failure.connect(process_failure_signal, weak=False)
 
 
-def register_logger_signal(client, logger=None):
+def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
     filter_ = CeleryFilter()
 
     if logger is None:
         logger = logging.getLogger()
     handler = SentryHandler(client)
-    handler.setLevel(logging.ERROR)
+    handler.setLevel(loglevel)
     handler.addFilter(filter_)
 
     def process_logger_event(sender, logger, loglevel, logfile, format,
