@@ -55,6 +55,8 @@ matrix:
       env: DJANGO=Django==1.4.18
     - python: "2.6"
       env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
+    - python: "3.2"
+      env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
     - python: "2.6"
       env: DJANGO=Django==1.8b1
     - python: "2.6"
