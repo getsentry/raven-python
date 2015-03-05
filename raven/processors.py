@@ -25,6 +25,9 @@ class Processor(object):
         if resp:
             data = resp
 
+        if 'stacktrace' in data:
+            self.filter_stacktrace(data['stacktrace'])
+
         if 'exception' in data:
             if 'values' in data['exception']:
                 for value in data['exception'].get('values', []):
@@ -73,7 +76,8 @@ class SanitizePasswordsProcessor(Processor):
     """
     MASK = '*' * 8
     FIELDS = frozenset([
-        'password', 'secret', 'passwd', 'authorization', 'api_key', 'apikey'
+        'password', 'secret', 'passwd', 'authorization', 'api_key', 'apikey',
+        'pw', 'cred'
     ])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 

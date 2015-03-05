@@ -15,6 +15,8 @@ VARS = {
     'a_password_here': 'hello',
     'api_key': 'secret_key',
     'apiKey': 'secret_key',
+    'pw': 'hello',
+    'cred': 'hello',
 }
 
 
@@ -25,6 +27,8 @@ def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
         a_password_here = "Don't look at me!"   # NOQA F841
         api_key = "I'm hideous!"                # NOQA F841
         apiKey = "4567000012345678"             # NOQA F841
+        pw = "this is my pw"                    # NOQA F841
+        cred = "my credential"                  # NOQA F841
 
         # TypeError: unsupported operand type(s) for /: 'str' and 'str'
         raise exception_class()
@@ -89,6 +93,10 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertEquals(vars['api_key'], proc.MASK)
         self.assertTrue('apiKey' in vars)
         self.assertEquals(vars['apiKey'], proc.MASK)
+        self.assertTrue('pw' in vars)
+        self.assertEquals(vars['pw'], proc.MASK)
+        self.assertTrue('cred' in vars)
+        self.assertEquals(vars['cred'], proc.MASK)
 
     def test_stacktrace(self, *args, **kwargs):
         """
