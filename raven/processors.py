@@ -73,7 +73,13 @@ class SanitizePasswordsProcessor(Processor):
     """
     MASK = '*' * 8
     FIELDS = frozenset([
-        'password', 'secret', 'passwd', 'authorization', 'api_key', 'apikey'
+        'password',
+        'secret',
+        'passwd',
+        'authorization',
+        'api_key',
+        'apikey',
+        'sentry_dsn',
     ])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 
