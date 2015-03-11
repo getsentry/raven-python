@@ -243,6 +243,6 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(http_data['url'], response.effective_url)
         self.assertEqual(http_data['query_string'], '')
         self.assertEqual(http_data['method'], 'POST')
-        self.assertEqual(http_data['data'], 'Body is too large!')
+        self.assertEqual(http_data['data'], 'Request body is too large!')
 
 
