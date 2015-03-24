@@ -35,7 +35,7 @@ A reasonably configured client should generally include a few additional setting
 
         # inform the client which parts of code are yours
         # include_paths=['my.app']
-        include_paths=[__name__.rsplit('.', 1)[0]],
+        include_paths=[__name__.split('.', 1)[0]],
 
         # pass along the version of your application
         # release='1.0.0'
