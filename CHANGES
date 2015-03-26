@@ -1,3 +1,8 @@
+Version 5.3.0
+-------------
+
+* Allow filtering of tornado's request body via overloading `get_sentry_request_body`
+
 Version 5.2.0
 -------------
 

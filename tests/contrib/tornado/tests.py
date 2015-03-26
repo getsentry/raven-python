@@ -6,6 +6,7 @@ from tornado import web, gen, testing
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
 from raven.utils import six
 
+body_limit = 5000
 
 class AnErrorProneHandler(SentryMixin, web.RequestHandler):
     def get(self):
@@ -37,9 +38,21 @@ class SendErrorTestHandler(SentryMixin, web.RequestHandler):
 
 
 class SendErrorAsyncHandler(SentryMixin, web.RequestHandler):
+    def get_sentry_request_body(self):
+        body = self.request.body
+        if len(body) > body_limit:
+            return 'Request body is too large!'
+        else:
+            return body
+
     @web.asynchronous
     @gen.engine
     def get(self):
+        raise Exception("Oops")
+    
+    @web.asynchronous
+    @gen.engine
+    def post(self):
         raise Exception("Oops")
 
 
@@ -212,3 +225,24 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
 
         user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send')
+    def test_large_body_handler(self, send):
+        response = self.fetch('/send-error-async', method="POST", body="x" * (body_limit+1))
+        self.assertEqual(response.code, 500)
+        self.assertEqual(send.call_count, 1)
+        args, kwargs = send.call_args
+
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
+
+        http_data = kwargs['request']
+
+        self.assertEqual(http_data['cookies'], None)
+        self.assertEqual(http_data['url'], response.effective_url)
+        self.assertEqual(http_data['query_string'], '')
+        self.assertEqual(http_data['method'], 'POST')
+        self.assertEqual(http_data['data'], 'Request body is too large!')
+
+

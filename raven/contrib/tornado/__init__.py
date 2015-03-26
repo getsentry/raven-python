@@ -175,6 +175,9 @@ class SentryMixin(object):
         """
         return self.application.sentry_client
 
+    def get_sentry_request_body(self):
+        return self.request.body
+
     def get_sentry_data_from_request(self):
         """
         Extracts the data required for 'sentry.interfaces.Http' from the
@@ -186,7 +189,7 @@ class SentryMixin(object):
             'request': {
                 'url': self.request.full_url(),
                 'method': self.request.method,
-                'data': self.request.body,
+                'data': self.get_sentry_request_body(),
                 'query_string': self.request.query,
                 'cookies': self.request.headers.get('Cookie', None),
                 'headers': dict(self.request.headers),

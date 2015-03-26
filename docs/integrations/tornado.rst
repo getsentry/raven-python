@@ -94,3 +94,26 @@ Synchronous
         def get(self):
             self.write("You requested the main page")
             self.captureMessage("Request for main page served")
+
+
+Request Body Filtering
+~~~~~~~~~~~
+
+If you expect files or large body sizes, you may want to truncate or otherwise
+filter the body.
+
+.. code-block:: python
+
+    import tornado.web
+    from raven.contrib.tornado import SentryMixin
+
+    class AsyncExampleHandler(SentryMixin, tornado.web.RequestHandler):
+        # Strip files and ensure the body is small enough
+        def get_sentry_request_body(self):
+            if len(self.request.files)>0 or len(self.request.body) > 200000:
+                files = {k:[{dk:dv for dk, dv in d.iteritems() if dk!='body'}for d in v] for k,v in self.request.files.iteritems()}
+                data = { 'arguments': self.request.arguments, 'files': files } 
+            else:
+                data = self.request.body
+
+            return data
