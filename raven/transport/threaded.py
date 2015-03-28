@@ -35,6 +35,9 @@ class AsyncWorker(object):
         }
         self.start()
 
+    def is_alive(self):
+        return self._thread.is_alive()
+
     def main_thread_terminated(self):
         self._lock.acquire()
         try:
@@ -150,7 +153,7 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
     scheme = ['http', 'https', 'threaded+http', 'threaded+https']
 
     def get_worker(self):
-        if not hasattr(self, '_worker'):
+        if not hasattr(self, '_worker') or not self._worker.is_alive():
             self._worker = AsyncWorker()
         return self._worker
 
