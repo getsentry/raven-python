@@ -31,7 +31,7 @@ class LoggingThreadedScheme(ThreadedHTTPTransport):
 
     def send_sync(self, data, headers, success_cb, failure_cb):
         with open(self.filename, 'a') as log:
-            log.write("{} {}\n".format(os.getpid(), data['message']))
+            log.write("{0} {1}\n".format(os.getpid(), data['message']))
 
 
 class ThreadedTransportTest(TestCase):
@@ -71,8 +71,9 @@ class ThreadedTransportTest(TestCase):
         event1 = self.client.build_msg('raven.events.Message', message='parent')
         event2 = self.client.build_msg('raven.events.Message', message='child')
         url = urlparse(self.url)
-        _, filename = mkstemp()
+        fd, filename = mkstemp()
         try:
+            os.close(fd)
             transport = LoggingThreadedScheme(filename, url)
             # Log from the parent process - starts the worker thread
             transport.async_send(event1, None, None, None)
