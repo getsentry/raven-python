@@ -197,12 +197,10 @@ class Client(object):
                 secret_key = dsn_config['SENTRY_SECRET_KEY']
                 transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
             else:
-                if o.get('servers'):
-                    warnings.warn('Manually configured connections are deprecated. Switch to a DSN.', DeprecationWarning)
-                servers = o.get('servers')
-                project = o.get('project')
-                public_key = o.get('public_key')
-                secret_key = o.get('secret_key')
+                servers = ()
+                project = None
+                public_key = None
+                secret_key = None
                 transport_options = {}
             self.dsns[dsn] = servers, public_key, secret_key, project, transport_options
 

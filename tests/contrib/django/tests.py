@@ -579,9 +579,7 @@ class DjangoLoggingTest(TestCase):
 class CeleryIsolatedClientTest(TestCase):
     def setUp(self):
         self.client = CeleryClient(
-            servers=['http://example.com'],
-            public_key='public',
-            secret_key='secret',
+            dsn='sync+http://public:secret@example.com/1'
         )
 
     @mock.patch('raven.contrib.django.celery.send_raw')

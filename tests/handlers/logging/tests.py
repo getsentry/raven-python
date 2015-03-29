@@ -69,10 +69,7 @@ class LoggingIntegrationTest(TestCase):
         should_try.return_value = True
         # Test for the default behaviour in which an exception is handled by the client or handler
         client = Client(
-            servers=['sync+http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='sync+http://public:secret@example.com/1',
         )
         handler = SentryHandler(client)
         _send_remote.side_effect = Exception()
@@ -82,10 +79,7 @@ class LoggingIntegrationTest(TestCase):
 
         # Test for the case in which a send error is raised to the calling frame.
         client = Client(
-            servers=['sync+http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='sync+http://public:secret@example.com/1',
             raise_send_errors=True,
         )
         handler = SentryHandler(client)

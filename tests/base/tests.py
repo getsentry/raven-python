@@ -170,16 +170,13 @@ class ClientTest(TestCase):
     def test_send(self, time, send_remote):
         time.return_value = 1328055286.51
         client = Client(
-            servers=['http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='http://public:secret@example.com/1',
         )
         client.send(**{
             'foo': 'bar',
         })
         send_remote.assert_called_once_with(
-            url='http://example.com',
+            url='http://example.com/api/1/store/',
             data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
@@ -197,16 +194,13 @@ class ClientTest(TestCase):
     def test_send_with_auth_header(self, time, send_remote):
         time.return_value = 1328055286.51
         client = Client(
-            servers=['http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='http://public:secret@example.com/1',
         )
         client.send(auth_header='foo', **{
             'foo': 'bar',
         })
         send_remote.assert_called_once_with(
-            url='http://example.com',
+            url='http://example.com/api/1/store/',
             data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
@@ -220,10 +214,7 @@ class ClientTest(TestCase):
     def test_raise_exception_on_send_error(self, should_try, _send_remote):
         should_try.return_value = True
         client = Client(
-            servers=['sync+http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='sync+http://public:secret@example.com/1',
         )
 
         # Test for the default behaviour in which a send error is handled by the client
@@ -234,10 +225,7 @@ class ClientTest(TestCase):
 
         # Test for the case in which a send error is raised to the calling frame.
         client = Client(
-            servers=['sync+http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='sync+http://public:secret@example.com/1',
             raise_send_errors=True,
         )
         with self.assertRaises(Exception):
