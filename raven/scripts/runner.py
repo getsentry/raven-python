@@ -13,6 +13,7 @@ import logging
 import os
 import sys
 import time
+
 from optparse import OptionParser
 
 from raven import Client, get_version
@@ -80,12 +81,6 @@ def send_test_message(client, options):
         },
     ))
 
-    if client.state.did_fail():
-        sys.stdout.write('error!\n')
-        return False
-
-    sys.stdout.write('success!\n')
-
     sys.stdout.write('Event ID was %r\n' % (ident,))
 
 
@@ -113,5 +108,13 @@ def main():
     print()
 
     client = Client(dsn, include_paths=['raven'])
+
     send_test_message(client, opts.__dict__)
+
+    # TODO(dcramer): correctly support async models
     time.sleep(3)
+    if client.state.did_fail():
+        sys.stdout.write('error!\n')
+        sys.exit(1)
+
+    sys.stdout.write('success!\n')
