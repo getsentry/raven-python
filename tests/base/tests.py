@@ -133,7 +133,7 @@ class ClientTest(TestCase):
         self.assertEquals(client.state.status, client.state.ONLINE)
         self.assertEqual(client.state.retry_after, 0)
 
-    @mock.patch('raven.base.Client._registry.get_transport')
+    @mock.patch('raven.conf.remote.RemoteConfig.get_transport')
     @mock.patch('raven.base.ClientState.should_try')
     def test_async_send_remote_failover(self, should_try, get_transport):
         should_try.return_value = True
@@ -238,36 +238,10 @@ class ClientTest(TestCase):
         self.assertTrue(type(encoded), str)
         self.assertEquals(data, self.client.decode(encoded))
 
-    def test_dsn(self):
-        client = Client(dsn='http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
-        self.assertEquals(client.project, '1')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
-
-    def test_dsn_as_first_arg(self):
-        client = Client('http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
-        self.assertEquals(client.project, '1')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
-
-    def test_slug_in_dsn(self):
-        client = Client('http://public:secret@example.com/slug-name')
-        self.assertEquals(client.servers, ['http://example.com/api/slug-name/store/'])
-        self.assertEquals(client.project, 'slug-name')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
-
     def test_get_public_dsn(self):
-        client = Client('threaded+http://public:secret@example.com/1')
+        client = Client('http://public:secret@example.com/1')
         public_dsn = client.get_public_dsn()
         self.assertEquals(public_dsn, '//public@example.com/1')
-
-    def test_get_public_dsn_override_scheme(self):
-        client = Client('threaded+http://public:secret@example.com/1')
-        public_dsn = client.get_public_dsn('https')
-        self.assertEquals(public_dsn, 'https://public@example.com/1')
 
     def test_explicit_message_on_message_event(self):
         self.client.captureMessage(message='test', data={

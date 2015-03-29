@@ -1,3 +1,11 @@
+Version 5.4.0
+-------------
+
+* Binding transports via a scheme prefix on DSNs is now deprecated.
+* ``raven.conf.load`` has been removed.
+* Upstream-related configuration (such as url, project_id, and keys) is now contained in ``RemoteConfig``
+  attached to ``Client.remote``
+
 Version 5.3.1
 -------------
 

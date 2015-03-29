@@ -63,6 +63,9 @@ class TransportRegistry(object):
             self._transports[full_url] = self._schemes[parsed_url.scheme](parsed_url, **options)
         return self._transports[full_url]
 
+    def get_transport_cls(self, scheme):
+        return self._schemes[scheme]
+
     def compute_scope(self, url, scope):
         """
         Compute a scope dictionary.  This may be overridden by custom

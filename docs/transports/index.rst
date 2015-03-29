@@ -3,7 +3,12 @@ Transports
 
 A transport is the mechanism in which Raven sends the HTTP request to the Sentry server. By default, Raven uses a threaded asynchronous transport, but you can easily adjust this by modifying your ``SENTRY_DSN`` value.
 
-Transport registration is done via the URL prefix, so for example, a synchronous transport is as simple as prefixing your ``SENTRY_DSN`` with the ``sync+`` value.
+Transport registration is done as part of the Client configuration:
+
+.. code-block:: python
+
+  # Use the synchronous HTTP transport
+  client = Client('http://public:secret@example.com/1', transport=HTTPTransport)
 
 Options are passed to transports via the querystring.
 
@@ -25,82 +30,38 @@ For example, to increase the timeout and to disable SSL verification:
 	SENTRY_DSN = 'http://public:secret@example.com/1?timeout=5&verify_ssl=0'
 
 
-aiohttp
--------
-
-Should only be used within a :pep:`3156` compatible event loops
-(*asyncio* itself and others).
-
-::
-
-    SENTRY_DSN = 'aiohttp+http://public:secret@example.com/1'
-
-Eventlet
---------
-
-Should only be used within an Eventlet IO loop.
-
-::
-
-    SENTRY_DSN = 'eventlet+http://public:secret@example.com/1'
-
-
-Gevent
-------
-
-Should only be used within a Gevent IO loop.
-
-::
-
-    SENTRY_DSN = 'gevent+http://public:secret@example.com/1'
-
-
-Requests
---------
-
-Requires the ``requests`` library. Synchronous.
-
-::
-
-    SENTRY_DSN = 'requests+http://public:secret@example.com/1'
-
-
-Sync
-----
-
-A synchronous blocking transport.
-
-::
-
-    SENTRY_DSN = 'sync+http://public:secret@example.com/1'
-
-
-Threaded (Default)
+Builtin Transports
 ------------------
 
-Spawns an async worker for processing messages.
+.. data:: sentry.transport.thread.ThreadedHTTPTransport
 
-::
+   The default transport. Manages a threaded worker for processing messages asynchronous.
 
-    SENTRY_DSN = 'threaded+http://public:secret@example.com/1'
+.. data:: sentry.transport.http.HTTPTransport
 
+   A synchronous blocking transport.
 
-Tornado
--------
+.. data:: sentry.transport.aiohttp.AioHttpTransport
 
-Should only be used within a Tornado IO loop.
+   Should only be used within a :pep:`3156` compatible event loops
+   (*asyncio* itself and others).
 
-::
+.. data:: sentry.transport.eventlet.EventletHTTPTransport
 
-    SENTRY_DSN = 'tornado+http://public:secret@example.com/1'
+   Should only be used within an Eventlet IO loop.
 
+.. data:: sentry.transport.gevent.GeventedHTTPTransport
 
-Twisted
--------
+   Should only be used within a Gevent IO loop.
 
-Should only be used within a Twisted event loop.
+.. data:: sentry.transport.requests.RequestsHTTPTransport
 
-::
+   A synchronous transport which relies on the ``requests`` library.
 
-    SENTRY_DSN = 'twisted+http://public:secret@example.com/1'
+.. data:: sentry.transport.tornado.TornadoHTTPTransport
 
+   Should only be used within a Tornado IO loop.
+
+.. data:: sentry.transport.twisted.TwistedHTTPTransport
+
+   Should only be used within a Twisted event loop.

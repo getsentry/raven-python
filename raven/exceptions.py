@@ -20,3 +20,11 @@ class RateLimited(APIError):
 
 class InvalidGitRepository(Exception):
     pass
+
+
+class ConfigurationError(ValueError):
+    pass
+
+
+class InvalidDsn(ConfigurationError):
+    pass

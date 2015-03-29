@@ -22,11 +22,7 @@ class Sentry(Middleware):
     def __init__(self, app, config, client_cls=Client):
         client = client_cls(
             dsn=config.get('sentry.dsn'),
-            servers=list_from_setting(config, 'sentry.servers'),
             name=config.get('sentry.name'),
-            public_key=config.get('sentry.public_key'),
-            secret_key=config.get('sentry.secret_key'),
-            project=config.get('sentry.project'),
             site=config.get('sentry.site'),
             include_paths=list_from_setting(config, 'sentry.include_paths'),
             exclude_paths=list_from_setting(config, 'sentry.exclude_paths'),
