@@ -49,8 +49,9 @@ def send_test_message(client, options):
         sys.stdout.write('  %-15s: %s\n' % (k, getattr(client, k)))
     sys.stdout.write('\n')
 
-    if not all([client.servers, client.project, client.public_key, client.secret_key]):
-        sys.stdout.write("Error: All values must be set!\n")
+    remote_config = client.remote
+    if not remote_config.is_active():
+        sys.stdout.write("Error: DSN configuration is not valid!\n")
         sys.exit(1)
 
     if not client.is_enabled():

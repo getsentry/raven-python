@@ -15,3 +15,4 @@ def register_scheme(scheme):
 
 
 urlparse = _urlparse.urlparse
+parse_qsl = _urlparse.parse_qsl

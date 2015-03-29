@@ -159,7 +159,7 @@ class DjangoClient(Client):
         if is_http_request and result:
             # attach the sentry object to the request
             request.sentry = {
-                'project_id': data.get('project', self.project),
+                'project_id': data.get('project', self.remote.project),
                 'id': self.get_ident(result),
             }
 

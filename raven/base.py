@@ -24,13 +24,13 @@ from types import FunctionType
 
 import raven
 from raven.conf import defaults
+from raven.conf.remote import RemoteConfig
 from raven.context import Context
 from raven.exceptions import APIError, RateLimited
 from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
-from raven.utils.urlparse import urlparse
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -117,7 +117,7 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, raise_send_errors=False, **options):
+    def __init__(self, dsn=None, raise_send_errors=False, transport=None, **options):
         global Raven
 
         o = options
@@ -134,8 +134,8 @@ class Client(object):
         self.error_logger = logging.getLogger('sentry.errors')
         self.uncaught_logger = logging.getLogger('sentry.errors.uncaught')
 
-        self.dsns = {}
-        self.set_dsn(dsn, **options)
+        self._transport_cache = {}
+        self.set_dsn(dsn, transport)
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
@@ -174,42 +174,27 @@ class Client(object):
 
         self._context = Context()
 
-    def set_dsn(self, dsn=None, **options):
-        o = options
-
+    def set_dsn(self, dsn=None, transport=None):
         if dsn is None and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
             self.logger.debug(msg)
             dsn = os.environ['SENTRY_DSN']
 
-        try:
-            servers, public_key, secret_key, project, transport_options = self.dsns[dsn]
-        except KeyError:
-            if dsn:
-                # TODO: should we validate other options weren't sent?
-                urlparts = urlparse(dsn)
-                self.logger.debug(
-                    "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
-                    urlparts.netloc, urlparts.path))
-                dsn_config = raven.load(dsn, transport_registry=self._registry)
-                servers = dsn_config['SENTRY_SERVERS']
-                project = dsn_config['SENTRY_PROJECT']
-                public_key = dsn_config['SENTRY_PUBLIC_KEY']
-                secret_key = dsn_config['SENTRY_SECRET_KEY']
-                transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
+        if dsn not in self._transport_cache:
+            if dsn is None:
+                result = RemoteConfig(transport=transport)
             else:
-                servers = ()
-                project = None
-                public_key = None
-                secret_key = None
-                transport_options = {}
-            self.dsns[dsn] = servers, public_key, secret_key, project, transport_options
+                result = RemoteConfig.from_string(
+                    dsn,
+                    transport=transport,
+                    transport_registry=self._registry,
+                )
+            self._transport_cache[dsn] = result
+            self.remote = result
+        else:
+            self.remote = self._transport_cache[dsn]
 
-        self.servers = servers
-        self.public_key = public_key
-        self.secret_key = secret_key
-        self.project = project or defaults.PROJECT
-        self.transport_options = transport_options
+        self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
@@ -252,14 +237,6 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
-    def _get_public_dsn(self):
-        url = urlparse(self.servers[0])
-        netloc = url.hostname
-        if url.port:
-            netloc += ':%s' % url.port
-        path = url.path.replace('api/%s/store/' % (self.project,), self.project)
-        return '//%s@%s%s' % (self.public_key, netloc, path)
-
     def get_public_dsn(self, scheme=None):
         """
         Returns a public DSN which is consumable by raven-js
@@ -272,7 +249,7 @@ class Client(object):
         """
         if not self.is_enabled():
             return
-        url = self._get_public_dsn()
+        url = self.remote.get_public_dsn()
         if not scheme:
             return url
         return '%s:%s' % (scheme, url)
@@ -397,7 +374,7 @@ class Client(object):
             data['extra'][k] = self.transform(v)
 
         # It's important date is added **after** we serialize
-        data.setdefault('project', self.project)
+        data.setdefault('project', self.remote.project)
         data.setdefault('timestamp', date or datetime.utcnow())
         data.setdefault('time_spent', time_spent)
         data.setdefault('event_id', event_id)
@@ -532,7 +509,7 @@ class Client(object):
         Return a boolean describing whether the client should attempt to send
         events.
         """
-        return bool(self.servers)
+        return self.remote.is_active()
 
     def _successful_send(self):
         self.state.set_success()
@@ -590,9 +567,7 @@ class Client(object):
             self._failed_send(e, url, self.decode(data))
 
         try:
-            parsed = urlparse(url)
-            transport = self._registry.get_transport(
-                parsed, **self.transport_options)
+            transport = self.remote.get_transport()
             if transport.async:
                 transport.async_send(data, headers, self._successful_send,
                                      failed_send)
@@ -626,18 +601,22 @@ class Client(object):
                 protocol=self.protocol_version,
                 timestamp=timestamp,
                 client=client_string,
-                api_key=self.public_key,
-                api_secret=self.secret_key,
+                api_key=self.remote.public_key,
+                api_secret=self.remote.secret_key,
             )
 
-        for url in self.servers:
-            headers = {
-                'User-Agent': client_string,
-                'X-Sentry-Auth': auth_header,
-                'Content-Type': 'application/octet-stream',
-            }
+        headers = {
+            'User-Agent': client_string,
+            'X-Sentry-Auth': auth_header,
+            'Content-Type': 'application/octet-stream',
+        }
 
-            self.send_remote(url=url, data=message, headers=headers)
+        self.send_remote(
+            url=self.remote.store_endpoint,
+            data=message,
+            headers=headers,
+            **kwargs
+        )
 
     def encode(self, data):
         """
