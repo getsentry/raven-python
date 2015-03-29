@@ -1,4 +1,6 @@
 language: python
+sudo: false
+
 python:
   - "2.6"
   - "2.7"
@@ -25,8 +27,6 @@ env:
     # - S3_CREDENTIALS=
     - secure: "QEFKt0HhaMlCW0FCLTz3NDY/P4UuVl1Pw8kSUVKKjbaKn2jZdaLKS68yl3Vyrd9AqrBfRNNLBAnvpZjYL6EwqqnZzpRH3KnAf0WRxE6d5ytrUkwZtOnQaN0Tumuqc3xnoXXalPXvs+abhXZpjfOzx0oPBa2WbtMF/RJZ/bwsTKE="
 before_install:
-  # Use closer nameservers
-  - printf "nameserver 199.91.168.70\nnameserver 199.91.168.71\n" | sudo tee /etc/resolv.conf
 
   # These need to be here and not in the env hash because they need to be
   # evaluated after the virtualenv has been setup
