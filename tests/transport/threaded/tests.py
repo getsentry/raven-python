@@ -79,10 +79,13 @@ class ThreadedTransportTest(TestCase):
             # Log from the parent process - starts the worker thread
             transport.async_send(event1, None, None, None)
             childpid = os.fork()
+
             if childpid == 0:
                 # Log from the child process
                 transport.async_send(event2, None, None, None)
-                time.sleep(0.1)
+
+                # Ensure threaded worker has finished
+                transport.get_worker().stop()
                 os._exit(0)
 
             # Wait for the child process to finish
