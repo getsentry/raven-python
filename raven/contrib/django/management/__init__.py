@@ -28,21 +28,16 @@ def patch_base_command(cls):
     if hasattr(original_func, '__raven_patched'):
         return False
 
-    def can_capture(cls):
-        return 'sentry' not in settings.INSTALLED_APPS
-
     @wraps(original_func)
     def new_execute(self, *args, **kwargs):
         try:
             return original_func(self, *args, **kwargs)
         except Exception:
+            from raven.contrib.django.models import client
 
-            if can_capture(type(self)):
-                from raven.contrib.django.models import client
-
-                client.captureException(extra={
-                    'argv': sys.argv
-                })
+            client.captureException(extra={
+                'argv': sys.argv
+            })
             raise
 
     new_execute.__raven_patched = True

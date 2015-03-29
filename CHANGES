@@ -2,6 +2,7 @@ Version 5.3.0
 -------------
 
 * The UDP transport has been removed.
+* The integrated Sentry+Django client has been removed. This is now part of Sentry core.
 
 Version 5.2.0
 -------------

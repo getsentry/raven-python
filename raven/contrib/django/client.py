@@ -27,9 +27,6 @@ __all__ = ('DjangoClient',)
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
 
-    def is_enabled(self):
-        return bool(self.servers or 'sentry' in settings.INSTALLED_APPS)
-
     def get_user_info(self, user):
         if not user.is_authenticated():
             return {'is_authenticated': False}
@@ -167,27 +164,3 @@ class DjangoClient(Client):
             }
 
         return result
-
-    def send(self, **kwargs):
-        """
-        Serializes and signs ``data`` and passes the payload off to ``send_remote``
-
-        If ``servers`` was passed into the constructor, this will serialize the data and pipe it to
-        each server using ``send_remote()``. Otherwise, this will communicate with ``sentry.models.GroupedMessage``
-        directly.
-        """
-        if self.servers:
-            return super(DjangoClient, self).send(**kwargs)
-        elif 'sentry' in settings.INSTALLED_APPS:
-            try:
-                return self.send_integrated(kwargs)
-            except Exception as e:
-                if self.raise_send_errors:
-                    raise
-                self.error_logger.error(
-                    'Unable to record event: %s\nEvent was: %r', e,
-                    kwargs['message'], exc_info=True)
-
-    def send_integrated(self, kwargs):
-        from sentry.models import Group
-        return Group.objects.from_kwargs(**kwargs)

@@ -121,7 +121,7 @@ class ClientProxyTest(TestCase):
 
 
 class DjangoClientTest(TestCase):
-    ## Fixture setup/teardown
+    # Fixture setup/teardown
     urls = 'tests.contrib.django.urls'
 
     def setUp(self):
@@ -599,29 +599,6 @@ class CeleryIsolatedClientTest(TestCase):
         self.client.captureMessage(message='test')
 
         assert send_raw.delay.call_count == 1
-
-
-class CeleryIntegratedClientTest(TestCase):
-    def setUp(self):
-        self.client = CeleryClient()
-
-    @mock.patch('raven.contrib.django.celery.send_raw_integrated')
-    def test_send_encoded(self, send_raw):
-        with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
-            self.client.send_integrated('foo')
-
-            send_raw.delay.assert_called_once_with('foo')
-
-    @mock.patch('raven.contrib.django.celery.send_raw_integrated')
-    def test_without_eager(self, send_raw):
-        """
-        Integration test to ensure it propagates all the way down
-        and calls delay on the task.
-        """
-        with Settings(INSTALLED_APPS=tuple(settings.INSTALLED_APPS) + ('sentry',)):
-            self.client.captureMessage(message='test')
-
-            assert send_raw.delay.call_count == 1
 
 
 class IsValidOriginTestCase(TestCase):

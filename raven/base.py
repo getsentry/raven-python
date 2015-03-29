@@ -92,9 +92,7 @@ class ClientState(object):
 
 class Client(object):
     """
-    The base Raven client, which handles both local direct
-    communication with Sentry (through the GroupedMessage API), as
-    well as communicating over the HTTP API to multiple servers.
+    The base Raven client.
 
     Will read default configuration from the environment variable
     ``SENTRY_DSN`` if available.
