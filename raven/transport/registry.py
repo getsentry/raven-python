@@ -18,7 +18,6 @@ from raven.transport.threaded import ThreadedHTTPTransport
 from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
 from raven.transport.twisted import TwistedHTTPTransport
 from raven.transport.tornado import TornadoHTTPTransport
-from raven.transport.udp import UDPTransport
 from raven.utils import urlparse
 
 if sys.version_info >= (3, 3):
@@ -81,7 +80,6 @@ default_transports = [
     RequestsHTTPTransport,
     ThreadedRequestsHTTPTransport,
     TornadoHTTPTransport,
-    UDPTransport,
     EventletHTTPTransport,
 ]
 

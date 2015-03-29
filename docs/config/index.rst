@@ -56,7 +56,7 @@ The DSN can be found in Sentry by navigation to Account -> Projects -> [Project 
 
 It is composed of six important pieces:
 
-* The Protocol used. This can be one of the following: http, https, or udp.
+* The Protocol used. This can be one of the following: http or https.
 
 * The public and secret keys to authenticate the client.
 

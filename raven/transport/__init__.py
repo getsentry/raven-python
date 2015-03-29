@@ -20,7 +20,6 @@ from raven.transport.registry import *  # NOQA
 from raven.transport.twisted import *  # NOQA
 from raven.transport.threaded import *  # NOQA
 from raven.transport.tornado import *  # NOQA
-from raven.transport.udp import *  # NOQA
 
 if sys.version_info >= (3, 3):
     from raven.transport.aiohttp import *  # NOQA

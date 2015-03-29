@@ -77,18 +77,6 @@ class LoadTest(TestCase):
             'SENTRY_TRANSPORT_OPTIONS': {},
         })
 
-    def test_udp(self):
-        dsn = 'udp://foo:bar@sentry.local:9001/1'
-        res = {}
-        load(dsn, res)
-        self.assertEquals(res, {
-            'SENTRY_PROJECT': '1',
-            'SENTRY_SERVERS': ['udp://sentry.local:9001/api/1/store/'],
-            'SENTRY_PUBLIC_KEY': 'foo',
-            'SENTRY_SECRET_KEY': 'bar',
-            'SENTRY_TRANSPORT_OPTIONS': {},
-        })
-
     def test_options(self):
         dsn = 'http://foo:bar@sentry.local:9001/1?timeout=1'
         res = {}

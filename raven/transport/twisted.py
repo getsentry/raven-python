@@ -12,10 +12,8 @@ import logging
 
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
-from raven.transport.udp import BaseUDPTransport
 
 try:
-    import twisted.internet.protocol
     from twisted.web.client import (
         Agent, FileBodyProducer, HTTPConnectionPool, ResponseNeverReceived,
         readBody,
@@ -81,17 +79,3 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
         ).addErrback(
             on_failure,
         )
-
-
-class TwistedUDPTransport(BaseUDPTransport):
-    scheme = ['twisted+udp']
-
-    def __init__(self, parsed_url):
-        super(TwistedUDPTransport, self).__init__(parsed_url)
-        if not has_twisted:
-            raise ImportError('TwistedUDPTransport requires twisted.')
-        self.protocol = twisted.internet.protocol.DatagramProtocol()
-        twisted.internet.reactor.listenUDP(0, self.protocol)
-
-    def _send_data(self, data, addr):
-        self.protocol.transport.write(data, addr)

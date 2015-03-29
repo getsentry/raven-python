@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 
 import inspect
 import mock
-import pytest
 import raven
 import time
-from socket import socket, AF_INET, SOCK_DGRAM
+
 from raven.base import Client, ClientState
 from raven.exceptions import RateLimited
 from raven.transport import AsyncTransport
@@ -476,23 +475,3 @@ class ClientTest(TestCase):
         else:
             expected = {'logger': "u'test'", 'foo': "u'bar'"}
         self.assertEquals(event['extra'], expected)
-
-
-# TODO: Python 3
-@pytest.mark.skipif(str("six.PY3"))
-class ClientUDPTest(TestCase):
-    def setUp(self):
-        self.server_socket = socket(AF_INET, SOCK_DGRAM)
-        self.server_socket.bind(('127.0.0.1', 0))
-        self.client = Client(servers=["udp://%s:%s" % self.server_socket.getsockname()], key='BassOmatic')
-
-    def test_delivery(self):
-        self.client.captureMessage('test')
-        data, address = self.server_socket.recvfrom(2 ** 16)
-        self.assertTrue("\n\n" in data)
-        header, payload = data.split("\n\n")
-        for substring in ("sentry_timestamp=", "sentry_client="):
-            self.assertTrue(substring in header)
-
-    def tearDown(self):
-        self.server_socket.close()
