@@ -75,6 +75,7 @@ class ThreadedTransportTest(TestCase):
         try:
             os.close(fd)
             transport = LoggingThreadedScheme(filename, url)
+
             # Log from the parent process - starts the worker thread
             transport.async_send(event1, None, None, None)
             childpid = os.fork()
@@ -83,13 +84,21 @@ class ThreadedTransportTest(TestCase):
                 transport.async_send(event2, None, None, None)
                 time.sleep(0.1)
                 os._exit(0)
+
             # Wait for the child process to finish
             os.waitpid(childpid, 0)
-            self.assertTrue(os.path.isfile(filename))
+            assert os.path.isfile(filename)
+
+            # Ensure threaded worker has finished
+            transport.get_worker().stop()
+
             with open(filename, 'r') as logfile:
                 events = dict(x.strip().split() for x in logfile.readlines())
+
             # Check parent and child both logged successfully
-            self.assertEqual(events, {str(os.getpid()): 'parent',
-                                      str(childpid): 'child'})
+            assert events == {
+                str(os.getpid()): 'parent',
+                str(childpid): 'child',
+            }
         finally:
             os.remove(filename)
