@@ -29,11 +29,12 @@ class User(AnonymousUserMixin):
     get_id = lambda x: 1
 
 
-def create_app(ignore_exceptions=None):
+def create_app(ignore_exceptions=None, debug=False):
     import os
 
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.urandom(40)
+    app.debug = debug
 
     if ignore_exceptions:
         app.config['RAVEN_IGNORE_EXCEPTIONS'] = ignore_exceptions
@@ -91,7 +92,7 @@ class BaseTest(TestCase):
         app = create_app(*args, **kwargs)
         raven = TempStoreClient()
         Sentry(app, client=raven)
-        return app.test_client(), raven
+        return app.test_client(), raven, app
 
 
 class FlaskTest(BaseTest):
@@ -203,22 +204,29 @@ class FlaskTest(BaseTest):
         http = event['request']
         self.assertEqual({}, http.get('data'))
 
+    def test_wrap_wsgi_status(self):
+        _, _, app_debug = self.make_client_and_raven(debug=True)
+        self.assertFalse(app_debug.extensions['sentry'].wrap_wsgi)
+
+        _, _, app_ndebug = self.make_client_and_raven(debug=False)
+        self.assertTrue(app_ndebug.extensions['sentry'].wrap_wsgi)
+
     def test_error_handler_with_ignored_exception(self):
-        client, raven = self.make_client_and_raven(ignore_exceptions=[NameError, ValueError])
+        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[NameError, ValueError])
 
         response = client.get('/an-error/')
         self.assertEquals(response.status_code, 500)
         self.assertEquals(len(raven.events), 0)
 
     def test_error_handler_with_exception_not_ignored(self):
-        client, raven = self.make_client_and_raven(ignore_exceptions=[NameError, KeyError])
+        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[NameError, KeyError])
 
         response = client.get('/an-error/')
         self.assertEquals(response.status_code, 500)
         self.assertEquals(len(raven.events), 1)
 
     def test_error_handler_with_empty_ignore_exceptions_list(self):
-        client, raven = self.make_client_and_raven(ignore_exceptions=[])
+        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[])
 
         response = client.get('/an-error/')
         self.assertEquals(response.status_code, 500)

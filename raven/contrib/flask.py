@@ -94,7 +94,7 @@ class Sentry(object):
     # TODO(dcramer): the client isn't using local context and therefore
     # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False, level=logging.NOTSET, wrap_wsgi=True,
+                 logging=False, level=logging.NOTSET, wrap_wsgi=None,
                  register_signal=True):
         self.dsn = dsn
         self.logging = logging
@@ -205,6 +205,13 @@ class Sentry(object):
 
         if wrap_wsgi is not None:
             self.wrap_wsgi = wrap_wsgi
+        else:
+            # Fix https://github.com/getsentry/raven-python/issues/412
+            # the gist is that we get errors twice in debug mode if we don't do this
+            if app and app.debug:
+                self.wrap_wsgi = False
+            else:
+                self.wrap_wsgi = True
 
         if register_signal is not None:
             self.register_signal = register_signal
