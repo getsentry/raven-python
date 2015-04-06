@@ -41,7 +41,7 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
 
     if logger is None:
         logger = logging.getLogger()
-    handler = SentryHandler(client)
+    handler = SentryHandler(client, level=loglevel)
     handler.setLevel(loglevel)
     handler.addFilter(filter_)
 
