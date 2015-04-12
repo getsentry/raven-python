@@ -44,7 +44,7 @@ See also:
 Testing the Client
 ------------------
 
-Once you've got your server configured, you can test the Raven client by using it's CLI::
+Once you've got your server configured, you can test the Raven client by using its CLI::
 
   raven test <DSN value>
 
