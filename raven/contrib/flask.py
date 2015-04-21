@@ -191,8 +191,9 @@ class Sentry(object):
         self.client.http_context(self.get_http_info(request))
         self.client.user_context(self.get_user_info(request))
 
-    def add_sentry_id_header(self, sender, response, *args, **kwargs):
+    def after_request(self, sender, response, *args, **kwargs):
         response.headers['X-Sentry-ID'] = self.last_event_id
+        self.client.context.clear()
         return response
 
     def init_app(self, app, dsn=None, logging=None, level=None, wrap_wsgi=None,
@@ -232,7 +233,7 @@ class Sentry(object):
 
         if self.register_signal:
             got_request_exception.connect(self.handle_exception, sender=app)
-            request_finished.connect(self.add_sentry_id_header, sender=app)
+            request_finished.connect(self.after_request, sender=app)
 
         if not hasattr(app, 'extensions'):
             app.extensions = {}
@@ -255,3 +256,15 @@ class Sentry(object):
         else:
             self.last_event_id = None
         return result
+
+    def user_context(self, *args, **kwargs):
+        assert self.client, 'captureMessage called before application configured'
+        return self.client.user_context(*args, **kwargs)
+
+    def tags_context(self, *args, **kwargs):
+        assert self.client, 'captureMessage called before application configured'
+        return self.client.tags_context(*args, **kwargs)
+
+    def extra_context(self, *args, **kwargs):
+        assert self.client, 'captureMessage called before application configured'
+        return self.client.extra_context(*args, **kwargs)
