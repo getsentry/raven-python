@@ -229,7 +229,15 @@ class Client(object):
     def get_module_versions(self):
         if not self.include_versions:
             return {}
-        return get_versions(self.include_paths)
+
+        version_info = sys.version_info
+
+        modules = get_versions(self.include_paths)
+        modules['python'] = '{}.{}.{}'.format(
+            version_info.major, version_info.minor, version_info.micro,
+        )
+
+        return modules
 
     def get_ident(self, result):
         """

@@ -82,7 +82,6 @@ class TransportTest(TestCase):
             'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
             'server_name': 'test_server',
             'level': 40,
-            'modules': {},
             'tags': {},
             'time_spent': None,
             'timestamp': 1336089600,
