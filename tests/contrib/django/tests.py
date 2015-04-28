@@ -21,7 +21,7 @@ from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 from django.template import TemplateSyntaxError
-from django.test import TestCase, SimpleTestCase
+from django.test import TestCase
 from django.utils.translation import gettext_lazy
 
 from raven.base import Client
@@ -33,7 +33,7 @@ from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
 from raven.utils.serializer import transform
-from raven.utils import six, json
+from raven.utils import six
 from raven.utils.six import StringIO
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
@@ -705,6 +705,10 @@ class PromiseSerializerTestCase(TestCase):
         expected = "'Igpay Atinlay'" if six.PY3 else "u'Igpay Atinlay'"
         assert result == expected
 
+    def test_real_gettext_lazy(self):
+        d = {'lazy_translation': gettext_lazy('testing')}
+        assert transform(d) == {"u'lazy_translation'": "u'testing'"}
+
 
 class ModelInstanceSerializerTestCase(TestCase):
     def test_basic(self):
@@ -778,9 +782,3 @@ class SentryExceptionHandlerTest(TestCase):
         sentry_exception_handler(request=self.request)
 
         assert not captureException.called
-
-
-class JSONTest(SimpleTestCase):
-    def test_translation(self):
-        d = {'lazy_translation': gettext_lazy('testing')}
-        assert json.dumps(d) == '{"lazy_translation": "testing"}'

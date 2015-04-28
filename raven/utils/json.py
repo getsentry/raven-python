@@ -11,7 +11,6 @@ from __future__ import absolute_import
 import codecs
 import datetime
 import uuid
-from decimal import Decimal
 try:
     import simplejson as json
 except ImportError:
@@ -29,14 +28,10 @@ class BetterJSONEncoder(json.JSONEncoder):
         datetime.datetime: lambda o: o.strftime('%Y-%m-%dT%H:%M:%SZ'),
         set: list,
         frozenset: list,
-        bytes: lambda o: o.decode('utf-8', errors='replace'),
-        Decimal: repr
+        bytes: lambda o: o.decode('utf-8', errors='replace')
     }
 
     def default(self, obj):
-        if hasattr(obj, '_proxy____text_cast'):
-            # django's gettext_lazy proxy strings
-            return obj.encode('utf8')
         try:
             encoder = self.ENCODER_BY_TYPE[type(obj)]
         except KeyError:
