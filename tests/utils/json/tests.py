@@ -2,6 +2,7 @@
 
 import datetime
 import uuid
+from decimal import Decimal
 from raven.utils.testutils import TestCase
 
 from raven.utils import json
@@ -32,3 +33,7 @@ class JSONTest(TestCase):
 
         obj = Unknown()
         assert json.dumps(obj) == '"Unknown object"'
+
+    def test_decimal(self):
+        d = {'decimal': Decimal('123.45')}
+        assert json.dumps(d) == '{"decimal": "Decimal(\'123.45\')"}'
