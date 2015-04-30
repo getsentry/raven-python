@@ -97,6 +97,9 @@ class Message(BaseEvent):
     """
     name = 'sentry.interfaces.Message'
 
+    def to_string(self, data):
+        return data[self.name]['message']
+
     def capture(self, message, params=(), formatted=None, **kwargs):
         message = to_unicode(message)
         data = {
