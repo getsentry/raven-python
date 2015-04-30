@@ -234,7 +234,7 @@ class Client(object):
         version_info = sys.version_info
 
         modules = get_versions(self.include_paths)
-        modules['python'] = '{}.{}.{}'.format(
+        modules['python'] = '{0}.{1}.{2}'.format(
             version_info[0], version_info[1], version_info[2],
         )
 
