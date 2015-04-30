@@ -8,6 +8,7 @@ Version 5.3.0
 * Unsent events now log to 'sentry.errors.uncaught'.
 * Django management commands should now effectively autopatch (when run from the CLI).
 * Flask wrapper now includes user_context, tags_context, and extra_context helpers.
+* Python version is now reported with modules.
 
 Version 5.2.0
 -------------
