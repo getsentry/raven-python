@@ -258,13 +258,13 @@ class Sentry(object):
         return result
 
     def user_context(self, *args, **kwargs):
-        assert self.client, 'captureMessage called before application configured'
+        assert self.client, 'user_context called before application configured'
         return self.client.user_context(*args, **kwargs)
 
     def tags_context(self, *args, **kwargs):
-        assert self.client, 'captureMessage called before application configured'
+        assert self.client, 'tags_context called before application configured'
         return self.client.tags_context(*args, **kwargs)
 
     def extra_context(self, *args, **kwargs):
-        assert self.client, 'captureMessage called before application configured'
+        assert self.client, 'extra_context called before application configured'
         return self.client.extra_context(*args, **kwargs)
