@@ -104,12 +104,12 @@ class ClientTest(TestCase):
 
         # test error
         send.side_effect = Exception()
-        client.send_remote('sync+http://example.com/api/store', 'foo')
+        client.send_remote('sync+http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
 
         # test recovery
         send.side_effect = None
-        client.send_remote('sync+http://example.com/api/store', 'foo')
+        client.send_remote('sync+http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ONLINE)
 
     @mock.patch('raven.transport.http.HTTPTransport.send')
@@ -123,13 +123,13 @@ class ClientTest(TestCase):
 
         # test error
         send.side_effect = RateLimited('foo', 5)
-        client.send_remote('sync+http://example.com/api/store', 'foo')
+        client.send_remote('sync+http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
         self.assertEqual(client.state.retry_after, 5)
 
         # test recovery
         send.side_effect = None
-        client.send_remote('sync+http://example.com/api/store', 'foo')
+        client.send_remote('sync+http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ONLINE)
         self.assertEqual(client.state.retry_after, 0)
 
@@ -150,17 +150,17 @@ class ClientTest(TestCase):
 
         # test immediate raise of error
         async_send.side_effect = Exception()
-        client.send_remote('http://example.com/api/store', 'foo')
+        client.send_remote('http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
 
         # test recovery
-        client.send_remote('http://example.com/api/store', 'foo')
+        client.send_remote('http://example.com/api/store', client.encode({}))
         success_cb = async_send.call_args[0][2]
         success_cb()
         self.assertEquals(client.state.status, client.state.ONLINE)
 
         # test delayed raise of error
-        client.send_remote('http://example.com/api/store', 'foo')
+        client.send_remote('http://example.com/api/store', client.encode({}))
         failure_cb = async_send.call_args[0][3]
         failure_cb(Exception())
         self.assertEquals(client.state.status, client.state.ERROR)

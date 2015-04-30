@@ -19,6 +19,7 @@ import warnings
 
 from datetime import datetime
 from functools import wraps
+from pprint import pformat
 from types import FunctionType
 
 import raven
@@ -30,7 +31,6 @@ from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.utils.urlparse import urlparse
-from raven.utils.compat import HTTPError
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -132,6 +132,7 @@ class Client(object):
         self.logger = logging.getLogger(
             '%s.%s' % (cls.__module__, cls.__name__))
         self.error_logger = logging.getLogger('sentry.errors')
+        self.uncaught_logger = logging.getLogger('sentry.errors.uncaught')
 
         self.dsns = {}
         self.set_dsn(dsn, **options)
@@ -526,16 +527,6 @@ class Client(object):
 
         return (data.get('event_id'),)
 
-    def _get_log_message(self, data):
-        # decode message so we can show the actual event
-        try:
-            data = self.decode(data)
-        except Exception:
-            message = '<failed decoding data>'
-        else:
-            message = data.pop('message', '<no message value>')
-        return message
-
     def is_enabled(self):
         """
         Return a boolean describing whether the client should attempt to send
@@ -546,26 +537,40 @@ class Client(object):
     def _successful_send(self):
         self.state.set_success()
 
-    def _failed_send(self, e, url, data):
+    def _failed_send(self, exc, url, data):
         retry_after = 0
-        if isinstance(e, APIError):
-            if isinstance(e, RateLimited):
-                retry_after = e.retry_after
-            self.error_logger.error('Unable to capture event: %s(%s)', e.__class__.__name__, e.message)
-        elif isinstance(e, HTTPError):
-            body = e.read()
+        if isinstance(exc, APIError):
+            if isinstance(exc, RateLimited):
+                retry_after = exc.retry_after
             self.error_logger.error(
-                'Unable to reach Sentry log server: %s (url: %s, body: %s)',
-                e, url, body, exc_info=True,
-                extra={'data': {'body': body[:200], 'remote_url': url}})
+                'Sentry responed with an API error: %s(%s)', type(exc).__name__, exc.message)
         else:
             self.error_logger.error(
-                'Unable to reach Sentry log server: %s (url: %s)', e, url,
-                exc_info=True, extra={'data': {'remote_url': url}})
+                'Sentry responded with an error: %s (url: %s)\n%s',
+                exc, url, pformat(data),
+                exc_info=True
+            )
 
-        message = self._get_log_message(data)
-        self.error_logger.error('Failed to submit message: %r', message)
+        self._log_failed_submission(data)
         self.state.set_fail(retry_after=retry_after)
+
+    def _log_failed_submission(self, data):
+        """
+        Log a reasonable representation of an event that should have been sent
+        to Sentry
+        """
+        message = data.pop('message', '<no message value>')
+        output = [message]
+        if 'exception' in data and 'stacktrace' in data['exception']['values'][0]:
+            # try to reconstruct a reasonable version of the exception
+            for frame in data['exception']['values'][0]['stacktrace']['frames']:
+                output.append('  File "%(filename)s", line %(lineno)s, in %(function)s' % {
+                    'filename': frame['filename'],
+                    'lineno': frame['lineno'],
+                    'function': frame['function'],
+                })
+
+        self.uncaught_logger.error(output)
 
     def send_remote(self, url, data, headers=None):
         # If the client is configured to raise errors on sending,
@@ -573,15 +578,16 @@ class Client(object):
         # will be handled by the calling application
         if headers is None:
             headers = {}
+
         if not self.raise_send_errors and not self.state.should_try():
-            message = self._get_log_message(data)
-            self.error_logger.error(message)
+            data = self.decode(data)
+            self._log_failed_submission(data)
             return
 
         self.logger.debug('Sending message of length %d to %s', len(data), url)
 
         def failed_send(e):
-            self._failed_send(e, url, data)
+            self._failed_send(e, url, self.decode(data))
 
         try:
             parsed = urlparse(url)
