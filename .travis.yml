@@ -8,11 +8,11 @@ python:
   - "pypy"
 env:
   matrix:
-    - DJANGO=Django==1.4.18
-    - DJANGO=Django==1.5.10
-    - DJANGO=Django==1.6.10
-    - DJANGO=Django==1.7.5
-    - DJANGO=Django==1.8b1
+    - DJANGO=Django==1.4.20
+    - DJANGO=Django==1.5.12
+    - DJANGO=Django==1.6.11
+    - DJANGO=Django==1.7.7
+    - DJANGO=Django==1.8
     - 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
   global:
     - 'PIP_DOWNLOAD_CACHE=".pip_download_cache"'
@@ -43,16 +43,16 @@ matrix:
     - env: 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
   exclude:
     - python: "3.2"
-      env: DJANGO=Django==1.4.18
+      env: DJANGO=Django==1.4.20
     - python: "3.3"
-      env: DJANGO=Django==1.4.18
+      env: DJANGO=Django==1.4.20
     - python: "3.4"
-      env: DJANGO=Django==1.4.18
+      env: DJANGO=Django==1.4.20
     - python: "2.6"
       env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
     - python: "3.2"
       env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
     - python: "2.6"
-      env: DJANGO=Django==1.8b1
+      env: DJANGO=Django==1.8
     - python: "2.6"
-      env: DJANGO=Django==1.7.5
+      env: DJANGO=Django==1.7.7
