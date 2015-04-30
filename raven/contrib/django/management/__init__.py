@@ -8,17 +8,24 @@ raven.contrib.django.raven.management
 from __future__ import absolute_import, print_function
 
 import sys
+import warnings
 
 from functools import wraps
 
-from django.conf import settings
 
-
-def patch_base_command(cls):
+def patch_cli_runner():
     """
     Patches ``cls.execute``, returning a boolean describing if the
     attempt was successful.
     """
+    try:
+        from django.core.management import ManagementUtility
+    except ImportError:
+        warnings.warn('Unable to patch Django management commands')
+        return
+    else:
+        cls = ManagementUtility
+
     try:
         original_func = cls.execute
     except AttributeError:
@@ -44,14 +51,3 @@ def patch_base_command(cls):
     cls.execute = new_execute
 
     return True
-
-if ('raven.contrib.django' in settings.INSTALLED_APPS or
-        'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS):
-
-    try:
-        from django.core.management.base import BaseCommand
-    except ImportError:
-        # give up
-        pass
-    else:
-        patch_base_command(BaseCommand)

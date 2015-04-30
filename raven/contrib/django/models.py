@@ -20,6 +20,7 @@ from django.conf import settings as django_settings
 from hashlib import md5
 
 from raven.utils import six
+from raven.contrib.django.management import patch_cli_runner
 
 
 logger = logging.getLogger('sentry.errors.client')
@@ -235,7 +236,10 @@ def register_serializers():
     # force import so serializers can call register
     import raven.contrib.django.serializers  # NOQA
 
+
 if ('raven.contrib.django' in django_settings.INSTALLED_APPS
         or 'raven.contrib.django.raven_compat' in django_settings.INSTALLED_APPS):
     register_handlers()
     register_serializers()
+
+    patch_cli_runner()
