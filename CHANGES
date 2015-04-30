@@ -4,6 +4,9 @@ Version 5.3.0
 * The UDP transport has been removed.
 * The integrated Sentry+Django client has been removed. This is now part of Sentry core.
 * Server configuration *must* now be specified with a DSN.
+* Upstream errors now have increased verbosity in logs.
+* Unsent events now log to 'sentry.errors.uncaught'.
+* Django management commands should now effectively autopatch (when run from the CLI).
 
 Version 5.2.0
 -------------
