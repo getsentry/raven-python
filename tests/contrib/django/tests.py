@@ -707,7 +707,9 @@ class PromiseSerializerTestCase(TestCase):
 
     def test_real_gettext_lazy(self):
         d = {'lazy_translation': gettext_lazy('testing')}
-        assert transform(d) == {"u'lazy_translation'": "u'testing'"}
+        key = "'lazy_translation'" if six.PY3 else "u'lazy_translation'"
+        value = "'testing'" if six.PY3 else "u'testing'"
+        assert transform(d) == {key: value}
 
 
 class ModelInstanceSerializerTestCase(TestCase):
