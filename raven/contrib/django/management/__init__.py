@@ -19,12 +19,12 @@ def patch_cli_runner():
     attempt was successful.
     """
     try:
-        from django.core.management import ManagementUtility
+        from django.core.management.base import BaseCommand
     except ImportError:
         warnings.warn('Unable to patch Django management commands')
         return
     else:
-        cls = ManagementUtility
+        cls = BaseCommand
 
     try:
         original_func = cls.execute
