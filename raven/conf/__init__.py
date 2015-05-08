@@ -47,7 +47,7 @@ def load(dsn, scope=None, transport_registry=None):
     url = urlparse(dsn)
 
     if not transport_registry.supported_scheme(url.scheme):
-        raise ValueError('Unsupported Sentry DSN scheme: %r' % url.scheme)
+        raise ValueError('Url %r have unsupported Sentry DSN scheme: %r' % (dsn, url.scheme))
 
     if scope is None:
         scope = {}
