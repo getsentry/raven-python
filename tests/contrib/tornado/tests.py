@@ -15,6 +15,15 @@ class AnErrorProneHandler(SentryMixin, web.RequestHandler):
             self.captureException(True)
 
 
+@web.stream_request_body
+class AnErrorProneStreamingHandler(SentryMixin, web.RequestHandler):
+    def get(self):
+        try:
+            raise Exception("Damn it!")
+        except Exception:
+            self.captureException(True)
+
+
 class AnErrorWithCustomNonDictData(SentryMixin, web.RequestHandler):
     def get(self):
         try:
@@ -64,6 +73,7 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
     def get_app(self):
         app = web.Application([
             web.url(r'/an-error', AnErrorProneHandler),
+            web.url(r'/a-streaming-error', AnErrorProneStreamingHandler),
             web.url(r'/an-async-message', AsyncMessageHandler),
             web.url(r'/send-error', SendErrorTestHandler),
             web.url(r'/send-error-async', SendErrorAsyncHandler),
@@ -93,6 +103,27 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(http_data['method'], 'GET')
 
         user_data = kwargs['user']
+        self.assertEqual(user_data['is_authenticated'], False)
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send_encoded')
+    def test_streaming_error_handler(self, send_encoded):
+        response = self.fetch('/a-streaming-error?qs=qs')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(send_encoded.call_count, 1)
+        encoded = send_encoded.call_args[0][0]
+        decoded = self._app.sentry_client.decode(encoded)
+
+        assert 'user' in decoded
+        assert 'request' in decoded
+        assert 'exception' in decoded
+
+        http_data = decoded['request']
+        self.assertEqual(http_data['cookies'], None)
+        self.assertEqual(http_data['url'], response.effective_url)
+        self.assertEqual(http_data['query_string'], 'qs=qs')
+        self.assertEqual(http_data['method'], 'GET')
+
+        user_data = decoded['user']
         self.assertEqual(user_data['is_authenticated'], False)
 
     @patch('raven.contrib.tornado.AsyncSentryClient.send')
