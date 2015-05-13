@@ -21,14 +21,11 @@ class TornadoHTTPTransport(HTTPTransport):
 
     scheme = ['tornado+http', 'tornado+https']
 
-    def __init__(self, parsed_url, **kwargs):
+    def __init__(self, parsed_url, *args, **kwargs):
         if not has_tornado:
             raise ImportError('TornadoHTTPTransport requires tornado.')
 
-        super(TornadoHTTPTransport, self).__init__(parsed_url, **kwargs)
-
-        # remove the tornado+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
+        super(TornadoHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
 
     def send(self, data, headers):
         kwargs = dict(method='POST', headers=headers, body=data)

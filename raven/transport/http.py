@@ -23,7 +23,7 @@ class HTTPTransport(Transport):
         self.check_scheme(parsed_url)
 
         self._parsed_url = parsed_url
-        self._url = parsed_url.geturl().split('+', 1)[-1]
+        self._url = parsed_url.geturl().rsplit('+', 1)[-1]
 
         if isinstance(timeout, six.string_types):
             timeout = int(timeout)
