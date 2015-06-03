@@ -80,6 +80,7 @@ class SanitizePasswordsProcessor(Processor):
         'api_key',
         'apikey',
         'sentry_dsn',
+        'access_token',
     ])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 

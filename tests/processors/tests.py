@@ -15,6 +15,7 @@ VARS = {
     'a_password_here': 'hello',
     'api_key': 'secret_key',
     'apiKey': 'secret_key',
+    'access_token': 'oauth2 access token',
 }
 
 
@@ -25,6 +26,7 @@ def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
         a_password_here = "Don't look at me!"   # NOQA F841
         api_key = "I'm hideous!"                # NOQA F841
         apiKey = "4567000012345678"             # NOQA F841
+        access_token = "secret stuff!"          # NOQA F841
 
         # TypeError: unsupported operand type(s) for /: 'str' and 'str'
         raise exception_class()
@@ -89,6 +91,8 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertEquals(vars['api_key'], proc.MASK)
         self.assertTrue('apiKey' in vars)
         self.assertEquals(vars['apiKey'], proc.MASK)
+        self.assertTrue('access_token' in vars)
+        self.assertEquals(vars['access_token'], proc.MASK)
 
     def test_stacktrace(self, *args, **kwargs):
         """
@@ -191,7 +195,8 @@ class SanitizePasswordsProcessorTest(TestCase):
     def test_cookie_header(self):
         data = get_http_data()
         data['request']['headers']['Cookie'] = 'foo=bar;password=hello'\
-                ';the_secret=hello;a_password_here=hello;api_key=secret_key'
+            ';the_secret=hello;a_password_here=hello;api_key=secret_key'\
+            ';access_token=at'
 
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
@@ -201,7 +206,8 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertEquals(
             http['headers']['Cookie'],
             'foo=bar;password=%(m)s'
-            ';the_secret=%(m)s;a_password_here=%(m)s;api_key=%(m)s' % dict(m=proc.MASK))
+            ';the_secret=%(m)s;a_password_here=%(m)s;api_key=%(m)s'
+            ';access_token=%(m)s' % dict(m=proc.MASK))
 
     def test_sanitize_credit_card(self):
         proc = SanitizePasswordsProcessor(Mock())
