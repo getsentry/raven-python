@@ -520,7 +520,7 @@ class Client(object):
             if isinstance(exc, RateLimited):
                 retry_after = exc.retry_after
             self.error_logger.error(
-                'Sentry responed with an API error: %s(%s)', type(exc).__name__, exc.message)
+                'Sentry responded with an API error: %s(%s)', type(exc).__name__, exc.message)
         else:
             self.error_logger.error(
                 'Sentry responded with an error: %s (url: %s)\n%s',
