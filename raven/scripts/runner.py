@@ -45,8 +45,8 @@ def get_uid():
 
 def send_test_message(client, options):
     sys.stdout.write("Client configuration:\n")
-    for k in ('servers', 'project', 'public_key', 'secret_key'):
-        sys.stdout.write('  %-15s: %s\n' % (k, getattr(client, k)))
+    for k in ('base_url', 'project', 'public_key', 'secret_key'):
+        sys.stdout.write('  %-15s: %s\n' % (k, getattr(client.remote, k)))
     sys.stdout.write('\n')
 
     remote_config = client.remote
