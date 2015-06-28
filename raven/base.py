@@ -232,7 +232,9 @@ class Client(object):
         >>> result = client.capture(**kwargs)
         >>> ident = client.get_ident(result)
         """
-        return '$'.join(result)
+        warnings.warn('Client.get_ident is deprecated. The event ID is now returned as the result of capture.',
+                      DeprecationWarning)
+        return result
 
     def get_handler(self, name):
         return self.module_cache[name](self)
@@ -502,7 +504,7 @@ class Client(object):
 
         self.send(**data)
 
-        return (data.get('event_id'),)
+        return data['event_id']
 
     def is_enabled(self):
         """
