@@ -171,13 +171,12 @@ class Sentry(object):
 
     def get_http_info(self, request):
         """
-        Redirect HTTP info to get data from request.data instead.
+        Determine how to retrieve actual data by using request.mimetype.
         """
-        headers = dict(get_headers(request.environ))
 
         retriever = self.get_form_data
 
-        if self.is_json_type(headers['Content-Type']):
+        if self.is_json_type(request.mimetype):
             retriever = self.get_json_data
 
         return self.get_http_info_with_retriever(request, retriever)
