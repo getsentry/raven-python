@@ -170,18 +170,43 @@ class Sentry(object):
         return user_info
 
     def get_http_info(self, request):
+        """
+        Determine how to retrieve actual data by using request.mimetype.
+        """
+
+        retriever = self.get_form_data
+
+        if self.is_json_type(request.mimetype):
+            retriever = self.get_json_data
+
+        return self.get_http_info_with_retriever(request, retriever)
+
+    def is_json_type(self, content_type):
+        return content_type == 'application/json'
+
+    def get_form_data(self, request):
+        return request.form
+
+    def get_json_data(self, request):
+        return request.data
+
+    def get_http_info_with_retriever(self, request,
+                                     retriever=get_form_data):
+        """
+        Exact method for getting http_info but with form data work around.
+        """
         urlparts = _urlparse.urlsplit(request.url)
 
         try:
-            formdata = request.form
+            data = retriever(request)
         except ClientDisconnected:
-            formdata = {}
+            data = {}
 
         return {
             'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
             'query_string': urlparts.query,
             'method': request.method,
-            'data': formdata,
+            'data': data,
             'headers': dict(get_headers(request.environ)),
             'env': dict(get_environ(request.environ)),
         }
