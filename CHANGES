@@ -5,6 +5,7 @@ Version 5.4.0
 * ``raven.conf.load`` has been removed.
 * Upstream-related configuration (such as url, project_id, and keys) is now contained in ``RemoteConfig``
   attached to ``Client.remote``
+* The ``aiohttp`` transport has been moved to ``raven-aiohttp`` package.
 
 Version 5.3.1
 -------------

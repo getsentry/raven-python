@@ -8,7 +8,6 @@ raven.transport
 # TODO: deprecate this namespace and force non-default (sync + threaded) to
 # manually import/register transports somehow
 from __future__ import absolute_import
-import sys
 
 from raven.transport.base import *  # NOQA
 from raven.transport.eventlet import *  # NOQA
@@ -20,6 +19,3 @@ from raven.transport.registry import *  # NOQA
 from raven.transport.twisted import *  # NOQA
 from raven.transport.threaded import *  # NOQA
 from raven.transport.tornado import *  # NOQA
-
-if sys.version_info >= (3, 3):
-    from raven.transport.aiohttp import *  # NOQA

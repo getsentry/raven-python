@@ -41,11 +41,6 @@ Builtin Transports
 
    A synchronous blocking transport.
 
-.. data:: sentry.transport.aiohttp.AioHttpTransport
-
-   Should only be used within a :pep:`3156` compatible event loops
-   (*asyncio* itself and others).
-
 .. data:: sentry.transport.eventlet.EventletHTTPTransport
 
    Should only be used within an Eventlet IO loop.
@@ -65,3 +60,9 @@ Builtin Transports
 .. data:: sentry.transport.twisted.TwistedHTTPTransport
 
    Should only be used within a Twisted event loop.
+
+
+Other Transports
+----------------
+
+- `aiohttp <https://github.com/getsentry/raven-aiohttp>`_
