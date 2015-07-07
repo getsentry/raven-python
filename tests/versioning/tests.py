@@ -10,7 +10,7 @@ from raven.utils import six
 
 
 def has_git_requirements():
-    return os.path.join(settings.PROJECT_ROOT, '.git', 'refs', 'heads', 'master')
+    return os.path.exists(os.path.join(settings.PROJECT_ROOT, '.git', 'refs', 'heads', 'master'))
 
 
 @pytest.mark.skipif('not has_git_requirements()')
