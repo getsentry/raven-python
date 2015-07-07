@@ -21,6 +21,8 @@ setup-git:
 	cd .git/hooks && ln -sf ../../hooks/* ./
 
 publish:
-	python setup.py sdist bdist_wheel upload
+	rm -rf dist
+	python setup.py sdist bdist_wheel
+	twine upload -s dist/*
 
 .PHONY: bootstrap test lint coverage setup-git publish
