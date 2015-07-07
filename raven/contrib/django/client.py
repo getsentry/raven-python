@@ -14,7 +14,12 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
-from django.template.loader import LoaderOrigin
+
+try:
+    from django.template.base import Origin
+except ImportError:
+    # support Django <1.9
+    from django.template.loader import LoaderOrigin as Origin
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
@@ -148,7 +153,7 @@ class DjangoClient(Client):
             # As of r16833 (Django) all exceptions may contain a ``django_template_source`` attribute (rather than the
             # legacy ``TemplateSyntaxError.source`` check) which describes template information.
             if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and
-               isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], LoaderOrigin))):
+               isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], Origin))):
                 source = getattr(exc_value, 'django_template_source', getattr(exc_value, 'source', None))
                 if source is None:
                     self.logger.info('Unable to get template source from exception')
