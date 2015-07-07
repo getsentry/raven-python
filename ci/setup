@@ -3,7 +3,7 @@
 pip install $DJANGO
 make bootstrap
 if [[ ${TRAVIS_PYTHON_VERSION::1} == '2' ]]; then
-	pip install gevent --use-mirrors
+	pip install gevent
 fi
 if [[ ${TRAVIS_PYTHON_VERSION} == '3.2' ]]; then
 	pip install -I https://github.com/celery/celery/archive/3.0.zip
