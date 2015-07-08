@@ -1,3 +1,8 @@
+Version 5.4.1
+-------------
+
+* Fixed packaging of 5.4.0 which erronously kept the ``aiohttp.py`` file in the wheel only.
+
 Version 5.4.0
 -------------
 

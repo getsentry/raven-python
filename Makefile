@@ -21,7 +21,7 @@ setup-git:
 	cd .git/hooks && ln -sf ../../hooks/* ./
 
 publish:
-	rm -rf dist
+	rm -rf dist build
 	python setup.py sdist bdist_wheel
 	twine upload -s dist/*
 
