@@ -33,31 +33,31 @@ For example, to increase the timeout and to disable SSL verification:
 Builtin Transports
 ------------------
 
-.. data:: sentry.transport.thread.ThreadedHTTPTransport
+.. data:: raven.transport.thread.ThreadedHTTPTransport
 
    The default transport. Manages a threaded worker for processing messages asynchronous.
 
-.. data:: sentry.transport.http.HTTPTransport
+.. data:: raven.transport.http.HTTPTransport
 
    A synchronous blocking transport.
 
-.. data:: sentry.transport.eventlet.EventletHTTPTransport
+.. data:: raven.transport.eventlet.EventletHTTPTransport
 
    Should only be used within an Eventlet IO loop.
 
-.. data:: sentry.transport.gevent.GeventedHTTPTransport
+.. data:: raven.transport.gevent.GeventedHTTPTransport
 
    Should only be used within a Gevent IO loop.
 
-.. data:: sentry.transport.requests.RequestsHTTPTransport
+.. data:: raven.transport.requests.RequestsHTTPTransport
 
    A synchronous transport which relies on the ``requests`` library.
 
-.. data:: sentry.transport.tornado.TornadoHTTPTransport
+.. data:: raven.transport.tornado.TornadoHTTPTransport
 
    Should only be used within a Tornado IO loop.
 
-.. data:: sentry.transport.twisted.TwistedHTTPTransport
+.. data:: raven.transport.twisted.TwistedHTTPTransport
 
    Should only be used within a Twisted event loop.
 
