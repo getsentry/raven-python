@@ -84,7 +84,7 @@ class RemoteConfig(object):
         if not all([netloc, project, url.username, url.password]):
             raise InvalidDsn('Invalid Sentry DSN: %r' % url.geturl())
 
-        base_url = '%s://%s%s' % (url.scheme, netloc, path)
+        base_url = '%s://%s%s' % (url.scheme.rsplit('+', 1)[-1], netloc, path)
 
         return cls(
             base_url=base_url,
