@@ -20,8 +20,6 @@ class HTTPTransport(Transport):
 
     def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=True,
                  ca_certs=defaults.CA_BUNDLE):
-        self.check_scheme(parsed_url)
-
         self._parsed_url = parsed_url
         self._url = parsed_url.geturl().rsplit('+', 1)[-1]
 

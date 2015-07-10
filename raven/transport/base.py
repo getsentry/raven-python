@@ -7,8 +7,6 @@ raven.transport.base
 """
 from __future__ import absolute_import
 
-from raven.transport.exceptions import InvalidScheme
-
 
 class Transport(object):
     """
@@ -23,10 +21,6 @@ class Transport(object):
 
     async = False
     scheme = []
-
-    def check_scheme(self, url):
-        if url.scheme not in self.scheme:
-            raise InvalidScheme()
 
     def send(self, data, headers):
         """

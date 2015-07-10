@@ -23,7 +23,6 @@ class DummyScheme(Transport):
     scheme = ['mock']
 
     def __init__(self, parsed_url, timeout=5):
-        self.check_scheme(parsed_url)
         self._parsed_url = parsed_url
         self.timeout = timeout
 
