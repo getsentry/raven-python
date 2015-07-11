@@ -33,9 +33,9 @@ For example, to increase the timeout and to disable SSL verification:
 Builtin Transports
 ------------------
 
-.. data:: raven.transport.thread.ThreadedHTTPTransport
+.. data:: raven.transport.threaded.ThreadedHTTPTransport
 
-   The default transport. Manages a threaded worker for processing messages asynchronous.
+   The default transport. Manages a threaded worker for processing messages asynchronously.
 
 .. data:: raven.transport.http.HTTPTransport
 
