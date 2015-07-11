@@ -1,3 +1,9 @@
+Version 5.4.2
+-------------
+
+* Remove scheme checking on transports.
+* Added ``SENTRY_TRANSPORT`` to Flask and Django configurations.
+
 Version 5.4.1
 -------------
 
