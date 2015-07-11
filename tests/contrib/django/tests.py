@@ -32,6 +32,7 @@ from raven.contrib.django.models import client, get_client, sentry_exception_han
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
+from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
 from raven.utils import six
 from raven.utils.six import StringIO
@@ -401,6 +402,15 @@ class DjangoClientTest(TestCase):
 
         with Settings(**extra_settings):
             assert isinstance(get_client(), DjangoClient)
+
+    def test_transport_specification(self):
+        extra_settings = {
+            'SENTRY_TRANSPORT': 'raven.transport.HTTPTransport',
+            'SENTRY_DSN': 'http://public:secret@example.com/1',
+        }
+        with Settings(**extra_settings):
+            client = get_client(reset=True)
+            assert type(client.remote.get_transport()) is HTTPTransport
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
