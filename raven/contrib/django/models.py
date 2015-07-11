@@ -16,10 +16,11 @@ import logging
 import sys
 import warnings
 
-from django.conf import settings as django_settings
+from django.conf import settings
 from hashlib import md5
 
 from raven.utils import six
+from raven.utils.imports import import_string
 from raven.contrib.django.management import patch_cli_runner
 
 
@@ -30,7 +31,7 @@ def get_installed_apps():
     """
     Modules in settings.INSTALLED_APPS as a set.
     """
-    return set(django_settings.INSTALLED_APPS)
+    return set(settings.INSTALLED_APPS)
 
 
 _client = (None, None)
@@ -107,23 +108,21 @@ client = ProxyClient()
 
 
 def get_option(x, d=None):
-    options = getattr(django_settings, 'RAVEN_CONFIG', {})
+    options = getattr(settings, 'RAVEN_CONFIG', {})
 
-    return getattr(django_settings, 'SENTRY_%s' % x, options.get(x, d))
+    return getattr(settings, 'SENTRY_%s' % x, options.get(x, d))
 
 
-def get_client(client=None):
+def get_client(client=None, reset=False):
     global _client
 
     tmp_client = client is not None
     if not tmp_client:
-        client = getattr(django_settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
+        client = getattr(settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
 
-    if _client[0] != client:
-        module, class_name = client.rsplit('.', 1)
-
-        ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-        options = copy.deepcopy(getattr(django_settings, 'RAVEN_CONFIG', {}))
+    if _client[0] != client or reset:
+        ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
+        options = copy.deepcopy(getattr(settings, 'RAVEN_CONFIG', {}))
         options.setdefault('servers', ga('SERVERS'))
         options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
         options['include_paths'] = set(options['include_paths']) | get_installed_apps()
@@ -131,7 +130,6 @@ def get_client(client=None):
         options.setdefault('timeout', ga('TIMEOUT'))
         options.setdefault('name', ga('NAME'))
         options.setdefault('auto_log_stacks', ga('AUTO_LOG_STACKS'))
-        options.setdefault('key', ga('KEY', md5(django_settings.SECRET_KEY.encode('utf8')).hexdigest()))
         options.setdefault('string_max_length', ga('MAX_LENGTH_STRING'))
         options.setdefault('list_max_length', ga('MAX_LENGTH_LIST'))
         options.setdefault('site', ga('SITE'))
@@ -143,10 +141,13 @@ def get_client(client=None):
         options.setdefault('context', ga('CONTEXT'))
         options.setdefault('release', ga('RELEASE'))
 
-        class_name = str(class_name)
+        transport = ga('TRANSPORT') or options.get('transport')
+        if isinstance(transport, basestring):
+            transport = import_string(transport)
+        options['transport'] = transport
 
         try:
-            Client = getattr(__import__(module, {}, {}, class_name), class_name)
+            Client = import_string(client)
         except ImportError:
             logger.exception('Failed to import client: %s', client)
             if not _client[1]:
@@ -186,7 +187,7 @@ def register_handlers():
     from django.core.signals import got_request_exception
 
     # HACK: support Sentry's internal communication
-    if 'sentry' in django_settings.INSTALLED_APPS:
+    if 'sentry' in settings.INSTALLED_APPS:
         from django.db import transaction
         # Django 1.6
         if hasattr(transaction, 'atomic'):
@@ -208,7 +209,7 @@ def register_handlers():
     got_request_exception.connect(exception_handler, weak=False)
 
     # If Celery is installed, register a signal handler
-    if 'djcelery' in django_settings.INSTALLED_APPS:
+    if 'djcelery' in settings.INSTALLED_APPS:
         try:
             # Celery < 2.5? is not supported
             from raven.contrib.celery import (
@@ -222,8 +223,8 @@ def register_handlers():
                 logger.exception('Failed to install Celery error handler')
 
             try:
-                ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-                options = getattr(django_settings, 'RAVEN_CONFIG', {})
+                ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
+                options = getattr(settings, 'RAVEN_CONFIG', {})
                 loglevel = options.get('celery_loglevel',
                                        ga('CELERY_LOGLEVEL', logging.ERROR))
 
@@ -237,8 +238,8 @@ def register_serializers():
     import raven.contrib.django.serializers  # NOQA
 
 
-if ('raven.contrib.django' in django_settings.INSTALLED_APPS
-        or 'raven.contrib.django.raven_compat' in django_settings.INSTALLED_APPS):
+if ('raven.contrib.django' in settings.INSTALLED_APPS
+        or 'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS):
     register_handlers()
     register_serializers()
 

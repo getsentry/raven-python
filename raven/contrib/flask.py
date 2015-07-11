@@ -21,18 +21,27 @@ import logging
 
 from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
+from werkzeug.exceptions import ClientDisconnected
+
 from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
 from raven.utils.compat import _urlparse
+from raven.utils.imports import import_string
 from raven.utils.wsgi import get_headers, get_environ
-from werkzeug.exceptions import ClientDisconnected
 
 
 def make_client(client_cls, app, dsn=None):
+    # TODO(dcramer): django and Flask share very similar concepts here, and
+    # should be refactored
+    transport = app.config.get('SENTRY_TRANSPORT')
+    if isinstance(transport, basestring):
+        transport = import_string(transport)
+
     return client_cls(
         dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
+        transport=transport,
         include_paths=set(app.config.get('SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
         exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
         servers=app.config.get('SENTRY_SERVERS'),
