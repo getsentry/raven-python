@@ -7,6 +7,11 @@ addons:
     packages:
     - libevent-dev
 
+cache:
+  directories:
+    - node_modules
+    - .pip_download_cache
+
 python:
   - "2.6"
   - "2.7"
@@ -25,14 +30,6 @@ env:
     - 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
   global:
     - 'PIP_DOWNLOAD_CACHE=".pip_download_cache"'
-    - 'WAD_FILES="package.json,Makefile,setup.py"'
-    - 'WAD_INSTALL_COMMAND=ci/setup'
-
-    # This should be specified with:
-    # travis encrypt S3_BUCKET_NAME=secretvalue S3_CREDENTIALS=accesskey:secretkey
-    # - S3_BUCKET_NAME=
-    # - S3_CREDENTIALS=
-    - secure: "QEFKt0HhaMlCW0FCLTz3NDY/P4UuVl1Pw8kSUVKKjbaKn2jZdaLKS68yl3Vyrd9AqrBfRNNLBAnvpZjYL6EwqqnZzpRH3KnAf0WRxE6d5ytrUkwZtOnQaN0Tumuqc3xnoXXalPXvs+abhXZpjfOzx0oPBa2WbtMF/RJZ/bwsTKE="
 
 before_install:
   # Use closer nameservers
@@ -40,11 +37,9 @@ before_install:
   # These need to be here and not in the env hash because they need to be
   # evaluated after the virtualenv has been setup
   - mkdir -p $PIP_DOWNLOAD_CACHE
-  - 'export WAD_ENVIRONMENT_VARIABLES="TRAVIS_PYTHON_VERSION,TRAVIS_NODE_VERSION,WAD_CACHE_PATH"'
-  - 'export WAD_CACHE_PATH="node_modules,$PIP_DOWNLOAD_CACHE,$VIRTUAL_ENV"'
 
 install:
-  - time ci/wad
+  - time ci/setup
 
 script:
   - "if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi"
