@@ -2,7 +2,6 @@
 
 from __future__ import absolute_import
 from __future__ import with_statement
-from __future__ import unicode_literals
 
 import datetime
 import django
@@ -716,7 +715,7 @@ class PromiseSerializerTestCase(TestCase):
         assert result == expected
 
     def test_real_gettext_lazy(self):
-        d = {'lazy_translation': gettext_lazy('testing')}
+        d = {u'lazy_translation': gettext_lazy(u'testing')}
         key = "'lazy_translation'" if six.PY3 else "u'lazy_translation'"
         value = "'testing'" if six.PY3 else "u'testing'"
         assert transform(d) == {key: value}
