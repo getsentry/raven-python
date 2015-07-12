@@ -1,14 +1,17 @@
 Celery
 ======
 
-tl;dr register a couple of signals to hijack Celery error handling
+`Celery <http://www.celeryproject.org/>`_ is a distributed task queue
+system for Python built on AMQP principles.  For Celery built-in support
+by Raven is provided but it requires some manual configuraiton.
 
-.. code-block:: python
+To capture errors, you need to register a couple of signals to hijack
+Celery error handling::
 
     from raven import Client
     from raven.contrib.celery import register_signal, register_logger_signal
 
-    client = Client()
+    client = Client('___DSN___')
 
     # register a custom filter to filter out duplicate logs
     register_logger_signal(client)
@@ -26,13 +29,13 @@ A more complex version to encapsulate behavior:
 .. code-block:: python
 
     import celery
+    import raven
+    from raven.contrib.celery import register_signal, register_logger_signal
 
     class Celery(celery.Celery):
-        def on_configure(self):
-            import raven
-            from raven.contrib.celery import register_signal, register_logger_signal
 
-            client = raven.Client()
+        def on_configure(self):
+            client = raven.Client('___DSN___')
 
             # register a custom filter to filter out duplicate logs
             register_logger_signal(client)

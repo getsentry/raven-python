@@ -1,0 +1,83 @@
+{
+  "configurations": {
+    "python": {
+      "name": "Python",
+      "client_lib": "raven-python",
+      "is_framework": false,
+      "doc_link": "installation",
+      "snippets": [
+        "installation#installation",
+        "usage#capture-an-error",
+        "usage#reporting-an-event"
+      ]
+    },
+    "python-flask": {
+      "name": "Flask",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/flask",
+      "snippets": [
+        "integrations/flask#installation",
+        "integrations/flask#setup"
+      ]
+    },
+    "python-bottle": {
+      "name": "Bottle",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/bottle",
+      "snippets": [
+        "integrations/bottle#setup",
+        "integrations/bottle#usage"
+      ]
+    },
+    "python-celery": {
+      "name": "Celery",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/celery",
+      "snippets": [
+        "integrations/celery"
+      ]
+    },
+    "python-django": {
+      "name": "Django",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/django",
+      "snippets": [
+        "integrations/django#setup"
+      ]
+    },
+    "python-pylons": {
+      "name": "Pylons",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/pylons",
+      "snippets": [
+        "integrations/pylons#wsgi-middleware",
+        "integrations/pylons#logger-setup"
+      ]
+    },
+    "python-pyramid": {
+      "name": "Pyramid",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/pyramid",
+      "snippets": [
+        "integrations/pyramid#pastedeploy-filter",
+        "integrations/pyramid#logger-setup"
+      ]
+    },
+    "python-tornado": {
+      "name": "Tornado",
+      "client_lib": "raven-python",
+      "is_framework": true,
+      "doc_link": "integrations/tornado",
+      "snippets": [
+        "integrations/tornado#setup",
+        "integrations/tornado#usage"
+      ]
+    }
+  }
+}
