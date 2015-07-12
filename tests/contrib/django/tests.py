@@ -715,7 +715,7 @@ class PromiseSerializerTestCase(TestCase):
         assert result == expected
 
     def test_real_gettext_lazy(self):
-        d = {u'lazy_translation': gettext_lazy(u'testing')}
+        d = {six.text_type('lazy_translation'): gettext_lazy(six.text_type('testing'))}
         key = "'lazy_translation'" if six.PY3 else "u'lazy_translation'"
         value = "'testing'" if six.PY3 else "u'testing'"
         assert transform(d) == {key: value}
