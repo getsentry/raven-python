@@ -27,6 +27,7 @@ from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
+from raven.utils import six
 from raven.utils.compat import _urlparse
 from raven.utils.imports import import_string
 from raven.utils.wsgi import get_headers, get_environ
@@ -36,7 +37,7 @@ def make_client(client_cls, app, dsn=None):
     # TODO(dcramer): django and Flask share very similar concepts here, and
     # should be refactored
     transport = app.config.get('SENTRY_TRANSPORT')
-    if isinstance(transport, basestring):
+    if isinstance(transport, six.string_types):
         transport = import_string(transport)
 
     return client_cls(

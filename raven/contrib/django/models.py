@@ -142,7 +142,7 @@ def get_client(client=None, reset=False):
         options.setdefault('release', ga('RELEASE'))
 
         transport = ga('TRANSPORT') or options.get('transport')
-        if isinstance(transport, basestring):
+        if isinstance(transport, six.string_types):
             transport = import_string(transport)
         options['transport'] = transport
 

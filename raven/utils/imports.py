@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 
 def import_string(key):
-    key = str(key)
-
     if '.' not in key:
         return __import__(key)
 
