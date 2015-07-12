@@ -2,11 +2,11 @@
 
 failed=0
 for filename in hooks/pre-commit.*; do
-  if [ -f "hooks/$filename" ]; then
-    if $("./hooks/$filename") != "0"; then
+  if [ -f "$filename" ]; then
+    if ! $filename; then
       failed=1
     fi
   fi
 done
 
-exit failed
+exit $failed
