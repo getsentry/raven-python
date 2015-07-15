@@ -17,8 +17,8 @@ available under a very liberal BSD license.
 
 .. sentry:edition:: self
 
-   Users Guide
-   -----------
+   User's Guide
+   ------------
 
 .. toctree::
    :maxdepth: 2
