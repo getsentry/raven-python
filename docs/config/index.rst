@@ -82,6 +82,16 @@ A sentry compatible DSN.
     dsn = 'http://public:secret@example.com/1'
 
 
+transport
+~~~~~~~~~
+
+The transport implementation to use.
+
+::
+
+    transport = ThreadedHTTPTransport
+
+
 name
 ~~~~
 
@@ -116,6 +126,7 @@ Extending this allow you to ignore module prefixes when we attempt to discover w
         'lxml.objectify',
     ]
 
+
 include_paths
 ~~~~~~~~~~~~~
 
@@ -130,6 +141,7 @@ For example, in Django this defaults to your list of ``INSTALLED_APPS``, and is 
         'lxml.objectify',
     ]
 
+
 list_max_length
 ~~~~~~~~~~~~~~~
 
@@ -143,6 +155,7 @@ If an iterable is longer than the specified length, the left-most elements up to
 
     list_max_length = 50
 
+
 string_max_length
 ~~~~~~~~~~~~~~~~~
 
@@ -153,6 +166,7 @@ If a string is longer than the given length, it will be truncated down to the sp
 ::
 
     string_max_length = 200
+
 
 auto_log_stacks
 ~~~~~~~~~~~~~~~
@@ -176,6 +190,19 @@ additional global state data or sanitizing data that you want to keep off of the
     processors = (
         'raven.processors.SanitizePasswordsProcessor',
     )
+
+
+install_sys_hook
+~~~~~~~~~~~~~~~~
+
+Install a global exception hook (via ``sys.excepthook``).
+
+Defaults to ``True``.
+
+::
+
+    install_sys_hook = False
+
 
 Sanitizing Data
 ---------------
