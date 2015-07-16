@@ -82,16 +82,6 @@ A sentry compatible DSN.
     dsn = 'http://public:secret@example.com/1'
 
 
-site
-~~~~
-
-An optional, arbitrary string to identify this client installation.
-
-::
-
-    site = 'my site name'
-
-
 name
 ~~~~
 
