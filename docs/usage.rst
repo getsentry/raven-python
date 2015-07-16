@@ -60,7 +60,7 @@ You should get something like the following, assuming you're configured everythi
     http://dd2c825ff9b1417d88a99573903ebf80:91631495b10b45f8a1cdbc492088da6a@localhost:9000/1
 
   Client configuration:
-    servers        : ['http://localhost:9000/api/store/']
+    base_url       : http://localhost:9000
     project        : 1
     public_key     : dd2c825ff9b1417d88a99573903ebf80
     secret_key     : 91631495b10b45f8a1cdbc492088da6a

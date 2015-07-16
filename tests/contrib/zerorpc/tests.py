@@ -13,9 +13,9 @@ gevent = pytest.importorskip("gevent")
 
 
 class TempStoreClient(Client):
-    def __init__(self, servers=None, **kwargs):
+    def __init__(self, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
+        super(TempStoreClient, self).__init__(**kwargs)
 
     def is_enabled(self):
         return True

@@ -12,9 +12,9 @@ from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
-    def __init__(self, servers=None, **kwargs):
+    def __init__(self, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
+        super(TempStoreClient, self).__init__(**kwargs)
 
     def is_enabled(self):
         return True
@@ -226,10 +226,6 @@ class LoggingHandlerTest(TestCase):
         client = TempStoreClient(include_paths=['tests'])
         handler = SentryHandler(client=client)
         self.assertEqual(handler.client, client)
-
-    def test_args_as_servers_and_key(self):
-        handler = SentryHandler(['http://sentry.local/api/store/'], 'KEY')
-        self.assertTrue(isinstance(handler.client, Client))
 
     def test_first_arg_as_dsn(self):
         handler = SentryHandler('http://public:secret@example.com/1')

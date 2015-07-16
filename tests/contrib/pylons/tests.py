@@ -12,8 +12,6 @@ class MiddlewareTest(TestCase):
 
     def test_init(self):
         config = {
-            'sentry.servers': 'http://localhost/api/store',
-            'sentry.public_key': 'p' * 32,
-            'sentry.secret_key': 's' * 32,
+            'sentry.dsn': 'http://public:secret@example.com/1',
         }
         middleware = Sentry(self.app, config)
