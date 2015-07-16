@@ -28,20 +28,6 @@ CLIENT = 'raven.contrib.django.DjangoClient'
 # will set it to None and require it passed in to ``Client`` on initializtion.
 NAME = socket.gethostname() if hasattr(socket, 'gethostname') else None
 
-# Superuser key -- will be used if set, otherwise defers to
-# SECRET_KEY and PUBLIC_KEY
-KEY = None
-
-# Credentials to authenticate with the Sentry server
-SECRET_KEY = None
-PUBLIC_KEY = None
-
-# We allow setting the site name either by explicitly setting it with the
-# SENTRY_SITE setting, or using the django.contrib.sites framework for
-# fetching the current site. Since we can't reliably query the database
-# from this module, the specific logic is within the SiteFilter
-SITE = None
-
 # The maximum number of elements to store for a list-like structure.
 MAX_LENGTH_LIST = 50
 

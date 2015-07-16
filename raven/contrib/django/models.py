@@ -123,7 +123,6 @@ def get_client(client=None, reset=False):
     if _client[0] != client or reset:
         ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
         options = copy.deepcopy(getattr(settings, 'RAVEN_CONFIG', {}))
-        options.setdefault('servers', ga('SERVERS'))
         options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
         options['include_paths'] = set(options['include_paths']) | get_installed_apps()
         options.setdefault('exclude_paths', ga('EXCLUDE_PATHS'))
@@ -133,9 +132,6 @@ def get_client(client=None, reset=False):
         options.setdefault('string_max_length', ga('MAX_LENGTH_STRING'))
         options.setdefault('list_max_length', ga('MAX_LENGTH_LIST'))
         options.setdefault('site', ga('SITE'))
-        options.setdefault('public_key', ga('PUBLIC_KEY'))
-        options.setdefault('secret_key', ga('SECRET_KEY'))
-        options.setdefault('project', ga('PROJECT'))
         options.setdefault('processors', ga('PROCESSORS'))
         options.setdefault('dsn', ga('DSN'))
         options.setdefault('context', ga('CONTEXT'))

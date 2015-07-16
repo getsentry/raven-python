@@ -142,7 +142,7 @@ class Client(object):
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
-        self.name = six.text_type(o.get('name') or defaults.NAME)
+        self.name = six.text_type(o.get('name') or o.get('machine') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
         self.capture_locals = bool(
@@ -151,7 +151,7 @@ class Client(object):
             o.get('string_max_length') or defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(
             o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
-        self.site = o.get('site', defaults.SITE)
+        self.site = o.get('site')
         self.include_versions = o.get('include_versions', True)
         self.processors = o.get('processors')
         if self.processors is None:
@@ -166,7 +166,6 @@ class Client(object):
 
         self.module_cache = ModuleProxyCache()
 
-        # servers may be set to a NoneType (for Django)
         if not self.is_enabled():
             self.logger.info(
                 'Raven is not configured (logging is disabled). Please see the'
