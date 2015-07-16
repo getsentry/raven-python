@@ -209,8 +209,8 @@ class Client(object):
             __excepthook__ = sys.excepthook
 
         def handle_exception(*exc_info):
-            __excepthook__(*exc_info)
             self.captureException(exc_info=exc_info)
+            __excepthook__(*exc_info)
         sys.excepthook = handle_exception
 
     @classmethod
