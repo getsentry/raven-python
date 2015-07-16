@@ -35,6 +35,8 @@ from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
 
+__excepthook__ = None
+
 PLATFORM_NAME = 'python'
 
 # singleton for the client
@@ -201,8 +203,13 @@ class Client(object):
         self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
 
     def install_sys_hook(self):
+        global __excepthook__
+
+        if __excepthook__ is None:
+            __excepthook__ = sys.excepthook
+
         def handle_exception(*exc_info):
-            sys.__excepthook__(*exc_info)
+            __excepthook__(*exc_info)
             self.captureException(exc_info=exc_info)
         sys.excepthook = handle_exception
 
