@@ -18,17 +18,18 @@ A basic setup for logging looks like that:
 
     %import raven.contrib.zope
     <sentry>
-      dsn YOUR_DSN
+      dsn ___DSN___
       level ERROR
     </sentry>
   </eventlog>
 
-This configuration keeps the regular logging to a logfile, but adds logging to sentry for ERRORs.
+This configuration keeps the regular logging to a logfile, but adds
+logging to sentry for ERRORs.
 
-All options of :py:class:`raven.base.Client` are supported. See :ref:`usage-label`
+All options of :py:class:`raven.base.Client` are supported.
 
-Nobody writes zope.conf files these days, instead buildout recipe does that.
-To add the equivalent configuration, you would do this:
+Nobody writes zope.conf files these days, instead buildout recipe does
+that.  To add the equivalent configuration, you would do this:
 
 .. code-block:: ini
 
@@ -42,6 +43,6 @@ To add the equivalent configuration, you would do this:
           level INFO
         </logfile>
         <sentry>
-          dsn YOUR_DSN
+          dsn ___DSN___
           level ERROR
         </sentry>

@@ -1,6 +1,8 @@
 Pylons
 ======
 
+Pylons is a framework for Python.
+
 WSGI Middleware
 ---------------
 
@@ -17,7 +19,7 @@ Configuration is handled via the sentry namespace:
 .. code-block:: ini
 
     [sentry]
-    dsn=http://public:secret@example.com/1
+    dsn=___DSN___
     include_paths=my.package,my.other.package,
     exclude_paths=my.package.crud
 
@@ -65,5 +67,3 @@ Add the following lines to your project's `.ini` file to setup `SentryHandler`:
     datefmt = %H:%M:%S
 
 .. note:: You may want to setup other loggers as well.
-
-

@@ -1,8 +1,10 @@
 Logging
 =======
 
-Sentry supports the ability to directly tie into the :mod:`logging` module.  To
-use it simply add :class:`SentryHandler` to your logger.
+.. default-domain:: py
+
+Sentry supports the ability to directly tie into the :mod:`logging`
+module.  To use it simply add :class:`SentryHandler` to your logger.
 
 First you'll need to configure a handler::
 
@@ -15,7 +17,7 @@ First you'll need to configure a handler::
 You can also automatically configure the default client with a DSN::
 
     # Configure the default client
-    handler = SentryHandler('http://public:secret@example.com/1')
+    handler = SentryHandler('___DSN___')
 
 Finally, call the :func:`setup_logging` helper function::
 
@@ -31,7 +33,8 @@ Another option is to use :mod:`logging.config.dictConfig`::
 
         'formatters': {
             'console': {
-                'format': '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s',
+                'format': '[%(asctime)s][%(levelname)s] %(name)s '
+                          '%(filename)s:%(funcName)s:%(lineno)d | %(message)s',
                 'datefmt': '%H:%M:%S',
                 },
             },
@@ -45,7 +48,7 @@ Another option is to use :mod:`logging.config.dictConfig`::
             'sentry': {
                 'level': 'ERROR',
                 'class': 'raven.handlers.logging.SentryHandler',
-                'dsn': 'http://public:secret@example.com/1',
+                'dsn': '___DSN___',
                 },
             },
 
@@ -79,14 +82,21 @@ Sentry to render it based on that information::
     # If you're actually catching an exception, use `exc_info=True`
     logger.error('There was an error, with a stacktrace!', exc_info=True)
 
-    # If you don't have an exception, but still want to capture a stacktrace, use the `stack` arg
+    # If you don't have an exception, but still want to capture a
+    # stacktrace, use the `stack` arg
     logger.error('There was an error, with a stacktrace!', extra={
         'stack': True,
     })
 
-.. note:: Depending on the version of Python you're using, ``extra`` might not be an acceptable keyword argument for a logger's ``.exception()`` method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and ``.critical()`` should work fine regardless of Python version). This should be fixed as of Python 3.2. Official issue here: http://bugs.python.org/issue15541.
+.. note:: Depending on the version of Python you're using, ``extra`` might
+   not be an acceptable keyword argument for a logger's ``.exception()``
+   method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and
+   ``.critical()`` should work fine regardless of Python version). This
+   should be fixed as of Python 3.2. Official issue here:
+   http://bugs.python.org/issue15541.
 
-While we don't recommend this, you can also enable implicit stack capturing for all messages::
+While we don't recommend this, you can also enable implicit stack
+capturing for all messages::
 
     client = Client(..., auto_log_stacks=True)
     handler = SentryHandler(client)
@@ -108,20 +118,16 @@ within your ``extra`` clause::
         }
     })
 
-.. note:: The ``url`` and ``view`` keys are used internally by Sentry within the extra data.
-.. note:: Any key (in ``data``) prefixed with ``_`` will not automatically output on the Sentry details view.
+.. note:: The ``url`` and ``view`` keys are used internally by Sentry
+   within the extra data.
 
-Sentry will intelligently group messages if you use proper string formatting. For example, the following messages would
-be seen as the same message within Sentry::
+.. note:: Any key (in ``data``) prefixed with ``_`` will not automatically
+   output on the Sentry details view.
+
+Sentry will intelligently group messages if you use proper string
+formatting. For example, the following messages would be seen as the same
+message within Sentry::
 
     logger.error('There was some %s error', 'crazy')
     logger.error('There was some %s error', 'fun')
     logger.error('There was some %s error', 1)
-
-.. note::
-
-    Other languages that provide a logging package that is comparable to the
-    python :mod:`logging` package may define a Sentry handler.  Check the
-    `Extending Sentry
-    <http://sentry.readthedocs.org/en/latest/developer/client/index.html>`_
-    documentation.

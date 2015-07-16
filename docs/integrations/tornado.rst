@@ -1,6 +1,8 @@
 Tornado
 =======
 
+Tornado is an async web framework for Python.
+
 Setup
 -----
 
@@ -8,7 +10,6 @@ The first thing you'll need to do is to initialize sentry client under
 your application
 
 .. code-block:: python
-   :emphasize-lines: 2,11,12,13
 
     import tornado.web
     from raven.contrib.tornado import AsyncSentryClient
@@ -21,7 +22,7 @@ your application
         (r"/", MainHandler),
     ])
     application.sentry_client = AsyncSentryClient(
-        'http://public_key:secret_key@host:port/project'
+        '___DSN___'
     )
 
 
@@ -36,7 +37,8 @@ can automatically capture uncaught exceptions by inheriting the `SentryMixin` cl
     import tornado.web
     from raven.contrib.tornado import SentryMixin
 
-    class UncaughtExceptionExampleHandler(SentryMixin, tornado.web.RequestHandler):
+    class UncaughtExceptionExampleHandler(
+            SentryMixin, tornado.web.RequestHandler):
         def get(self):
             1/0
 
@@ -79,7 +81,7 @@ Asynchronous
 
 .. tip::
 
-   The value returned by the yield is a HTTPResponse obejct.
+   The value returned by the yield is a ``HTTPResponse`` object.
 
 
 Synchronous
