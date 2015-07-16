@@ -81,38 +81,6 @@ A sentry compatible DSN.
 
     dsn = 'http://public:secret@example.com/1'
 
-project
-~~~~~~~
-
-Set this to your Sentry project ID. The default value for installations is ``1``.
-
-::
-
-    project = 1
-
-
-public_key
-~~~~~~~~~~
-
-Set this to the public key of the project member which will authenticate as the
-client. You can find this information on the member details page of your project
-within Sentry.
-
-::
-
-    public_key = 'fb9f9e31ea4f40d48855c603f15a2aa4'
-
-
-secret_key
-~~~~~~~~~~
-
-Set this to the secret key of the project member which will authenticate as the
-client. You can find this information on the member details page of your project
-within Sentry.
-
-::
-
-    secret_key = '6e968b3d8ba240fcb50072ad9cba0810'
 
 site
 ~~~~
