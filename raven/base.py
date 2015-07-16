@@ -117,7 +117,8 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, raise_send_errors=False, transport=None, **options):
+    def __init__(self, dsn=None, raise_send_errors=False, transport=None,
+                 install_sys_hook=True, **options):
         global Raven
 
         o = options
@@ -174,6 +175,9 @@ class Client(object):
 
         self._context = Context()
 
+        if install_sys_hook:
+            self.install_sys_hook()
+
     def set_dsn(self, dsn=None, transport=None):
         if dsn is None and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
@@ -195,6 +199,12 @@ class Client(object):
             self.remote = self._transport_cache[dsn]
 
         self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+
+    def install_sys_hook(self):
+        def handle_exception(*exc_info):
+            sys.__excepthook__(*exc_info)
+            self.captureException(exc_info=exc_info)
+        sys.excepthook = handle_exception
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
