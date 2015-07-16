@@ -15,9 +15,6 @@ import socket
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), os.pardir))
 
-# This should be the full URL to sentries store view
-SERVERS = None
-
 TIMEOUT = 1
 
 # TODO: this is specific to Django
@@ -44,9 +41,6 @@ CAPTURE_LOCALS = True
 PROCESSORS = (
     'raven.processors.SanitizePasswordsProcessor',
 )
-
-# Default Project ID
-PROJECT = 1
 
 try:
     # Try for certifi first since they likely keep their bundle more up to date
