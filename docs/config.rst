@@ -14,20 +14,16 @@ Configuring the Client
 ----------------------
 
 Settings are specified as part of the initialization of the client.  The
-client is a class that can be instanciated with a specific configuration
+client is a class that can be instantiated with a specific configuration
 and all reporting can then happen from the instance of that object.
 Typically an instance is created somewhere globally and then imported as
 necessary.
-
-As of Raven 1.2.0, you can now configure all clients through a standard DSN
-string. This can be specified as a default using the ``SENTRY_DSN`` environment
-variable, as well as passed to all clients by using the ``dsn`` argument.
 
 .. code-block:: python
 
     from raven import Client
 
-    # Read configuration from the environment
+    # Read configuration from the ``SENTRY_DSN`` environment variable
     client = Client()
 
     # Manually specify a DSN
