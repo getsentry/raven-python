@@ -2,11 +2,10 @@ Django
 ======
 
 .. default-domain:: py
-
-`Django <http://djangoproject.com/>`_ is one of (if not the) Python's most
-popular web frameworks.  Support is built into Raven but needs some
-configuration.  While older versions of Django will likely work,
-officially only version 1.4 and newer are supported.
+`Django <http://djangoproject.com/>`_ is arguably Python's most popular web
+framework.  Support is built into Raven but needs some configuration.  While
+older versions of Django will likely work, officially only version 1.4 and
+newer are supported.
 
 Setup
 -----
