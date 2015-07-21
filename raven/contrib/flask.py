@@ -237,7 +237,7 @@ class Sentry(object):
 
         if wrap_wsgi is not None:
             self.wrap_wsgi = wrap_wsgi
-        else:
+        elif self.wrap_wsgi is None:
             # Fix https://github.com/getsentry/raven-python/issues/412
             # the gist is that we get errors twice in debug mode if we don't do this
             if app and app.debug:
