@@ -1,5 +1,5 @@
-Usage
-=====
+Basic Usage
+===========
 
 This gives a basic overview of how to use the raven client with Python
 directly.
