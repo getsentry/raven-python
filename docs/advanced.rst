@@ -1,12 +1,24 @@
-Configuration
-=============
+Advanced Usage
+==============
 
-.. default-domain:: py
+This covers some advanced usage scenarios for raven Python.
 
-This document describes configuration options available to the Raven
-client for the use with Sentry.  It also covers some other important parts
-about configuring the environment.
+Alternative Installations
+-------------------------
 
+If you want to use the latest git version you can get it from `the github
+repository <https://github.com/getsentry/raven-python>`_::
+
+    git clone https://github.com/getsentry/raven-python
+    pip install raven-python
+
+Certain additional features can be installed by defining the feature when
+``pip`` installing it.  For instance to install all dependencies needed to
+use the Flask integration, you can depend on ``raven[flask]``::
+
+    pip install raven[flask]
+
+For more information refer to the individual integration documentation.
 
 .. _python-client-config:
 

@@ -10,23 +10,82 @@
    Python
    ======
 
-Raven for Python (raven-python) is the official standalone Python client
-for Sentry.  It can be used with any modern Python interpreter be it
-CPython 2.x or 3.x, PyPy or Jython.  It's an Open Source project and
-available under a very liberal BSD license.
+For pairing Sentry up with Python you can use the Raven for Python
+(raven-python) library.  It is the official standalone Python client for
+Sentry.  It can be used with any modern Python interpreter be it CPython
+2.x or 3.x, PyPy or Jython.  It's an Open Source project and available
+under a very liberal BSD license.
 
-.. sentry:edition:: self
+Installation
+------------
 
-   User's Guide
-   ------------
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
+Configuring the Client
+----------------------
+
+Settings are specified as part of the initialization of the client.  The
+client is a class that can be instanciated with a specific configuration
+and all reporting can then happen from the instance of that object.
+Typically an instance is created somewhere globally and then imported as
+necessary.  For getting started all you need is your DSN:
+
+.. sourcecode:: python
+
+    from raven import Client
+    client = Client('___DSN___')
+
+Capture an Error
+----------------
+
+The most basic use for raven is to record one specific error that occurs::
+
+    from raven import Client
+
+    client = Client('___DSN___')
+
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        client.captureException()
+
+Adding Context
+--------------
+
+The raven client internally keeps a thread local mapping that can carry
+additional information.  Whenever a message is submitted to Sentry that
+additional data will be passed along.  This context is available as
+`client.context` and can be modified or cleared.
+
+Example usage:
+
+.. sourcecode:: python
+
+    def handle_request(request):
+        client.context.merge({'user': {
+            'email': request.user.email
+        }})
+        try:
+            ...
+        finally:
+            client.context.clear()
+
+Deep Dive
+---------
+
+Raven Python is more than that however.  To dive deeper into what it does,
+how it works and how it integrates into other systems there is more to
+discover:
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
 
-   installation
-   config
    usage
+   advanced
    integrations/index
    transports
    platform-support
