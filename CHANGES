@@ -1,3 +1,10 @@
+Version 5.5.0
+-------------
+
+* Added ``sys.excepthook`` handler (installed by default).
+* Fixed an issue where ``wrap_wsgi`` wasn't being respected.
+* Various deprecated code removed.
+
 Version 5.4.4
 -------------
 
