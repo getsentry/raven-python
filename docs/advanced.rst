@@ -184,22 +184,19 @@ Sanitizing Data
 Several processors are included with Raven to assist in data
 sanitiziation. These are configured with the ``processors`` value.
 
-.. data:: raven.processors.SanitizePasswordsProcessor
-   :noindex:
+.. describe:: raven.processors.SanitizePasswordsProcessor
 
    Removes all keys which resemble ``password``, ``secret``, or
    ``api_key`` within stacktrace contexts, HTTP bits (such as cookies,
    POST data, the querystring, and environment), and extra data.
 
-.. data:: raven.processors.RemoveStackLocalsProcessor
-   :noindex:
+.. describe:: raven.processors.RemoveStackLocalsProcessor
 
    Removes all stacktrace context variables. This will cripple the
    functionality of Sentry, as you'll only get raw tracebacks, but it will
    ensure no local scoped information is available to the server.
 
-.. data:: raven.processors.RemovePostDataProcessor
-   :noindex:
+.. describe:: raven.processors.RemovePostDataProcessor
 
    Removes the ``body`` of all HTTP data.
 
