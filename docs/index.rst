@@ -55,23 +55,19 @@ The most basic use for raven is to record one specific error that occurs::
 Adding Context
 --------------
 
-The raven client internally keeps a thread local mapping that can carry
-additional information.  Whenever a message is submitted to Sentry that
-additional data will be passed along.  This context is available as
-`client.context` and can be modified or cleared.
-
-Example usage:
+Much of the usefulness of Sentry comes from additional context data with
+the events.  The Python client makes this very convenient by providing
+methods to set thread local context data that is then submitted
+automatically with all events.  For instance you can use
+:py:meth:`~raven.Client.user_context` to set the information about the
+current user:
 
 .. sourcecode:: python
 
     def handle_request(request):
-        client.context.merge({'user': {
+        client.user_context({
             'email': request.user.email
-        }})
-        try:
-            ...
-        finally:
-            client.context.clear()
+        })
 
 Deep Dive
 ---------

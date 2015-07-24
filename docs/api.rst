@@ -95,6 +95,38 @@ Client
         Returns a reference to the thread local context object.  See
         :py:class:`raven.context.Context` for more information.
 
+    .. py:method:: user_context(data)
+
+        Updates the user context for future events.
+
+        Equivalent to this::
+
+            client.context.merge({'user': data})
+
+    .. py:method:: http_context(data)
+
+        Updates the HTTP context for future events.
+
+        Equivalent to this::
+
+            client.context.merge({'request': data})
+
+    .. py:method:: extra_context(data)
+
+        Update the extra context for future events.
+
+        Equivalent to this::
+
+            client.context.merge({'extra': data})
+
+    .. py:method:: tags_context(data)
+
+        Update the tags context for future events.
+
+        Equivalent to this::
+
+            client.context.merge({'tags': data})
+
 Context
 -------
 
