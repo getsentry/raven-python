@@ -66,24 +66,6 @@ settings:
    The *fetch_package_version* and *fetch_git_sha* helpers.
 
 
-The Sentry DSN
---------------
-
-.. sentry:edition:: hosted, on-premise
-
-   The most important information is the Sentry DSN.  For information
-   about it see :ref:`configure-the-dsn` in the general Sentry docs.
-
-The Python client supports one additional modification to the regular DSN
-values which is the choice of the transport.  To select a specific
-transport, the DSN needs to be prepended with the name of the transport.
-For instance to select the ``gevent`` transport, the following DSN would
-be used::
-
-    'gevent+___DSN___'
-
-For more information see :doc:`transports`.
-
 Client Arguments
 ----------------
 
@@ -94,6 +76,13 @@ The following are valid arguments which may be passed to the Raven client:
     A Sentry compatible DSN as mentioned before::
 
         dsn = '___DSN___'
+
+.. describe:: transport
+
+    The HTTP transport class to use. By default this is an asynchronous worker
+    thread that runs in-process.
+
+    For more information see :doc:`transports`.
 
 .. describe:: site
 
@@ -200,6 +189,27 @@ sanitiziation. These are configured with the ``processors`` value.
 
    Removes the ``body`` of all HTTP data.
 
+
+Changing Grouping Behavior
+--------------------------
+
+In some cases you may see issues where Sentry groups multiple events together
+when they should be separate entities. In other cases, Sentry simply doesn't
+group events together because they're so sporadic that they never look the same.
+
+Both of these problems can be addressed by specifying the ``fingerprint``
+attribute.
+
+For example, if you have HTTP 404 (page not found) errors, and you'd prefer they
+deduplicate by taking into account the URL:
+
+.. code-style:: python
+
+    client.captureException(fingerprint=['{{ default }}', 'http://my-url/'])
+
+.. sentry:edition:: hosted, on-premise
+
+    For more information, see :ref:`custom-grouping`.
 
 A Note on uWSGI
 ---------------
