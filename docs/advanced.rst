@@ -203,7 +203,7 @@ attribute.
 For example, if you have HTTP 404 (page not found) errors, and you'd prefer they
 deduplicate by taking into account the URL:
 
-.. code-style:: python
+.. code-block:: python
 
     client.captureException(fingerprint=['{{ default }}', 'http://my-url/'])
 
