@@ -189,9 +189,8 @@ sanitiziation. These are configured with the ``processors`` value.
 
    Removes the ``body`` of all HTTP data.
 
-
-Changing Grouping Behavior
---------------------------
+Custom Grouping Behavior
+------------------------
 
 In some cases you may see issues where Sentry groups multiple events together
 when they should be separate entities. In other cases, Sentry simply doesn't
