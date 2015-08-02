@@ -7,6 +7,7 @@ from raven.utils.testutils import TestCase
 
 from raven.base import Client
 from raven.middleware import Sentry
+from raven.utils.six import Iterator, next
 
 
 class TempStoreClient(Client):
@@ -21,12 +22,30 @@ class TempStoreClient(Client):
         self.events.append(kwargs)
 
 
-class ErroringIterable(object):
+class ErroringIterable(Iterator):
     def __init__(self):
         self.closed = False
 
     def __iter__(self):
+        return self
+
+    def __next__(self):
         raise ValueError('hello world')
+
+    def close(self):
+        self.closed = True
+
+
+class SimpleIteratable(Iterator):
+    def __init__(self):
+        self.closed = False
+        self._iter = iter(['a'])
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self._iter)
 
     def close(self):
         self.closed = True
@@ -59,9 +78,6 @@ class MiddlewareTestCase(TestCase):
         with self.assertRaises(ValueError):
             response = list(response)
 
-        # TODO: this should be a separate test
-        self.assertTrue(iterable.closed, True)
-
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
 
@@ -86,3 +102,13 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(env['SERVER_NAME'], 'localhost')
         self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
+
+    def test_close(self):
+        iterable = SimpleIteratable()
+        app = ExampleApp(iterable)
+        middleware = Sentry(app, client=self.client)
+
+        response = middleware(self.request.environ, lambda *args: None)
+        list(response)  # exhaust iterator
+        response.close()
+        self.assertTrue(iterable.closed, True)

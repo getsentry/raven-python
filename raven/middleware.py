@@ -9,6 +9,37 @@ from __future__ import absolute_import
 
 from raven.utils.wsgi import (
     get_current_url, get_headers, get_environ)
+from raven.utils.six import Iterator, next
+
+
+class ClosingIterator(Iterator):
+    """
+    An iterator that is implements a ``close`` method as-per
+    WSGI recommendation.
+    """
+    def __init__(self, sentry, iterable, environ):
+        self.sentry = sentry
+        self.environ = environ
+        self.iterable = iter(iterable)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return next(self.iterable)
+        except StopIteration:
+            # propagate up the normal StopIteration
+            raise
+        except Exception:
+            # but capture any other exception, then re-raise
+            self.sentry.handle_exception(self.environ)
+            raise
+
+    def close(self):
+        self.sentry.client.context.clear()
+        if hasattr(self.iterable, 'close') and callable(self.iterable.close):
+            self.iterable.close()
 
 
 class Sentry(object):
@@ -37,21 +68,7 @@ class Sentry(object):
             self.handle_exception(environ)
             raise
 
-        try:
-            for event in iterable:
-                yield event
-        except Exception:
-            self.handle_exception(environ)
-            raise
-        finally:
-            # wsgi spec requires iterable to call close if it exists
-            # see http://blog.dscpl.com.au/2012/10/obligations-for-calling-close-on.html
-            if iterable and hasattr(iterable, 'close') and callable(iterable.close):
-                try:
-                    iterable.close()
-                except Exception:
-                    self.handle_exception(environ)
-            self.client.context.clear()
+        return ClosingIterator(self, iterable, environ)
 
     def get_http_context(self, environ):
         return {
