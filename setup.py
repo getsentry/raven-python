@@ -66,6 +66,7 @@ tests_require = [
     'pytest>=2.7.0,<2.8.0',
     'pytest-cov>=1.4',
     'pytest-django>=2.8.0,<2.7.0',
+    'pytest-timeout==0.4',
     'requests',
     'tornado',
     'webob',
