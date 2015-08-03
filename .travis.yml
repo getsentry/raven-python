@@ -9,8 +9,7 @@ addons:
 
 cache:
   directories:
-    - node_modules
-    - .pip_download_cache
+    - $HOME/.cache/pip
 
 python:
   - "2.6"
@@ -28,15 +27,6 @@ env:
     - DJANGO=Django==1.7.7
     - DJANGO=Django==1.8
     - 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
-  global:
-    - 'PIP_DOWNLOAD_CACHE=".pip_download_cache"'
-
-before_install:
-  # Use closer nameservers
-  # - printf "nameserver 199.91.168.70\nnameserver 199.91.168.71\n" | sudo tee /etc/resolv.conf
-  # These need to be here and not in the env hash because they need to be
-  # evaluated after the virtualenv has been setup
-  - mkdir -p $PIP_DOWNLOAD_CACHE
 
 install:
   - time ci/setup
