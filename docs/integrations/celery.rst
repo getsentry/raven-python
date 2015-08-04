@@ -13,6 +13,7 @@ Celery error handling::
 
     client = Client('___DSN___')
 
+    # a shortcut for register_logger() and register_logging_filter()
     # register a custom filter to filter out duplicate logs
     register_logger_signal(client)
 
@@ -37,7 +38,7 @@ A more complex version to encapsulate behavior:
         def on_configure(self):
             client = raven.Client('___DSN___')
 
-            # register a custom filter to filter out duplicate logs
+            # a shortcut for register_logger() and register_logging_filter()
             register_logger_signal(client)
 
             # hook into the Celery error handler

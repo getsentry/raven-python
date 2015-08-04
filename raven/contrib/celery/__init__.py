@@ -37,24 +37,33 @@ def register_signal(client):
 
 
 def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
-    filter_ = CeleryFilter()
+    # logger is unused
+    register_logging_filter(client)
+    register_logger(client, loglevel)
 
-    if logger is None:
-        logger = logging.getLogger()
-    handler = SentryHandler(client)
-    handler.setLevel(loglevel)
-    handler.addFilter(filter_)
 
-    def process_logger_event(sender, logger, loglevel, logfile, format,
+def register_logging_filter(client):
+    def sentry_logging_filter(sender, logger, loglevel, logfile, format,
                              colorize, **kw):
         # Attempt to find an existing SentryHandler, and if it exists ensure
         # that the CeleryFilter is installed.
         # If one is found, we do not attempt to install another one.
         for h in logger.handlers:
             if type(h) == SentryHandler:
+                filter_ = CeleryFilter()
                 h.addFilter(filter_)
                 return False
 
+    after_setup_logger.connect(sentry_logging_filter, weak=False)
+
+
+def register_logger(client, loglevel=logging.ERROR):
+    def sentry_logger(sender, logger, loglevel, logfile, format,
+                      colorize, **kw):
+        filter_ = CeleryFilter()
+        handler = SentryHandler(client)
+        handler.setLevel(loglevel)
+        handler.addFilter(filter_)
         logger.addHandler(handler)
 
-    after_setup_logger.connect(process_logger_event, weak=False)
+    after_setup_logger.connect(sentry_logger, weak=False)
