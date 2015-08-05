@@ -218,8 +218,10 @@ class Sentry(object):
         }
 
     def update_context(self):
-        self.client.http_context(self.get_http_info(request))
-        self.client.user_context(self.get_user_info(request))
+        if 'request' not in self.client.context:
+            self.client.http_context(self.get_http_info(request))
+        if 'user' not in self.client.context:
+            self.client.user_context(self.get_user_info(request))
 
     def after_request(self, sender, response, *args, **kwargs):
         if self.last_event_id:
