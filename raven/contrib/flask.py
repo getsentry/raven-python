@@ -223,7 +223,8 @@ class Sentry(object):
         self.client.user_context(self.get_user_info(request))
 
     def after_request(self, sender, response, *args, **kwargs):
-        response.headers['X-Sentry-ID'] = self.last_event_id
+        if self.last_event_id:
+            response.headers['X-Sentry-ID'] = self.last_event_id
         self.client.context.clear()
         return response
 
