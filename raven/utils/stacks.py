@@ -8,6 +8,7 @@ raven.utils.stacks
 from __future__ import absolute_import
 
 import inspect
+import linecache
 import re
 import sys
 import warnings
@@ -46,28 +47,15 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
             source = None
         if source is not None:
             source = source.splitlines()
+
     if source is None:
         try:
-            f = open(filename, 'rb')
-            try:
-                source = f.readlines()
-            finally:
-                f.close()
+            source = linecache.getlines(filename)
         except (OSError, IOError):
-            pass
-
-        if source is None:
             return None, None, None
 
-        encoding = 'utf8'
-        for line in source[:2]:
-            # File coding may be specified. Match pattern from PEP-263
-            # (http://www.python.org/dev/peps/pep-0263/)
-            match = _coding_re.search(line.decode('utf8'))  # let's assume utf8
-            if match:
-                encoding = match.group(1)
-                break
-        source = [six.text_type(sline, encoding, 'replace') for sline in source]
+    if not source:
+        return None, None, None
 
     lower_bound = max(0, lineno - context_lines)
     upper_bound = min(lineno + 1 + context_lines, len(source))
