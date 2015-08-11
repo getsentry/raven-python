@@ -139,16 +139,32 @@ addition of an optional ``request`` key in the extra data::
 -----------
 
 In certain conditions you may wish to log 404 events to the Sentry server. To
-do this, you simply need to enable a Django middleware::
+do this, you simply need to enable a Django middleware:
+
+.. sourcecode:: python
 
     MIDDLEWARE_CLASSES = (
-      'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
-      ...,
+        'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
+        ...,
     ) + MIDDLEWARE_CLASSES
-    
+
 It is recommended to put the middleware at the top, so that any only 404s 
 that bubbled all the way up get logged. Certain middlewares (e.g. flatpages)
 capture 404s and replace the response.
+
+It is also possible to configure this middleware to ignore 404s on particular
+pages by defining the ``IGNORABLE_404_URLS`` setting as an iterable of regular
+expression patterns. If any of these patterns produces as match against the full
+requested URL (as defined by the regular expression's ``search`` method), then
+the 404 will not be reported to Sentry.
+
+.. sourcecode:: python
+
+    import re
+
+    IGNORABLE_404_URLS = (
+        re.compile('/foo'),
+    )
 
 Message References
 ------------------
