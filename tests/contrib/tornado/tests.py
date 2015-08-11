@@ -36,6 +36,14 @@ class SendErrorTestHandler(SentryMixin, web.RequestHandler):
         raise Exception("Oops")
 
 
+class SendIgnoredCustomErrorTestHandler(SentryMixin, web.RequestHandler):
+    class CustomError(Exception):
+        pass
+
+    def get(self):
+        raise self.CustomError("A Custom Error!")
+
+
 class SendErrorAsyncHandler(SentryMixin, web.RequestHandler):
     @web.asynchronous
     @gen.engine
@@ -212,3 +220,21 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
 
         user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
+
+
+class TornadoAsyncClientWithIgnoredExceptionsTestCase(testing.AsyncHTTPTestCase):
+    def get_app(self):
+        app = web.Application([
+            web.url(r'/an-ignored-error', SendIgnoredCustomErrorTestHandler),
+        ])
+        app.sentry_client = AsyncSentryClient(
+            'http://public_key:secret_key@host:9000/project',
+            ignored_exception_types=[SendIgnoredCustomErrorTestHandler.CustomError],
+        )
+        return app
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send')
+    def test_send_an_ignored_error(self, send):
+        response = self.fetch('/an-ignored-error?qs=qs')
+        self.assertEqual(response.code, 500)
+        self.assertEqual(send.call_count, 0)
