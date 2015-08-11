@@ -19,6 +19,7 @@ class AsyncSentryClient(Client):
     """
     def __init__(self, *args, **kwargs):
         self.validate_cert = kwargs.pop('validate_cert', True)
+        self.ignored_exc_types = kwargs.pop('ignored_exc_types', [])
         super(AsyncSentryClient, self).__init__(*args, **kwargs)
 
     def capture(self, *args, **kwargs):
