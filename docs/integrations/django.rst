@@ -154,9 +154,9 @@ capture 404s and replace the response.
 
 It is also possible to configure this middleware to ignore 404s on particular
 pages by defining the ``IGNORABLE_404_URLS`` setting as an iterable of regular
-expression patterns. If any of these patterns produces as match against the full
-requested URL (as defined by the regular expression's ``search`` method), then
-the 404 will not be reported to Sentry.
+expression patterns. If any pattern produces a match against the full requested
+URL (as defined by the regular expression's ``search`` method), then the 404
+will not be reported to Sentry.
 
 .. sourcecode:: python
 
