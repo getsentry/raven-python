@@ -169,9 +169,13 @@ class SentryMixin(object):
         `tornado.web.RequestHandler.get_current_user` tests postitively for on
         Truth calue testing
         """
+        try:
+            user = self.get_current_user()
+        except Exception:
+            return {}
         return {
             'user': {
-                'is_authenticated': True if self.get_current_user() else False
+                'is_authenticated': True if user else False
             }
         }
 
