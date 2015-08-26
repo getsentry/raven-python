@@ -3,7 +3,8 @@ Version 5.6.0
 
 * Content is no longer base64-encoded.
 * ``fingerprint`` is now correctly supported.
-
+* Django: 1.9 compatibility.
+* Celery: Filter ``celery.redirect`` logger.
 
 Version 5.5.0
 -------------
