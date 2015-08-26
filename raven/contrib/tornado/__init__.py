@@ -27,7 +27,7 @@ class AsyncSentryClient(Client):
         and extracts the keyword argument callback which will be called on
         asynchronous sending of the request
 
-        :return: a 32-length string identifying this event and checksum
+        :return: a 32-length string identifying this event
         """
         if not self.is_enabled():
             return
