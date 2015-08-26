@@ -273,7 +273,7 @@ class Client(object):
 
     def build_msg(self, event_type, data=None, date=None,
                   time_spent=None, extra=None, stack=None, public_key=None,
-                  tags=None, **kwargs):
+                  tags=None, fingerprint=None, **kwargs):
         """
         Captures, processes and serializes an event into a dict object
 
@@ -374,6 +374,9 @@ class Client(object):
 
         if culprit:
             data['culprit'] = culprit
+
+        if fingerprint:
+            data['fingerprint'] = fingerprint
 
         # Run the data through processors
         for processor in self.get_processors():

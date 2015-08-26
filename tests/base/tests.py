@@ -350,6 +350,16 @@ class ClientTest(TestCase):
         assert 'stacktrace' not in event
         self.assertTrue('timestamp' in event)
 
+    def test_fingerprint(self):
+        self.client.captureMessage(
+            message='test',
+            fingerprint=['{{ default }}', 'foobar'],
+        )
+
+        assert len(self.client.events) == 1
+        event = self.client.events.pop(0)
+        assert event['fingerprint'] == ['{{ default }}', 'foobar']
+
     def test_context(self):
         self.client.context.merge({
             'tags': {'foo': 'bar'},
