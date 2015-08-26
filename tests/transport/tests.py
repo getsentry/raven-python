@@ -14,7 +14,6 @@ from raven.utils import json
 import datetime
 import calendar
 import pytz
-import base64
 import zlib
 
 
@@ -58,8 +57,8 @@ class TransportTest(TestCase):
 
         mock_cls = c._transport_cache['mock://some_username:some_password@localhost:8143/1'].get_transport()
 
-        expected_message = zlib.decompress(base64.b64decode(c.encode(data)))
-        actual_message = zlib.decompress(base64.b64decode(mock_cls._data))
+        expected_message = zlib.decompress(c.encode(data))
+        actual_message = zlib.decompress(mock_cls._data)
 
         # These loads()/dumps() pairs order the dict keys before comparing the string.
         # See GH504

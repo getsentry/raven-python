@@ -8,7 +8,6 @@ raven.base
 
 from __future__ import absolute_import
 
-import base64
 import zlib
 import logging
 import os
@@ -626,6 +625,7 @@ class Client(object):
         headers = {
             'User-Agent': client_string,
             'X-Sentry-Auth': auth_header,
+            'Content-Encoding': self.get_content_encoding(),
             'Content-Type': 'application/octet-stream',
         }
 
@@ -636,17 +636,20 @@ class Client(object):
             **kwargs
         )
 
+    def get_content_encoding(self):
+        return 'deflate'
+
     def encode(self, data):
         """
         Serializes ``data`` into a raw string.
         """
-        return base64.b64encode(zlib.compress(json.dumps(data).encode('utf8')))
+        return zlib.compress(json.dumps(data).encode('utf8'))
 
     def decode(self, data):
         """
         Unserializes a string, ``data``.
         """
-        return json.loads(zlib.decompress(base64.b64decode(data)).decode('utf8'))
+        return json.loads(zlib.decompress(data).decode('utf8'))
 
     def captureMessage(self, message, **kwargs):
         """

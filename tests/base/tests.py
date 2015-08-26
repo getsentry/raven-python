@@ -175,10 +175,11 @@ class ClientTest(TestCase):
         })
         send_remote.assert_called_once_with(
             url='http://example.com/api/1/store/',
-            data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
+            data=client.encode({'foo': 'bar'}),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
+                'Content-Encoding': client.get_content_encoding(),
                 'X-Sentry-Auth': (
                     'Sentry sentry_timestamp=1328055286.51, '
                     'sentry_client=raven-python/%s, sentry_version=6, '
@@ -199,11 +200,12 @@ class ClientTest(TestCase):
         })
         send_remote.assert_called_once_with(
             url='http://example.com/api/1/store/',
-            data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
+            data=client.encode({'foo': 'bar'}),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
-                'X-Sentry-Auth': 'foo'
+                'Content-Encoding': client.get_content_encoding(),
+                'X-Sentry-Auth': 'foo',
             },
         )
 
