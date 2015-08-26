@@ -50,10 +50,12 @@ class Serializer(object):
         Given ``value``, recurse (using the parent serializer) to handle
         coercing of newly defined values.
         """
+        string_max_length = kwargs.get('string_max_length', None)
+
         _depth += 1
         if _depth >= max_depth:
             try:
-                value = six.text_type(repr(value))
+                value = six.text_type(repr(value))[:string_max_length]
             except Exception as e:
                 import traceback
                 traceback.print_exc()
