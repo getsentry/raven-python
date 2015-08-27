@@ -431,6 +431,18 @@ class Client(object):
             'user': data,
         })
 
+    def limit_request_data(self, data):
+        """
+        Remove data that is too large to avoid 413 Request Entity Too Large
+        """
+        max_size_mb = 4
+        max_size = max_size_mb * 1024 * 1024
+        if sys.getsizeof(str(data.get('data'))) > max_size:
+            data['data'] = 'Size of request data was over %sMB so it was ' \
+                           'removed to prevent "413 Request Entity ' \
+                           'Too Large".' % max_size_mb
+        return data
+
     def http_context(self, data, **kwargs):
         """
         Update the http context for future events.
@@ -438,7 +450,7 @@ class Client(object):
         >>> client.http_context({'url': 'http://example.com'})
         """
         return self.context.merge({
-            'request': data,
+            'request': self.limit_request_data(data),
         })
 
     def extra_context(self, data, **kwargs):
