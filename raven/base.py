@@ -437,7 +437,7 @@ class Client(object):
         """
         max_size_mb = 4
         max_size = max_size_mb * 1024 * 1024
-        if sys.getsizeof(str(data.get('data'))) > max_size:
+        if len(str(data.get('data'))) > max_size:
             data['data'] = 'Size of request data was over %sMB so it was ' \
                            'removed to prevent "413 Request Entity ' \
                            'Too Large".' % max_size_mb
