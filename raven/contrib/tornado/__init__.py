@@ -19,6 +19,7 @@ class AsyncSentryClient(Client):
     """
     def __init__(self, *args, **kwargs):
         self.validate_cert = kwargs.pop('validate_cert', True)
+        self.ignored_exception_types = kwargs.pop('ignored_exception_types', [])
         super(AsyncSentryClient, self).__init__(*args, **kwargs)
 
     def capture(self, *args, **kwargs):
@@ -229,7 +230,11 @@ class SentryMixin(object):
         log_exception() is added in Tornado v3.1.
         """
         rv = super(SentryMixin, self).log_exception(typ, value, tb)
-        self.captureException(exc_info=(typ, value, tb))
+
+        client = self.get_sentry_client()
+        if not any(typ is ignored_type for ignored_type in client.ignored_exception_types):
+            self.captureException(exc_info=(typ, value, tb))
+
         return rv
 
     def send_error(self, status_code=500, **kwargs):
@@ -240,6 +245,9 @@ class SentryMixin(object):
             return super(SentryMixin, self).send_error(status_code, **kwargs)
         else:
             rv = super(SentryMixin, self).send_error(status_code, **kwargs)
-            if 500 <= status_code <= 599:
-                self.captureException(exc_info=kwargs.get('exc_info'))
+            exc_info = kwargs.get('exc_info')
+            if 500 <= status_code <= 599 and exc_info:
+                client = self.get_sentry_client()
+                if not any(exc_info[0] is ignored_type for ignored_type in client.ignored_exception_types):
+                    self.captureException(exc_info=exc_info)
             return rv
