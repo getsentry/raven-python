@@ -7,6 +7,9 @@ raven.contrib.tornado
 """
 from __future__ import absolute_import
 
+from functools import partial
+
+from tornado import ioloop
 from tornado.httpclient import AsyncHTTPClient, HTTPError
 
 from raven.base import Client
@@ -51,30 +54,25 @@ class AsyncSentryClient(Client):
             headers = {}
 
         if not self.state.should_try():
-            message = self._get_log_message(data)
-            self.error_logger.error(message)
+            data = self.decode(data)
+            self._log_failed_submission(data)
             return
 
+        future = self._send_remote(
+            url=url, data=data, headers=headers, callback=callback
+        )
+        ioloop.IOLoop.current().add_future(future, partial(self._handle_result, url, data))
+        return future
+
+    def _handle_result(self, url, data, future):
         try:
-            self._send_remote(
-                url=url, data=data, headers=headers, callback=callback
-            )
+            future.result()
         except HTTPError as e:
-            body = e.response.body
-            self.error_logger.error(
-                'Unable to reach Sentry log server: %s '
-                '(url: %%s, body: %%s)' % (e,),
-                url, body, exc_info=True,
-                extra={'data': {'body': body, 'remote_url': url}}
-            )
+            data = self.decode(data)
+            self._failed_send(e, url, data)
         except Exception as e:
-            self.error_logger.error(
-                'Unable to reach Sentry log server: %s (url: %%s)' % (e,),
-                url, exc_info=True, extra={'data': {'remote_url': url}}
-            )
-            message = self._get_log_message(data)
-            self.error_logger.error('Failed to submit message: %r', message)
-            self.state.set_fail()
+            data = self.decode(data)
+            self._failed_send(e, url, data)
         else:
             self.state.set_success()
 
