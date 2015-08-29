@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from mock import patch
 from tornado import web, gen, testing
+from tornado.concurrent import Future
+from tornado.httpclient import HTTPError
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
 from raven.utils import six
 
@@ -212,3 +214,26 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
 
         user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
+
+    @testing.gen_test
+    def test_sending_to_unresponsive_sentry_server_logs_error(self):
+        client = self.get_app().sentry_client
+        with patch.object(client, '_failed_send') as mock_failed:
+            client.send()
+
+            yield gen.sleep(0.01)  # we need to run after the async send
+            assert mock_failed.called
+
+    @testing.gen_test
+    def test_non_successful_responses_marks_client_as_failed(self):
+        client = self.get_app().sentry_client
+        with patch.object(client, '_failed_send') as mock_failed:
+            with patch.object(client, '_send_remote') as mock_send:
+
+                f = Future()
+                f.set_exception(HTTPError(499, 'error'))
+                mock_send.return_value = f
+                client.send()
+
+                yield gen.sleep(0.01)  # we need to run after the async send
+                assert mock_failed.called
