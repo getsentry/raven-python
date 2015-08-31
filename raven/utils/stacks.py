@@ -175,8 +175,54 @@ def iter_stack_frames(frames=None):
         yield frame, lineno
 
 
+def get_frame_locals(frame, transformer=transform, max_var_size=4096):
+    f_locals = getattr(frame, 'f_locals', None)
+    if not f_locals:
+        return None
+
+    if not isinstance(f_locals, dict):
+        # XXX: Genshi (and maybe others) have broken implementations of
+        # f_locals that are not actually dictionaries
+        try:
+            f_locals = to_dict(f_locals)
+        except Exception:
+            return None
+
+    f_vars = {}
+    f_size = 0
+    for k, v in six.iteritems(f_locals):
+        v = transformer(v)
+        v_size = len(repr(v))
+        if v_size + f_size < 4096:
+            f_vars[k] = v
+            f_size += v_size
+    return f_vars
+
+
+def slim_frame_data(frames, frame_allowance=25):
+    """
+    Removes various excess metadata from middle frames which go beyond
+    ``frame_allowance``.
+
+    Returns ``frames``.
+    """
+    frames_len = len(frames)
+
+    if frames_len <= frame_allowance:
+        return frames
+
+    half_max = frame_allowance / 2
+
+    for n in xrange(half_max, frames_len - half_max):
+        # remove heavy components
+        frames[n].pop('vars', None)
+        frames[n].pop('pre_context', None)
+        frames[n].pop('post_context', None)
+    return frames
+
+
 def get_stack_info(frames, transformer=transform, capture_locals=True,
-                   max_frames=50):
+                   frame_allowance=25):
     """
     Given a list of frames, returns a list of stack information
     dictionary objects that are JSON-ready.
@@ -187,14 +233,8 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
     """
     __traceback_hide__ = True  # NOQA
 
-    half_max = max_frames / 2
-
-    top_results = []
-    bottom_results = []
-
-    total_frames = 0
-
-    for frame_no, frame_info in enumerate(frames):
+    result = []
+    for frame_info in frames:
         # Old, terrible API
         if isinstance(frame_info, (list, tuple)):
             frame, lineno = frame_info
@@ -240,14 +280,6 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
         if not filename:
             filename = abs_path
 
-        if capture_locals and not isinstance(f_locals, dict):
-            # XXX: Genshi (and maybe others) have broken implementations of
-            # f_locals that are not actually dictionaries
-            try:
-                f_locals = to_dict(f_locals)
-            except Exception:
-                capture_locals = False
-
         frame_result = {
             'abs_path': abs_path,
             'filename': filename,
@@ -256,10 +288,9 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
             'lineno': lineno + 1,
         }
         if capture_locals:
-            frame_result['vars'] = dict(
-                (k, transformer(v))
-                for k, v in six.iteritems(f_locals)
-            )
+            f_vars = get_frame_locals(frame, transformer=transformer)
+            if f_vars:
+                frame_result['vars'] = f_vars
 
         if context_line is not None:
             frame_result.update({
@@ -267,19 +298,10 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
                 'context_line': context_line,
                 'post_context': post_context,
             })
-
-        if frame_no >= half_max:
-            while len(bottom_results) > half_max - 1:
-                bottom_results.pop(0)
-            bottom_results.append(frame_result)
-        else:
-            top_results.append(frame_result)
-        total_frames += 1
+        result.append(frame_result)
 
     stackinfo = {
-        'frames': top_results + bottom_results,
+        'frames': slim_frame_data(result, frame_allowance=frame_allowance),
     }
-    if total_frames > max_frames:
-        stackinfo['frames_omitted'] = (half_max + 1, total_frames - half_max + 1)
 
     return stackinfo

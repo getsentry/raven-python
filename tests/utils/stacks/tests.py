@@ -73,28 +73,29 @@ class GetStackInfoTest(TestCase):
             }
         assert result['vars'] == expected
 
-    def test_max_frames(self):
+    def test_frame_allowance(self):
         frames = []
         for x in range(10):
             frame = Mock()
-            frame.f_locals = {}
+            frame.f_locals = {'k': 'v'}
             frame.f_lineno = None
             frame.f_globals = {}
             frame.f_code.co_filename = str(x)
             frame.f_code.co_name = __name__
             frames.append((frame, 1))
 
-        results = get_stack_info(frames, max_frames=4)
-        assert results['frames_omitted'] == (3, 9)
-        assert len(results['frames']) == 4
+        results = get_stack_info(frames, frame_allowance=4)
+        assert len(results['frames']) == 10
         assert results['frames'][0]['filename'] == '0'
         assert results['frames'][1]['filename'] == '1'
-        assert results['frames'][2]['filename'] == '8'
-        assert results['frames'][3]['filename'] == '9'
+        for idx, frame in enumerate(results['frames'][2:8]):
+            assert frame['filename'] == str(idx + 2)
+            assert 'vars' not in frame
+        assert results['frames'][8]['filename'] == '8'
+        assert results['frames'][9]['filename'] == '9'
 
 
 class GetLineFromFileTest(TestCase):
-
     def test_non_ascii_file(self):
         import os.path
         filename = os.path.join(os.path.dirname(__file__), 'utf8_file.txt')
