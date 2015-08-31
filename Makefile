@@ -22,7 +22,6 @@ setup-git:
 
 publish:
 	rm -rf dist build
-	python setup.py sdist bdist_wheel
-	twine upload -s dist/*
+	python setup.py sdist bdist_wheel upload
 
 .PHONY: bootstrap test lint coverage setup-git publish
