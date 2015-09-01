@@ -217,10 +217,11 @@ class Sentry(object):
             'env': dict(get_environ(request.environ)),
         }
 
-    def before_request(self, *args, **kwargs):
-        self.last_event_id = None
-        self.client.http_context(self.get_http_info(request))
-        self.client.user_context(self.get_user_info(request))
+    def update_context(self):
+        if 'request' not in self.client.context:
+            self.client.http_context(self.get_http_info(request))
+        if 'user' not in self.client.context:
+            self.client.user_context(self.get_user_info(request))
 
     def after_request(self, sender, response, *args, **kwargs):
         if self.last_event_id:
@@ -261,8 +262,6 @@ class Sentry(object):
         if self.wrap_wsgi:
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)
 
-        app.before_request(self.before_request)
-
         if self.register_signal:
             got_request_exception.connect(self.handle_exception, sender=app)
             request_finished.connect(self.after_request, sender=app)
@@ -273,6 +272,7 @@ class Sentry(object):
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'
+        self.update_context()
         result = self.client.captureException(*args, **kwargs)
         if result:
             self.last_event_id = self.client.get_ident(result)
@@ -282,6 +282,7 @@ class Sentry(object):
 
     def captureMessage(self, *args, **kwargs):
         assert self.client, 'captureMessage called before application configured'
+        self.update_context()
         result = self.client.captureMessage(*args, **kwargs)
         if result:
             self.last_event_id = self.client.get_ident(result)
