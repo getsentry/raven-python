@@ -52,7 +52,7 @@ class TornadoHTTPTransport(AsyncTransport, HTTPTransport):
                 failure_cb(e)
 
     @staticmethod
-    def handler(future, success, error):
+    def handler(success, error, future):
         try:
             future.result()
             success()
