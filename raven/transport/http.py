@@ -36,7 +36,7 @@ class HTTPTransport(Transport):
         """
         Sends a request to a remote webserver using HTTP POST.
         """
-        req = urllib2.Request(self._url, headers=headers)
+        req = urllib2.Request(str(self._url), headers=headers)
 
         try:
             response = urlopen(
