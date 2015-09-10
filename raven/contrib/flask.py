@@ -149,31 +149,27 @@ class Sentry(object):
             return
 
         try:
-            is_authenticated = current_user.is_authenticated()
+            is_authenticated = current_user.is_authenticated
         except AttributeError:
             # HACK: catch the attribute error thrown by flask-login is not attached
             # >   current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
             # E   AttributeError: 'RequestContext' object has no attribute 'user'
             return {}
 
-        if is_authenticated:
-            user_info = {
-                'is_authenticated': True,
-                'is_anonymous': current_user.is_anonymous(),
-                'id': current_user.get_id(),
-            }
+        if callable(is_authenticated):
+            is_authenticated = is_authenticated()
 
-            if 'SENTRY_USER_ATTRS' in current_app.config:
-                for attr in current_app.config['SENTRY_USER_ATTRS']:
-                    if hasattr(current_user, attr):
-                        user_info[attr] = getattr(current_user, attr)
-        else:
-            user_info = {
-                'is_authenticated': False,
-                'is_anonymous': current_user.is_anonymous(),
-            }
+        if not is_authenticated:
+            return {}
 
-        return user_info
+        user_info = {
+            'id': current_user.get_id(),
+        }
+
+        if 'SENTRY_USER_ATTRS' in current_app.config:
+            for attr in current_app.config['SENTRY_USER_ATTRS']:
+                if hasattr(current_user, attr):
+                    user_info[attr] = getattr(current_user, attr)
 
     def get_http_info(self, request):
         """
