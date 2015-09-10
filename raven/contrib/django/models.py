@@ -209,8 +209,7 @@ def register_handlers():
         try:
             # Celery < 2.5? is not supported
             from raven.contrib.celery import (
-                register_signal, register_logging_filter
-            )
+                register_signal, register_logger_signal)
         except ImportError:
             logger.exception('Failed to install Celery error handler')
         else:
@@ -220,7 +219,12 @@ def register_handlers():
                 logger.exception('Failed to install Celery error handler')
 
             try:
-                register_logging_filter(client)
+                ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
+                options = getattr(settings, 'RAVEN_CONFIG', {})
+                loglevel = options.get('celery_loglevel',
+                                       ga('CELERY_LOGLEVEL', logging.ERROR))
+
+                register_logger_signal(client, loglevel=loglevel)
             except Exception:
                 logger.exception('Failed to install Celery error handler')
 
