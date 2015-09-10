@@ -193,7 +193,6 @@ class DjangoClientTest(TestCase):
             assert 'user' in event
             user_info = event['user']
             assert user_info == {
-                'is_authenticated': True,
                 'username': user.username,
                 'id': user.id,
                 'email': user.email,
@@ -217,7 +216,6 @@ class DjangoClientTest(TestCase):
         )
         user_info = self.raven.get_user_info(user)
         assert user_info == {
-            'is_authenticated': True,
             'username': user.username,
             'id': user.id,
             'email': user.email,

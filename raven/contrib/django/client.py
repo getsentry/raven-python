@@ -35,11 +35,10 @@ class DjangoClient(Client):
 
     def get_user_info(self, user):
         if not user.is_authenticated():
-            return {'is_authenticated': False}
+            return {}
 
         user_info = {
             'id': user.pk,
-            'is_authenticated': True,
         }
 
         if hasattr(user, 'email'):
