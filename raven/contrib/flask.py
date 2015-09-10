@@ -215,8 +215,14 @@ class Sentry(object):
 
     def before_request(self, *args, **kwargs):
         self.last_event_id = None
-        self.client.http_context(self.get_http_info(request))
-        self.client.user_context(self.get_user_info(request))
+        try:
+            self.client.http_context(self.get_http_info(request))
+        except Exception as e:
+            self.client.logger.exception(unicode(e))
+        try:
+            self.client.user_context(self.get_user_info(request))
+        except Exception as e:
+            self.client.logger.exception(unicode(e))
 
     def after_request(self, sender, response, *args, **kwargs):
         if self.last_event_id:
