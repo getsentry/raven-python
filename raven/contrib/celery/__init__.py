@@ -14,12 +14,6 @@ from raven.handlers.logging import SentryHandler
 
 class CeleryFilter(logging.Filter):
     def filter(self, record):
-        # celery.redirect is used for stdout -- kill it
-        # TODO(dcramer): this should be more configurable, but our default
-        # injections with Celery aren't super friendly towards configurability
-        if record.name == 'celery.redirect':
-            return False
-
         # Context is fixed in Celery 3.x so use internal flag instead
         extra_data = getattr(record, 'data', {})
         if not isinstance(extra_data, dict):
