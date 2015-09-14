@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os.path
 import pytest
+import subprocess
 
 from django.conf import settings
 
@@ -19,6 +20,9 @@ def test_fetch_git_sha():
     assert result is not None
     assert len(result) == 40
     assert isinstance(result, six.string_types)
+    assert result == subprocess.check_output(
+        'git rev-parse --verify HEAD', shell=True, cwd=settings.PROJECT_ROOT
+    ).strip()
 
 
 def test_fetch_package_version():
