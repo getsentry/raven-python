@@ -17,15 +17,22 @@ def fetch_git_sha(path, head=None):
     >>> fetch_git_sha(os.path.dirname(__file__))
     """
     if not head:
+        head_path = os.path.join(path, '.git', 'HEAD')
+        if not os.path.exists(head_path):
+            raise InvalidGitRepository('Cannot identify HEAD for git repository at %s' % (path,))
+
+        with open(head_path, 'r') as fp:
+            head = fp.read().strip()
+
         try:
-            head = open(os.path.join(path, '.git', 'HEAD'), 'r')
             revision_file = os.path.join(
-                path, '.git', *head.read().strip().split(' ')[1].split('/')
+                path, '.git', *head.split(' ')[1].split('/')
             )
-        finally:
-            head.close()
+        except IndexError:
+            raise InvalidGitRepository('Unparseable HEAD (%r) for git repository %s' % (head, path,))
     else:
         revision_file = os.path.join(path, '.git', 'refs', 'heads', head)
+
     if not os.path.exists(revision_file):
         if not os.path.exists(os.path.join(path, '.git')):
             raise InvalidGitRepository('%s does not seem to be the root of a git repository' % (path,))
