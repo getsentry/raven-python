@@ -12,11 +12,20 @@ from .exceptions import InvalidGitRepository
 __all__ = ('fetch_git_sha', 'fetch_package_version')
 
 
-def fetch_git_sha(path, head='master'):
+def fetch_git_sha(path, head=None):
     """
     >>> fetch_git_sha(os.path.dirname(__file__))
     """
-    revision_file = os.path.join(path, '.git', 'refs', 'heads', head)
+    if not head:
+        try:
+            head = open(os.path.join(path, '.git', 'HEAD'), 'r')
+            revision_file = os.path.join(
+                path, '.git', *head.read().strip().split(' ')[1].split('/')
+            )
+        finally:
+            head.close()
+    else:
+        revision_file = os.path.join(path, '.git', 'refs', 'heads', head)
     if not os.path.exists(revision_file):
         if not os.path.exists(os.path.join(path, '.git')):
             raise InvalidGitRepository('%s does not seem to be the root of a git repository' % (path,))
