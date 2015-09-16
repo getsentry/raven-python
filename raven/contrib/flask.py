@@ -29,6 +29,7 @@ from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
 from raven.utils import six
 from raven.utils.compat import _urlparse
+from raven.utils.encoding import to_unicode
 from raven.utils.imports import import_string
 from raven.utils.wsgi import get_headers, get_environ
 
@@ -218,11 +219,11 @@ class Sentry(object):
         try:
             self.client.http_context(self.get_http_info(request))
         except Exception as e:
-            self.client.logger.exception(unicode(e))
+            self.client.logger.exception(to_unicode(e))
         try:
             self.client.user_context(self.get_user_info(request))
         except Exception as e:
-            self.client.logger.exception(unicode(e))
+            self.client.logger.exception(to_unicode(e))
 
     def after_request(self, sender, response, *args, **kwargs):
         if self.last_event_id:

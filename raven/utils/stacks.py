@@ -213,7 +213,7 @@ def slim_frame_data(frames, frame_allowance=25):
 
     half_max = frame_allowance / 2
 
-    for n in xrange(half_max, frames_len - half_max):
+    for n in range(half_max, frames_len - half_max):
         # remove heavy components
         frames[n].pop('vars', None)
         frames[n].pop('pre_context', None)
