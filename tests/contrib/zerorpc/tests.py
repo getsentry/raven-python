@@ -65,7 +65,7 @@ class ZeroRPCTest(TestCase):
 
         self._client.choice([])
 
-        for attempt in xrange(0, 10):
+        for attempt in range(0, 10):
             gevent.sleep(0.1)
             if len(self._sentry.events):
                 exc = self._sentry.events[0]['exception']
