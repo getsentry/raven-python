@@ -1,3 +1,15 @@
+Version 5.7.0
+-------------
+
+* Reverted changes to Celery which incorrectly caused some configurations
+  to log unwanted messages.
+* Improved behavior in ``fetch_git_sha``.
+* Removed ``is_authenticated`` property from most integrations.
+* Better error handling for errors within Flask context.
+* Support for new versions of Flask-Login.
+* Update Tornado support for modern versions.
+* Update stacktrace truncation code to match current versions of Sentry server.
+
 Version 5.6.0
 -------------
 
