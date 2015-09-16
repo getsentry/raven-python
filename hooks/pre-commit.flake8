@@ -2,7 +2,6 @@
 
 import glob
 import os
-import six
 import sys
 
 os.environ['PYFLAKES_NODOCTEST'] = '1'
@@ -21,6 +20,7 @@ def main():
     from flake8.main import DEFAULT_CONFIG
     from flake8.engine import get_style_guide
     from flake8.hooks import run
+    from raven.utils import six
 
     gitcmd = "git diff-index --cached --name-only HEAD"
 
