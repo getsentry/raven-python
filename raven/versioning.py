@@ -24,12 +24,11 @@ def fetch_git_sha(path, head=None):
         with open(head_path, 'r') as fp:
             head = fp.read().strip()
 
-        try:
-            revision_file = os.path.join(
-                path, '.git', *head.split(' ')[1].split('/')
-            )
-        except IndexError:
-            raise InvalidGitRepository('Unparseable HEAD (%r) for git repository %s' % (head, path,))
+        if '/' in head:
+            head = head.split(' ')[1].split('/')
+        revision_file = os.path.join(
+            path, '.git', head
+        )
     else:
         revision_file = os.path.join(path, '.git', 'refs', 'heads', head)
 
