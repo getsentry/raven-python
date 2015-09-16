@@ -2,6 +2,7 @@
 
 import glob
 import os
+import six
 import sys
 
 os.environ['PYFLAKES_NODOCTEST'] = '1'
@@ -24,6 +25,8 @@ def main():
     gitcmd = "git diff-index --cached --name-only HEAD"
 
     _, files_modified, _ = run(gitcmd)
+
+    files_modified = [six.text_type(x) for x in files_modified]
 
     # remove non-py files and files which no longer exist
     files_modified = filter(

@@ -211,7 +211,7 @@ def slim_frame_data(frames, frame_allowance=25):
     if frames_len <= frame_allowance:
         return frames
 
-    half_max = frame_allowance / 2
+    half_max = int(frame_allowance / 2)
 
     for n in range(half_max, frames_len - half_max):
         # remove heavy components
