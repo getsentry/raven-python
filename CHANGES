@@ -1,3 +1,9 @@
+Version 5.7.1
+-------------
+
+* Correctly handle SHAs in .git/HEAD.
+* Fixed several cases of invalid Python3 syntax.
+
 Version 5.7.0
 -------------
 
