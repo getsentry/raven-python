@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 
 import os.path
+
 try:
     import pkg_resources
 except ImportError:
     # pkg_resource is not available on Google App Engine
     pkg_resources = None
+
+from raven.utils import six
 
 from .exceptions import InvalidGitRepository
 
@@ -22,13 +25,14 @@ def fetch_git_sha(path, head=None):
             raise InvalidGitRepository('Cannot identify HEAD for git repository at %s' % (path,))
 
         with open(head_path, 'r') as fp:
-            head = fp.read().strip()
+            head = six.text_type(fp.read()).strip()
 
-        if '/' in head:
-            head = head.split(' ')[1].split('/')
-        revision_file = os.path.join(
-            path, '.git', head
-        )
+        if head.startswith('ref: '):
+            revision_file = os.path.join(
+                path, '.git', *head.rsplit(' ', 1)[-1].split('/')
+            )
+        else:
+            revision_file = os.path.join(path, '.git', head)
     else:
         revision_file = os.path.join(path, '.git', 'refs', 'heads', head)
 
@@ -39,7 +43,7 @@ def fetch_git_sha(path, head=None):
 
     fh = open(revision_file, 'r')
     try:
-        return fh.read().strip()
+        return six.text_type(fh.read()).strip()
     finally:
         fh.close()
 

@@ -22,7 +22,7 @@ def test_fetch_git_sha():
     assert isinstance(result, six.string_types)
     assert result == subprocess.check_output(
         'git rev-parse --verify HEAD', shell=True, cwd=settings.PROJECT_ROOT
-    ).strip()
+    ).decode('latin1').strip()
 
 
 def test_fetch_package_version():
