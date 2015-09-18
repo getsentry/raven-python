@@ -215,6 +215,30 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
         assert event['tags'] == {'foo': 'bar'}
 
+    def test_fingerprint_on_event(self):
+        record = self.make_record('Message', extra={'fingerprint': ['foo']})
+        self.handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['fingerprint'] == ['foo']
+
+    def test_culprit_on_event(self):
+        record = self.make_record('Message', extra={'culprit': 'foo'})
+        self.handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['culprit'] == 'foo'
+
+    def test_server_name_on_event(self):
+        record = self.make_record('Message', extra={'server_name': 'foo'})
+        self.handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['server_name'] == 'foo'
+
 
 class LoggingHandlerTest(TestCase):
     def test_client_arg(self):
