@@ -509,7 +509,7 @@ class Client(object):
                            event (in milliseconds)
         :param extra: a dictionary of additional standard metadata
         :param stack: a stacktrace for the event
-        :param tags: list of extra tags
+        :param tags: dict of extra tags
         :return: a tuple with a 32-length string identifying this event
         """
 

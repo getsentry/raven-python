@@ -50,7 +50,7 @@ Client
         :param extra: a dictionary of additional standard metadata.
         :param stack: If set to `True` a stack frame is recorded together
                       with the event.
-        :param tags: list of extra tags
+        :param tags: dict of extra tags
         :param kwargs: extra keyword arguments are handled specific to the
                        reported event type.
         :return: a tuple with a 32-length string identifying this event
