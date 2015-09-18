@@ -39,7 +39,8 @@ def fetch_git_sha(path, head=None):
     if not os.path.exists(revision_file):
         if not os.path.exists(os.path.join(path, '.git')):
             raise InvalidGitRepository('%s does not seem to be the root of a git repository' % (path,))
-        raise InvalidGitRepository('Unable to find ref to head "%s" in repository' % (head,))
+        # raise InvalidGitRepository('Unable to find ref to head "%s" in repository' % (head,))
+        assert False, (head, revision_file)
 
     fh = open(revision_file, 'r')
     try:
