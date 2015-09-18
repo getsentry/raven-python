@@ -111,6 +111,7 @@ within your ``extra`` clause::
     logger.error('There was some crazy error', exc_info=True, extra={
         # Optionally you can pass additional arguments to specify request info
         'culprit': 'my.view.name',
+        'fingerprint': [...],
 
         'data': {
             # You may specify any values here and Sentry will log and output them
