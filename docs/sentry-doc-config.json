@@ -6,7 +6,7 @@
       "is_framework": false,
       "doc_link": "installation",
       "snippets": [
-        "installation#installation",
+        "index#installation",
         "usage#capture-an-error",
         "usage#reporting-an-event"
       ]
@@ -27,6 +27,7 @@
       "is_framework": true,
       "doc_link": "integrations/bottle",
       "snippets": [
+        "index#installation",
         "integrations/bottle#setup",
         "integrations/bottle#usage"
       ]
@@ -37,6 +38,7 @@
       "is_framework": true,
       "doc_link": "integrations/celery",
       "snippets": [
+        "index#installation",
         "integrations/celery"
       ]
     },
@@ -46,6 +48,7 @@
       "is_framework": true,
       "doc_link": "integrations/django",
       "snippets": [
+        "index#installation",
         "integrations/django#setup"
       ]
     },
@@ -55,6 +58,7 @@
       "is_framework": true,
       "doc_link": "integrations/pylons",
       "snippets": [
+        "index#installation",
         "integrations/pylons#wsgi-middleware",
         "integrations/pylons#logger-setup"
       ]
@@ -65,6 +69,7 @@
       "is_framework": true,
       "doc_link": "integrations/pyramid",
       "snippets": [
+        "index#installation",
         "integrations/pyramid#pastedeploy-filter",
         "integrations/pyramid#logger-setup"
       ]
@@ -75,6 +80,7 @@
       "is_framework": true,
       "doc_link": "integrations/tornado",
       "snippets": [
+        "index#installation",
         "integrations/tornado#setup",
         "integrations/tornado#usage"
       ]
