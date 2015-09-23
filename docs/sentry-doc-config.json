@@ -17,6 +17,7 @@
       "is_framework": true,
       "doc_link": "integrations/flask/",
       "snippets": [
+        "index#installation",
         "integrations/flask#installation",
         "integrations/flask#setup"
       ]
