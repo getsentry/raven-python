@@ -10,7 +10,7 @@ Raven includes a simple to use WSGI middleware.
 
     application = Sentry(
         application,
-        Client('http://public:secret@example.com/1')
+        Client('___DSN___')
     )
 
 .. note:: Many frameworks will not propagate exceptions to the underlying WSGI middleware by default.

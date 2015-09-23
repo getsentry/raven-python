@@ -16,7 +16,7 @@ A filter factory for `PasteDeploy <http://pythonpaste.org/deploy/>`_ exists to a
 
     [filter:raven]
     use = egg:raven#raven
-    dsn = http://public:secret@example.com/1
+    dsn = ___DSN___
     include_paths = my.package, my.other.package
     exclude_paths = my.package.crud
 
@@ -58,7 +58,7 @@ Add the following lines to your project's `.ini` file to setup `SentryHandler`:
 
     [handler_sentry]
     class = raven.handlers.logging.SentryHandler
-    args = ('http://public:secret@example.com/1',)
+    args = ('___DSN___',)
     level = WARNING
     formatter = generic
 
