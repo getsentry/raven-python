@@ -30,7 +30,7 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
         if not has_twisted:
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
-        super(TwistedHTTPTransport, self).__init__(*args, **kwargs)
+        super(TwistedHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
 
         # Import reactor as late as possible.
         from twisted.internet import reactor
