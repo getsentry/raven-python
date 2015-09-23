@@ -4,7 +4,7 @@
       "name": "Python",
       "client_lib": "raven-python",
       "is_framework": false,
-      "doc_link": "installation",
+      "doc_link": "installation/",
       "snippets": [
         "index#installation",
         "usage#capture-an-error",
@@ -15,7 +15,7 @@
       "name": "Flask",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/flask",
+      "doc_link": "integrations/flask/",
       "snippets": [
         "integrations/flask#installation",
         "integrations/flask#setup"
@@ -25,7 +25,7 @@
       "name": "Bottle",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/bottle",
+      "doc_link": "integrations/bottle/",
       "snippets": [
         "index#installation",
         "integrations/bottle#setup",
@@ -36,7 +36,7 @@
       "name": "Celery",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/celery",
+      "doc_link": "integrations/celery/",
       "snippets": [
         "index#installation",
         "integrations/celery"
@@ -46,7 +46,7 @@
       "name": "Django",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/django",
+      "doc_link": "integrations/django/",
       "snippets": [
         "index#installation",
         "integrations/django#setup"
@@ -56,7 +56,7 @@
       "name": "Pylons",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/pylons",
+      "doc_link": "integrations/pylons/",
       "snippets": [
         "index#installation",
         "integrations/pylons#wsgi-middleware",
@@ -67,7 +67,7 @@
       "name": "Pyramid",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/pyramid",
+      "doc_link": "integrations/pyramid/",
       "snippets": [
         "index#installation",
         "integrations/pyramid#pastedeploy-filter",
@@ -78,7 +78,7 @@
       "name": "Tornado",
       "client_lib": "raven-python",
       "is_framework": true,
-      "doc_link": "integrations/tornado",
+      "doc_link": "integrations/tornado/",
       "snippets": [
         "index#installation",
         "integrations/tornado#setup",
