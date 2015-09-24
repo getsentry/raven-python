@@ -9,7 +9,6 @@ raven.utils.serializer.base
 from __future__ import absolute_import
 
 import itertools
-import uuid
 import types
 
 from raven.utils import six
@@ -74,13 +73,6 @@ class IterableSerializer(Serializer):
             for n, o
             in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value))
         )
-
-
-class UUIDSerializer(Serializer):
-    types = (uuid.UUID,)
-
-    def serialize(self, value, **kwargs):
-        return repr(value)
 
 
 class DictSerializer(Serializer):
@@ -178,7 +170,6 @@ if not six.PY3:
 
 # register all serializers, order matters
 serialization_manager.register(IterableSerializer)
-serialization_manager.register(UUIDSerializer)
 serialization_manager.register(DictSerializer)
 serialization_manager.register(UnicodeSerializer)
 serialization_manager.register(StringSerializer)
