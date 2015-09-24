@@ -29,7 +29,7 @@ from raven.exceptions import APIError, RateLimited
 from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
+from raven.utils.stacks import get_stack_info, iter_stack_frames
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -343,14 +343,6 @@ class Client(object):
                         any(path.startswith(x) for x in self.include_paths) and
                         not any(path.startswith(x) for x in self.exclude_paths)
                     )
-
-        if not culprit:
-            if 'stacktrace' in data:
-                culprit = get_culprit(data['stacktrace']['frames'])
-            elif 'exception' in data:
-                stacktrace = data['exception']['values'][0].get('stacktrace')
-                if stacktrace:
-                    culprit = get_culprit(stacktrace['frames'])
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR

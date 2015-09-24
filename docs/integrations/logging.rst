@@ -109,8 +109,8 @@ will be displayed on the Sentry dashboard. To do this, pass it as ``data``
 within your ``extra`` clause::
 
     logger.error('There was some crazy error', exc_info=True, extra={
+
         # Optionally you can pass additional arguments to specify request info
-        'culprit': 'my.view.name',
         'fingerprint': [...],
 
         'data': {

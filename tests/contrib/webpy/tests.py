@@ -57,7 +57,6 @@ class WebPyTest(TestCase):
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'That\'s what she said')
         self.assertEquals(event['message'], 'ValueError: That\'s what she said')
-        self.assertEquals(event['culprit'], 'tests.contrib.webpy.tests in GET')
 
     def test_post(self):
         response = self.client.post('/test?biz=baz', params={'foo': 'bar'}, expect_errors=True)

@@ -155,7 +155,6 @@ class DjangoClientTest(TestCase):
         assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
         assert event['level'] == logging.ERROR
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
-        assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
@@ -168,7 +167,6 @@ class DjangoClientTest(TestCase):
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
         assert event['message'] == 'Exception: view exception'
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
     def test_user_info(self):
         with Settings(MIDDLEWARE_CLASSES=[
@@ -234,7 +232,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'request'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: request'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_request'
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -251,7 +248,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'response'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: response'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_response'
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
@@ -269,7 +265,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'view exception'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'Exception: view exception'
-            assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
             event = self.raven.events.pop(0)
 
@@ -279,7 +274,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'handler500'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ValueError: handler500'
-            assert event['culprit'] == 'tests.contrib.django.urls in handler500'
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
@@ -294,30 +288,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'view'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: view'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_view'
-
-    def test_exclude_modules_view(self):
-        exclude_paths = self.raven.exclude_paths
-        self.raven.exclude_paths = ['tests.views']
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
-        self.raven.exclude_paths = exclude_paths
-
-    def test_include_modules(self):
-        include_paths = self.raven.include_paths
-        self.raven.include_paths = ['django.shortcuts']
-
-        self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'].startswith('django.shortcuts in ')
-        self.raven.include_paths = include_paths
 
     def test_template_name_as_view(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))

@@ -150,7 +150,6 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(frame['module'], 'raven.handlers.logging')
         assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertEqual(event['culprit'], 'root in make_record')
         self.assertEqual(event['message'], 'This is a test of stacks')
 
     def test_no_record_stack(self):
@@ -169,8 +168,6 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
         assert 'stacktrace' in event
-        assert 'culprit' in event
-        assert event['culprit'] == 'root in make_record'
         self.assertTrue('message' in event, event)
         self.assertEqual(event['message'], 'This is a test of stacks')
         assert 'exception' not in event

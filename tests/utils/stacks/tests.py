@@ -5,7 +5,7 @@ from mock import Mock
 from raven.utils.testutils import TestCase
 from raven.utils import six
 
-from raven.utils.stacks import get_culprit, get_stack_info, get_lines_from_file
+from raven.utils.stacks import get_stack_info, get_lines_from_file
 
 
 class Context(object):
@@ -15,33 +15,6 @@ class Context(object):
     __getitem__ = lambda s, *a: s.dict.__getitem__(*a)
     __setitem__ = lambda s, *a: s.dict.__setitem__(*a)
     iterkeys = lambda s, *a: six.iterkeys(s.dict, *a)
-
-
-class GetCulpritTest(TestCase):
-    def test_empty_module(self):
-        culprit = get_culprit([{
-            'module': None,
-            'function': 'foo',
-        }])
-        assert culprit == '? in foo'
-
-    def test_empty_function(self):
-        culprit = get_culprit([{
-            'module': 'foo',
-            'function': None,
-        }])
-        assert culprit == 'foo in ?'
-
-    def test_no_module_or_function(self):
-        culprit = get_culprit([{}])
-        assert culprit is None
-
-    def test_all_params(self):
-        culprit = get_culprit([{
-            'module': 'package.name',
-            'function': 'foo',
-        }])
-        assert culprit == 'package.name in foo'
 
 
 class GetStackInfoTest(TestCase):
