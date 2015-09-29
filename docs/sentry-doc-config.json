@@ -1,86 +1,78 @@
 {
-  "wizards": {
+  "platforms": {
     "python": {
       "name": "Python",
-      "client_lib": "raven-python",
-      "is_framework": false,
+      "type": "language",
       "doc_link": "installation/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "usage#capture-an-error",
         "usage#reporting-an-event"
       ]
     },
-    "python-flask": {
+    "python.flask": {
       "name": "Flask",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/flask/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/flask#installation",
         "integrations/flask#setup"
       ]
     },
-    "python-bottle": {
+    "python.bottle": {
       "name": "Bottle",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/bottle/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/bottle#setup",
         "integrations/bottle#usage"
       ]
     },
-    "python-celery": {
+    "python.celery": {
       "name": "Celery",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "library",
       "doc_link": "integrations/celery/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/celery"
       ]
     },
-    "python-django": {
+    "python.django": {
       "name": "Django",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/django/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/django#setup"
       ]
     },
-    "python-pylons": {
+    "python.pylons": {
       "name": "Pylons",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/pylons/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/pylons#wsgi-middleware",
         "integrations/pylons#logger-setup"
       ]
     },
-    "python-pyramid": {
+    "python.pyramid": {
       "name": "Pyramid",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/pyramid/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/pyramid#pastedeploy-filter",
         "integrations/pyramid#logger-setup"
       ]
     },
-    "python-tornado": {
+    "python.tornado": {
       "name": "Tornado",
-      "client_lib": "raven-python",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/tornado/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/tornado#setup",
         "integrations/tornado#usage"
