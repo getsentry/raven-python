@@ -149,7 +149,7 @@ do this, you simply need to enable a Django middleware:
         ...,
     ) + MIDDLEWARE_CLASSES
 
-It is recommended to put the middleware at the top, so that any only 404s 
+It is recommended to put the middleware at the top, so that any only 404s
 that bubbled all the way up get logged. Certain middlewares (e.g. flatpages)
 capture 404s and replace the response.
 
@@ -297,20 +297,6 @@ Or, alternatively, you can just enable Sentry responses::
             # Make sure the exception signal is fired for Sentry
             sentry_exception_handler(request=request)
             return HttpResponse('foo')
-
-
-Gunicorn
-~~~~~~~~
-
-If you are running Django with `gunicorn <http://gunicorn.org/>`_ and
-using the ``gunicorn`` executable, instead of the ``run_gunicorn``
-management command, you will need to add a hook to gunicorn to activate
-Raven::
-
-    from django.core.management import call_command
-
-    def when_ready(server):
-        call_command('validate')
 
 Circus
 ~~~~~~
