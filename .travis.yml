@@ -30,10 +30,14 @@ env:
 
 install:
   - time ci/setup
+  - pip install codecov
 
 script:
   - "if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi"
   - py.test tests/ --cov raven --cov-report term-missing --timeout 10
+
+after_success:
+  - codecov -e DJANGO
 
 matrix:
   allow_failures:
