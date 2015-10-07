@@ -55,6 +55,7 @@ if sys.version_info[0] == 3:
 tests_require = [
     'bottle',
     'celery>=2.5',
+    'coverage',
     'Django>=1.4',
     'django-celery>=2.5',
     'exam>=0.5.2',
@@ -64,7 +65,6 @@ tests_require = [
     'pep8',
     'pytz',
     'pytest>=2.7.0,<2.8.0',
-    'pytest-cov>=1.4',
     'pytest-django>=2.7.0,<2.8.0',
     'pytest-timeout==0.4',
     'requests',
