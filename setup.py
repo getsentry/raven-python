@@ -55,7 +55,6 @@ if sys.version_info[0] == 3:
 tests_require = [
     'bottle',
     'celery>=2.5',
-    'coverage',
     'Django>=1.4',
     'django-celery>=2.5',
     'exam>=0.5.2',
