@@ -124,7 +124,8 @@ def get_client(client=None, reset=False):
         ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
         options = copy.deepcopy(getattr(settings, 'RAVEN_CONFIG', {}))
         options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
-        options['include_paths'] = set(options['include_paths']) | get_installed_apps()
+        if not options['include_paths']:
+            options['include_paths'] = get_installed_apps()
         options.setdefault('exclude_paths', ga('EXCLUDE_PATHS'))
         options.setdefault('timeout', ga('TIMEOUT'))
         options.setdefault('name', ga('NAME'))
