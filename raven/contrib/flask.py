@@ -172,6 +172,8 @@ class Sentry(object):
                 if hasattr(current_user, attr):
                     user_info[attr] = getattr(current_user, attr)
 
+        return user_info
+
     def get_http_info(self, request):
         """
         Determine how to retrieve actual data by using request.mimetype.

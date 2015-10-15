@@ -27,13 +27,23 @@ class User(AnonymousUserMixin):
     is_active = lambda x: True
     is_authenticated = lambda x: True
     get_id = lambda x: 1
+    name = 'TestUser'
+
+    def to_dict(self):
+        return {
+            'id': self.get_id(),
+            'name': self.name
+        }
 
 
-def create_app(ignore_exceptions=None, debug=False):
+def create_app(ignore_exceptions=None, debug=False, **config):
     import os
 
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.urandom(40)
+    for key, value in config.items():
+        app.config[key] = value
+
     app.debug = debug
 
     if ignore_exceptions:
@@ -56,10 +66,10 @@ def create_app(ignore_exceptions=None, debug=False):
         current_app.extensions['sentry'].captureMessage('Interesting')
         return 'World'
 
-    @app.route('/an-error-logged-in/', methods=['GET', 'POST'])
+    @app.route('/login/', methods=['GET', 'POST'])
     def login():
         login_user(User())
-        raise ValueError('hello world')
+        return "hello world"
     return app
 
 
@@ -255,13 +265,20 @@ class FlaskTest(BaseTest):
 
 
 class FlaskLoginTest(BaseTest):
+
+    @fixture
+    def app(self):
+        return create_app(SENTRY_USER_ATTRS=['name'])
+
     @before
     def setup_login(self):
         self.login_manager = init_login(self.app)
 
     def test_user(self):
-        self.client.get('/an-error-logged-in/')
+        self.client.get('/login/')
+        self.client.get('/an-error/')
         event = self.raven.events.pop(0)
         assert event['message'] == 'ValueError: hello world'
         assert 'request' in event
         assert 'user' in event
+        self.assertDictEqual(event['user'], User().to_dict())
