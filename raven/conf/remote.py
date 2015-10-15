@@ -7,7 +7,7 @@ from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils import six
 from raven.utils.urlparse import parse_qsl, urlparse
 
-ERR_UNKNOWN_SCHEME = 'Unsupported Sentry DSN scheme: {0}'
+ERR_UNKNOWN_SCHEME = 'Unsupported Sentry DSN scheme: {0} ({1})'
 
 DEFAULT_TRANSPORT = ThreadedHTTPTransport
 
@@ -66,7 +66,7 @@ class RemoteConfig(object):
                 transport_registry = TransportRegistry(default_transports)
 
             if not transport_registry.supported_scheme(url.scheme):
-                raise InvalidDsn(ERR_UNKNOWN_SCHEME.format(url.scheme))
+                raise InvalidDsn(ERR_UNKNOWN_SCHEME.format(url.scheme, value))
 
             transport = transport_registry.get_transport_cls(url.scheme)
 
