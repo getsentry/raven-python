@@ -161,7 +161,7 @@ class Client(object):
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
-        self.release = o.get('release')
+        self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
 
         self.module_cache = ModuleProxyCache()
 
