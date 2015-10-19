@@ -68,4 +68,4 @@ Add the following lines to your project's `.ini` file to setup `SentryHandler`:
 
 .. note:: You may want to setup other loggers as well.  See the `Pyramid Logging Documentation <http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html>`_ for more information.
 
-
+Instead of defining the DSN in the `.ini` file you can also use the environment variable ``SENTRY_DSN`` which overwrites the setting in this file. Because of a syntax check you cannot remove the ``args`` setting completely, as workaround you can define an empty list of arguments ``args = ()``.
