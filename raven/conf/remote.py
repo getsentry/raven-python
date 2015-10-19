@@ -5,6 +5,7 @@ import warnings
 from raven.exceptions import InvalidDsn
 from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils import six
+from raven.utils.encoding import to_string
 from raven.utils.urlparse import parse_qsl, urlparse
 
 ERR_UNKNOWN_SCHEME = 'Unsupported Sentry DSN scheme: {0} ({1})'
@@ -55,6 +56,7 @@ class RemoteConfig(object):
 
     @classmethod
     def from_string(cls, value, transport=None, transport_registry=None):
+        value = to_string(value)
         url = urlparse(value)
 
         if url.scheme not in ('http', 'https'):
