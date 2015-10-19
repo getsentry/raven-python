@@ -108,20 +108,13 @@ class DjangoClient(Client):
     def build_msg(self, *args, **kwargs):
         data = super(DjangoClient, self).build_msg(*args, **kwargs)
 
-        stacks = [
-            data.get('stacktrace'),
-        ]
-        if 'exception' in data:
-            stacks.append(data['exception']['values'][0]['stacktrace'])
+        for frame in self._iter_frames(data):
+            module = frame.get('module')
+            if not module:
+                continue
 
-        for stacktrace in filter(bool, stacks):
-            for frame in stacktrace['frames']:
-                module = frame.get('module')
-                if not module:
-                    continue
-
-                if module.startswith('django.'):
-                    frame['in_app'] = False
+            if module.startswith('django.'):
+                frame['in_app'] = False
 
         if not self.site and 'django.contrib.sites' in settings.INSTALLED_APPS:
             try:

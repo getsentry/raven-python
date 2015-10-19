@@ -327,8 +327,8 @@ class Client(object):
                 'stacktrace': stack_info,
             })
 
-        if 'stacktrace' in data and self.include_paths:
-            for frame in data['stacktrace']['frames']:
+        if self.include_paths:
+            for frame in self._iter_frames(data):
                 if frame.get('in_app') is not None:
                     continue
 
@@ -530,6 +530,14 @@ class Client(object):
         events.
         """
         return self.remote.is_active()
+
+    def _iter_frames(self, data):
+        if 'stacktrace' in data:
+            for frame in data['stacktrace']['frames']:
+                yield frame
+        if 'exception' in data:
+            for frame in data['exception']['values'][0]['stacktrace']['frames']:
+                yield frame
 
     def _successful_send(self):
         self.state.set_success()

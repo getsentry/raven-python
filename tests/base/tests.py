@@ -455,3 +455,53 @@ class ClientTest(TestCase):
 
         client = Client('sync+http://public:secret@example.com/1')
         assert type(client.remote.get_transport()) is HTTPTransport
+
+    def test_marks_in_app_frames_for_stacktrace(self):
+        client = TempStoreClient(
+            include_paths=['foo'],
+            exclude_paths=['foo.bar'],
+        )
+        client.captureMessage('hello', data={
+            'stacktrace': {
+                'frames': [
+                    {'module': 'foo'},
+                    {'module': 'bar'},
+                    {'module': 'foo.bar'},
+                    {'module': 'foo.baz'},
+                ]
+            }
+        })
+
+        event = client.events.pop(0)
+        frames = event['stacktrace']['frames']
+        assert frames[0]['in_app']
+        assert not frames[1]['in_app']
+        assert not frames[2]['in_app']
+        assert frames[3]['in_app']
+
+    def test_marks_in_app_frames_for_exception(self):
+        client = TempStoreClient(
+            include_paths=['foo'],
+            exclude_paths=['foo.bar'],
+        )
+        client.captureMessage('hello', data={
+            'exception': {
+                'values': [{
+                    'stacktrace': {
+                        'frames': [
+                            {'module': 'foo'},
+                            {'module': 'bar'},
+                            {'module': 'foo.bar'},
+                            {'module': 'foo.baz'},
+                        ]
+                    }
+                }]
+            }
+        })
+
+        event = client.events.pop(0)
+        frames = event['exception']['values'][0]['stacktrace']['frames']
+        assert frames[0]['in_app']
+        assert not frames[1]['in_app']
+        assert not frames[2]['in_app']
+        assert frames[3]['in_app']
