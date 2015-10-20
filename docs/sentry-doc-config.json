@@ -3,7 +3,7 @@
     "python": {
       "name": "Python",
       "type": "language",
-      "doc_link": "installation/",
+      "doc_link": "",
       "wizard": [
         "index#installation",
         "usage#capture-an-error",
