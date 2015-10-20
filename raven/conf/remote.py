@@ -56,7 +56,11 @@ class RemoteConfig(object):
 
     @classmethod
     def from_string(cls, value, transport=None, transport_registry=None):
-        value = to_string(value)
+        # in Python 2.x sending the DSN as a unicode value will eventually
+        # cause issues in httplib
+        if not six.PY3:
+            value = to_string(value)
+
         url = urlparse(value)
 
         if url.scheme not in ('http', 'https'):
