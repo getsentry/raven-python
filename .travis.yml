@@ -30,7 +30,7 @@ env:
 
 install:
   - time ci/setup
-  - pip install codecov
+  - pip install codecov "coverage<4"
 
 script:
   - "if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi"
