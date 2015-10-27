@@ -7,13 +7,14 @@ raven.contrib.django.middleware.wsgi
 """
 from __future__ import absolute_import
 
+from django.utils.functional import cached_property
 from raven.middleware import Sentry
 
 
 class Sentry(Sentry):
     """
     Identical to the default WSGI middleware except that
-    the client comes dynamically via ``get_client
+    the client comes dynamically via ``get_client``
 
     >>> from raven.contrib.django.middleware.wsgi import Sentry
     >>> application = Sentry(application)
@@ -21,7 +22,7 @@ class Sentry(Sentry):
     def __init__(self, application):
         self.application = application
 
-    @property
+    @cached_property
     def client(self):
         from raven.contrib.django.models import client
         return client
