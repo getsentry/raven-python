@@ -3,11 +3,16 @@ Transports
 
 A transport is the mechanism in which Raven sends the HTTP request to the
 Sentry server. By default, Raven uses a threaded asynchronous transport,
-but you can easily adjust this by modifying your ``SENTRY_DSN`` value.
+but you can easily adjust this by passing your own transport class.
 
-Transport registration is done via the URL prefix, so for example, a
-synchronous transport is as simple as prefixing your ``SENTRY_DSN`` with
-the ``sync+`` value.
+
+The transport class is passed via the ``transport`` parameter on ``Client``:
+
+.. code-block:: python
+
+    from raven import Client
+
+    Client('...', transport=TransportClass)
 
 Options are passed to transports via the querystring.
 
@@ -27,24 +32,16 @@ For example, to increase the timeout and to disable SSL verification::
 	SENTRY_DSN = '___DSN___?timeout=5&verify_ssl=0'
 
 
-aiohttp
--------
-
-Should only be used within a :pep:`3156` compatible event loops
-(*asyncio* itself and others).
-
-::
-
-    SENTRY_DSN = 'aiohttp+___DSN___'
-
 Eventlet
 --------
 
 Should only be used within an Eventlet IO loop.
 
-::
+.. code-block:: python
 
-    SENTRY_DSN = 'eventlet+___DSN___'
+    from raven.transport.eventlet import EventletHTTPTransport
+
+    Client('...', transport=EventletHTTPTransport)
 
 
 Gevent
@@ -52,9 +49,11 @@ Gevent
 
 Should only be used within a Gevent IO loop.
 
-::
+.. code-block:: python
 
-    SENTRY_DSN = 'gevent+___DSN___'
+    from raven.transport.gevent import GeventHTTPTransport
+
+    Client('...', transport=GeventHTTPTransport)
 
 
 Requests
@@ -62,9 +61,19 @@ Requests
 
 Requires the ``requests`` library. Synchronous.
 
-::
+.. code-block:: python
 
-    SENTRY_DSN = 'requests+___DSN___'
+    from raven.transport.requests import RequestsHTTPTransport
+
+    Client('...', transport=RequestsHTTPTransport)
+
+Alternatively, a threaded client also exists for Requests:
+
+.. code-block:: python
+
+    from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
+
+    Client('...', transport=ThreadedRequestsHTTPTransport)
 
 
 Sync
@@ -72,9 +81,11 @@ Sync
 
 A synchronous blocking transport.
 
-::
+.. code-block:: python
 
-    SENTRY_DSN = 'sync+___DSN___'
+    from raven.transport.http import HTTPTransport
+
+    Client('...', transport=HTTPTransport)
 
 
 Threaded (Default)
@@ -82,9 +93,11 @@ Threaded (Default)
 
 Spawns an async worker for processing messages.
 
-::
+.. code-block:: python
 
-    SENTRY_DSN = 'threaded+___DSN___'
+    from raven.transport.threaded import ThreadedHTTPTransport
+
+    Client('...', transport=ThreadedHTTPTransport)
 
 
 Tornado
@@ -92,9 +105,11 @@ Tornado
 
 Should only be used within a Tornado IO loop.
 
-::
+.. code-block:: python
 
-    SENTRY_DSN = 'tornado+___DSN___'
+    from raven.transport.tornado import TornadoHTTPTransport
+
+    Client('...', transport=TornadoHTTPTransport)
 
 
 Twisted
@@ -102,6 +117,8 @@ Twisted
 
 Should only be used within a Twisted event loop.
 
-::
+.. code-block:: twisted
 
-    SENTRY_DSN = 'twisted+___DSN___'
+    from raven.transport.twisted import TwistedHTTPTransport
+
+    Client('...', transport=TwistedHTTPTransport)
