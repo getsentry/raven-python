@@ -117,7 +117,7 @@ Twisted
 
 Should only be used within a Twisted event loop.
 
-.. code-block:: twisted
+.. code-block:: python
 
     from raven.transport.twisted import TwistedHTTPTransport
 
