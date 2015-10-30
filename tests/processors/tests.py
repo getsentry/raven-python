@@ -10,6 +10,11 @@ from raven.processors import SanitizePasswordsProcessor, \
 
 VARS = {
     'foo': 'bar',
+    'vars_dict': {
+        42: 'bar',
+        ('foo', 'bar'): 'hello',
+        'password': 'hello',
+    },
     'password': 'hello',
     'the_secret': 'hello',
     'a_password_here': 'hello',
@@ -21,6 +26,7 @@ VARS = {
 
 def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
     def _will_throw_type_error(foo, **kwargs):
+        vars_dict = VARS['vars_dict']
         password = "you should not see this"    # NOQA F841
         the_secret = "nor this"                 # NOQA F841
         a_password_here = "Don't look at me!"   # NOQA F841
@@ -81,6 +87,24 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertIn(vars['foo'], (
             VARS['foo'], "'%s'" % VARS['foo'], '"%s"' % VARS['foo'])
         )
+        self.assertTrue('vars_dict' in vars)
+        vars_dict = vars['vars_dict']
+        ref_dict = VARS['vars_dict'].copy()
+        ref_dict['password'] = proc.MASK
+        self.assertTrue(42 in vars_dict or '42' in vars_dict)
+        if 42 in vars_dict:
+            # Extra data - dictionary keys are not changed.
+            self.assertDictEqual(vars_dict, ref_dict)
+        else:
+            # Stack trace - dictionary keys are converted to strings.
+            self.assertTrue('42' in vars_dict)
+            self.assertIn(vars_dict['42'], "'%s'" % ref_dict[42], '"%s"' % ref_dict[42])
+            self.assertTrue('("\'foo\'", "\'bar\'")' in vars_dict or "('\"foo\"', '\"bar\"')" in vars_dict)
+            self.assertTrue('"password"' in vars_dict or "'password'" in vars_dict)
+            if "'password'" in vars_dict:
+                self.assertEqual(vars_dict["'password'"], proc.MASK)
+            else:
+                self.assertEqual(vars_dict['"password"'], proc.MASK)
         self.assertTrue('password' in vars)
         self.assertEquals(vars['password'], proc.MASK)
         self.assertTrue('the_secret' in vars)

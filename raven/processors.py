@@ -94,7 +94,7 @@ class SanitizePasswordsProcessor(Processor):
         if not key:  # key can be a NoneType
             return value
 
-        key = key.lower()
+        key = six.text_type(key).lower()
         for field in self.FIELDS:
             if field in key:
                 # store mask as a fixed length for security
