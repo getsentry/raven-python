@@ -68,6 +68,16 @@
         "integrations/pyramid#logger-setup"
       ]
     },
+    "python.rq": {
+      "name": "RQ",
+      "type": "framework",
+      "doc_link": "integrations/rq/",
+      "wizard": [
+        "index#installation",
+        "integrations/rq#usage",
+        "integrations/rq#extended-setup"
+      ]
+    },
     "python.tornado": {
       "name": "Tornado",
       "type": "framework",
