@@ -74,7 +74,7 @@ class DjangoClient(Client):
             host = get_host(request)
             uri = '%s://%s%s' % (scheme, host, request.path)
 
-        if request.method != 'GET':
+        if request.method not in ('GET', 'HEAD'):
             try:
                 data = request.body
             except Exception:
