@@ -47,8 +47,8 @@ You can pass parameters in the ``init_app`` hook::
 
     def create_app():
         app = Flask(__name__)
-        sentry.init_app(app, dsn='http://public_key:secret_key@example.com/1',
-                        logging=True, level=logging.ERROR)
+        sentry.init_app(app, dsn='___DSN___', logging=True,
+                        level=logging.ERROR)
         return app
 
 Settings
@@ -108,7 +108,7 @@ Log a generic message with ``captureMessage``::
 
     sentry.captureMessage('hello, world!')
 
-Getting the last event id
+Getting The Last Event ID
 -------------------------
 
 If possible, the last Sentry event ID is stored in the request context
@@ -122,7 +122,7 @@ ID if have done a custom error 500 page.
     <p>The error identifier is {{ g.sentry_event_id }}</p>
     {% endif %}
 
-Dealing with proxies
+Dealing With Proxies
 --------------------
 
 When your Flask application is behind a proxy such as nginx, Sentry will
