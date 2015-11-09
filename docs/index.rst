@@ -112,11 +112,11 @@ discover:
 
    Deprecation Notes
    -----------------
-   
+
    Milestones releases are 1.3 or 1.4, and our deprecation policy is to a two
    version step. For example, a feature will be deprecated in 1.3, and
    completely removed in 1.4.
-   
+
    Resources
    ---------
 
@@ -124,7 +124,7 @@ discover:
 
    Resources:
 
-* `Documentation <http://raven.readthedocs.org/>`_
+* `Documentation <https://docs.getsentry.com/hosted/clients/python/>`_
 * `Bug Tracker <http://github.com/getsentry/raven-python/issues>`_
 * `Code <http://github.com/getsentry/raven-python>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_

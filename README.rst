@@ -15,7 +15,7 @@ any Python application.
 Resources
 ---------
 
-* `Documentation <http://raven.readthedocs.org/>`_
+* `Documentation <https://docs.getsentry.com/hosted/clients/python/>`_
 * `Bug Tracker <http://github.com/getsentry/raven-python/issues>`_
 * `Code <http://github.com/getsentry/raven-python>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_
