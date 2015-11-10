@@ -99,7 +99,7 @@ setup(
     author='David Cramer',
     author_email='dcramer@gmail.com',
     url='https://github.com/getsentry/raven-python',
-    description='Raven is a client for Sentry (https://www.getsentry.com)',
+    description='Raven is a client for Sentry (https://getsentry.com)',
     long_description=__doc__,
     packages=find_packages(exclude=("tests", "tests.*",)),
     zip_safe=False,
