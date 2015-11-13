@@ -32,6 +32,14 @@ class ErroringIterable(object):
         self.closed = True
 
 
+class ExitingIterable(ErroringIterable):
+    def __init__(self, code=0):
+        self._code = code
+
+    def __iter__(self):
+        raise SystemExit(self._code)
+
+
 class ExampleApp(object):
     def __init__(self, iterable):
         self.iterable = iterable
@@ -86,3 +94,41 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(env['SERVER_NAME'], 'localhost')
         self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
+
+    def test_systemexit_0_is_ignored(self):
+        iterable = ExitingIterable(code=0)
+        app = ExampleApp(iterable)
+        middleware = Sentry(app, client=self.client)
+
+        response = middleware(self.request.environ, lambda *args: None)
+
+        with self.assertRaises(SystemExit):
+            response = list(response)
+
+        # TODO: this should be a separate test
+        self.assertTrue(iterable.closed, True)
+
+        self.assertEquals(len(self.client.events), 0)
+
+    def test_systemexit_is_captured(self):
+        iterable = ExitingIterable(code=1)
+        app = ExampleApp(iterable)
+        middleware = Sentry(app, client=self.client)
+
+        response = middleware(self.request.environ, lambda *args: None)
+
+        with self.assertRaises(SystemExit):
+            response = list(response)
+
+        # TODO: this should be a separate test
+        self.assertTrue(iterable.closed, True)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
+        self.assertEquals(exc['type'], 'SystemExit')
+        self.assertEquals(exc['value'], '1')
+        self.assertEquals(event['level'], logging.ERROR)
+        self.assertEquals(event['message'], 'SystemExit: 1')
