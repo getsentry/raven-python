@@ -36,6 +36,9 @@ class Sentry(object):
         except Exception:
             self.handle_exception(environ)
             raise
+        except KeyboardInterrupt:
+            self.handle_exception(environ)
+            raise
         except SystemExit as e:
             if e.code != 0:
                 self.handle_exception(environ)
@@ -45,6 +48,9 @@ class Sentry(object):
             for event in iterable:
                 yield event
         except Exception:
+            self.handle_exception(environ)
+            raise
+        except KeyboardInterrupt:
             self.handle_exception(environ)
             raise
         except SystemExit as e:
@@ -59,6 +65,9 @@ class Sentry(object):
                     iterable.close()
                 except Exception:
                     self.handle_exception(environ)
+                except KeyboardInterrupt:
+                    self.handle_exception(environ)
+                    raise
                 except SystemExit as e:
                     if e.code != 0:
                         self.handle_exception(environ)

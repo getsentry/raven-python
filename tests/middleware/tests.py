@@ -33,11 +33,11 @@ class ErroringIterable(object):
 
 
 class ExitingIterable(ErroringIterable):
-    def __init__(self, code=0):
-        self._code = code
+    def __init__(self, exc_func):
+        self._exc_func = exc_func
 
     def __iter__(self):
-        raise SystemExit(self._code)
+        raise self._exc_func()
 
 
 class ExampleApp(object):
@@ -96,7 +96,7 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(env['SERVER_PORT'], '80')
 
     def test_systemexit_0_is_ignored(self):
-        iterable = ExitingIterable(code=0)
+        iterable = ExitingIterable(lambda: SystemExit(0))
         app = ExampleApp(iterable)
         middleware = Sentry(app, client=self.client)
 
@@ -111,7 +111,7 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(len(self.client.events), 0)
 
     def test_systemexit_is_captured(self):
-        iterable = ExitingIterable(code=1)
+        iterable = ExitingIterable(lambda: SystemExit(1))
         app = ExampleApp(iterable)
         middleware = Sentry(app, client=self.client)
 
@@ -132,3 +132,25 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(exc['value'], '1')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'SystemExit: 1')
+
+    def test_keyboard_interrupt_is_captured(self):
+        iterable = ExitingIterable(lambda: KeyboardInterrupt())
+        app = ExampleApp(iterable)
+        middleware = Sentry(app, client=self.client)
+
+        response = middleware(self.request.environ, lambda *args: None)
+
+        with self.assertRaises(KeyboardInterrupt):
+            response = list(response)
+
+        # TODO: this should be a separate test
+        self.assertTrue(iterable.closed, True)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+
+        assert 'exception' in event
+        exc = event['exception']['values'][0]
+        self.assertEquals(exc['type'], 'KeyboardInterrupt')
+        self.assertEquals(exc['value'], '')
+        self.assertEquals(event['level'], logging.ERROR)
