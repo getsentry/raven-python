@@ -249,6 +249,9 @@ Additional Settings
     customized using this setting::
 
         SENTRY_CELERY_LOGLEVEL = logging.INFO
+
+    Alternatively you can use a similarly named key in ``RAVEN_CONFIG``::
+
         RAVEN_CONFIG = {
             'CELERY_LOGLEVEL': logging.INFO
         }
