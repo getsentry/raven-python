@@ -36,12 +36,20 @@ class Sentry(object):
         except Exception:
             self.handle_exception(environ)
             raise
+        except SystemExit as e:
+            if e.code != 0:
+                self.handle_exception(environ)
+            raise
 
         try:
             for event in iterable:
                 yield event
         except Exception:
             self.handle_exception(environ)
+            raise
+        except SystemExit as e:
+            if e.code != 0:
+                self.handle_exception(environ)
             raise
         finally:
             # wsgi spec requires iterable to call close if it exists
@@ -51,6 +59,10 @@ class Sentry(object):
                     iterable.close()
                 except Exception:
                     self.handle_exception(environ)
+                except SystemExit as e:
+                    if e.code != 0:
+                        self.handle_exception(environ)
+                    raise
             self.client.context.clear()
 
     def get_http_context(self, environ):
