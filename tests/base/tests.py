@@ -102,8 +102,16 @@ class ClientTest(TestCase):
         with mock.patch.dict(os.environ, {'SENTRY_DSN': DSN}):
             client = Client()
             assert client.remote.get_public_dsn() == PUBLIC_DSN
-            client = Client('')
-            assert client.remote.get_public_dsn() == PUBLIC_DSN
+
+    def test_client_sets_empty_env_dsn(self):
+        DSN = ''
+        with mock.patch.dict(os.environ, {'SENTRY_DSN': DSN}):
+            client = Client()
+            assert client.remote.get_public_dsn() is None
+
+    def test_client_explicit_none_dsn(self):
+        client = Client(dsn=None)
+        assert client.remote.get_public_dsn == ''
 
     @mock.patch('raven.transport.http.HTTPTransport.send')
     @mock.patch('raven.base.ClientState.should_try')
