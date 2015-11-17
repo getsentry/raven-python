@@ -35,7 +35,7 @@ except ImportError:
 import raven
 from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
-from raven.exceptions import APIError, RateLimited
+from raven.exceptions import APIError, RateLimited, ConfigurationError
 from raven.utils import json, get_versions, get_auth_header, merge_dicts
 from raven.utils.compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
@@ -147,7 +147,7 @@ class Client(object):
     logger = logging.getLogger('raven')
     protocol_version = '6'
 
-    def __init__(self, dsn=None, raise_send_errors=False, transport=None,
+    def __init__(self, dsn=Ellipsis, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
                  hook_libraries=None, enable_breadcrumbs=True,
                  _random_seed=None, **options):
@@ -242,11 +242,19 @@ class Client(object):
             result[path] = config
         return result
 
-    def set_dsn(self, dsn=None, transport=None):
-        if not dsn and os.environ.get('SENTRY_DSN'):
-            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
-            self.logger.debug(msg)
-            dsn = os.environ['SENTRY_DSN']
+    def set_dsn(self, dsn=Ellipsis, transport=None):
+        """
+        Configures the client remote given a dsn and transport
+        If dsn is explicitly set to None or given an empty string
+        as an environment variable it will disable reporting.
+        """
+        if dsn is Ellipsis:
+            if 'SENTRY_DSN' in os.environ.keys():
+                msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+                self.logger.debug(msg)
+                dsn = os.environ['SENTRY_DSN']
+            else:
+                raise ConfigurationError("Must pass valid DSN or set SENTRY_DSN Environment Variable")
 
         if dsn not in self._transport_cache:
             if not dsn:
@@ -261,7 +269,10 @@ class Client(object):
         else:
             self.remote = self._transport_cache[dsn]
 
-        self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+        if dsn is not None:
+            self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+        else:
+            self.logger.debug('Disabling raven because DSN set to None')
 
     def install_sys_hook(self):
         global __excepthook__
