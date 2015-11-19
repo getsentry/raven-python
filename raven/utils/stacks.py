@@ -187,25 +187,52 @@ def get_frame_locals(frame, transformer=transform, max_var_size=4096):
     return f_vars
 
 
-def slim_frame_data(frames, frame_allowance=25):
+def slim_frame_data(frames, frame_allowance=25, in_app_info=False):
     """
     Removes various excess metadata from middle frames which go beyond
     ``frame_allowance``.
 
     Returns ``frames``.
     """
-    frames_len = len(frames)
+    def _strip(frames):
+        for frame in frames:
+            frame.pop('vars', None)
+            frame.pop('pre_context', None)
+            frame.pop('post_context', None)
 
-    if frames_len <= frame_allowance:
-        return frames
+    # We have frames marked as in app, so collect everything not in app
+    # and strip those.
+    if in_app_info:
+        in_app_frames = []
+        framework_frames = []
 
+        for frame in frames:
+            if frame.get('in_app'):
+                in_app_frames.append(frame)
+            else:
+                framework_frames.append(frame)
+
+        # Fewer frames than our limit, just do nothing
+        if len(in_app_frames) + len(framework_frames) < frame_allowance:
+            return
+
+        # App frames alone area already over limit.
+        if len(in_app_frames) > frame_allowance:
+            _strip(in_app_frames[:-frame_allowance])
+            _strip(framework_frames)
+            return
+
+        _strip(framework_frames[:-frame_allowance - len(in_app_frames)])
+        return
+
+    # If we don't know what's in the app, we just throw away the data in
+    # the first few frames.
     half_max = int(frame_allowance / 2)
+    if not in_app_info:
+        frames = list(frames)
+        for n in range(half_max, len(frames) - half_max):
+            _strip(frames[n])
 
-    for n in range(half_max, frames_len - half_max):
-        # remove heavy components
-        frames[n].pop('vars', None)
-        frames[n].pop('pre_context', None)
-        frames[n].pop('post_context', None)
     return frames
 
 
@@ -288,8 +315,9 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
             })
         result.append(frame_result)
 
-    stackinfo = {
-        'frames': slim_frame_data(result, frame_allowance=frame_allowance),
-    }
+    if frame_allowance is not None:
+        result = slim_frame_data(result, frame_allowance=frame_allowance)
 
-    return stackinfo
+    return {
+        'frames': result
+    }

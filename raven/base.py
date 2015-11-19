@@ -29,7 +29,8 @@ from raven.exceptions import APIError, RateLimited
 from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
+from raven.utils.stacks import get_stack_info, iter_stack_frames, \
+    get_culprit, slim_frame_data
 from raven.transport.registry import TransportRegistry, default_transports
 
 __all__ = ('Client',)
@@ -322,11 +323,13 @@ class Client(object):
                 frames,
                 transformer=self.transform,
                 capture_locals=self.capture_locals,
+                frame_allowance=None,
             )
             data.update({
                 'stacktrace': stack_info,
             })
 
+        in_app_info = False
         if self.include_paths:
             for frame in self._iter_frames(data):
                 if frame.get('in_app') is not None:
@@ -336,6 +339,7 @@ class Client(object):
                 if not path:
                     continue
 
+                in_app_info = True
                 if path.startswith('raven.'):
                     frame['in_app'] = False
                 else:
@@ -343,6 +347,8 @@ class Client(object):
                         any(path.startswith(x) for x in self.include_paths) and
                         not any(path.startswith(x) for x in self.exclude_paths)
                     )
+
+        slim_frame_data(self._iter_frames(data), in_app_info=in_app_info)
 
         if not culprit:
             if 'stacktrace' in data:

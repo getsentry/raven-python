@@ -63,6 +63,7 @@ class Exception(BaseEvent):
                 iter_traceback_frames(exc_traceback),
                 transformer=self.transform,
                 capture_locals=self.client.capture_locals,
+                frame_allowance=None,
             )
 
             exc_module = getattr(exc_type, '__module__', None)
