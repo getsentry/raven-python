@@ -17,9 +17,13 @@ import uuid
 import warnings
 
 from datetime import datetime
-from functools import wraps
 from pprint import pformat
 from types import FunctionType
+
+if sys.version_info >= (3, 2):
+    import contextlib
+else:
+    import contextlib2 as contextlib
 
 import raven
 from raven.conf import defaults
@@ -689,10 +693,11 @@ class Client(object):
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)
 
-    def capture_exceptions(self, function_or_exceptions, **kwargs):
+    def capture_exceptions(self, function_or_exceptions=None, **kwargs):
         """
-        Wrap a function in try/except and automatically call ``.captureException``
-        if it raises an exception, then the exception is reraised.
+        Wrap a function or code block in try/except and automatically call
+        ``.captureException`` if it raises an exception, then the exception
+        is reraised.
 
         By default, it will capture ``Exception``
 
@@ -700,28 +705,41 @@ class Client(object):
         >>> def foo():
         >>>     raise Exception()
 
+        >>> with client.capture_exceptions():
+        >>>    raise Exception()
+
         You can also specify exceptions to be caught specifically
 
         >>> @client.capture_exceptions((IOError, LookupError))
         >>> def bar():
         >>>     ...
 
+        >>> with client.capture_exceptions((IOError, LookupError)):
+        >>>    ...
+
         ``kwargs`` are passed through to ``.captureException``.
         """
-        def make_decorator(exceptions):
-            def decorator(func):
-                @wraps(func)
-                def wrapper(*funcargs, **funckwargs):
-                    try:
-                        return func(*funcargs, **funckwargs)
-                    except exceptions:
-                        self.captureException(**kwargs)
-                        raise
-                return wrapper
-            return decorator
+        function = None
+        exceptions = (Exception,)
         if isinstance(function_or_exceptions, FunctionType):
-            return make_decorator((Exception,))(function_or_exceptions)
-        return make_decorator(function_or_exceptions)
+            function = function_or_exceptions
+        elif function_or_exceptions is not None:
+            exceptions = function_or_exceptions
+
+        # In python3.2 contextmanager acts both as contextmanager and decorator
+        @contextlib.contextmanager
+        def make_decorator(exceptions):
+            try:
+                yield
+            except exceptions:
+                self.captureException(**kwargs)
+                raise
+
+        decorator = make_decorator(exceptions)
+
+        if function:
+            return decorator(function)
+        return decorator
 
     def captureQuery(self, query, params=(), engine=None, **kwargs):
         """

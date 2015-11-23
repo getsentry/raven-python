@@ -323,9 +323,9 @@ class ClientTest(TestCase):
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
         stacktrace = exc['stacktrace']
-        # this is a wrapped function so two frames are expected
-        self.assertEquals(len(stacktrace['frames']), 2)
-        frame = stacktrace['frames'][1]
+        # this is a wrapped class object with __call__ so three frames are expected
+        self.assertEquals(len(stacktrace['frames']), 3)
+        frame = stacktrace['frames'][-1]
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test2')
 
@@ -336,6 +336,41 @@ class ClientTest(TestCase):
 
         try:
             test3()
+        except Exception:
+            pass
+
+        self.assertEquals(len(self.client.events), 0)
+
+    def test_context_manager_functionality(self):
+        def test4():
+            raise self.DecoratorTestException()
+
+        try:
+            with self.client.capture_exceptions():
+                test4()
+        except self.DecoratorTestException:
+            pass
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'DecoratorTestException')
+        exc = event['exception']['values'][0]
+        self.assertEquals(exc['type'], 'DecoratorTestException')
+        self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
+        stacktrace = exc['stacktrace']
+        # three frames are expected: test4, `with` block and context manager internals
+        self.assertEquals(len(stacktrace['frames']), 3)
+        frame = stacktrace['frames'][-1]
+        self.assertEquals(frame['module'], __name__)
+        self.assertEquals(frame['function'], 'test4')
+
+    def test_content_manager_filtering(self):
+        def test5():
+            raise Exception()
+
+        try:
+            with self.client.capture_exceptions(self.DecoratorTestException):
+                test5()
         except Exception:
             pass
 

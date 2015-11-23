@@ -24,6 +24,10 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
+install_requires = [
+    'contextlib2',
+]
+
 setup_requires = [
     'pytest',
 ]
@@ -51,6 +55,10 @@ webpy_tests_requires = [
 if sys.version_info[0] == 3:
     unittest2_requires = []
     webpy_tests_requires = []
+
+    # If it's python3.2 or greater, don't use contextlib backport
+    if sys.version_info[1] >= 2:
+        install_requires.remove('contextlib2')
 
 tests_require = [
     'bottle',
@@ -110,6 +118,7 @@ setup(
     },
     license='BSD',
     tests_require=tests_require,
+    install_requires=install_requires,
     cmdclass={'test': PyTest},
     include_package_data=True,
     entry_points={
