@@ -32,7 +32,7 @@ def fetch_git_sha(path, head=None):
                 path, '.git', *head.rsplit(' ', 1)[-1].split('/')
             )
         else:
-            revision_file = os.path.join(path, '.git', head)
+            return head
     else:
         revision_file = os.path.join(path, '.git', 'refs', 'heads', head)
 
