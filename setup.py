@@ -28,10 +28,6 @@ install_requires = [
     'contextlib2',
 ]
 
-setup_requires = [
-    'pytest',
-]
-
 dev_requires = [
     'flake8>=2.0,<2.1',
 ]
