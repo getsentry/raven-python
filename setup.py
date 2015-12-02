@@ -28,10 +28,6 @@ install_requires = [
     'contextlib2',
 ]
 
-dev_requires = [
-    'flake8>=2.0,<2.1',
-]
-
 unittest2_requires = ['unittest2']
 flask_requires = [
     'Flask>=0.8',
@@ -62,12 +58,13 @@ tests_require = [
     'Django>=1.4',
     'django-celery>=2.5',
     'exam>=0.5.2',
+    'flake8>=2.0,<2.1',
     'logbook',
     'mock',
     'nose',
     'pep8',
     'pytz',
-    'pytest>=2.7.0,<2.8.0',
+    'pytest',
     'pytest-django>=2.7.0,<2.8.0',
     'pytest-timeout==0.4',
     'requests',
@@ -110,7 +107,6 @@ setup(
     extras_require={
         'flask': flask_requires,
         'tests': tests_require,
-        'dev': dev_requires,
     },
     license='BSD',
     tests_require=tests_require,

@@ -1,5 +1,5 @@
 bootstrap:
-	pip install -r test-requirements.txt
+	pip install -e . [tests]
 	make setup-git
 
 test: bootstrap lint
