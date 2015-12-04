@@ -98,6 +98,7 @@ following config can be used::
             'sentry': {
                 'level': 'ERROR',
                 'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler'
+                'tags': {'custom-tag': 'x'},
             },
             'console': {
                 'level': 'DEBUG',

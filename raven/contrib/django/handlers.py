@@ -13,8 +13,9 @@ from raven.handlers.logging import SentryHandler as BaseSentryHandler
 
 
 class SentryHandler(BaseSentryHandler):
-    def __init__(self, level=logging.NOTSET):
+    def __init__(self, level=logging.NOTSET, tags=None):
         logging.Handler.__init__(self, level=level)
+        self.tags = tags
 
     def _get_client(self):
         from raven.contrib.django.models import client
@@ -25,5 +26,7 @@ class SentryHandler(BaseSentryHandler):
 
     def _emit(self, record):
         request = getattr(record, 'request', None)
+        if self.tags is not None and not hasattr(record, 'tags'):
+            record.tags = self.tags
 
         return super(SentryHandler, self)._emit(record, request=request)
