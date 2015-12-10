@@ -45,6 +45,8 @@ class SentryHandler(logging.Handler, object):
         else:
             self.client = client(*args, **kwargs)
 
+        self.tags = kwargs.pop('tags', None)
+
         logging.Handler.__init__(self, level=kwargs.get('level', logging.NOTSET))
 
     def can_record(self, record):
@@ -168,6 +170,8 @@ class SentryHandler(logging.Handler, object):
 
         if hasattr(record, 'tags'):
             kwargs['tags'] = record.tags
+        elif self.tags:
+            kwargs['tags'] = self.tags
 
         kwargs.update(handler_kwargs)
 
