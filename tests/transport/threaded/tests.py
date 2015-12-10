@@ -64,6 +64,29 @@ class ThreadedTransportTest(TestCase):
 
         self.assertEqual(len(transport.events), 1)
 
+    def test_fork_spawns_anew(self):
+        url = urlparse(self.url)
+        transport = DummyThreadedScheme(url)
+        transport.send_delay = 0.5
+
+        data = self.client.build_msg('raven.events.Message', message='foo')
+
+        pid = os.fork()
+        if pid == 0:
+            time.sleep(0.1)
+
+            transport.async_send(data, None, None, None)
+
+            # this should wait for the message to get sent
+            transport.get_worker().main_thread_terminated()
+
+            self.assertEqual(len(transport.events), 1)
+            # Use os._exit here so that py.test gets not confused about
+            # what the hell we're doing here.
+            os._exit(0)
+        else:
+            os.waitpid(pid, 0)
+
     def test_fork_with_active_worker(self):
         # Test threaded transport when forking with an active worker.
         # Forking a process doesn't clone the worker thread - make sure
