@@ -30,18 +30,26 @@ class AsyncWorker(object):
         self._queue = Queue(-1)
         self._lock = threading.Lock()
         self._thread = None
+        self._thread_for_pid = None
         self.options = {
             'shutdown_timeout': shutdown_timeout,
         }
         self.start()
 
     def is_alive(self):
-        return self._thread.is_alive()
+        if self._thread_for_pid != os.getpid():
+            return False
+        return self._thread and self._thread.is_alive()
+
+    def _ensure_thread(self):
+        if self.is_alive():
+            return
+        self.start()
 
     def main_thread_terminated(self):
         self._lock.acquire()
         try:
-            if not self._thread:
+            if not self.is_alive():
                 # thread not started or already stopped - nothing to do
                 return
 
@@ -107,10 +115,11 @@ class AsyncWorker(object):
         """
         self._lock.acquire()
         try:
-            if not self._thread:
+            if not self.is_alive():
                 self._thread = threading.Thread(target=self._target)
                 self._thread.setDaemon(True)
                 self._thread.start()
+                self._thread_for_pid = os.getpid()
         finally:
             self._lock.release()
             atexit.register(self.main_thread_terminated)
@@ -125,10 +134,12 @@ class AsyncWorker(object):
                 self._queue.put_nowait(self._terminator)
                 self._thread.join(timeout=timeout)
                 self._thread = None
+                self._thread_for_pid = None
         finally:
             self._lock.release()
 
     def queue(self, callback, *args, **kwargs):
+        self._ensure_thread()
         self._queue.put_nowait((callback, args, kwargs))
 
     def _target(self):
