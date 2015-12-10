@@ -165,6 +165,7 @@ class Client(object):
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
+        self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
 
         self.module_cache = ModuleProxyCache()
@@ -367,6 +368,9 @@ class Client(object):
 
         if self.release is not None:
             data['release'] = self.release
+
+        if self.environment is not None:
+            data['environment'] = self.environment
 
         data['tags'] = merge_dicts(self.tags, data['tags'], tags)
         data['extra'] = merge_dicts(self.extra, data['extra'], extra)
