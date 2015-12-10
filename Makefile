@@ -1,5 +1,5 @@
 bootstrap:
-	pip install -e "file://`pwd`#egg=raven[tests]"
+	#pip install -e "file://`pwd`#egg=raven[tests]"
 	make setup-git
 
 test: bootstrap lint
