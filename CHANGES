@@ -1,3 +1,10 @@
+Version 5.9.0
+-------------
+
+* The threaded worker will now correctly handle forking.
+* The 'environment' parameter is now supported (requires a Sentry 8.0 server ).
+* 'tags' can now be specified as part of a LoggingHandler's constructor.
+
 Version 5.8.0
 -------------
 
