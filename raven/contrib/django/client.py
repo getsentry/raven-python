@@ -52,8 +52,6 @@ class DjangoClient(Client):
         return user_info
 
     def get_data_from_request(self, request):
-        result = {}
-
         try:
             from django.contrib.auth.models import AbstractBaseUser as BaseUser
         except ImportError:
@@ -61,10 +59,12 @@ class DjangoClient(Client):
         except RuntimeError:
             # If the contenttype / user applications are not installed trying to
             # import the user models will fail for django >= 1.9.
-            pass
-        else:
-            if hasattr(request, 'user') and isinstance(request.user, BaseUser):
-                result['user'] = self.get_user_info(request.user)
+            BaseUser = None
+
+        result = {}
+
+        if BaseUser and hasattr(request, 'user') and isinstance(request.user, BaseUser):
+            result['user'] = self.get_user_info(request.user)
 
         try:
             uri = request.build_absolute_uri()
