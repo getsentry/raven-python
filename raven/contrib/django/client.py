@@ -128,7 +128,11 @@ class DjangoClient(Client):
                 data['tags'].setdefault('site', site_name)
             except Exception:
                 # Database error? Fallback to the id
-                data['tags'].setdefault('site', settings.SITE_ID)
+                try:
+                    data['tags'].setdefault('site', settings.SITE_ID)
+                except AttributeError:
+                    # SITE_ID wasn't set, so just ignore
+                    pass
 
         return data
 
