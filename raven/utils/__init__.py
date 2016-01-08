@@ -162,6 +162,5 @@ class memoize(object):
             return self
         d, n = vars(obj), self.__name__
         if n not in d:
-            value = self.func(obj)
-            d[n] = value
-        return value
+            d[n] = self.func(obj)
+        return d[n]
