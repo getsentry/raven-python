@@ -24,9 +24,9 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
-
+contextlib2_that_works_on_py26 = "contextlib2<=0.4.0"
 if sys.version_info[:2] <= (2, 6):
-    contextlib2 = "contextlib2<=0.4.0"
+    contextlib2 = contextlib2_that_works_on_py26
 else:
     contextlib2 = "contextlib2"
 install_requires = [
@@ -112,6 +112,7 @@ setup(
     extras_require={
         'flask': flask_requires,
         'tests': tests_require,
+        ":python_version=='2.6'": [contextlib2_that_works_on_py26],
     },
     license='BSD',
     tests_require=tests_require,
