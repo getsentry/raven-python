@@ -11,7 +11,7 @@ from functools import partial
 
 from tornado import ioloop
 from tornado.httpclient import AsyncHTTPClient, HTTPError
-from tornado import web
+from tornado.web import HTTPError as WebHTTPError
 
 from raven.base import Client
 
@@ -228,8 +228,8 @@ class SentryMixin(object):
         log_exception() is added in Tornado v3.1.
         """
         rv = super(SentryMixin, self).log_exception(typ, value, tb)
-        # Do not capture web.HTTPErrors outside the 500 range.
-        if isinstance(value, web.HTTPError) and (value.status_code < 500 or value.status_code > 599):
+        # Do not capture tornado.web.HTTPErrors outside the 500 range.
+        if isinstance(value, WebHTTPError) and (value.status_code < 500 or value.status_code > 599):
             return rv
         self.captureException(exc_info=(typ, value, tb))
         return rv
