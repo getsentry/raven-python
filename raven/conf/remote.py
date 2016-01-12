@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import warnings
 
+from raven._compat import PY2, text_type
 from raven.exceptions import InvalidDsn
 from raven.transport.threaded import ThreadedHTTPTransport
-from raven.utils import six
 from raven.utils.encoding import to_string
 from raven.utils.urlparse import parse_qsl, urlparse
 
@@ -32,7 +32,7 @@ class RemoteConfig(object):
         self._transport_cls = transport or DEFAULT_TRANSPORT
 
     def __unicode__(self):
-        return six.text_type(self.base_url)
+        return text_type(self.base_url)
 
     def is_active(self):
         return all([self.base_url, self.project, self.public_key, self.secret_key])
@@ -58,7 +58,7 @@ class RemoteConfig(object):
     def from_string(cls, value, transport=None, transport_registry=None):
         # in Python 2.x sending the DSN as a unicode value will eventually
         # cause issues in httplib
-        if not six.PY3:
+        if PY2:
             value = to_string(value)
 
         url = urlparse(value)

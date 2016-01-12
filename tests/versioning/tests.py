@@ -3,11 +3,11 @@ from __future__ import absolute_import
 import os.path
 import pytest
 import subprocess
+import six
 
 from django.conf import settings
 
 from raven.versioning import fetch_git_sha, fetch_package_version
-from raven.utils import six
 
 
 def has_git_requirements():

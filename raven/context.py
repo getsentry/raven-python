@@ -10,7 +10,7 @@ from __future__ import absolute_import
 from collections import Mapping, Iterable
 from threading import local
 
-from raven.utils import six
+from raven._compat import iteritems
 
 
 class Context(local, Mapping, Iterable):
@@ -42,10 +42,10 @@ class Context(local, Mapping, Iterable):
 
     def merge(self, data):
         d = self.data
-        for key, value in six.iteritems(data):
+        for key, value in iteritems(data):
             if key in ('tags', 'extra'):
                 d.setdefault(key, {})
-                for t_key, t_value in six.iteritems(value):
+                for t_key, t_value in iteritems(value):
                     d[key][t_key] = t_value
             else:
                 d[key] = value

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from raven.utils import six
+from raven._compat import text_type
 
 
 class APIError(Exception):
@@ -9,7 +9,7 @@ class APIError(Exception):
         self.message = message
 
     def __unicode__(self):
-        return six.text_type("%s: %s" % (self.message, self.code))
+        return text_type("%s: %s" % (self.message, self.code))
 
 
 class RateLimited(APIError):

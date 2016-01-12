@@ -20,13 +20,17 @@ def main():
     from flake8.main import DEFAULT_CONFIG
     from flake8.engine import get_style_guide
     from flake8.hooks import run
-    from raven.utils import six
 
     gitcmd = "git diff-index --cached --name-only HEAD"
 
     _, files_modified, _ = run(gitcmd)
 
-    files_modified = [six.text_type(x) for x in files_modified]
+    try:
+        text_type = unicode
+    except NameError:
+        text_type = str
+
+    files_modified = [text_type(x) for x in files_modified]
 
     # remove non-py files and files which no longer exist
     files_modified = filter(

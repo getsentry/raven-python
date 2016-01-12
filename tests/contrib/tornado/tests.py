@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import six
 from mock import patch
 from tornado import web, gen, testing
 from tornado.concurrent import Future
 from tornado.httpclient import HTTPError
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
-from raven.utils import six
 
 
 class AnErrorProneHandler(SentryMixin, web.RequestHandler):

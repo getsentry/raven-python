@@ -7,10 +7,10 @@ raven.transport.http
 """
 from __future__ import absolute_import
 
+from raven._compat import string_types
 from raven.conf import defaults
 from raven.exceptions import APIError, RateLimited
 from raven.transport.base import Transport
-from raven.utils import six
 from raven.utils.http import urlopen
 from raven.utils.compat import urllib2
 
@@ -23,9 +23,9 @@ class HTTPTransport(Transport):
         self._parsed_url = parsed_url
         self._url = parsed_url.geturl().rsplit('+', 1)[-1]
 
-        if isinstance(timeout, six.string_types):
+        if isinstance(timeout, string_types):
             timeout = int(timeout)
-        if isinstance(verify_ssl, six.string_types):
+        if isinstance(verify_ssl, string_types):
             verify_ssl = bool(int(verify_ssl))
 
         self.timeout = timeout

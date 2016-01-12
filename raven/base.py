@@ -30,7 +30,8 @@ from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
 from raven.context import Context
 from raven.exceptions import APIError, RateLimited
-from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
+from raven.utils import json, get_versions, get_auth_header, merge_dicts
+from raven._compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
@@ -145,7 +146,7 @@ class Client(object):
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
-        self.name = six.text_type(o.get('name') or o.get('machine') or defaults.NAME)
+        self.name = text_type(o.get('name') or o.get('machine') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
         self.capture_locals = bool(
@@ -252,7 +253,8 @@ class Client(object):
         >>> result = client.capture(**kwargs)
         >>> ident = client.get_ident(result)
         """
-        warnings.warn('Client.get_ident is deprecated. The event ID is now returned as the result of capture.',
+        warnings.warn('Client.get_ident is deprecated. The event ID is now '
+                      'returned as the result of capture.',
                       DeprecationWarning)
         return result
 
@@ -306,7 +308,7 @@ class Client(object):
         if data.get('culprit'):
             culprit = data['culprit']
 
-        for k, v in six.iteritems(result):
+        for k, v in iteritems(result):
             if k not in data:
                 data[k] = v
 
@@ -394,11 +396,11 @@ class Client(object):
             data['message'] = kwargs.get('message', handler.to_string(data))
 
         # tags should only be key=>u'value'
-        for key, value in six.iteritems(data['tags']):
+        for key, value in iteritems(data['tags']):
             data['tags'][key] = to_unicode(value)
 
         # extra data can be any arbitrary value
-        for k, v in six.iteritems(data['extra']):
+        for k, v in iteritems(data['extra']):
             data['extra'][k] = self.transform(v)
 
         # It's important date is added **after** we serialize
@@ -556,7 +558,8 @@ class Client(object):
             if isinstance(exc, RateLimited):
                 retry_after = exc.retry_after
             self.error_logger.error(
-                'Sentry responded with an API error: %s(%s)', type(exc).__name__, exc.message)
+                'Sentry responded with an API error: %s(%s)',
+                type(exc).__name__, exc.message)
         else:
             self.error_logger.error(
                 'Sentry responded with an error: %s (url: %s)\n%s',
@@ -577,10 +580,10 @@ class Client(object):
         if 'exception' in data and 'stacktrace' in data['exception']['values'][0]:
             # try to reconstruct a reasonable version of the exception
             for frame in data['exception']['values'][0]['stacktrace']['frames']:
-                output.append('  File "%(filename)s", line %(lineno)s, in %(function)s' % {
-                    'filename': frame['filename'],
+                output.append('  File "%(fn)s", line %(lineno)s, in %(func)s' % {
+                    'fn': frame['filename'],
                     'lineno': frame['lineno'],
-                    'function': frame['function'],
+                    'func': frame['function'],
                 })
 
         self.uncaught_logger.error(output)

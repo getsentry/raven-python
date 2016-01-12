@@ -13,16 +13,16 @@ import logbook
 import sys
 import traceback
 
+from raven._compat import string_types
 from raven.base import Client
 from raven.utils.encoding import to_string
-from raven.utils import six
 
 
 class SentryHandler(logbook.Handler):
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, six.string_types):
+            if isinstance(arg, string_types):
                 self.client = kwargs.pop('client_cls', Client)(dsn=arg, **kwargs)
             elif isinstance(arg, Client):
                 self.client = arg

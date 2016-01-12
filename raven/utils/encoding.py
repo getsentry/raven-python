@@ -8,7 +8,9 @@ raven.utils.encoding
 from __future__ import absolute_import, unicode_literals
 
 import warnings
-from raven.utils import six
+
+from raven._compat import integer_types, text_type, binary_type, \
+    string_types, PY2
 
 
 def is_protected_type(obj):
@@ -19,7 +21,7 @@ def is_protected_type(obj):
     """
     import Decimal
     import datetime
-    return isinstance(obj, six.integer_types + (type(None), float, Decimal,
+    return isinstance(obj, integer_types + (type(None), float, Decimal,
         datetime.datetime, datetime.date, datetime.time))
 
 
@@ -31,25 +33,25 @@ def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
     If strings_only is True, don't convert (some) non-string-like objects.
     """
     # Handle the common case first, saves 30-40% when s is an instance of
-    # six.text_type. This function gets called often in that setting.
-    if isinstance(s, six.text_type):
+    # text_type. This function gets called often in that setting.
+    if isinstance(s, text_type):
         return s
     if strings_only and is_protected_type(s):
         return s
     try:
-        if not isinstance(s, six.string_types):
+        if not isinstance(s, string_types):
             if hasattr(s, '__unicode__'):
                 s = s.__unicode__()
             else:
-                if six.PY3:
+                if not PY2:
                     if isinstance(s, bytes):
-                        s = six.text_type(s, encoding, errors)
+                        s = text_type(s, encoding, errors)
                     else:
-                        s = six.text_type(s)
+                        s = text_type(s)
                 else:
-                    s = six.text_type(bytes(s), encoding, errors)
+                    s = text_type(bytes(s), encoding, errors)
         else:
-            # Note: We use .decode() here, instead of six.text_type(s, encoding,
+            # Note: We use .decode() here, instead of text_type(s, encoding,
             # errors), so that if s is a SafeBytes, it ends up being a
             # SafeText at the end.
             s = s.decode(encoding, errors)
@@ -69,19 +71,20 @@ def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
 
 def transform(value):
     from raven.utils.serializer import transform
-    warnings.warn('You should switch to raven.utils.serializer.transform', DeprecationWarning)
+    warnings.warn('You should switch to raven.utils.serializer.'
+                  'transform', DeprecationWarning)
 
     return transform(value)
 
 
 def to_unicode(value):
     try:
-        value = six.text_type(force_text(value))
+        value = text_type(force_text(value))
     except (UnicodeEncodeError, UnicodeDecodeError):
         value = '(Error decoding value)'
     except Exception:  # in some cases we get a different exception
         try:
-            value = six.binary_type(repr(type(value)))
+            value = binary_type(repr(type(value)))
         except Exception:
             value = '(Error decoding value)'
     return value
@@ -89,6 +92,6 @@ def to_unicode(value):
 
 def to_string(value):
     try:
-        return six.binary_type(value.decode('utf-8').encode('utf-8'))
+        return binary_type(value.decode('utf-8').encode('utf-8'))
     except:
         return to_unicode(value).encode('utf-8')

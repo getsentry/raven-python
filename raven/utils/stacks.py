@@ -14,13 +14,14 @@ import sys
 import warnings
 
 from raven.utils.serializer import transform
-from raven.utils import six
+from raven._compat import iteritems
 
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
 
 
-def get_lines_from_file(filename, lineno, context_lines, loader=None, module_name=None):
+def get_lines_from_file(filename, lineno, context_lines,
+                        loader=None, module_name=None):
     """
     Returns context_lines before and after lineno from file.
     Returns (pre_context_lineno, pre_context, context_line, post_context).
@@ -63,7 +64,8 @@ def get_lines_from_file(filename, lineno, context_lines, loader=None, module_nam
     try:
         pre_context = [line.strip('\r\n') for line in source[lower_bound:lineno]]
         context_line = source[lineno].strip('\r\n')
-        post_context = [line.strip('\r\n') for line in source[(lineno + 1):upper_bound]]
+        post_context = [line.strip('\r\n') for line in
+                        source[(lineno + 1):upper_bound]]
     except IndexError:
         # the file may have changed since it was loaded into memory
         return None, None, None
@@ -178,7 +180,7 @@ def get_frame_locals(frame, transformer=transform, max_var_size=4096):
 
     f_vars = {}
     f_size = 0
-    for k, v in six.iteritems(f_locals):
+    for k, v in iteritems(f_locals):
         v = transformer(v)
         v_size = len(repr(v))
         if v_size + f_size < 4096:
@@ -253,7 +255,8 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
             lineno -= 1
 
         if lineno is not None and abs_path:
-            pre_context, context_line, post_context = get_lines_from_file(abs_path, lineno, 5, loader, module_name)
+            pre_context, context_line, post_context = \
+                get_lines_from_file(abs_path, lineno, 5, loader, module_name)
         else:
             pre_context, context_line, post_context = None, None, None
 
@@ -261,7 +264,8 @@ def get_stack_info(frames, transformer=transform, capture_locals=True,
         # This changes /foo/site-packages/baz/bar.py into baz/bar.py
         try:
             base_filename = sys.modules[module_name.split('.', 1)[0]].__file__
-            filename = abs_path.split(base_filename.rsplit('/', 2)[0], 1)[-1].lstrip("/")
+            filename = abs_path.split(
+                base_filename.rsplit('/', 2)[0], 1)[-1].lstrip("/")
         except:
             filename = abs_path
 

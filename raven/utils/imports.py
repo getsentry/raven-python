@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
-from . import six
+from raven._compat import PY2
 
 
 def import_string(key):
     # HACK(dcramer): Ensure a unicode key is still importable
-    if not six.PY3:
+    if PY2:
         key = str(key)
 
     if '.' not in key:

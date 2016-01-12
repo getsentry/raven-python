@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import logging
 from contextlib import closing
-from raven.utils import six
+from raven._compat import text_type
 
 __all__ = ('register', 'transform')
 
@@ -69,16 +69,18 @@ class Serializer(object):
                         return serializer.serialize(value, **kwargs)
                     except Exception as e:
                         logger.exception(e)
-                        return six.text_type(type(value))
+                        return text_type(type(value))
 
             # if all else fails, lets use the repr of the object
             try:
                 return repr(value)
             except Exception as e:
                 logger.exception(e)
-                # It's common case that a model's __unicode__ definition may try to query the database
-                # which if it was not cleaned up correctly, would hit a transaction aborted exception
-                return six.text_type(type(value))
+                # It's common case that a model's __unicode__ definition
+                # may try to query the database which if it was not
+                # cleaned up correctly, would hit a transaction aborted
+                # exception
+                return text_type(type(value))
         finally:
             self.context.remove(objid)
 

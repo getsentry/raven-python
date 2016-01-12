@@ -53,6 +53,7 @@ if sys.version_info[0] == 3:
         install_requires.remove('contextlib2')
 
 tests_require = [
+    'six',
     'bottle',
     'celery>=2.5',
     'Django>=1.4',

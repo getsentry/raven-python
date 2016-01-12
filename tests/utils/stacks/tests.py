@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import six
+
 from mock import Mock
 from raven.utils.testutils import TestCase
-from raven.utils import six
 
 from raven.utils.stacks import get_culprit, get_stack_info, get_lines_from_file
 

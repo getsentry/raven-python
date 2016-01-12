@@ -9,8 +9,10 @@ import logging
 import mock
 import pytest
 import re
+import six
 import sys  # NOQA
 from exam import fixture
+from six import StringIO
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -33,8 +35,6 @@ from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
 from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
-from raven.utils import six
-from raven.utils.six import StringIO
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
 from .models import TestModel

@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
+import six
+
 import raven
 
-from raven.utils import six
 from raven.utils.imports import import_string
 
 

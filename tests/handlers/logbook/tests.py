@@ -1,9 +1,9 @@
 from __future__ import with_statement
 from __future__ import unicode_literals
 
+import six
 import logbook
 from raven.utils.testutils import TestCase
-from raven.utils import six
 from raven.base import Client
 from raven.handlers.logbook import SentryHandler
 

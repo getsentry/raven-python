@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 import logging
 import sys
 import mock
+import six
 
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
-from raven.utils import six
 from raven.utils.stacks import iter_stack_frames
 from raven.utils.testutils import TestCase
 
