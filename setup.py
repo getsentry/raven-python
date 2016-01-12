@@ -24,8 +24,13 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
+
+if sys.version_info[:2] <= (2, 6):
+    contextlib2 = "contextlib2<=0.4.0"
+else:
+    contextlib2 = "contextlib2"
 install_requires = [
-    'contextlib2',
+    contextlib2,
 ]
 
 unittest2_requires = ['unittest2']
