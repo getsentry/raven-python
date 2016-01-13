@@ -48,7 +48,11 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
     if verify_ssl:
         handlers = [ValidHTTPSHandler]
     else:
-        handlers = []
+        try:
+            handlers = [urllib2.HTTPSHandler(
+                context=ssl._create_unverified_context())]
+        except AttributeError:
+            handlers = []
 
     opener = urllib2.build_opener(*handlers)
 
