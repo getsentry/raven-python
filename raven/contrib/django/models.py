@@ -19,7 +19,7 @@ import warnings
 from django.conf import settings
 from hashlib import md5
 
-from raven._compat import PY2, binary_type, text_type
+from raven._compat import PY2, binary_type, text_type, string_types
 from raven.utils.imports import import_string
 from raven.contrib.django.management import patch_cli_runner
 
