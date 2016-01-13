@@ -151,14 +151,23 @@ class DjangoClient(Client):
 
         if kwargs.get('exc_info'):
             exc_value = kwargs['exc_info'][1]
-            # As of r16833 (Django) all exceptions may contain a ``django_template_source`` attribute (rather than the
-            # legacy ``TemplateSyntaxError.source`` check) which describes template information.
-            if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and
-               isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], Origin))):
-                source = getattr(exc_value, 'django_template_source', getattr(exc_value, 'source', None))
+            # As of r16833 (Django) all exceptions may contain a
+            # ``django_template_source`` attribute (rather than the legacy
+            # ``TemplateSyntaxError.source`` check) which describes
+            # template information.  As of Django 1.9 or so the new
+            # template debug thing showed up.
+            if hasattr(exc_value, 'django_template_source') or \
+               ((isinstance(exc_value, TemplateSyntaxError) and
+                isinstance(getattr(exc_value, 'source', None),
+                           (tuple, list)) and
+                isinstance(exc_value.source[0], Origin))) or \
+               hasattr(exc_value, 'template_debug'):
+                source = getattr(exc_value, 'django_template_source',
+                                 getattr(exc_value, 'source', None))
+                debug = getattr(exc_value, 'template_debug', None)
                 if source is None:
                     self.logger.info('Unable to get template source from exception')
-                data.update(get_data_from_template(source))
+                data.update(get_data_from_template(source, debug))
 
         result = super(DjangoClient, self).capture(event_type, **kwargs)
 

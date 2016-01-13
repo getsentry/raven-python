@@ -319,9 +319,6 @@ class DjangoClientTest(TestCase):
         assert event['culprit'].startswith('django.shortcuts in ')
         self.raven.include_paths = include_paths
 
-    # This is broken as of recently.  It only works on older Django
-    # versions?
-    @pytest.mark.xfail
     def test_template_name_as_view(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
