@@ -1,5 +1,5 @@
-Version 5.9.3
--------------
+Version 5.10.0
+--------------
 
 * Restore template debug support for Django 1.9 and newer.
 * Correctly handle SSL verification disabling for newer Python versions.
