@@ -66,7 +66,7 @@ tests_require = [
     'pep8',
     'pytz',
     'pytest',
-    'pytest-django>=2.7.0,<2.8.0',
+    'pytest-django==2.9.1',
     'pytest-timeout==0.4',
     'requests',
     'tornado',
