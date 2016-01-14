@@ -12,6 +12,7 @@ import zlib
 import logging
 import os
 import sys
+import threading
 import time
 import uuid
 import warnings
@@ -183,6 +184,7 @@ class Client(object):
 
         if install_sys_hook:
             self.install_sys_hook()
+            self.install_thread_hook()
 
     def set_dsn(self, dsn=None, transport=None):
         if dsn is None and os.environ.get('SENTRY_DSN'):
@@ -216,6 +218,26 @@ class Client(object):
             self.captureException(exc_info=exc_info)
             __excepthook__(*exc_info)
         sys.excepthook = handle_exception
+
+    def install_thread_hook(self):
+        """
+        Workaround for sys.excepthook thread bug, http://bugs.python.org/issue1230540
+        """
+        init_old = threading.Thread.__init__
+        raven_self = self
+        def init(self, *args, **kwargs):
+            init_old(self, *args, **kwargs)
+            run_old = self.run
+            def run_with_except_hook(*args, **kw):
+                try:
+                    run_old(*args, **kw)
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    raven_self.captureException(exc_info=sys.exc_info())
+                    raise
+            self.run = run_with_except_hook
+        threading.Thread.__init__ = init
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
