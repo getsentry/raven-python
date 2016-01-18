@@ -47,6 +47,7 @@ settings:
 
 .. code-block:: python
 
+    import os
     import raven
 
     client = raven.Client(
