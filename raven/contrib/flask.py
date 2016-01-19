@@ -103,10 +103,11 @@ class Sentry(object):
     # TODO(dcramer): the client isn't using local context and therefore
     # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False, level=logging.NOTSET, wrap_wsgi=None,
-                 register_signal=True):
+                 logging=False, logging_exclusions=None, level=logging.NOTSET,
+                 wrap_wsgi=None, register_signal=True):
         self.dsn = dsn
         self.logging = logging
+        self.logging_exclusions = logging_exclusions
         self.client_cls = client_cls
         self.client = client
         self.level = level
@@ -238,7 +239,8 @@ class Sentry(object):
         self.client.context.clear()
         return response
 
-    def init_app(self, app, dsn=None, logging=None, level=None, wrap_wsgi=None,
+    def init_app(self, app, dsn=None, logging=None, level=None,
+                 logging_exclusions=None, wrap_wsgi=None,
                  register_signal=None):
         if dsn is not None:
             self.dsn = dsn
@@ -262,11 +264,18 @@ class Sentry(object):
         if logging is not None:
             self.logging = logging
 
+        if logging_exclusions is not None:
+            self.logging_exclusions = logging_exclusions
+
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)
 
         if self.logging:
-            setup_logging(SentryHandler(self.client, level=self.level))
+            kwargs = {}
+            if self.logging_exclusions is not None:
+                kwargs['exclude'] = self.logging_exclusions
+
+            setup_logging(SentryHandler(self.client, level=self.level), **kwargs)
 
         if self.wrap_wsgi:
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)
