@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import re
 
-from raven._compat import string_types, text_type
+from raven._compat import string_types, text_type, PY2
 from raven.utils import varmap
 
 
@@ -93,6 +93,10 @@ class SanitizePasswordsProcessor(Processor):
 
         if not key:  # key can be a NoneType
             return value
+
+        # key can contain non-ascii symbols
+        if PY2 and isinstance(key, str):
+            key = key.decode('utf8')
 
         key = text_type(key).lower()
         for field in self.FIELDS:
