@@ -36,7 +36,7 @@ class DjangoClient(Client):
     def get_user_info(self, user):
         if hasattr(user, 'is_authenticated') and \
            not user.is_authenticated():
-            return {}
+            return None
 
         user_info = {
             'id': user.pk,
@@ -57,7 +57,9 @@ class DjangoClient(Client):
 
         user = getattr(request, 'user', None)
         if user is not None:
-            result['user'] = self.get_user_info(user)
+            user_info = self.get_user_info(user)
+            if user_info:
+                result['user'] = user_info
 
         try:
             uri = request.build_absolute_uri()
