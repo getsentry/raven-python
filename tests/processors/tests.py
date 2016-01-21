@@ -244,6 +244,11 @@ class SanitizePasswordsProcessorTest(TestCase):
         result = proc.sanitize('foo', '424242424242424')
         self.assertEquals(result, proc.MASK)
 
+    def test_sanitize_non_ascii(self):
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('__repr__: жили-были', '42')
+        self.assertEquals(result, '42')
+
 
 class RemovePostDataProcessorTest(TestCase):
     def test_does_remove_data(self):
