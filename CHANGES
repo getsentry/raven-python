@@ -5,6 +5,7 @@ Version 5.10.1
   on data sanitization if those bytes were outside of the ASCII range.
 * Django client no longer requires the user object to be a subclass
   of the base model.
+* Corrected an issue with the Django log handler which would cause a recursive import.
 
 Version 5.10.0
 --------------
