@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import re
 
-from raven._compat import string_types, text_type
+from raven._compat import string_types
 from raven.utils import varmap
 
 
@@ -94,7 +94,12 @@ class SanitizePasswordsProcessor(Processor):
         if not key:  # key can be a NoneType
             return value
 
-        key = text_type(key).lower()
+        # Just in case we have bytes here, we want to make them into text
+        # properly without failing so we can perform our check.
+        if isinstance(key, bytes):
+            key = key.decode('utf-8', 'replace')
+
+        key = key.lower()
         for field in self.FIELDS:
             if field in key:
                 # store mask as a fixed length for security

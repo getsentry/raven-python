@@ -1,3 +1,9 @@
+Version 5.10.1
+--------------
+
+* Fixed a problem where bytes as keys in dictionaries caused problems
+  on data sanitization if those bytes were outside of the ASCII range.
+
 Version 5.10.0
 --------------
 
