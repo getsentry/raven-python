@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import re
 
-from raven._compat import string_types
+from raven._compat import string_types, text_type
 from raven.utils import varmap
 
 
@@ -98,6 +98,8 @@ class SanitizePasswordsProcessor(Processor):
         # properly without failing so we can perform our check.
         if isinstance(key, bytes):
             key = key.decode('utf-8', 'replace')
+        else:
+            key = text_type(key)
 
         key = key.lower()
         for field in self.FIELDS:
