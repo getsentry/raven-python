@@ -1,77 +1,75 @@
 language: python
-
 sudo: false
-
 addons:
   apt:
     packages:
     - libevent-dev
-
 cache:
   directories:
-    - $HOME/.cache/pip
-
+  - "$HOME/.cache/pip"
+deploy:
+  provider: pypi
+  user: getsentry
+  password:
+    secure: NMwOI1H9arp2vbgaidx9OY6y8990hiu0WsHtowEvEdGKXNzAQcy0sW3SoKcB6FN0bk11xhj49+5C++KAwMYwE/SL8Y5OoZ1/iYVI4/XlWNukr+1/pfPKVMgw3v5W+pL5Ba9TBdFfIoFPNYUDPLItSSjg94Bm95034gBkYWC5Hl0=
+  on:
+    tags:: true
 python:
-  - "2.6"
-  - "2.7"
-  - "3.2"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "pypy"
-
+- '2.6'
+- '2.7'
+- '3.2'
+- '3.3'
+- '3.4'
+- '3.5'
+- pypy
 env:
   matrix:
-    - DJANGO=Django==1.4.20
-    - DJANGO=Django==1.5.12
-    - DJANGO=Django==1.6.11
-    - DJANGO=Django==1.7.11
-    - DJANGO=Django==1.8.7
-    - DJANGO=Django==1.9
-    - 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
-
+  - DJANGO=Django==1.4.20
+  - DJANGO=Django==1.5.12
+  - DJANGO=Django==1.6.11
+  - DJANGO=Django==1.7.11
+  - DJANGO=Django==1.8.7
+  - DJANGO=Django==1.9
+  - DJANGO="-e git+git://github.com/django/django.git#egg=Django"
 install:
-  - time ci/setup
-  - pip install codecov "coverage<4"
-
+- time ci/setup
+- pip install codecov "coverage<4"
 script:
-  - "if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi"
-  - coverage run --source=raven -m py.test tests --timeout 10
-
+- if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi
+- coverage run --source=raven -m py.test tests --timeout 10
 after_success:
-  - codecov -e DJANGO
-
+- codecov -e DJANGO
 matrix:
   allow_failures:
-    - env: 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
+  - env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
   exclude:
-    - python: "3.2"
-      env: DJANGO=Django==1.4.20
-    - python: "3.2"
-      env: DJANGO=Django==1.9
-    - python: "3.3"
-      env: DJANGO=Django==1.4.20
-    - python: "3.3"
-      env: DJANGO=Django==1.9
-    - python: "3.4"
-      env: DJANGO=Django==1.4.20
-    - python: "3.5"
-      env: DJANGO=Django==1.4.20
-    - python: "3.5"
-      env: DJANGO=Django==1.5.12
-    - python: "3.5"
-      env: DJANGO=Django==1.6.11
-    - python: "3.5"
-      env: DJANGO=Django==1.7.11
-    - python: "3.5"
-      env: DJANGO=Django==1.8.7
-    - python: "2.6"
-      env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
-    - python: "3.2"
-      env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
-    - python: "2.6"
-      env: DJANGO=Django==1.9
-    - python: "2.6"
-      env: DJANGO=Django==1.8.7
-    - python: "2.6"
-      env: DJANGO=Django==1.7.11
+  - python: '3.2'
+    env: DJANGO=Django==1.4.20
+  - python: '3.2'
+    env: DJANGO=Django==1.9
+  - python: '3.3'
+    env: DJANGO=Django==1.4.20
+  - python: '3.3'
+    env: DJANGO=Django==1.9
+  - python: '3.4'
+    env: DJANGO=Django==1.4.20
+  - python: '3.5'
+    env: DJANGO=Django==1.4.20
+  - python: '3.5'
+    env: DJANGO=Django==1.5.12
+  - python: '3.5'
+    env: DJANGO=Django==1.6.11
+  - python: '3.5'
+    env: DJANGO=Django==1.7.11
+  - python: '3.5'
+    env: DJANGO=Django==1.8.7
+  - python: '2.6'
+    env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
+  - python: '3.2'
+    env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
+  - python: '2.6'
+    env: DJANGO=Django==1.9
+  - python: '2.6'
+    env: DJANGO=Django==1.8.7
+  - python: '2.6'
+    env: DJANGO=Django==1.7.11
