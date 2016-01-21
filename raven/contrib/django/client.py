@@ -34,7 +34,8 @@ class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
 
     def get_user_info(self, user):
-        if not user.is_authenticated():
+        if hasattr(user, 'is_authenticated') and \
+           not user.is_authenticated():
             return {}
 
         user_info = {
@@ -52,19 +53,11 @@ class DjangoClient(Client):
         return user_info
 
     def get_data_from_request(self, request):
-        try:
-            from django.contrib.auth.models import AbstractBaseUser as BaseUser
-        except ImportError:
-            from django.contrib.auth.models import User as BaseUser  # NOQA
-        except RuntimeError:
-            # If the contenttype / user applications are not installed trying to
-            # import the user models will fail for django >= 1.9.
-            BaseUser = None
-
         result = {}
 
-        if BaseUser and hasattr(request, 'user') and isinstance(request.user, BaseUser):
-            result['user'] = self.get_user_info(request.user)
+        user = getattr(request, 'user', None)
+        if user is not None:
+            result['user'] = self.get_user_info(user)
 
         try:
             uri = request.build_absolute_uri()

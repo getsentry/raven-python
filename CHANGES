@@ -3,6 +3,8 @@ Version 5.10.1
 
 * Fixed a problem where bytes as keys in dictionaries caused problems
   on data sanitization if those bytes were outside of the ASCII range.
+* Django client no longer requires the user object to be a subclass
+  of the base model.
 
 Version 5.10.0
 --------------
