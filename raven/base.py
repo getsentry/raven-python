@@ -37,6 +37,10 @@ from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
 from raven.transport.registry import TransportRegistry, default_transports
 
+# enforce imports to avoid obscure stacktraces with MemoryError
+import raven.events  # NOQA
+
+
 __all__ = ('Client',)
 
 __excepthook__ = None
