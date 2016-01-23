@@ -7,6 +7,8 @@ raven.contrib.celery
 """
 from __future__ import absolute_import
 
+import logging
+
 from celery.signals import after_setup_logger, task_failure
 from raven.handlers.logging import SentryHandler
 
