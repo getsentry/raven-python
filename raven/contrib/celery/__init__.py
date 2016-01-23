@@ -7,7 +7,6 @@ raven.contrib.celery
 """
 from __future__ import absolute_import
 
-import logging
 from celery.signals import after_setup_logger, task_failure
 from raven.handlers.logging import SentryHandler
 
@@ -39,8 +38,6 @@ def register_signal(client):
 def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
     filter_ = CeleryFilter()
 
-    if logger is None:
-        logger = logging.getLogger()
     handler = SentryHandler(client)
     handler.setLevel(loglevel)
     handler.addFilter(filter_)
