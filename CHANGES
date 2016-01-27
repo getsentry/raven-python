@@ -4,6 +4,7 @@ Version 5.10.2
 * Remember exceptions in flight until the context is cleared so that two
   reports with the same exception data do not result in two errors
   being logged.
+* Allow logging exclusions.
 
 Version 5.10.1
 --------------
