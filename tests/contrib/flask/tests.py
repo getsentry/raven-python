@@ -9,6 +9,7 @@ from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
 from raven.base import Client
 from raven.contrib.flask import Sentry
 from raven.utils.testutils import TestCase
+from raven.handlers.logging import SentryHandler
 
 
 class TempStoreClient(Client):
@@ -124,6 +125,12 @@ class FlaskTest(BaseTest):
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
         self.assertEquals(event['culprit'], 'tests.contrib.flask.tests in an_error')
+
+    def test_capture_plus_logging(self):
+        client, raven, app = self.make_client_and_raven(debug=False)
+        app.logger.addHandler(SentryHandler(raven))
+        client.get('/an-error/')
+        assert len(raven.events) == 1
 
     def test_get(self):
         response = self.client.get('/an-error/?foo=bar')

@@ -27,6 +27,7 @@ class Context(local, Mapping, Iterable):
     """
     def __init__(self):
         self.data = {}
+        self.exceptions_to_skip = set()
 
     def __getitem__(self, key):
         return self.data[key]
@@ -58,3 +59,4 @@ class Context(local, Mapping, Iterable):
 
     def clear(self):
         self.data = {}
+        self.exceptions_to_skip.clear()

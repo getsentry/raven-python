@@ -282,6 +282,20 @@ class Client(object):
             return url
         return '%s:%s' % (scheme, url)
 
+    def _get_exception_key(self, exc_info):
+        return (
+            id(exc_info[1]),
+            id(exc_info[2]),
+        )
+
+    def skip_error_for_logging(self, exc_info):
+        key = self._get_exception_key(exc_info)
+        return key in self.context.exceptions_to_skip
+
+    def record_exception_seen(self, exc_info):
+        key = self._get_exception_key(exc_info)
+        self.context.exceptions_to_skip.add(key)
+
     def build_msg(self, event_type, data=None, date=None,
                   time_spent=None, extra=None, stack=None, public_key=None,
                   tags=None, fingerprint=None, **kwargs):
@@ -530,6 +544,12 @@ class Client(object):
         if not self.is_enabled():
             return
 
+        exc_info = kwargs.get('exc_info')
+        if exc_info is not None:
+            if self.skip_error_for_logging(exc_info):
+                return
+            self.record_exception_seen(exc_info)
+
         data = self.build_msg(
             event_type, data, date, time_spent, extra, stack, tags=tags,
             **kwargs)
@@ -701,6 +721,8 @@ class Client(object):
 
         ``kwargs`` are passed through to ``.capture``.
         """
+        if exc_info is None:
+            exc_info = sys.exc_info()
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)
 
