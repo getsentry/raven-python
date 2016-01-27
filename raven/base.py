@@ -285,7 +285,8 @@ class Client(object):
     def _get_exception_key(self, exc_info):
         return (
             id(exc_info[1]),
-            id(exc_info[2]),
+            id(exc_info[2].tb_frame.f_code),
+            exc_info[2].tb_lasti,
         )
 
     def skip_error_for_logging(self, exc_info):
