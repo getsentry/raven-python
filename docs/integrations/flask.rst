@@ -30,7 +30,8 @@ You can optionally configure logging too::
 
     import logging
     from raven.contrib.flask import Sentry
-    sentry = Sentry(app, logging=True, level=logging.ERROR)
+    sentry = Sentry(app, logging=True, level=logging.ERROR, \
+                    logging_exclusions=("logger1", "logger2", ...))
 
 Building applications on the fly? You can use Raven's ``init_app`` hook::
 
@@ -48,7 +49,8 @@ You can pass parameters in the ``init_app`` hook::
     def create_app():
         app = Flask(__name__)
         sentry.init_app(app, dsn='___DSN___', logging=True,
-                        level=logging.ERROR)
+                        level=logging.ERROR,
+                        logging_exclusions=("logger1", "logger2", ...))
         return app
 
 Settings

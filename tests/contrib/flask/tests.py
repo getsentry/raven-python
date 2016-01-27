@@ -270,6 +270,19 @@ class FlaskTest(BaseTest):
             assert self.middleware.last_event_id == event_id
             assert g.sentry_event_id == event_id
 
+    def test_logging_setup_with_exclusion_list(self):
+        app = Flask(__name__)
+        raven = TempStoreClient()
+
+        Sentry(app, client=raven, logging=True,
+            logging_exclusions=("excluded_logger",))
+
+        excluded_logger = logging.getLogger("excluded_logger")
+        self.assertFalse(excluded_logger.propagate)
+
+        some_other_logger = logging.getLogger("some_other_logger")
+        self.assertTrue(some_other_logger.propagate)
+
 
 class FlaskLoginTest(BaseTest):
 

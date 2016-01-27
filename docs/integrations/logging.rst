@@ -132,3 +132,13 @@ message within Sentry::
     logger.error('There was some %s error', 'crazy')
     logger.error('There was some %s error', 'fun')
     logger.error('There was some %s error', 1)
+
+Exclusions
+~~~~~~~~~~
+
+You can also configure some logging exclusions during setup. These loggers
+will not propagate their logs to the Sentry handler.
+
+    from raven.conf import setup_logging
+
+    setup_logging(handler, exclude=("logger1", "logger2", ...))
