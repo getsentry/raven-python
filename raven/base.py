@@ -284,8 +284,10 @@ class Client(object):
 
     def _get_exception_key(self, exc_info):
         return (
+            exc_info[0],
             id(exc_info[1]),
             id(exc_info[2].tb_frame.f_code),
+            id(exc_info[2]),
             exc_info[2].tb_lasti,
         )
 
