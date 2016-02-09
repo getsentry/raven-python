@@ -3,7 +3,7 @@ Celery
 
 `Celery <http://www.celeryproject.org/>`_ is a distributed task queue
 system for Python built on AMQP principles.  For Celery built-in support
-by Raven is provided but it requires some manual configuraiton.
+by Raven is provided but it requires some manual configuration.
 
 To capture errors, you need to register a couple of signals to hijack
 Celery error handling::
