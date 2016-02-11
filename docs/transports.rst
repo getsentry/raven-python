@@ -51,9 +51,9 @@ Should only be used within a Gevent IO loop.
 
 .. code-block:: python
 
-    from raven.transport.gevent import GeventHTTPTransport
+    from raven.transport.gevent import GeventedHTTPTransport
 
-    Client('...', transport=GeventHTTPTransport)
+    Client('...', transport=GeventedHTTPTransport)
 
 
 Requests
