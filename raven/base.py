@@ -724,7 +724,7 @@ class Client(object):
 
         ``kwargs`` are passed through to ``.capture``.
         """
-        if exc_info is None:
+        if exc_info is None or exc_info is True:
             exc_info = sys.exc_info()
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)

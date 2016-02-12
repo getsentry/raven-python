@@ -2,6 +2,7 @@ Version 5.10.3
 --------------
 
 * Improved double error check
+* Restored support for exc_info is True.
 
 Version 5.10.2
 --------------

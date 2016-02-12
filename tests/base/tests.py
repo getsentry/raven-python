@@ -296,6 +296,24 @@ class ClientTest(TestCase):
         self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
 
+    def test_exception_event_true_exc_info(self):
+        try:
+            raise ValueError('foo')
+        except ValueError:
+            self.client.captureException(exc_info=True)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'ValueError: foo')
+        self.assertTrue('exception' in event)
+        exc = event['exception']['values'][0]
+        stacktrace = exc['stacktrace']
+        self.assertEquals(len(stacktrace['frames']), 1)
+        frame = stacktrace['frames'][0]
+        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
+        self.assertEquals(frame['filename'], 'tests/base/tests.py')
+        self.assertEquals(frame['module'], __name__)
+
     def test_decorator_preserves_function(self):
         @self.client.capture_exceptions
         def test1():
