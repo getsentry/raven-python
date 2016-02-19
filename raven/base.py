@@ -656,8 +656,7 @@ class Client(object):
     def send_encoded(self, message, auth_header=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
-        payload off to ``send_remote`` for each server specified in the servers
-        configuration.
+        payload off to ``send_remote``.
         """
         client_string = 'raven-python/%s' % (raven.VERSION,)
 
