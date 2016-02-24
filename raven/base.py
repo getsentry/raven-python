@@ -133,8 +133,6 @@ class Client(object):
 
         o = options
 
-        self.configure_logging()
-
         self.raise_send_errors = raise_send_errors
 
         # configure loggers first
@@ -224,14 +222,6 @@ class Client(object):
     @classmethod
     def register_scheme(cls, scheme, transport_class):
         cls._registry.register_scheme(scheme, transport_class)
-
-    def configure_logging(self):
-        for name in ('raven', 'sentry'):
-            logger = logging.getLogger(name)
-            if logger.handlers:
-                continue
-            logger.addHandler(logging.StreamHandler())
-            logger.setLevel(logging.INFO)
 
     def get_processors(self):
         for processor in self.processors:
