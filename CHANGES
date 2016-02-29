@@ -3,10 +3,6 @@ Version 5.11.0
 
 * ``Client.configure_logging`` has been removed, and handlers will not automatically
   be added to 'sentry' and 'raven' namespaces.
-
-Version 5.10.3
---------------
-
 * Improved double error check
 * Restored support for exc_info is True.
 
