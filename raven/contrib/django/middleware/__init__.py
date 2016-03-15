@@ -61,9 +61,51 @@ class SentryResponseErrorIdMiddleware(object):
         return response
 
 
-class SentryLogMiddleware(object):
-    # Create a threadlocal variable to store the session in for logging
-    thread = threading.local()
+class SentryMiddleware(threading.local):
+    # backwards compat
+    @property
+    def thread(self):
+        return self
+
+    def _get_transaction_from_view(self, func):
+        module = func.__module__.rsplit('.', 1)[-1]
+        if hasattr(func, 'im_class'):
+            return '{0}.{1}.{2}'.format(
+                module,
+                func.im_class.__name__,
+                func.__name__,
+            )
+        return '{0}.{1}'.format(
+            module,
+            func.__name__,
+        )
 
     def process_request(self, request):
+        self._txid = None
         self.thread.request = request
+
+    def process_view(self, request, func, args, kwargs):
+        from raven.contrib.django.models import client
+
+        try:
+            self._txid = client.transaction.push(self._get_transaction_from_view(func))
+        except Exception as exc:
+            client.error_logger.exception(unicode(exc))
+        return None
+
+    def process_response(self, request, response):
+        from raven.contrib.django.models import client
+
+        if self._txid:
+            client.transaction.pop(self._txid)
+            self._txid = None
+        return response
+
+    # def process_exception(self, request, exception):
+    #     from raven.contrib.django.models import client
+
+    #     if self._txid:
+    #         client.transaction.pop(self._txid)
+    #         self._txid = None
+
+SentryLogMiddleware = SentryMiddleware

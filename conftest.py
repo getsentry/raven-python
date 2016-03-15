@@ -81,4 +81,5 @@ def pytest_configure(config):
                 ],
             }],
             ALLOWED_HOSTS=['*'],
+            DISABLE_SENTRY_INSTRUMENTATION=True,
         )

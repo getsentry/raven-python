@@ -73,6 +73,7 @@ class Sentry(object):
                         self.handle_exception(environ)
                     raise
             self.client.context.clear()
+            self.client.transaction.clear()
 
     def get_http_context(self, environ):
         return {

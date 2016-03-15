@@ -28,7 +28,9 @@ from raven.base import Client
 from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
-from raven.contrib.django.models import client, get_client, sentry_exception_handler
+from raven.contrib.django.models import (
+    SentryDjangoHandler, client, get_client
+)
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
@@ -36,6 +38,7 @@ from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
+
 from .models import TestModel
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
@@ -127,6 +130,9 @@ class DjangoClientTest(TestCase):
 
     def setUp(self):
         self.raven = get_client()
+        self.handler = SentryDjangoHandler(self.raven)
+        self.handler.install()
+        self.addCleanup(self.handler.uninstall)
 
     def test_basic(self):
         self.raven.captureMessage(message='foo')
@@ -155,7 +161,6 @@ class DjangoClientTest(TestCase):
         assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
         assert event['level'] == logging.ERROR
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
-        assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
     @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
@@ -169,7 +174,6 @@ class DjangoClientTest(TestCase):
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
         assert event['message'] == 'Exception: view exception'
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
     def test_user_info(self):
         with Settings(MIDDLEWARE_CLASSES=[
@@ -235,7 +239,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'request'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: request'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_request'
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -252,7 +255,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'response'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: response'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_response'
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
@@ -270,7 +272,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'view exception'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'Exception: view exception'
-            assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
             event = self.raven.events.pop(0)
 
@@ -280,7 +281,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'handler500'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ValueError: handler500'
-            assert event['culprit'] == 'tests.contrib.django.urls in handler500'
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
@@ -295,30 +295,6 @@ class DjangoClientTest(TestCase):
             assert exc['value'] == 'view'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: view'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_view'
-
-    def test_exclude_modules_view(self):
-        exclude_paths = self.raven.exclude_paths
-        self.raven.exclude_paths = ['tests.views']
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
-        self.raven.exclude_paths = exclude_paths
-
-    def test_include_modules(self):
-        include_paths = self.raven.include_paths
-        self.raven.include_paths = ['django.shortcuts']
-
-        self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'].startswith('django.shortcuts in ')
-        self.raven.include_paths = include_paths
 
     @pytest.mark.skipif(DJANGO_18, reason='Django 1.8+ not supported')
     def test_template_name_as_view(self):
@@ -366,7 +342,7 @@ class DjangoClientTest(TestCase):
             resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
 
-            assert len(self.raven.events) == 1
+            assert len(self.raven.events) == 1, [e['message'] for e in self.raven.events]
             event = self.raven.events.pop(0)
 
             assert event['level'] == logging.INFO
@@ -759,11 +735,16 @@ class SentryExceptionHandlerTest(TestCase):
     def exc_info(self):
         return (ValueError, ValueError('lol world'), None)
 
+    def setUp(self):
+        super(SentryExceptionHandlerTest, self).setUp()
+        self.client = get_client()
+        self.handler = SentryDjangoHandler(self.client)
+
     @mock.patch.object(TempStoreClient, 'captureException')
     @mock.patch('sys.exc_info')
     def test_does_capture_exception(self, exc_info, captureException):
         exc_info.return_value = self.exc_info
-        sentry_exception_handler(request=self.request)
+        self.handler.exception_handler(request=self.request)
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
 
@@ -772,11 +753,11 @@ class SentryExceptionHandlerTest(TestCase):
     def test_does_exclude_filtered_types(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
         try:
-            get_client().ignore_exceptions = set(['ValueError'])
+            self.client.ignore_exceptions = set(['ValueError'])
 
-            sentry_exception_handler(request=self.request)
+            self.handler.exception_handler(request=self.request)
         finally:
-            get_client().ignore_exceptions.clear()
+            self.client.ignore_exceptions.clear()
 
         assert not mock_capture.called
 
@@ -787,12 +768,12 @@ class SentryExceptionHandlerTest(TestCase):
 
         try:
             if six.PY3:
-                get_client().ignore_exceptions = set(['builtins.*'])
+                self.client.ignore_exceptions = set(['builtins.*'])
             else:
-                get_client().ignore_exceptions = set(['exceptions.*'])
-            sentry_exception_handler(request=self.request)
+                self.client.ignore_exceptions = set(['exceptions.*'])
+            self.handler.exception_handler(request=self.request)
         finally:
-            get_client().ignore_exceptions.clear()
+            self.client.ignore_exceptions.clear()
 
         assert not mock_capture.called
 
@@ -803,11 +784,11 @@ class SentryExceptionHandlerTest(TestCase):
 
         try:
             if six.PY3:
-                get_client().ignore_exceptions = set(['builtins.ValueError'])
+                self.client.ignore_exceptions = set(['builtins.ValueError'])
             else:
-                get_client().ignore_exceptions = set(['exceptions.ValueError'])
-            sentry_exception_handler(request=self.request)
+                self.client.ignore_exceptions = set(['exceptions.ValueError'])
+            self.handler.exception_handler(request=self.request)
         finally:
-            get_client().ignore_exceptions.clear()
+            self.client.ignore_exceptions.clear()
 
         assert not mock_capture.called
