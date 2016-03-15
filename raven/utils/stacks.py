@@ -11,7 +11,6 @@ import inspect
 import linecache
 import re
 import sys
-import warnings
 
 from raven.utils.serializer import transform
 from raven._compat import iteritems
@@ -80,41 +79,6 @@ def get_lines_from_file(filename, lineno, context_lines,
         slim_string(context_line),
         slim_string(post_context)
     )
-
-
-def label_from_frame(frame):
-    module = frame.get('module') or '?'
-    function = frame.get('function') or '?'
-    if module == function == '?':
-        return ''
-    return '%s in %s' % (module, function)
-
-
-def get_culprit(frames, *args, **kwargs):
-    # We iterate through each frame looking for a deterministic culprit
-    # When one is found, we mark it as last "best guess" (best_guess) and then
-    # check it against ``exclude_paths``. If it isn't listed, then we
-    # use this option. If nothing is found, we use the "best guess".
-    if args or kwargs:
-        warnings.warn('get_culprit no longer does application detection')
-
-    best_guess = None
-    culprit = None
-    for frame in reversed(frames):
-        culprit = label_from_frame(frame)
-        if not culprit:
-            culprit = None
-            continue
-
-        if frame.get('in_app'):
-            return culprit
-        elif not best_guess:
-            best_guess = culprit
-        elif best_guess:
-            break
-
-    # Return either the best guess or the last frames call
-    return best_guess or culprit
 
 
 def _getitem_from_frame(f_locals, key, default=None):

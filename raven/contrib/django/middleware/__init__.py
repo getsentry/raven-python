@@ -8,10 +8,12 @@ raven.contrib.django.middleware
 
 from __future__ import absolute_import
 
-import threading
 import logging
+import threading
 
 from django.conf import settings
+
+from raven.contrib.django.resolver import RouteResolver
 
 
 def is_ignorable_404(uri):
@@ -61,9 +63,48 @@ class SentryResponseErrorIdMiddleware(object):
         return response
 
 
-class SentryLogMiddleware(object):
-    # Create a threadlocal variable to store the session in for logging
-    thread = threading.local()
+class SentryMiddleware(threading.local):
+    resolver = RouteResolver()
+
+    # backwards compat
+    @property
+    def thread(self):
+        return self
+
+    def _get_transaction_from_request(self, request):
+        # TODO(dcramer): it'd be nice to pull out parameters
+        # and make this a normalized path
+        return self.resolver.resolve(request.path)
 
     def process_request(self, request):
+        self._txid = None
         self.thread.request = request
+
+    def process_view(self, request, func, args, kwargs):
+        from raven.contrib.django.models import client
+
+        try:
+            self._txid = client.transaction.push(
+                self._get_transaction_from_request(request)
+            )
+        except Exception as exc:
+            raise
+            client.error_logger.exception(repr(exc))
+        return None
+
+    def process_response(self, request, response):
+        from raven.contrib.django.models import client
+
+        if self._txid:
+            client.transaction.pop(self._txid)
+            self._txid = None
+        return response
+
+    # def process_exception(self, request, exception):
+    #     from raven.contrib.django.models import client
+
+    #     if self._txid:
+    #         client.transaction.pop(self._txid)
+    #         self._txid = None
+
+SentryLogMiddleware = SentryMiddleware

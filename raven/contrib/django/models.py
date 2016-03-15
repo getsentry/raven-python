@@ -16,12 +16,16 @@ import sys
 import warnings
 
 from django.conf import settings
+from django.core.signals import got_request_exception, request_started
+from threading import Lock
 
-from raven._compat import PY2, binary_type, text_type, string_types
+from raven._compat import PY2, binary_type, text_type
 from raven.utils.conf import convert_options
 from raven.utils.imports import import_string
 
 logger = logging.getLogger('sentry.errors.client')
+
+settings_lock = Lock()
 
 
 def get_installed_apps():
@@ -151,58 +155,64 @@ def sentry_exception_handler(request=None, **kwargs):
             warnings.warn('Unable to process log entry: %s' % (exc,))
 
 
-def register_handlers():
-    from django.core.signals import got_request_exception, request_started
+class SentryDjangoHandler(object):
+    def __init__(self, client=client):
+        self.client = client
 
-    def before_request(*args, **kwargs):
-        client.context.activate()
-    request_started.connect(before_request, weak=False)
-
-    # HACK: support Sentry's internal communication
-    if 'sentry' in settings.INSTALLED_APPS:
-        from django.db import transaction
-        # Django 1.6
-        if hasattr(transaction, 'atomic'):
-            commit_on_success = transaction.atomic
-        else:
-            commit_on_success = transaction.commit_on_success
-
-        @commit_on_success
-        def wrap_sentry(request, **kwargs):
-            if transaction.is_dirty():
-                transaction.rollback()
-            return sentry_exception_handler(request, **kwargs)
-
-        exception_handler = wrap_sentry
-    else:
-        exception_handler = sentry_exception_handler
-
-    # Connect to Django's internal signal handler
-    got_request_exception.connect(exception_handler, weak=False)
-
-    # If Celery is installed, register a signal handler
-    if 'djcelery' in settings.INSTALLED_APPS:
         try:
-            # Celery < 2.5? is not supported
-            from raven.contrib.celery import (
-                register_signal, register_logger_signal)
+            import celery
         except ImportError:
-            logger.exception('Failed to install Celery error handler')
+            self.has_celery = False
         else:
+            self.has_celery = celery.VERSION >= (2, 5)
+
+        self.celery_handler = None
+
+    def install_celery(self):
+        from raven.contrib.celery import (
+            SentryCeleryHandler, register_logger_signal
+        )
+
+        self.celery_handler = SentryCeleryHandler(client).install()
+
+        # try:
+        #     ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
+        #     options = getattr(settings, 'RAVEN_CONFIG', {})
+        #     loglevel = options.get('celery_loglevel',
+        #                            ga('CELERY_LOGLEVEL', logging.ERROR))
+
+        #     register_logger_signal(client, loglevel=loglevel)
+        # except Exception:
+        #     logger.exception('Failed to install Celery error handler')
+
+    def install(self):
+        request_started.connect(self.before_request, weak=False)
+        got_request_exception.connect(self.exception_handler, weak=False)
+
+        if self.has_celery:
             try:
-                register_signal(client)
+                self.install_celery()
             except Exception:
                 logger.exception('Failed to install Celery error handler')
 
-            try:
-                ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
-                options = getattr(settings, 'RAVEN_CONFIG', {})
-                loglevel = options.get('celery_loglevel',
-                                       ga('CELERY_LOGLEVEL', logging.ERROR))
+    def uninstall(self):
+        request_started.disconnect(self.before_request)
+        got_request_exception.disconnect(self.exception_handler)
 
-                register_logger_signal(client, loglevel=loglevel)
-            except Exception:
-                logger.exception('Failed to install Celery error handler')
+        if self.celery_handler:
+            self.celery_handler.uninstall()
+
+    def exception_handler(self, request=None, **kwargs):
+        try:
+            self.client.captureException(exc_info=sys.exc_info(), request=request)
+        except Exception as exc:
+            try:
+                logger.exception('Unable to process log entry: %s' % (exc,))
+            except Exception as exc:
+                warnings.warn('Unable to process log entry: %s' % (exc,))
+
+    def before_request(self, *args, **kwargs):
+        self.client.context.activate()
 
 
 def register_serializers():
@@ -210,7 +220,30 @@ def register_serializers():
     import raven.contrib.django.serializers  # NOQA
 
 
-if ('raven.contrib.django' in settings.INSTALLED_APPS
-        or 'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS):
-    register_handlers()
+def install_middleware():
+    """
+    Force installation of SentryMiddlware if it's not explicitly present.
+
+    This ensures things like request context and transaction names are made
+    available.
+    """
+    name = 'raven.contrib.django.middleware.SentryMiddleware'
+    all_names = (name, 'raven.contrib.django.middleware.SentryLogMiddleware')
+    with settings_lock:
+        middleware_list = set(settings.MIDDLEWARE_CLASSES)
+        if not any(n in middleware_list for n in all_names):
+            settings.MIDDLEWARE_CLASSES = (
+                name,
+            ) + tuple(settings.MIDDLEWARE_CLASSES)
+
+
+if (
+    'raven.contrib.django' in settings.INSTALLED_APPS or
+    'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS
+):
     register_serializers()
+    install_middleware()
+
+    if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
+        handler = SentryDjangoHandler()
+        handler.install()

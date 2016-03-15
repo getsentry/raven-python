@@ -37,7 +37,8 @@ from raven.utils import json, get_versions, get_auth_header, merge_dicts
 from raven._compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
+from raven.utils.stacks import get_stack_info, iter_stack_frames
+from raven.utils.transaction import TransactionStack
 from raven.transport.registry import TransportRegistry, default_transports
 
 # enforce imports to avoid obscure stacktraces with MemoryError
@@ -186,6 +187,7 @@ class Client(object):
         self.tags = o.get('tags') or {}
         self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
+        self.transaction = TransactionStack()
 
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
 
@@ -410,12 +412,7 @@ class Client(object):
                     )
 
         if not culprit:
-            if 'stacktrace' in data:
-                culprit = get_culprit(data['stacktrace']['frames'])
-            elif 'exception' in data:
-                stacktrace = data['exception']['values'][0].get('stacktrace')
-                if stacktrace:
-                    culprit = get_culprit(stacktrace['frames'])
+            culprit = self.transaction.peek()
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR

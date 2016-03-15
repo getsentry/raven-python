@@ -216,6 +216,9 @@ class Sentry(object):
 
     def before_request(self, *args, **kwargs):
         self.last_event_id = None
+
+        self.client.transaction.push(request.url_rule.rule)
+
         try:
             self.client.http_context(self.get_http_info(request))
         except Exception as e:
@@ -229,6 +232,7 @@ class Sentry(object):
         if self.last_event_id:
             response.headers['X-Sentry-ID'] = self.last_event_id
         self.client.context.clear()
+        self.client.transaction.pop(request.url_rule.rule)
         return response
 
     def init_app(self, app, dsn=None, logging=None, level=None,

@@ -17,7 +17,7 @@ import traceback
 from raven._compat import string_types, iteritems, text_type
 from raven.base import Client
 from raven.utils.encoding import to_string
-from raven.utils.stacks import iter_stack_frames, label_from_frame
+from raven.utils.stacks import iter_stack_frames
 
 RESERVED = frozenset((
     'stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno',
@@ -158,16 +158,6 @@ class SentryHandler(logging.Handler, object):
 
             event_type = 'raven.events.Exception'
             handler_kwargs = {'exc_info': record.exc_info}
-
-        # HACK: discover a culprit when we normally couldn't
-        elif not (data.get('stacktrace') or data.get('culprit')) \
-                and (record.name or record.funcName):
-            culprit = label_from_frame({
-                'module': record.name,
-                'function': record.funcName
-            })
-            if culprit:
-                data['culprit'] = culprit
 
         data['level'] = record.levelno
         data['logger'] = record.name
