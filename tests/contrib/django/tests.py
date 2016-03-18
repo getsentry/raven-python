@@ -392,6 +392,36 @@ class DjangoClientTest(TestCase):
             assert http['query_string'] == ''
             assert http['data'] is None
 
+    def test_404_middleware_with_url_matching_grouping_urls(self):
+        extra_settings = {
+            'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
+            'GROUPING_404_URLS': ((re.compile(r'^/old/(?:\d+)$'), ['FP']),)
+        }
+
+        with Settings(**extra_settings):
+            resp = self.client.get('/old/42')
+            assert resp.status_code == 404
+
+            assert len(self.raven.events) == 1
+            event = self.raven.events.pop(0)
+
+            assert event['fingerprint'] == ['FP']
+
+    def test_404_middleware_with_url_not_matching_grouping_urls(self):
+        extra_settings = {
+            'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
+            'GROUPING_404_URLS': ((re.compile(r'^/old/(?:\d+)$'), ['FP']),)
+        }
+
+        with Settings(**extra_settings):
+            resp = self.client.get('/new/42')
+            assert resp.status_code == 404
+
+            assert len(self.raven.events) == 1
+            event = self.raven.events.pop(0)
+
+            assert 'fingerprint' not in event
+
     def test_404_middleware_when_disabled(self):
         extra_settings = {
             'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
