@@ -127,7 +127,7 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, raise_send_errors=False, transport=None,
+    def __init__(self, dsn=Ellipsis, raise_send_errors=False, transport=None,
                  install_sys_hook=True, **options):
         global Raven
 
@@ -186,11 +186,14 @@ class Client(object):
         if install_sys_hook:
             self.install_sys_hook()
 
-    def set_dsn(self, dsn=None, transport=None):
-        if dsn is None and os.environ.get('SENTRY_DSN'):
-            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
-            self.logger.debug(msg)
-            dsn = os.environ['SENTRY_DSN']
+    def set_dsn(self, dsn=Ellipsis, transport=None):
+        if dsn is Ellipsis:
+            if os.environ.get('SENTRY_DSN'):
+                msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+                self.logger.debug(msg)
+                dsn = os.environ['SENTRY_DSN']
+            else:
+                dsn = None
 
         if dsn not in self._transport_cache:
             if dsn is None:
@@ -206,7 +209,10 @@ class Client(object):
         else:
             self.remote = self._transport_cache[dsn]
 
-        self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+        if dsn is not None:
+            self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+        else:
+            self.logger.debug('Disabling raven because DSN set to None')
 
     def install_sys_hook(self):
         global __excepthook__
