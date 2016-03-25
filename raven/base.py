@@ -273,12 +273,20 @@ class Client(object):
         return '%s:%s' % (scheme, url)
 
     def _get_exception_key(self, exc_info):
+        if exc_info[2]:
+            try:
+                code_pos = id(exc_info[2].tb_frame.f_code)
+            except AttributeError:
+                code_pos = None
+        else:
+            code_pos = None
+
         return (
             exc_info[0],
             id(exc_info[1]),
-            id(exc_info[2] and exc_info[2].tb_frame.f_code),
+            code_pos,
             id(exc_info[2]),
-            exc_info[2] and exc_info[2].tb_lasti,
+            exc_info[2] and getattr(exc_info[2], 'tb_lasti', None),
         )
 
     def skip_error_for_logging(self, exc_info):
