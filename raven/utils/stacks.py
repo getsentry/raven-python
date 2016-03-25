@@ -140,7 +140,9 @@ def iter_traceback_frames(tb):
     frames that do not contain the ``__traceback_hide__``
     local variable.
     """
-    while tb:
+    # Some versions of celery have hacked traceback objects that might
+    # miss tb_frame.
+    while tb and hasattr(tb, 'tb_frame'):
         # support for __traceback_hide__ which is used by a few libraries
         # to hide internal frames.
         f_locals = getattr(tb.tb_frame, 'f_locals', {})

@@ -273,12 +273,21 @@ class Client(object):
         return '%s:%s' % (scheme, url)
 
     def _get_exception_key(self, exc_info):
+        # On certain celery versions the tb_frame attribute might
+        # not exist or be `None`.
+        code_id = 0
+        last_id = 0
+        try:
+            code_id = id(exc_info[2] and exc_info[2].tb_frame.f_code)
+            last_id = exc_info[2] and exc_info[2].tb_lasti or 0
+        except (AttributeError, IndexError):
+            pass
         return (
             exc_info[0],
             id(exc_info[1]),
-            id(exc_info[2] and exc_info[2].tb_frame.f_code),
+            code_id,
             id(exc_info[2]),
-            exc_info[2] and exc_info[2].tb_lasti,
+            last_id,
         )
 
     def skip_error_for_logging(self, exc_info):

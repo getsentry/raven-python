@@ -1,3 +1,9 @@
+Version 5.11.2
+--------------
+
+* Added a workaround for back traceback objects passed to raven.  In these
+  cases we now wobble further along to at least log something.
+
 Version 5.11.1
 --------------
 
