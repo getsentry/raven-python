@@ -6,6 +6,7 @@ import mock
 import raven
 import time
 import six
+import os
 
 from raven.base import Client, ClientState
 from raven.exceptions import RateLimited
@@ -93,6 +94,15 @@ class ClientTest(TestCase):
 
         assert base.Raven is client
         assert client is not client2
+
+    def test_client_picks_up_env_dsn(self):
+        DSN = 'sync+http://public:secret@example.com/1'
+        PUBLIC_DSN = '//public@example.com/1'
+        with mock.patch.dict(os.environ, {'SENTRY_DSN': DSN}):
+            client = Client()
+            assert client.remote.get_public_dsn() == PUBLIC_DSN
+            client = Client('')
+            assert client.remote.get_public_dsn() == PUBLIC_DSN
 
     @mock.patch('raven.transport.http.HTTPTransport.send')
     @mock.patch('raven.base.ClientState.should_try')
