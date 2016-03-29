@@ -187,13 +187,13 @@ class Client(object):
             self.install_sys_hook()
 
     def set_dsn(self, dsn=None, transport=None):
-        if dsn is None and os.environ.get('SENTRY_DSN'):
+        if not dsn and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
             self.logger.debug(msg)
             dsn = os.environ['SENTRY_DSN']
 
         if dsn not in self._transport_cache:
-            if dsn is None:
+            if not dsn:
                 result = RemoteConfig(transport=transport)
             else:
                 result = RemoteConfig.from_string(
