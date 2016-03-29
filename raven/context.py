@@ -7,10 +7,36 @@ raven.context
 """
 from __future__ import absolute_import
 
+import time
+
 from collections import Mapping, Iterable
+from datetime import datetime
 from threading import local
 
 from raven._compat import iteritems
+
+
+class BreadcrumbBuffer(object):
+
+    def __init__(self, limit=100):
+        self.buffer = []
+        self.limit = limit
+
+    def record(self, type, data=None, timestamp=None):
+        if timestamp is None:
+            timestamp = time.time()
+        elif isinstance(timestamp, datetime):
+            timestamp = datetime
+
+        self.buffer.append({
+            'type': type,
+            'timestamp': timestamp,
+            'data': data or {},
+        })
+        del self.buffer[:-self.limit]
+
+    def clear(self):
+        del self.buffer[:]
 
 
 class Context(local, Mapping, Iterable):
