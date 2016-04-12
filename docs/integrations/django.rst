@@ -78,8 +78,8 @@ override:
 Integration with :mod:`logging`
 -------------------------------
 
-To integrate with the standard library's :mod:`logging` module the
-following config can be used::
+To integrate with the standard library's :mod:`logging` module, and send all
+ERROR and above messages to sentry, the following config can be used::
 
     LOGGING = {
         'version': 1,
@@ -96,7 +96,7 @@ following config can be used::
         },
         'handlers': {
             'sentry': {
-                'level': 'ERROR',
+                'level': 'ERROR', # To capture more than ERROR, change to WARNING, INFO, etc.
                 'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
                 'tags': {'custom-tag': 'x'},
             },
