@@ -47,6 +47,11 @@ __excepthook__ = None
 
 PLATFORM_NAME = 'python'
 
+SDK_VALUE = {
+    'name': 'raven-python',
+    'version': raven.VERSION,
+}
+
 # singleton for the client
 Raven = None
 
@@ -429,6 +434,7 @@ class Client(object):
         data.setdefault('time_spent', time_spent)
         data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
+        data.setdefault('sdk', SDK_VALUE)
 
         return data
 
