@@ -9,10 +9,6 @@ from __future__ import absolute_import
 
 import os
 import os.path
-from raven.base import *  # NOQA
-from raven.conf import *  # NOQA
-from raven.versioning import *  # NOQA
-
 
 __all__ = ('VERSION', 'Client', 'get_version')
 
@@ -55,3 +51,9 @@ def get_version():
 
 __build__ = get_revision()
 __docformat__ = 'restructuredtext en'
+
+
+# Declare child imports last to prevent recursion
+from raven.base import *  # NOQA
+from raven.conf import *  # NOQA
+from raven.versioning import *  # NOQA
