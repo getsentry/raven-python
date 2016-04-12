@@ -20,6 +20,7 @@ pip-log.txt
 bin/
 include/
 lib/
+.cache
 .idea
 .eggs
 venv
