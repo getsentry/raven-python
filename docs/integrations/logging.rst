@@ -137,7 +137,7 @@ Exclusions
 ~~~~~~~~~~
 
 You can also configure some logging exclusions during setup. These loggers
-will not propagate their logs to the Sentry handler.
+will not propagate their logs to the Sentry handler::
 
     from raven.conf import setup_logging
 
