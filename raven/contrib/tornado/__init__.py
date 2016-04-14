@@ -38,9 +38,9 @@ class AsyncSentryClient(Client):
 
         data = self.build_msg(*args, **kwargs)
 
-        self.send(callback=kwargs.get('callback', None), **data)
+        future = self.send(callback=kwargs.get('callback', None), **data)
 
-        return (data['event_id'],)
+        return (data['event_id'], future)
 
     def send(self, auth_header=None, callback=None, **data):
         """

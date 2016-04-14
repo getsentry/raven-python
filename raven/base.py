@@ -682,7 +682,7 @@ class Client(object):
             'Content-Type': 'application/octet-stream',
         }
 
-        self.send_remote(
+        return self.send_remote(
             url=self.remote.store_endpoint,
             data=message,
             headers=headers,
