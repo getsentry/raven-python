@@ -65,7 +65,7 @@ def get_version_from_app(module_name, app):
         # pull version from pkg_resources if distro exists
         try:
             return pkg_resources.get_distribution(module_name).version
-        except pkg_resources.DistributionNotFound:
+        except Exception:
             pass
 
     if hasattr(app, 'get_version'):
