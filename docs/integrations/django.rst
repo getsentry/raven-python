@@ -236,7 +236,7 @@ User Feedback
 To enable user feedback for crash reports, you'll simply need to add a bit of
 code to your ``500.html`` template:
 
-    .. sourcecode:: html+django
+.. sourcecode:: html+django
 
     <!-- Sentry JS SDK 2.1.+ required -->
     <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
