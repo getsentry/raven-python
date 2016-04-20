@@ -252,6 +252,8 @@ code to your ``500.html`` template:
       </script>
     {% endif %}
 
+For more details on this feature, see the :doc:`User Feedback guide <../../../learn/user-feedback>`.
+
 Additional Settings
 -------------------
 
