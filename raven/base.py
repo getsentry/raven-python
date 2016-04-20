@@ -430,6 +430,11 @@ class Client(object):
         data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
 
+        # insert breadcrumbs
+        crumbs = self.context.breadcrumbs.fetch()
+        if crumbs:
+            data.setdefault('breadcrumbs', crumbs)
+
         return data
 
     def transform(self, data):
@@ -790,6 +795,12 @@ class Client(object):
             'captureExceptions is deprecated, used context() instead.',
             DeprecationWarning)
         return self.context(**kwargs)
+
+    def captureBreadcrumb(self, type, **data):
+        """Records a breadcrumb."""
+        self.context.breadcrumbs.record(type, data)
+
+    capture_breadcrumb = captureBreadcrumb
 
 
 class DummyClient(Client):

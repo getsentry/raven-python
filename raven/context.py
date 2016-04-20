@@ -35,6 +35,11 @@ class BreadcrumbBuffer(object):
         })
         del self.buffer[:-self.limit]
 
+    def fetch(self):
+        rv = self.buffer[:]
+        self.clear()
+        return rv
+
     def clear(self):
         del self.buffer[:]
 
@@ -54,6 +59,7 @@ class Context(local, Mapping, Iterable):
     def __init__(self):
         self.data = {}
         self.exceptions_to_skip = set()
+        self.breadcrumbs = BreadcrumbBuffer()
 
     def __getitem__(self, key):
         return self.data[key]
@@ -86,3 +92,4 @@ class Context(local, Mapping, Iterable):
     def clear(self):
         self.data = {}
         self.exceptions_to_skip.clear()
+        self.breadcrumbs.clear()

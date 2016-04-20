@@ -28,6 +28,7 @@ RESERVED = frozenset((
 
 class SentryHandler(logging.Handler, object):
     def __init__(self, *args, **kwargs):
+        self.enable_breadcrumbs = not kwargs.pop('disable_breadcrumbs', False)
         client = kwargs.get('client_cls', Client)
         if len(args) == 1:
             arg = args[0]
@@ -54,6 +55,13 @@ class SentryHandler(logging.Handler, object):
             record.name.startswith(('sentry.errors', 'raven.'))
         )
 
+    def is_breadcrumb(self, record):
+        if not self.enable_breadcrumbs:
+            return False
+        if record.exc_info is not None:
+            return False
+        return record.levelno < logging.ERROR
+
     def emit(self, record):
         try:
             # Beware to python3 bug (see #10805) if exc_info is (None, None, None)
@@ -63,7 +71,10 @@ class SentryHandler(logging.Handler, object):
                 print(to_string(record.message), file=sys.stderr)
                 return
 
-            return self._emit(record)
+            if self.is_breadcrumb(record):
+                self._emit_crumb(record)
+            else:
+                return self._emit_event(record)
         except Exception:
             if self.client.raise_send_errors:
                 raise
@@ -103,7 +114,18 @@ class SentryHandler(logging.Handler, object):
 
         return frames
 
-    def _emit(self, record, **kwargs):
+    def _emit_crumb(self, record):
+        try:
+            msg = text_type(record.msg)
+        except UnicodeDecodeError:
+            msg = repr(record.msg)[1:-1]
+        self.client.record_breadcrumb('message',
+            message=msg,
+            level=record.level,
+            logger=record.name
+        )
+
+    def _emit_event(self, record, **kwargs):
         data = {}
 
         extra = getattr(record, 'data', None)
