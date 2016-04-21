@@ -437,7 +437,7 @@ class Client(object):
         data.setdefault('sdk', SDK_VALUE)
 
         # insert breadcrumbs
-        crumbs = self.context.breadcrumbs.fetch()
+        crumbs = self.context.breadcrumbs.get_buffer()
         if crumbs:
             data.setdefault('breadcrumbs', crumbs)
 

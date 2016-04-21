@@ -35,13 +35,11 @@ class BreadcrumbBuffer(object):
         })
         del self.buffer[:-self.limit]
 
-    def fetch(self):
-        rv = self.buffer[:]
-        self.clear()
-        return rv
-
     def clear(self):
         del self.buffer[:]
+
+    def get_buffer(self):
+        return self.buffer[:]
 
 
 class Context(local, Mapping, Iterable):
