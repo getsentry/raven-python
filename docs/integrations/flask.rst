@@ -141,7 +141,7 @@ crash dialog:
     app = Flask(__name__)
     sentry = Sentry(app, dsn='___DSN___')
 
-    @app.errorhandler(500
+    @app.errorhandler(500)
     def internal_server_error(error):
         return render_template('500.html',
             event_id=g.sentry_event_id,
