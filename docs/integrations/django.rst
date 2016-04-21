@@ -230,6 +230,8 @@ level of your Django application::
 
     application = Sentry(get_wsgi_application())
 
+.. _python-django-user-feedback:
+
 User Feedback
 -------------
 
