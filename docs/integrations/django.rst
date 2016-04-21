@@ -233,8 +233,18 @@ level of your Django application::
 User Feedback
 -------------
 
-To enable user feedback for crash reports, you'll simply need to add a bit of
-code to your ``500.html`` template:
+To enable user feedback for crash reports, start with ensuring the ``request``
+value is available in your context processors:
+
+.. sourcecode:: python
+
+    TEMPLATE_CONTEXT_PROCESSORS = (
+        # ...
+        'django.core.context_processors.request',
+    )
+
+By default Django will render ``500.html``, so simply drop the following snippet
+into your template:
 
 .. sourcecode:: html+django
 
@@ -251,6 +261,8 @@ code to your ``500.html`` template:
       });
       </script>
     {% endif %}
+
+That's it!
 
 For more details on this feature, see the :doc:`User Feedback guide <../../../learn/user-feedback>`.
 
