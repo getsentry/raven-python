@@ -124,6 +124,8 @@ ID if have done a custom error 500 page.
     <p>The error identifier is {{ g.sentry_event_id }}</p>
     {% endif %}
 
+.. _python-flask-user-feedback:
+
 User Feedback
 -------------
 
