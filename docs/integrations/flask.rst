@@ -124,6 +124,49 @@ ID if have done a custom error 500 page.
     <p>The error identifier is {{ g.sentry_event_id }}</p>
     {% endif %}
 
+User Feedback
+-------------
+
+To enable user feedback for crash reports just make sure you have a custom
+`500` error handler and render out a HTML snippet for bringing up the
+crash dialog:
+
+.. sourcecode:: python
+
+    from flask import Flask, g, render_template
+    from raven.contrib.flask import Sentry
+
+    app = Flask(__name__)
+    sentry = Sentry(app, dsn='___DSN___')
+
+    @app.errorhandler(500
+    def internal_server_error(error):
+        return render_template('500.html',
+            event_id=g.sentry_event_id,
+            public_dsn=sentry.client.get_public_dsn('https')
+        )
+
+And in the error template (``500.html``) you can then do this:
+
+.. sourcecode:: html+jinja
+
+    <!-- Sentry JS SDK 2.1.+ required -->
+    <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+
+    {% if event_id %}
+      <script>
+      Raven.showReportDialog({
+        eventId: '{{ event_id }}',
+        dsn: '{{ public_dsn }}'
+      });
+      </script>
+    {% endif %}
+
+That's it!
+
+For more details on this feature, see the :doc:`User Feedback guide
+<../../../learn/user-feedback>`.
+
 Dealing With Proxies
 --------------------
 
