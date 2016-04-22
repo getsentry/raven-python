@@ -17,3 +17,16 @@ register = template.Library()
 def sentry_public_dsn(scheme=None):
     from raven.contrib.django.models import client
     return client.get_public_dsn(scheme) or ''
+    
+@register.simple_tag
+def sentry_tags(*tag_list):
+    from raven.contrib.django.models import client
+    tags = {}
+    tag_list = tag_list or ['site', 'release']
+    nounicode = lambda x : isinstance(x, unicode) and str(x) or x
+
+    for tag in tag_list:
+	    if hasattr(client, tag):
+	    	tags[ nounicode(tag) ] = nounicode(getattr(client, tag))
+
+    return tags
