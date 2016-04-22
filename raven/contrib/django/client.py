@@ -8,6 +8,7 @@ raven.contrib.django.client
 
 from __future__ import absolute_import
 
+import time
 import logging
 
 from django.conf import settings
@@ -26,12 +27,58 @@ from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
 from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.wsgi import get_headers, get_environ
+from raven.utils import once
+from raven import breadcrumbs
 
 __all__ = ('DjangoClient',)
 
 
+@once
+def install_sql_hook():
+    """If installed this causes Django's queries to be captured."""
+    from django.db.backends.utils import CursorWrapper
+
+    def record_sql(start, sql, params):
+        breadcrumbs.record_breadcrumb('query', {
+            'query': sql,
+            'params': params,
+            'duration': time.time() - start,
+            'classifier': 'django.db'
+        })
+
+    real_execute = CursorWrapper.execute
+    real_executemany = CursorWrapper.executemany
+
+    def execute(self, sql, params=None):
+        start = time.time()
+        try:
+            return real_execute(self, sql, params)
+        finally:
+            record_sql(start, sql, params)
+
+    def executemany(self, sql, param_list):
+        start = time.time()
+        try:
+            return real_executemany(self, sql, param_list)
+        finally:
+            record_sql(start, sql, param_list)
+
+    CursorWrapper.execute = execute
+    CursorWrapper.executemany = executemany
+    breadcrumbs.ignore_logger('django.db.backends')
+
+
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
+
+    def __init__(self, *args, **kwargs):
+        install_sql_hook = kwargs.pop('install_sql_hook', True)
+        Client.__init__(self, *args, **kwargs)
+        if install_sql_hook:
+            self.install_sql_hook()
+
+    def install_sql_hook(self):
+        install_sql_hook()
 
     def get_user_info(self, user):
         if hasattr(user, 'is_authenticated') and \
