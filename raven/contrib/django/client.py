@@ -36,7 +36,10 @@ __all__ = ('DjangoClient',)
 @once
 def install_sql_hook():
     """If installed this causes Django's queries to be captured."""
-    from django.db.backends.utils import CursorWrapper
+    try:
+        from django.db.backends.utils import CursorWrapper
+    except ImportError:
+        from django.db.backends.util import CursorWrapper
 
     def record_sql(start, sql, params):
         breadcrumbs.record_breadcrumb('query', {
