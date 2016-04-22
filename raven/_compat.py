@@ -175,3 +175,10 @@ else:
 def with_metaclass(meta, base=object):
     """Create a base class with a metaclass."""
     return meta("NewBase", (base,), {})
+
+
+def get_code(func):
+    rv = getattr(func, '__code__', getattr(func, 'func_code', None))
+    if rv is None:
+        raise TypeError('Could not get code from %r' % type(func).__name__)
+    return rv
