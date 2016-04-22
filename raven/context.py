@@ -84,7 +84,6 @@ class Context(local, Mapping, Iterable):
         _active_contexts.__dict__.setdefault('contexts', set()).add(self)
 
     def deactivate(self):
-        self.clear()
         try:
             _active_contexts.contexts.discard(self)
         except AttributeError:
@@ -106,10 +105,12 @@ class Context(local, Mapping, Iterable):
     def get(self):
         return self.data
 
-    def clear(self):
+    def clear(self, deactivate=True):
         self.data = {}
         self.exceptions_to_skip.clear()
         self.breadcrumbs.clear()
+        if deactivate:
+            self.deactivate()
 
 
 import raven.breadcrumbs
