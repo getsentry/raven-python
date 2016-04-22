@@ -100,13 +100,13 @@ def _wrap_logging_method(meth, level=None):
     # code location lines up again in case someone runs inspect.getsource
     # on the function.
     ns = {}
-    eval(compile(('''%(offset)sif 1:
+    eval(compile('''%(offset)sif 1:
     def factory(original, record_crumb):
         def %(name)s(self, %(args)s, *args, **kwargs):
             record_crumb(self, %(fwd)s, *args, **kwargs)
             return original(self, %(args)s, *args, **kwargs)
         return %(name)s
-    ''' + '\n') % {
+    \n''' % {
         'offset': '\n' * (code.co_firstlineno - 3),
         'name': func.__name__,
         'args': ', '.join(args),
