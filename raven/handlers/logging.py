@@ -28,7 +28,6 @@ RESERVED = frozenset((
 
 class SentryHandler(logging.Handler, object):
     def __init__(self, *args, **kwargs):
-        self.enable_breadcrumbs = not kwargs.pop('disable_breadcrumbs', False)
         client = kwargs.get('client_cls', Client)
         if len(args) == 1:
             arg = args[0]
