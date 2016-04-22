@@ -1,7 +1,6 @@
 import time
 import logging
 from threading import Lock
-from datetime import datetime
 from types import FunctionType
 
 from raven._compat import iteritems, get_code, text_type
@@ -20,24 +19,34 @@ class BreadcrumbBuffer(object):
     def record(self, type, data=None, timestamp=None):
         if timestamp is None:
             timestamp = time.time()
-        elif isinstance(timestamp, datetime):
-            timestamp = datetime
-
-        self.buffer.append({
-            'type': type,
-            'timestamp': timestamp,
-            'data': data or {},
-        })
+        self.buffer.append((type, timestamp, data))
         del self.buffer[:-self.limit]
 
     def clear(self):
         del self.buffer[:]
 
     def get_buffer(self):
-        return self.buffer[:]
+        rv = []
+        for type, timestamp, data in self.buffer:
+            if data is None:
+                data = {}
+            elif callable(data):
+                data = data()
+            rv.append({
+                'type': type,
+                'data': data,
+                'timestamp': timestamp,
+            })
+        return rv
 
 
-def record_breadcrumb(type, data, timestamp=None):
+def record_breadcrumb(type, data=None, timestamp=None):
+    """Records a breadcrumb for all active clients.  This is what integration
+    code should use rather than invoking the `captureBreadcrumb` method
+    on a specific client.  This also additionally permits data to be a
+    callable that will be invoked to generate the data if the crumb is not
+    discarded.
+    """
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
@@ -45,14 +54,16 @@ def record_breadcrumb(type, data, timestamp=None):
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
-    formatted_msg = text_type(msg)
-    if args:
-        formatted_msg = msg % args
-    record_breadcrumb('message', {
-        'message': formatted_msg,
-        'logger': logger.name,
-        'level': logging.getLevelName(level).lower(),
-    })
+    def _make_data():
+        formatted_msg = text_type(msg)
+        if args:
+            formatted_msg = msg % args
+        return {
+            'message': formatted_msg,
+            'logger': logger.name,
+            'level': logging.getLevelName(level).lower(),
+        }
+    record_breadcrumb('message', _make_data)
 
 
 def _wrap_logging_method(meth, level=None):

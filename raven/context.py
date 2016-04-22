@@ -38,18 +38,19 @@ class Context(local, Mapping, Iterable):
     >>>         context.clear()
     """
 
-    def __init__(self, client):
-        self._client = weakref(client)
+    def __init__(self, client=None):
+        if client is not None:
+            client = weakref(client)
+        self._client = client
         self.data = {}
         self.exceptions_to_skip = set()
         self.breadcrumbs = raven.breadcrumbs.BreadcrumbBuffer()
 
     @property
     def client(self):
-        rv = self._client()
-        if rv is None:
-            raise AttributeError('client')
-        return rv
+        if self._client is None:
+            return None
+        return self._client()
 
     def __hash__(self):
         return id(self)
