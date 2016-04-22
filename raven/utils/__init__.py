@@ -9,6 +9,8 @@ from __future__ import absolute_import
 
 from raven._compat import iteritems, string_types
 import logging
+import threading
+from functools import update_wrapper
 try:
     import pkg_resources
 except ImportError:
@@ -167,3 +169,22 @@ class memoize(object):
         if n not in d:
             d[n] = self.func(obj)
         return d[n]
+
+
+def once(func):
+    """Runs a thing once and once only."""
+    lock = threading.Lock()
+
+    def new_func(*args, **kwargs):
+        if new_func.called:
+            return
+        with lock:
+            if new_func.called:
+                return
+            rv = func(*args, **kwargs)
+            new_func.called = True
+            return rv
+
+    new_func = update_wrapper(new_func, func)
+    new_func.called = False
+    return new_func

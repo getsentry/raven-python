@@ -1,13 +1,9 @@
 import time
 import logging
-from threading import Lock
 from types import FunctionType
 
 from raven._compat import iteritems, get_code, text_type
-
-
-_logging_lock = Lock()
-_logging_hooked = False
+from raven.utils import once
 
 
 class BreadcrumbBuffer(object):
@@ -149,15 +145,12 @@ def _patch_logger():
         logging.Logger.log)
 
 
+@once
 def install_logging_hook():
-    global _logging_hooked
-    if _logging_hooked:
-        return
-    with _logging_lock:
-        if _logging_hooked:
-            return
-        _patch_logger()
-        _logging_hooked = True
+    """Installs the logging hook if it was not installed yet.  Otherwise
+    does nothing.
+    """
+    _patch_logger()
 
 
 import raven.context
