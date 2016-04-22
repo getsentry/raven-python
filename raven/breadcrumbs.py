@@ -4,8 +4,11 @@ import time
 import logging
 from types import FunctionType
 
-from raven._compat import iteritems, get_code, text_type
+from raven._compat import iteritems, get_code, text_type, string_types
 from raven.utils import once
+
+
+special_logger_handlers = {}
 
 
 class BreadcrumbBuffer(object):
@@ -52,6 +55,12 @@ def record_breadcrumb(type, data=None, timestamp=None):
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
+    handler = special_logger_handlers.get(logger.name)
+    if handler is not None:
+        rv = handler(logger, level, msg, args, kwargs)
+        if rv:
+            return
+
     def _make_data():
         formatted_msg = text_type(msg)
         if args:
@@ -154,6 +163,27 @@ def install_logging_hook():
     does nothing.
     """
     _patch_logger()
+
+
+def ignore_logger(name_or_logger):
+    """Ignores a logger for the regular breadcrumb code.  This is useful
+    for framework integration code where some log messages should be
+    specially handled.
+    """
+    register_special_log_handler(name_or_logger, lambda *args: True)
+
+
+def register_special_log_handler(name_or_logger, callback):
+    """Registers a callback for log handling.  The callback is invoked
+    with give arguments: `logger`, `level`, `msg`, `args` and `kwargs`
+    which are the values passed to the logging system.  If the callback
+    returns `True` the default handling is disabled.
+    """
+    if isinstance(name_or_logger, string_types):
+        name = name_or_logger
+    else:
+        name = name_or_logger.name
+    special_logger_handlers[name] = callback
 
 
 import raven.context
