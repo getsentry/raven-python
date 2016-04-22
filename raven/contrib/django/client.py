@@ -41,6 +41,14 @@ def install_sql_hook():
     except ImportError:
         from django.db.backends.util import CursorWrapper
 
+    try:
+        real_execute = CursorWrapper.execute
+        real_executemany = CursorWrapper.executemany
+    except AttributeError:
+        # XXX(mitsuhiko): On some very old django versions (<1.6) this
+        # trickery would have to look different but I can't be bothered.
+        return
+
     def record_sql(start, sql, params):
         breadcrumbs.record_breadcrumb('query', {
             'query': sql,
@@ -48,9 +56,6 @@ def install_sql_hook():
             'duration': time.time() - start,
             'classifier': 'django.db'
         })
-
-    real_execute = CursorWrapper.execute
-    real_executemany = CursorWrapper.executemany
 
     def execute(self, sql, params=None):
         start = time.time()
