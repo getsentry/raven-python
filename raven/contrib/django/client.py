@@ -49,12 +49,12 @@ def install_sql_hook():
         # trickery would have to look different but I can't be bothered.
         return
 
-    def record_sql(start, sql, params):
+    def record_sql(vendor, start, sql, params):
         breadcrumbs.record_breadcrumb('query', {
             'query': sql,
             'params': params,
             'duration': time.time() - start,
-            'classifier': 'django.db'
+            'classifier': 'django.db.%s' % vendor
         })
 
     def execute(self, sql, params=None):
@@ -62,14 +62,14 @@ def install_sql_hook():
         try:
             return real_execute(self, sql, params)
         finally:
-            record_sql(start, sql, params)
+            record_sql(self.db.vendor, start, sql, params)
 
     def executemany(self, sql, param_list):
         start = time.time()
         try:
             return real_executemany(self, sql, param_list)
         finally:
-            record_sql(start, sql, param_list)
+            record_sql(self.db.vendor, start, sql, param_list)
 
     CursorWrapper.execute = execute
     CursorWrapper.executemany = executemany
