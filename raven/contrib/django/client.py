@@ -54,7 +54,7 @@ def format_sql(sql, params):
         sql = sql % conv
         params = conv.params
 
-    for param in params:
+    for param in params or ():
         if param is None:
             rv.append('NULL')
         elif isinstance(param, string_types):
