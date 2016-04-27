@@ -133,7 +133,7 @@ class Client(object):
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
-                 **options):
+                 hook_libraries=None, **options):
         global Raven
 
         o = options
@@ -200,6 +200,8 @@ class Client(object):
         if install_logging_hook:
             self.install_logging_hook()
 
+        self.hook_libraries(hook_libraries)
+
     def set_dsn(self, dsn=None, transport=None):
         if not dsn and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
@@ -236,6 +238,10 @@ class Client(object):
     def install_logging_hook(self):
         from raven.breadcrumbs import install_logging_hook
         install_logging_hook()
+
+    def hook_libraries(self, libraries):
+        from raven.breadcrumbs import hook_libraries
+        hook_libraries(libraries)
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):

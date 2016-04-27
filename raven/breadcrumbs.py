@@ -186,4 +186,55 @@ def register_special_log_handler(name_or_logger, callback):
     special_logger_handlers[name] = callback
 
 
+hooked_libraries = {}
+
+
+def libraryhook(name):
+    def decorator(f):
+        f = once(f)
+        hooked_libraries[name] = f
+        return f
+    return decorator
+
+
+@libraryhook('requests')
+def _hook_requests():
+    try:
+        from requests.sesisons import Session
+    except ImportError:
+        return
+
+    real_send = Session.send
+
+    def send(self, request, *args, **kwargs):
+        def _record_request(response):
+            record_breadcrumb('http_request', {
+                'url': request.url,
+                'method': request.method,
+                'status_code': response and response.status or None,
+                'reason': response and response.reason or None,
+                'classifier': 'requests',
+            })
+        try:
+            resp = real_send(self, request, *args, **kwargs)
+        except Exception:
+            _record_request(None)
+            raise
+        else:
+            _record_request(resp)
+        return resp
+
+    Session.send = send
+
+
+def hook_libraries(libraries):
+    if not libraries:
+        libraries = hooked_libraries.keys()
+    for lib in libraries:
+        func = hooked_libraries.get(lib)
+        if func is None:
+            raise RuntimeError('Unknown library %r for hooking' % lib)
+        func()
+
+
 import raven.context
