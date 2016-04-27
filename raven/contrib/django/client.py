@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 raven.contrib.django.client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,8 +30,43 @@ from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils import once
 from raven import breadcrumbs
+from raven._compat import string_types, binary_type
 
 __all__ = ('DjangoClient',)
+
+
+class _FormatConverter(object):
+
+    def __init__(self, param_mapping):
+        self.param_mapping = param_mapping
+        self.params = []
+
+    def __getitem__(self, val):
+        self.params.append(self.param_mapping.get(val))
+        return '%s'
+
+
+def format_sql(sql, params):
+    rv = []
+
+    if isinstance(params, dict):
+        conv = _FormatConverter(params)
+        sql = sql % conv
+        params = conv.params
+
+    for param in params:
+        if param is None:
+            rv.append('NULL')
+        elif isinstance(param, string_types):
+            if isinstance(param, binary_type):
+                param = param.decode('utf-8', 'replace')
+            if len(param) > 256:
+                param = param[:256] + u'…'
+            rv.append("'%s'" % param.replace("'", "''"))
+        else:
+            rv.append(repr(param))
+
+    return sql, rv
 
 
 @once
@@ -49,27 +85,36 @@ def install_sql_hook():
         # trickery would have to look different but I can't be bothered.
         return
 
-    def record_sql(vendor, start, sql, params):
-        breadcrumbs.record_breadcrumb('query', {
-            'query': sql,
-            'params': params,
-            'duration': time.time() - start,
-            'classifier': 'django.db.%s' % vendor
-        })
+    def record_sql(vendor, start, duration, sql, params):
+        def _make_data():
+            real_sql, real_params = format_sql(sql, params)
+            return {
+                'query': real_sql,
+                'params': real_params,
+                'duration': duration,
+                'classifier': 'django.db.%s' % vendor
+            }
+        breadcrumbs.record_breadcrumb('query', _make_data)
+
+    def record_many_sql(vendor, start, sql, param_list):
+        duration = time.time() - start
+        for params in param_list:
+            record_sql(vendor, start, duration, sql, params)
 
     def execute(self, sql, params=None):
         start = time.time()
         try:
             return real_execute(self, sql, params)
         finally:
-            record_sql(self.db.vendor, start, sql, params)
+            record_sql(self.db.vendor, start, time.time() - start,
+                       sql, params)
 
     def executemany(self, sql, param_list):
         start = time.time()
         try:
             return real_executemany(self, sql, param_list)
         finally:
-            record_sql(self.db.vendor, start, sql, param_list)
+            record_many_sql(self.db.vendor, start, sql, param_list)
 
     CursorWrapper.execute = execute
     CursorWrapper.executemany = executemany
