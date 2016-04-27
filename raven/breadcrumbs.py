@@ -165,12 +165,17 @@ def install_logging_hook():
     _patch_logger()
 
 
-def ignore_logger(name_or_logger):
+def ignore_logger(name_or_logger, allow_level=None):
     """Ignores a logger for the regular breadcrumb code.  This is useful
     for framework integration code where some log messages should be
     specially handled.
     """
-    register_special_log_handler(name_or_logger, lambda *args: True)
+    def handler(logger, level, msg, args, kwargs):
+        if allow_level is not None and \
+           level >= allow_level:
+            return False
+        return True
+    register_special_log_handler(name_or_logger, handler)
 
 
 def register_special_log_handler(name_or_logger, callback):
@@ -200,7 +205,7 @@ def libraryhook(name):
 @libraryhook('requests')
 def _hook_requests():
     try:
-        from requests.sesisons import Session
+        from requests.sessions import Session
     except ImportError:
         return
 
@@ -211,7 +216,7 @@ def _hook_requests():
             record_breadcrumb('http_request', {
                 'url': request.url,
                 'method': request.method,
-                'status_code': response and response.status or None,
+                'status_code': response and response.status_code or None,
                 'reason': response and response.reason or None,
                 'classifier': 'requests',
             })
@@ -226,9 +231,59 @@ def _hook_requests():
 
     Session.send = send
 
+    ignore_logger('requests.packages.urllib3.connectionpool',
+                  allow_level=logging.WARNING)
+
+
+@libraryhook('httplib')
+def _install_httplib():
+    try:
+        from httplib import HTTPConnection
+    except ImportError:
+        from http.client import HTTPConnection
+
+    real_putrequest = HTTPConnection.putrequest
+    real_getresponse = HTTPConnection.getresponse
+
+    def putrequest(self, method, url, *args, **kwargs):
+        self._raven_status_dict = status = {}
+        host = self.host
+        port = self.port
+        default_port = self.default_port
+
+        def _make_data():
+            real_url = url
+            if not real_url.startswith(('http://', 'https://')):
+                real_url = '%s://%s%s%s' % (
+                    default_port == 443 and 'https' or 'http',
+                    host,
+                    port != default_port and ':%s' % port or '',
+                    url,
+                )
+            data = {
+                'url': real_url,
+                'method': method,
+                'classifier': 'httplib',
+            }
+            data.update(status)
+            return data
+        record_breadcrumb('http_request', _make_data)
+        return real_putrequest(self, method, url, *args, **kwargs)
+
+    def getresponse(self, *args, **kwargs):
+        rv = real_getresponse(self, *args, **kwargs)
+        status = getattr(self, '_raven_status_dict', None)
+        if status is not None and 'status_code' not in status:
+            status['status_code'] = rv.status
+            status['reason'] = rv.reason
+        return rv
+
+    HTTPConnection.putrequest = putrequest
+    HTTPConnection.getresponse = getresponse
+
 
 def hook_libraries(libraries):
-    if not libraries:
+    if libraries is None:
         libraries = hooked_libraries.keys()
     for lib in libraries:
         func = hooked_libraries.get(lib)
