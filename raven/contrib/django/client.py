@@ -85,36 +85,37 @@ def install_sql_hook():
         # trickery would have to look different but I can't be bothered.
         return
 
-    def record_sql(vendor, start, duration, sql, params):
+    def record_sql(vendor, alias, start, duration, sql, params):
         def _make_data():
             real_sql, real_params = format_sql(sql, params)
             return {
                 'query': real_sql,
                 'params': real_params,
                 'duration': duration,
-                'classifier': 'django.db.%s' % vendor
+                'classifier': 'django.%s.%s' % (vendor, alias or 'default')
             }
         breadcrumbs.record_breadcrumb('query', _make_data)
 
-    def record_many_sql(vendor, start, sql, param_list):
+    def record_many_sql(vendor, alias, start, sql, param_list):
         duration = time.time() - start
         for params in param_list:
-            record_sql(vendor, start, duration, sql, params)
+            record_sql(vendor, alias, start, duration, sql, params)
 
     def execute(self, sql, params=None):
         start = time.time()
         try:
             return real_execute(self, sql, params)
         finally:
-            record_sql(self.db.vendor, start, time.time() - start,
-                       sql, params)
+            record_sql(self.db.vendor, getattr(self.db, 'alias', None),
+                       start, time.time() - start, sql, params)
 
     def executemany(self, sql, param_list):
         start = time.time()
         try:
             return real_executemany(self, sql, param_list)
         finally:
-            record_many_sql(self.db.vendor, start, sql, param_list)
+            record_many_sql(self.db.vendor, getattr(self.db, 'alias', None),
+                            start, sql, param_list)
 
     CursorWrapper.execute = execute
     CursorWrapper.executemany = executemany
