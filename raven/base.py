@@ -28,7 +28,6 @@ else:
 import raven
 from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
-from raven.context import Context
 from raven.exceptions import APIError, RateLimited
 from raven.utils import json, get_versions, get_auth_header, merge_dicts
 from raven._compat import text_type, iteritems
@@ -133,7 +132,8 @@ class Client(object):
     _registry = TransportRegistry(transports=default_transports)
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
-                 install_sys_hook=True, **options):
+                 install_sys_hook=True, install_logging_hook=True,
+                 hook_libraries=None, **options):
         global Raven
 
         o = options
@@ -186,10 +186,21 @@ class Client(object):
         if Raven is None:
             Raven = self
 
-        self._context = Context()
+        from raven.context import Context
+        self._context = Context(self)
+
+        # We always activate the context for the calling thread.  This
+        # means even in the absence of code that activates the context for
+        # threads otherwise.
+        self._context.activate()
 
         if install_sys_hook:
             self.install_sys_hook()
+
+        if install_logging_hook:
+            self.install_logging_hook()
+
+        self.hook_libraries(hook_libraries)
 
     def set_dsn(self, dsn=None, transport=None):
         if not dsn and os.environ.get('SENTRY_DSN'):
@@ -223,6 +234,14 @@ class Client(object):
             self.captureException(exc_info=exc_info)
             __excepthook__(*exc_info)
         sys.excepthook = handle_exception
+
+    def install_logging_hook(self):
+        from raven.breadcrumbs import install_logging_hook
+        install_logging_hook()
+
+    def hook_libraries(self, libraries):
+        from raven.breadcrumbs import hook_libraries
+        hook_libraries(libraries)
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
@@ -435,6 +454,15 @@ class Client(object):
         data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
         data.setdefault('sdk', SDK_VALUE)
+
+        # insert breadcrumbs
+        crumbs = self.context.breadcrumbs.get_buffer()
+        if crumbs:
+            # Make sure we send the crumbs here as "values" as we use the
+            # raven client internally in sentry and the alternative
+            # submission option of a list here is not supported by the
+            # internal sender.
+            data.setdefault('breadcrumbs', {'values': crumbs})
 
         return data
 
@@ -796,6 +824,17 @@ class Client(object):
             'captureExceptions is deprecated, used context() instead.',
             DeprecationWarning)
         return self.context(**kwargs)
+
+    def captureBreadcrumb(self, type, *args, **kwargs):
+        """Records a breadcrumb with the current context.  They will be
+        sent with the next event.
+        """
+        # Note: framework integration should not call this method but
+        # instead use the raven.breadcrumbs.record_breadcrumb function
+        # which will record to the correct client automatically.
+        self.context.breadcrumbs.record(type, *args, **kwargs)
+
+    capture_breadcrumb = captureBreadcrumb
 
 
 class DummyClient(Client):

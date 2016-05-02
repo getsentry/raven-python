@@ -181,7 +181,11 @@ def sentry_exception_handler(request=None, **kwargs):
 
 
 def register_handlers():
-    from django.core.signals import got_request_exception
+    from django.core.signals import got_request_exception, request_started
+
+    def before_request(*args, **kwargs):
+        client.context.activate()
+    request_started.connect(before_request, weak=False)
 
     # HACK: support Sentry's internal communication
     if 'sentry' in settings.INSTALLED_APPS:

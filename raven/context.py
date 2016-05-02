@@ -7,36 +7,22 @@ raven.context
 """
 from __future__ import absolute_import
 
-import time
-
 from collections import Mapping, Iterable
-from datetime import datetime
 from threading import local
+from weakref import ref as weakref
 
 from raven._compat import iteritems
 
 
-class BreadcrumbBuffer(object):
+_active_contexts = local()
 
-    def __init__(self, limit=100):
-        self.buffer = []
-        self.limit = limit
 
-    def record(self, type, data=None, timestamp=None):
-        if timestamp is None:
-            timestamp = time.time()
-        elif isinstance(timestamp, datetime):
-            timestamp = datetime
-
-        self.buffer.append({
-            'type': type,
-            'timestamp': timestamp,
-            'data': data or {},
-        })
-        del self.buffer[:-self.limit]
-
-    def clear(self):
-        del self.buffer[:]
+def get_active_contexts():
+    """Returns all the active contexts for the current thread."""
+    try:
+        return list(_active_contexts.contexts)
+    except AttributeError:
+        return []
 
 
 class Context(local, Mapping, Iterable):
@@ -51,9 +37,29 @@ class Context(local, Mapping, Iterable):
     >>>     finally:
     >>>         context.clear()
     """
-    def __init__(self):
+
+    def __init__(self, client=None):
+        if client is not None:
+            client = weakref(client)
+        self._client = client
         self.data = {}
         self.exceptions_to_skip = set()
+        self.breadcrumbs = raven.breadcrumbs.BreadcrumbBuffer()
+
+    @property
+    def client(self):
+        if self._client is None:
+            return None
+        return self._client()
+
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        return self is other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __getitem__(self, key):
         return self.data[key]
@@ -66,6 +72,22 @@ class Context(local, Mapping, Iterable):
 
     def __repr__(self):
         return '<%s: %s>' % (type(self).__name__, self.data)
+
+    def __enter__(self):
+        self.activate()
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.deactivate()
+
+    def activate(self):
+        _active_contexts.__dict__.setdefault('contexts', set()).add(self)
+
+    def deactivate(self):
+        try:
+            _active_contexts.contexts.discard(self)
+        except AttributeError:
+            pass
 
     def merge(self, data):
         d = self.data
@@ -83,6 +105,12 @@ class Context(local, Mapping, Iterable):
     def get(self):
         return self.data
 
-    def clear(self):
+    def clear(self, deactivate=True):
         self.data = {}
         self.exceptions_to_skip.clear()
+        self.breadcrumbs.clear()
+        if deactivate:
+            self.deactivate()
+
+
+import raven.breadcrumbs
