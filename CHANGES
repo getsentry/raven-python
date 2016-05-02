@@ -1,3 +1,8 @@
+Version 5.14.0
+--------------
+
+* Added support for reading git sha's from packed references.
+
 Version 5.13.0
 --------------
 
