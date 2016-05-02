@@ -3,6 +3,7 @@ Version 5.14.0
 
 * Added support for reading git sha's from packed references.
 * Detect disabled thread support for uwsgi.
+* Added preliminary support for breadcrumbs.
 
 Version 5.13.0
 --------------
