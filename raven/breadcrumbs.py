@@ -17,10 +17,19 @@ class BreadcrumbBuffer(object):
         self.buffer = []
         self.limit = limit
 
-    def record(self, type, data=None, timestamp=None):
+    def record(self, type, timestamp=None, duration=None, level=None,
+               message=None, category=None, data=None, processor=None):
         if timestamp is None:
             timestamp = time.time()
-        self.buffer.append((type, timestamp, data))
+        self.buffer.append(({
+            'type': type,
+            'timestamp': timestamp,
+            'duration': duration,
+            'level': level,
+            'message': message,
+            'category': category,
+            'data': data,
+        }, processor))
         del self.buffer[:-self.limit]
 
     def clear(self):
@@ -28,30 +37,26 @@ class BreadcrumbBuffer(object):
 
     def get_buffer(self):
         rv = []
-        for type, timestamp, data in self.buffer:
-            if data is None:
-                data = {}
-            elif callable(data):
-                data = data()
-            rv.append({
-                'type': type,
-                'data': data,
-                'timestamp': timestamp,
-            })
+        for idx, (payload, processor) in enumerate(self.buffer):
+            if processor is not None:
+                processor(payload)
+                self.buffer[idx] = (payload, None)
+            rv.append(payload)
         return rv
 
 
-def record_breadcrumb(type, data=None, timestamp=None):
+def record_breadcrumb(type, timestamp=None, duration=None, level=None,
+                      message=None, category=None, data=None,
+                      processor=None):
     """Records a breadcrumb for all active clients.  This is what integration
     code should use rather than invoking the `captureBreadcrumb` method
-    on a specific client.  This also additionally permits data to be a
-    callable that will be invoked to generate the data if the crumb is not
-    discarded.
+    on a specific client.
     """
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
-        ctx.breadcrumbs.record(type, data, timestamp)
+        ctx.breadcrumbs.record(type, timestamp, duration, level, message,
+                               category, data, processor)
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
@@ -61,16 +66,17 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
         if rv:
             return
 
-    def _make_data():
+    def processor(data):
         formatted_msg = text_type(msg)
         if args:
             formatted_msg = msg % args
-        return {
+        data.update({
             'message': formatted_msg,
-            'logger': logger.name,
+            'category': logger.name,
             'level': logging.getLevelName(level).lower(),
-        }
-    record_breadcrumb('message', _make_data)
+            'data': kwargs,
+        })
+    record_breadcrumb('default', processor=processor)
 
 
 def _wrap_logging_method(meth, level=None):
@@ -213,12 +219,11 @@ def _hook_requests():
 
     def send(self, request, *args, **kwargs):
         def _record_request(response):
-            record_breadcrumb('http_request', {
+            record_breadcrumb('http', category='requests', data={
                 'url': request.url,
                 'method': request.method,
                 'status_code': response and response.status_code or None,
                 'reason': response and response.reason or None,
-                'classifier': 'requests',
             })
         try:
             resp = real_send(self, request, *args, **kwargs)
@@ -251,7 +256,7 @@ def _install_httplib():
         port = self.port
         default_port = self.default_port
 
-        def _make_data():
+        def processor(data):
             real_url = url
             if not real_url.startswith(('http://', 'https://')):
                 real_url = '%s://%s%s%s' % (
@@ -260,14 +265,14 @@ def _install_httplib():
                     port != default_port and ':%s' % port or '',
                     url,
                 )
-            data = {
+            data['data'] = {
                 'url': real_url,
                 'method': method,
-                'classifier': 'httplib',
             }
-            data.update(status)
+            data['data'].update(status)
             return data
-        record_breadcrumb('http_request', _make_data)
+        record_breadcrumb('http', category='requests',
+                          processor=processor)
         return real_putrequest(self, method, url, *args, **kwargs)
 
     def getresponse(self, *args, **kwargs):

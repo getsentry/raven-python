@@ -828,7 +828,7 @@ class Client(object):
         # Note: framework integration should not call this method but
         # instead use the raven.breadcrumbs.record_breadcrumb function
         # which will record to the correct client automatically.
-        self.context.breadcrumbs.record(type, dict(*args, **kwargs))
+        self.context.breadcrumbs.record(type, *args, **kwargs)
 
     capture_breadcrumb = captureBreadcrumb
 
