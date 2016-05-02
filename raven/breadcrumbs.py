@@ -72,7 +72,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
             formatted_msg = msg % args
         data.update({
             'message': formatted_msg,
-            'category': logger.name,
+            'category': logger.name.split('.')[0],
             'level': logging.getLevelName(level).lower(),
             'data': kwargs,
         })
