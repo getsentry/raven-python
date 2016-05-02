@@ -86,15 +86,18 @@ def install_sql_hook():
         return
 
     def record_sql(vendor, alias, start, duration, sql, params):
-        def _make_data():
+        def processor(data):
             real_sql, real_params = format_sql(sql, params)
-            return {
-                'query': real_sql,
-                'params': real_params,
+            if real_params:
+                real_sql = real_sql % tuple(real_params)
+            # maybe category to 'django.%s.%s' % (vendor, alias or
+            #   'default') ?
+            data.update({
+                'message': real_sql,
                 'duration': duration,
-                'classifier': 'django.%s.%s' % (vendor, alias or 'default')
-            }
-        breadcrumbs.record_breadcrumb('query', _make_data)
+                'category': 'query',
+            })
+        breadcrumbs.record_breadcrumb('default', processor=processor)
 
     def record_many_sql(vendor, alias, start, sql, param_list):
         duration = time.time() - start
