@@ -458,7 +458,11 @@ class Client(object):
         # insert breadcrumbs
         crumbs = self.context.breadcrumbs.get_buffer()
         if crumbs:
-            data.setdefault('breadcrumbs', crumbs)
+            # Make sure we send the crumbs here as "values" as we use the
+            # raven client internally in sentry and the alternative
+            # submission option of a list here is not supported by the
+            # internal sender.
+            data.setdefault('breadcrumbs', {'values': crumbs})
 
         return data
 
