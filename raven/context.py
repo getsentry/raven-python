@@ -13,6 +13,11 @@ from weakref import ref as weakref
 
 from raven._compat import iteritems
 
+try:
+    from thread import get_ident as get_thread_ident
+except ImportError:
+    from _thread import get_ident as get_thread_ident
+
 
 _active_contexts = local()
 
@@ -42,6 +47,11 @@ class Context(local, Mapping, Iterable):
         if client is not None:
             client = weakref(client)
         self._client = client
+        # Because the thread auto activates the thread local this also
+        # means that we auto activate this thing.  Only if someone decides
+        # to deactivate manually later another call to activate is
+        # technically necessary.
+        self.activate()
         self.data = {}
         self.exceptions_to_skip = set()
         self.breadcrumbs = raven.breadcrumbs.BreadcrumbBuffer()
@@ -80,7 +90,9 @@ class Context(local, Mapping, Iterable):
     def __exit__(self, exc_type, exc_value, tb):
         self.deactivate()
 
-    def activate(self):
+    def activate(self, sticky=False):
+        if sticky:
+            self._sticky_thread = get_thread_ident()
         _active_contexts.__dict__.setdefault('contexts', set()).add(self)
 
     def deactivate(self):
@@ -105,10 +117,19 @@ class Context(local, Mapping, Iterable):
     def get(self):
         return self.data
 
-    def clear(self, deactivate=True):
+    def clear(self, deactivate=None):
         self.data = {}
         self.exceptions_to_skip.clear()
         self.breadcrumbs.clear()
+
+        # If the caller did not specify if it wants to deactivate the
+        # context for the thread we only deactivate it if we're not the
+        # thread that created the context (main thread).
+        if deactivate is None:
+            client = self.client
+            if client is not None:
+                deactivate = get_thread_ident() != client.main_thread_id
+
         if deactivate:
             self.deactivate()
 

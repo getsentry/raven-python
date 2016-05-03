@@ -25,6 +25,11 @@ if sys.version_info >= (3, 2):
 else:
     import contextlib2 as contextlib
 
+try:
+    from thread import get_ident as get_thread_ident
+except ImportError:
+    from _thread import get_ident as get_thread_ident
+
 import raven
 from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
@@ -186,13 +191,12 @@ class Client(object):
         if Raven is None:
             Raven = self
 
+        # We want to remember the creating thread id here because this
+        # comes in useful for the context special handling
+        self.main_thread_id = get_thread_ident()
+
         from raven.context import Context
         self._context = Context(self)
-
-        # We always activate the context for the calling thread.  This
-        # means even in the absence of code that activates the context for
-        # threads otherwise.
-        self._context.activate()
 
         if install_sys_hook:
             self.install_sys_hook()
