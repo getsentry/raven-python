@@ -41,8 +41,8 @@ For instance when you use Django, database queries will be recorded.
 
 Another option to control what happens is to register special handlers for
 the logging system or to disable loggers entirely.  For this you can use
-the :func:`~raven.breadcrumbs.ignore_logger` and
-:func:`~raven.breadcrumbs.register_special_log_handler` functions:
+the :py:func:`~raven.breadcrumbs.ignore_logger` and
+:py:func:`~raven.breadcrumbs.register_special_log_handler` functions:
 
 .. py:function:: raven.breadcrumbs.ignore_logger(name_or_logger)
 
@@ -59,13 +59,13 @@ the :func:`~raven.breadcrumbs.ignore_logger` and
     `True` the default handling kicks in.
 
     Typically it makes sense to invoke
-    :func:`~raven.breadcrumbs.record_breadcrumb` from it.
+    :py:func:`~raven.breadcrumbs.record_breadcrumb` from it.
 
 Manually Emitting Breadcrumbs
 -----------------------------
 
 If you want to manually record breadcrumbs the most convenient way to do
-taht is to use the :func:`~reaven.breadcrumbs.record_breadcrumb` function
+that is to use the :py:func:`~reaven.breadcrumbs.record_breadcrumb` function
 which will automatically record the crumbs with the clients that are
 working with the current thread.  This is more convenient than to call the
 `captureBreadcrumb` method on the client itself as you need to hold a
