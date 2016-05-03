@@ -5,6 +5,10 @@ Version 5.14.0
 * Detect disabled thread support for uwsgi.
 * Added preliminary support for breadcrumbs.
 
+Note: this version adds breadcrumbs to events.  This means that if you run a
+Sentry version older than 8.5 you will see some warnings in the UI.  Consider
+using an older version of the client if you do not want to see it.
+
 Version 5.13.0
 --------------
 
