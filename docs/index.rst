@@ -82,6 +82,7 @@ discover:
 
    usage
    advanced
+   breadcrumbs
    integrations/index
    transports
    platform-support
