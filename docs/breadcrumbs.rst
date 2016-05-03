@@ -102,3 +102,27 @@ modifications:
     record_breadcrumb(message='This is an important message',
                       category='my_module', level='warning',
                       processor=process_crumb)
+
+Context Thread Binding
+----------------------
+
+Typically when you use breadcrumbs from a framework integration
+breadcrumbs work automatically.  However there are cases where you want to
+do this yourself.  If a context is not bound to the thread breadcrumbs
+will not be recorded.  The thread that created the client (typically the
+main thread) is bound by default.
+
+To bind the context you can use the `activate()` method on it::
+
+    client.context.activate()
+
+To unbind the context you can `deactivate()` it::
+
+    client.context.deactivate()
+
+Alternatively you can use the context with the `with` statement::
+
+    with client.context:
+        ...
+
+The context is automatically deactivated if it's cleared.

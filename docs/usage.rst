@@ -51,6 +51,37 @@ and `clear()` function that can be used::
         finally:
             client.context.clear()
 
+Additionally starting with Raven 5.14 you can bind the context to the
+current thread to enable crumb support by calling `activate()`.  The
+deactivation happens upon calling `clear()`.  This can also be achieved by
+using the context object with the `with` statement.  This is needed to
+enable breadcrumb capturing.  Framework integrations typically do this
+automatically.
+
+These two examples are equivalent::
+
+    def handle_request(request):
+        client.context.activate()
+        client.context.merge({'user': {
+            'email': request.user.email
+        }})
+        try:
+            ...
+        finally:
+            client.context.clear()
+
+With a context manager::
+
+    def handle_request(request):
+        with client.context:
+            client.context.merge({'user': {
+                'email': request.user.email
+            }})
+            try:
+                ...
+            finally:
+                client.context.clear()
+
 Testing the Client
 ------------------
 
