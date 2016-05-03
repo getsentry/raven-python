@@ -125,4 +125,6 @@ Alternatively you can use the context with the `with` statement::
     with client.context:
         ...
 
-The context is automatically deactivated if it's cleared.
+The context is automatically deactivated if it's cleared unless it's
+managed from the main thread.  Likewise raven will attempt to auto
+activate the client.
