@@ -77,7 +77,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
         kwargs.pop('exc_info', None)
         data.update({
             'message': formatted_msg,
-            'category': logger.name.split('.')[0],
+            'category': logger.name,
             'level': logging.getLevelName(level).lower(),
             'data': kwargs,
         })
