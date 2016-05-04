@@ -70,6 +70,11 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
         formatted_msg = text_type(msg)
         if args:
             formatted_msg = msg % args
+        # We do not want to include exc_info as argument because it often
+        # lies (set to a contant value like 1 or True) or even if it's a
+        # tuple it will not be particularly useful for us as we cannot
+        # process it anyways.
+        kwargs.pop('exc_info', None)
         data.update({
             'message': formatted_msg,
             'category': logger.name.split('.')[0],
