@@ -88,7 +88,7 @@ Example:
 
     from raven.breadcrumbs import record_breadcrumb
 
-    record_breadcrumb(message='This is an important message',
+    record_breadcrumb('info', message='This is an important message',
                       category='my_module', level='warning')
 
 Because crumbs go into a ring buffer, often it can be useful to defer
@@ -103,7 +103,7 @@ modifications:
     def process_crumb(data):
         data['data'] = compute_expensive_data()
 
-    record_breadcrumb(message='This is an important message',
+    record_breadcrumb('info', message='This is an important message',
                       category='my_module', level='warning',
                       processor=process_crumb)
 
