@@ -12,6 +12,10 @@ framework and a few popular libraries to emit crumbs.
 You can however also manually emit events if you want to do so.  There are
 a few ways this can be done.
 
+Breadcrumbs are enabled by default but starting with Raven 5.15 you can
+disable them on a per-client basis by passing ``enable_breadcrumbs=False``
+to the client constructor.
+
 Enabling / Disabling Instrumentation
 ------------------------------------
 
