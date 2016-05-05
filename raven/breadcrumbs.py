@@ -45,6 +45,17 @@ class BreadcrumbBuffer(object):
         return rv
 
 
+class BlackholeBreadcrumbBuffer(BreadcrumbBuffer):
+    def record(self, *args, **kwargs):
+        pass
+
+
+def make_buffer(enabled=True):
+    if enabled:
+        return BreadcrumbBuffer()
+    return BlackholeBreadcrumbBuffer()
+
+
 def record_breadcrumb(type, timestamp=None, duration=None, level=None,
                       message=None, category=None, data=None,
                       processor=None):

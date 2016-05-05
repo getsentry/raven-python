@@ -138,7 +138,7 @@ class Client(object):
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
-                 hook_libraries=None, **options):
+                 hook_libraries=None, enable_breadcrumbs=True, **options):
         global Raven
 
         o = options
@@ -194,6 +194,7 @@ class Client(object):
         # We want to remember the creating thread id here because this
         # comes in useful for the context special handling
         self.main_thread_id = get_thread_ident()
+        self.enable_breadcrumbs = enable_breadcrumbs
 
         from raven.context import Context
         self._context = Context(self)
@@ -460,13 +461,14 @@ class Client(object):
         data.setdefault('sdk', SDK_VALUE)
 
         # insert breadcrumbs
-        crumbs = self.context.breadcrumbs.get_buffer()
-        if crumbs:
-            # Make sure we send the crumbs here as "values" as we use the
-            # raven client internally in sentry and the alternative
-            # submission option of a list here is not supported by the
-            # internal sender.
-            data.setdefault('breadcrumbs', {'values': crumbs})
+        if self.enable_breadcrumbs:
+            crumbs = self.context.breadcrumbs.get_buffer()
+            if crumbs:
+                # Make sure we send the crumbs here as "values" as we use the
+                # raven client internally in sentry and the alternative
+                # submission option of a list here is not supported by the
+                # internal sender.
+                data.setdefault('breadcrumbs', {'values': crumbs})
 
         return data
 

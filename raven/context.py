@@ -44,6 +44,8 @@ class Context(local, Mapping, Iterable):
     """
 
     def __init__(self, client=None):
+        breadcrumbs = raven.breadcrumbs.make_buffer(
+            client is None or client.enable_breadcrumbs)
         if client is not None:
             client = weakref(client)
         self._client = client
@@ -54,7 +56,7 @@ class Context(local, Mapping, Iterable):
         self.activate()
         self.data = {}
         self.exceptions_to_skip = set()
-        self.breadcrumbs = raven.breadcrumbs.BreadcrumbBuffer()
+        self.breadcrumbs = breadcrumbs
 
     @property
     def client(self):

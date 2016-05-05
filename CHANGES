@@ -3,6 +3,8 @@ Version 5.16.0
 
 * exc_info is no longer included in logger based breadcrumbs.
 * log the entire logger name as category.
+* added a `enable_breadcrumbs` flag to the client to allow the enabling or
+  disabling of breadcrumbs quickly.
 
 Version 5.15.0
 --------------
