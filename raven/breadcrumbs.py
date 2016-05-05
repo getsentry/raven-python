@@ -82,7 +82,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
         if args:
             formatted_msg = msg % args
         # We do not want to include exc_info as argument because it often
-        # lies (set to a contant value like 1 or True) or even if it's a
+        # lies (set to a constant value like 1 or True) or even if it's a
         # tuple it will not be particularly useful for us as we cannot
         # process it anyways.
         kwargs.pop('exc_info', None)
