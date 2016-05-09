@@ -5,6 +5,9 @@ Version 5.16.0
 * log the entire logger name as category.
 * added a `enable_breadcrumbs` flag to the client to allow the enabling or
   disabling of breadcrumbs quickly.
+* corrected an issue where python interpreters with bytecode writing enabled
+  would report incorrect logging locations when breadcrumb patching for
+  logging was enabled.
 
 Version 5.15.0
 --------------
