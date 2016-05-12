@@ -20,10 +20,10 @@ from datetime import datetime
 from pprint import pformat
 from types import FunctionType
 
-if sys.version_info >= (3, 2):
-    import contextlib
-else:
+try:
     import contextlib2 as contextlib
+except ImportError:
+    import contextlib
 
 try:
     from thread import get_ident as get_thread_ident
@@ -800,7 +800,6 @@ class Client(object):
         elif function_or_exceptions is not None:
             exceptions = function_or_exceptions
 
-        # In python3.2 contextmanager acts both as contextmanager and decorator
         @contextlib.contextmanager
         def make_decorator(exceptions):
             try:

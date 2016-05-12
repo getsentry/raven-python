@@ -51,6 +51,9 @@ if sys.version_info[0] == 3:
     # If it's python3.2 or greater, don't use contextlib backport
     if sys.version_info[1] >= 2:
         install_requires.remove('contextlib2')
+elif sys.version_info[0] == 2 and sys.version_info[1] == 7:
+    # If we're on python 2.7, don't use contextlib backport
+    install_requires.remove('contextlib2')
 
 tests_require = [
     'six',
