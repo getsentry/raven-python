@@ -11,6 +11,9 @@ from raven.utils import once
 special_logger_handlers = {}
 
 
+logger = logging.getLogger('raven')
+
+
 class BreadcrumbBuffer(object):
 
     def __init__(self, limit=100):
@@ -39,9 +42,13 @@ class BreadcrumbBuffer(object):
         rv = []
         for idx, (payload, processor) in enumerate(self.buffer):
             if processor is not None:
-                processor(payload)
+                try:
+                    processor(payload)
+                except Exception:
+                    logger.exception('Failed to process breadcrumbs. Ignored')
                 self.buffer[idx] = (payload, None)
-            rv.append(payload)
+            if payload is not None:
+                rv.append(payload)
         return rv
 
 
