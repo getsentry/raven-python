@@ -78,9 +78,17 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
             return
 
     def processor(data):
-        formatted_msg = text_type(msg)
-        if args:
-            formatted_msg = msg % args
+        formatted_msg = msg
+
+        # If people log bad things, this can happen.  Then just don't do
+        # anything.
+        try:
+            formatted_msg = text_type(msg)
+            if args:
+                formatted_msg = msg % args
+        except Exception:
+            pass
+
         # We do not want to include exc_info as argument because it often
         # lies (set to a constant value like 1 or True) or even if it's a
         # tuple it will not be particularly useful for us as we cannot
