@@ -56,3 +56,15 @@ class BreadcrumbTestCase(TestCase):
         assert int(items[3]) == lineno
         assert items[4] == 'INFO'
         assert items[5] == 'Hello World!'
+
+    def test_broken_logging(self):
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            log = logging.getLogger('whatever.foo')
+            log.info('This is a message with %s. %s!', 42)
+            crumbs = client.context.breadcrumbs.get_buffer()
+
+        assert len(crumbs) == 1
+        assert crumbs[0]['type'] == 'default'
+        assert crumbs[0]['category'] == 'whatever.foo'
+        assert crumbs[0]['message'] == 'This is a message with %s. %s!'
