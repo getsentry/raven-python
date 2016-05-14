@@ -1,3 +1,8 @@
+Version 5.17.0
+--------------
+
+* if breadcrumbs fail to process due to an error they are now skipped.
+
 Version 5.16.0
 --------------
 
