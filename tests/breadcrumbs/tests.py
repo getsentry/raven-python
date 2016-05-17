@@ -82,7 +82,6 @@ class BreadcrumbTestCase(TestCase):
             log.info('This is a message with %s!', 42)
             crumbs = client.context.breadcrumbs.get_buffer()
 
-        print crumbs
         assert len(crumbs) == 3
         assert crumbs[0]['type'] == 'default'
         assert crumbs[0]['category'] == 'whatever.foo'
