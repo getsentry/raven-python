@@ -1,3 +1,9 @@
+Version 5.18.0
+--------------
+
+* Breadcrumbs are now attempted to be deduplicated to catch some common
+  cases where log messages just spam up the breadcrumbs.
+
 Version 5.17.0
 --------------
 

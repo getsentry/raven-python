@@ -14,20 +14,29 @@ special_logger_handlers = {}
 logger = logging.getLogger('raven')
 
 
+def event_payload_considered_equal(a, b):
+    return (
+        a['type'] == b['type'] and
+        a['level'] == b['level'] and
+        a['message'] == b['message'] and
+        a['category'] == b['category'] and
+        a['data'] == b['data']
+    )
+
+
 class BreadcrumbBuffer(object):
 
     def __init__(self, limit=100):
         self.buffer = []
         self.limit = limit
 
-    def record(self, type, timestamp=None, duration=None, level=None,
-               message=None, category=None, data=None, processor=None):
+    def record(self, type, timestamp=None, level=None, message=None,
+               category=None, data=None, processor=None):
         if timestamp is None:
             timestamp = time.time()
         self.buffer.append(({
             'type': type,
             'timestamp': timestamp,
-            'duration': duration,
             'level': level,
             'message': message,
             'category': category,
@@ -46,8 +55,10 @@ class BreadcrumbBuffer(object):
                     processor(payload)
                 except Exception:
                     logger.exception('Failed to process breadcrumbs. Ignored')
+                    payload = None
                 self.buffer[idx] = (payload, None)
-            if payload is not None:
+            if payload is not None and \
+               (not rv or not event_payload_considered_equal(rv[-1], payload)):
                 rv.append(payload)
         return rv
 
@@ -63,7 +74,7 @@ def make_buffer(enabled=True):
     return BlackholeBreadcrumbBuffer()
 
 
-def record_breadcrumb(type, timestamp=None, duration=None, level=None,
+def record_breadcrumb(type, timestamp=None, level=None,
                       message=None, category=None, data=None,
                       processor=None):
     """Records a breadcrumb for all active clients.  This is what integration
@@ -73,7 +84,7 @@ def record_breadcrumb(type, timestamp=None, duration=None, level=None,
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
-        ctx.breadcrumbs.record(type, timestamp, duration, level, message,
+        ctx.breadcrumbs.record(type, timestamp, level, message,
                                category, data, processor)
 
 

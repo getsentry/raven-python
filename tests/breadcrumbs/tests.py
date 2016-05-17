@@ -68,3 +68,28 @@ class BreadcrumbTestCase(TestCase):
         assert crumbs[0]['type'] == 'default'
         assert crumbs[0]['category'] == 'whatever.foo'
         assert crumbs[0]['message'] == 'This is a message with %s. %s!'
+
+    def test_dedup_logging(self):
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            log = logging.getLogger('whatever.foo')
+            log.info('This is a message with %s!', 42)
+            log.info('This is a message with %s!', 42)
+            log.info('This is a message with %s!', 42)
+            log.info('This is a message with %s!', 23)
+            log.info('This is a message with %s!', 23)
+            log.info('This is a message with %s!', 23)
+            log.info('This is a message with %s!', 42)
+            crumbs = client.context.breadcrumbs.get_buffer()
+
+        print crumbs
+        assert len(crumbs) == 3
+        assert crumbs[0]['type'] == 'default'
+        assert crumbs[0]['category'] == 'whatever.foo'
+        assert crumbs[0]['message'] == 'This is a message with 42!'
+        assert crumbs[1]['type'] == 'default'
+        assert crumbs[1]['category'] == 'whatever.foo'
+        assert crumbs[1]['message'] == 'This is a message with 23!'
+        assert crumbs[2]['type'] == 'default'
+        assert crumbs[2]['category'] == 'whatever.foo'
+        assert crumbs[2]['message'] == 'This is a message with 42!'
