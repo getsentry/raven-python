@@ -59,7 +59,7 @@ tests_require = [
     'Django>=1.4',
     'django-celery>=2.5',
     'exam>=0.5.2',
-    'flake8>=2.0,<2.1',
+    'flake8>=2.0,<2.6',
     'logbook',
     'mock',
     'nose',
