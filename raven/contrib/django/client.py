@@ -142,19 +142,25 @@ class DjangoClient(Client):
            not user.is_authenticated():
             return None
 
-        user_info = {
-            'id': user.pk,
-        }
+        user_info = {}
+        try:
+            user_info['id'] = user.pk
 
-        if hasattr(user, 'email'):
-            user_info['email'] = user.email
+            if hasattr(user, 'email'):
+                user_info['email'] = user.email
 
-        if hasattr(user, 'get_username'):
-            user_info['username'] = user.get_username()
-        elif hasattr(user, 'username'):
-            user_info['username'] = user.username
+            if hasattr(user, 'get_username'):
+                user_info['username'] = user.get_username()
+            elif hasattr(user, 'username'):
+                user_info['username'] = user.username
+        except Exception:
+            # We expect that user objects can be somewhat broken at times
+            # and try to just handle as much as possible and ignore errors
+            # as good as possible here.
+            pass
 
-        return user_info
+        if user_info:
+            return user_info
 
     def get_data_from_request(self, request):
         result = {}
