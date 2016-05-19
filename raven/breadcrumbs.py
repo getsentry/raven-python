@@ -30,8 +30,11 @@ class BreadcrumbBuffer(object):
         self.buffer = []
         self.limit = limit
 
-    def record(self, type, timestamp=None, level=None, message=None,
+    def record(self, message=None, timestamp=None, level=None, type='default',
                category=None, data=None, processor=None):
+        if not (message or data or processor):
+            raise ValueError('You must pass either `message`, `data`, or `processor`')
+
         if timestamp is None:
             timestamp = time.time()
         self.buffer.append(({
@@ -56,6 +59,8 @@ class BreadcrumbBuffer(object):
                 except Exception:
                     logger.exception('Failed to process breadcrumbs. Ignored')
                     payload = None
+                if not (payload.get('data') or payload.get('message')):
+                    raise ValueError('Missing required attribute: `message` or `data`')
                 self.buffer[idx] = (payload, None)
             if payload is not None and \
                (not rv or not event_payload_considered_equal(rv[-1], payload)):
@@ -74,8 +79,8 @@ def make_buffer(enabled=True):
     return BlackholeBreadcrumbBuffer()
 
 
-def record_breadcrumb(type, timestamp=None, level=None,
-                      message=None, category=None, data=None,
+def record_breadcrumb(message=None, timestamp=None, level=None,
+                      type='default', category=None, data=None,
                       processor=None):
     """Records a breadcrumb for all active clients.  This is what integration
     code should use rather than invoking the `captureBreadcrumb` method
@@ -84,8 +89,15 @@ def record_breadcrumb(type, timestamp=None, level=None,
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
-        ctx.breadcrumbs.record(type, timestamp, level, message,
-                               category, data, processor)
+        ctx.breadcrumbs.record(
+            type=type,
+            timestamp=timestamp,
+            level=level,
+            message=message,
+            category=category,
+            data=data,
+            processor=processor,
+        )
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
@@ -118,7 +130,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
             'level': logging.getLevelName(level).lower(),
             'data': kwargs,
         })
-    record_breadcrumb('default', processor=processor)
+    record_breadcrumb(type='default', processor=processor)
 
 
 def _wrap_logging_method(meth, level=None):
@@ -261,7 +273,7 @@ def _hook_requests():
 
     def send(self, request, *args, **kwargs):
         def _record_request(response):
-            record_breadcrumb('http', category='requests', data={
+            record_breadcrumb(type='http', category='requests', data={
                 'url': request.url,
                 'method': request.method,
                 'status_code': response and response.status_code or None,
@@ -313,7 +325,7 @@ def _install_httplib():
             }
             data['data'].update(status)
             return data
-        record_breadcrumb('http', category='requests',
+        record_breadcrumb(type='http', category='requests',
                           processor=processor)
         return real_putrequest(self, method, url, *args, **kwargs)
 
