@@ -122,13 +122,16 @@ modifications:
 Context Thread Binding
 ----------------------
 
-Typically when you use breadcrumbs from a framework integration
-breadcrumbs work automatically.  However there are cases where you want to
-do this yourself.  If a context is not bound to the thread breadcrumbs
-will not be recorded.  The thread that created the client (typically the
-main thread) is bound by default.
+Typically breadcrumbs work automatically.  Both the raven client itself as
+well as the framework integrations configure it to work as good as
+possible out of the box.  In some advanced scenarios however you might not
+see breadcrumbs show up.
 
-To bind the context you can use the `activate()` method on it::
+This can be because the context needs to be bound to a thread.  The
+default behavior is to automatically bind the context and to unbind it
+when the context is cleared.
+
+To manually bind the context you can use the `activate()` method on it::
 
     client.context.activate()
 
@@ -143,4 +146,4 @@ Alternatively you can use the context with the `with` statement::
 
 The context is automatically deactivated if it's cleared unless it's
 managed from the main thread.  Likewise raven will attempt to auto
-activate the client.
+activate the client the first time a thread needs it.

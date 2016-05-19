@@ -147,12 +147,26 @@ Context
     This means that you can modify this object over time to feed it with
     more appropriate information.
 
-    .. py:method:: merge(data)
+    .. py:method:: activate()
+
+        Binds the context to the current thread.  This normally happens
+        automatically on first usage but if the context was deactivated
+        then this needs to be called again to bind it again.  Only if a
+        context is bound to the thread breadcrumbs will be recorded.
+
+    .. py:method:: deactivate()
+
+        This deactivates the thread binding of the context.  In particular
+        it means that breadcrumbs of the current thread are no longer
+        recorded to this context.
+
+    .. py:method:: merge(data, activate=True)
 
         Performs a merge of the current data in the context and the new
-        data provided.
+        data provided.  This also automatically activates the context
+        by default.
 
-    .. py:method:: clear()
+    .. py:method:: clear(deactivate=None)
 
         Clears the context.  It's important that you make sure to call
         this when you reuse the thread for something else.  For instance
@@ -161,3 +175,11 @@ Context
 
         Otherwise you run at risk of seeing incorrect information after
         the first use of the thread.
+
+        Optionally `deactivate` parameter controls if the context should
+        automatically be deactivated.  The default behavior is to
+        deactivate if the context was not created for the main thread.
+
+    The context can also be used as a context manager.  In that case
+    :py:meth:`activate` is called on enter and :py:meth:`deactivate` is
+    called on exit.
