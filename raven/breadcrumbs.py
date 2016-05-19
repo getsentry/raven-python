@@ -32,6 +32,9 @@ class BreadcrumbBuffer(object):
 
     def record(self, timestamp=None, level=None, message=None,
                category=None, data=None, type=None, processor=None):
+        if not (message or data or processor):
+            raise ValueError('You must pass either `message`, `data`, '
+                             'or `processor`')
         if timestamp is None:
             timestamp = time.time()
         self.buffer.append(({
@@ -86,7 +89,6 @@ def record(message=None, timestamp=None, level=None, category=None,
     code should use rather than invoking the `captureBreadcrumb` method
     on a specific client.
     """
-
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
