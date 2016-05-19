@@ -1,5 +1,5 @@
-Logging Breadcrumbs
-===================
+Breadcrumbs
+===========
 
 Newer Sentry versions support logging of breadcrumbs in addition of
 errors.  This means that whenever an error or other Sentry event is
@@ -88,7 +88,7 @@ Example:
 
     from raven.breadcrumbs import record_breadcrumb
 
-    record_breadcrumb('default', message='This is an important message',
+    record_breadcrumb(message='This is an important message',
                       category='my_module', level='warning')
 
 Because crumbs go into a ring buffer, often it can be useful to defer
@@ -103,7 +103,7 @@ modifications:
     def process_crumb(data):
         data['data'] = compute_expensive_data()
 
-    record_breadcrumb('default', message='This is an important message',
+    record_breadcrumb(message='This is an important message',
                       category='my_module', level='warning',
                       processor=process_crumb)
 
