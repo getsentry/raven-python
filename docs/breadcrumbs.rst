@@ -63,33 +63,45 @@ the :py:func:`~raven.breadcrumbs.ignore_logger` and
     `True` the default handling kicks in.
 
     Typically it makes sense to invoke
-    :py:func:`~raven.breadcrumbs.record_breadcrumb` from it.
+    :py:func:`~raven.breadcrumbs.record` from it.
 
 Manually Emitting Breadcrumbs
 -----------------------------
 
 If you want to manually record breadcrumbs the most convenient way to do
-that is to use the :py:func:`~reaven.breadcrumbs.record_breadcrumb` function
+that is to use the :py:func:`~reaven.breadcrumbs.record` function
 which will automatically record the crumbs with the clients that are
 working with the current thread.  This is more convenient than to call the
 `captureBreadcrumb` method on the client itself as you need to hold a
 reference to that.
 
-.. py:function:: raven.breadcrumbs.record_breadcrumb(**options)
+.. py:function:: raven.breadcrumbs.record(**options)
 
     This function accepts keyword arguments matching the attributes of a
     breadcrumb.  For more information see :doc:`/clientdev/interfaces`.
     Additionally a `processor` callback can be passed which will be
     invoked to process the data if the crumb was not rejected.
 
+    The most important parameters:
+
+    `message`:
+        the message that should be recorded.
+    `data`:
+        a data dictionary that should be recorded with the event.
+    `category`:
+        The category for this error. This can be a module name, or just a
+        string that clearly identifies the crumb (eg: `http`, `rpc`, etc.)
+    `type`:
+        can override the type if a special type should be sent to Sentry.
+
 Example:
 
 .. sourcecode:: python
 
-    from raven.breadcrumbs import record_breadcrumb
+    from raven import breadcrumbs
 
-    record_breadcrumb('default', message='This is an important message',
-                      category='my_module', level='warning')
+    breadcrumbs.record(message='This is an important message',
+                       category='my_module', level='warning')
 
 Because crumbs go into a ring buffer, often it can be useful to defer
 processing of expensive operations until the crumb is actually needed.
@@ -98,14 +110,14 @@ modifications:
 
 .. sourcecode:: python
 
-    from raven.breadcrumbs import record_breadcrumb
+    from raven.breadcrumbs import record
 
     def process_crumb(data):
         data['data'] = compute_expensive_data()
 
-    record_breadcrumb('default', message='This is an important message',
-                      category='my_module', level='warning',
-                      processor=process_crumb)
+    breadcrumbs.record(message='This is an important message',
+                       category='my_module', level='warning',
+                       processor=process_crumb)
 
 Context Thread Binding
 ----------------------

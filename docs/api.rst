@@ -84,6 +84,15 @@ Client
             except Exception:
                 client.captureException()
 
+    .. py:method:: captureBreadcrumb(message=None, timestamp=None,
+                                     level=None, category=None, data=None,
+                                     type=None, processor=None)
+
+        Manually captures a breadcrumb in the internal buffer for the
+        current client's context.  Instead of using this method you are
+        encouraged to instead use the :py:func:`raven.breadcrumbs.record`
+        function which records to the correct client automatically.
+
     .. py:method:: send(**data)
 
         Accepts all data parameters and serializes them, then sends then
