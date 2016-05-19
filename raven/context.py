@@ -103,7 +103,9 @@ class Context(local, Mapping, Iterable):
         except AttributeError:
             pass
 
-    def merge(self, data):
+    def merge(self, data, activate=True):
+        if activate:
+            self.activate()
         d = self.data
         for key, value in iteritems(data):
             if key in ('tags', 'extra'):

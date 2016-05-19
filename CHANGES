@@ -3,6 +3,8 @@ Version 5.18.0
 
 * Breadcrumbs are now attempted to be deduplicated to catch some common
   cases where log messages just spam up the breadcrumbs.
+* Improvements to the public breadcrumbs API and stabilized some.
+* Automatically activate the context on calls to `merge`
 
 Version 5.17.0
 --------------
