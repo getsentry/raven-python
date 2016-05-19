@@ -97,7 +97,7 @@ def install_sql_hook():
                 'duration': duration,
                 'category': 'query',
             })
-        breadcrumbs.record_breadcrumb('default', processor=processor)
+        breadcrumbs.record(processor=processor)
 
     def record_many_sql(vendor, alias, start, sql, param_list):
         duration = time.time() - start

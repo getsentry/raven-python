@@ -831,14 +831,14 @@ class Client(object):
             DeprecationWarning)
         return self.context(**kwargs)
 
-    def captureBreadcrumb(self, type, *args, **kwargs):
+    def captureBreadcrumb(self, *args, **kwargs):
         """Records a breadcrumb with the current context.  They will be
         sent with the next event.
         """
         # Note: framework integration should not call this method but
         # instead use the raven.breadcrumbs.record_breadcrumb function
         # which will record to the correct client automatically.
-        self.context.breadcrumbs.record(type, *args, **kwargs)
+        self.context.breadcrumbs.record(*args, **kwargs)
 
     capture_breadcrumb = captureBreadcrumb
 

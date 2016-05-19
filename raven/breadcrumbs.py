@@ -30,12 +30,12 @@ class BreadcrumbBuffer(object):
         self.buffer = []
         self.limit = limit
 
-    def record(self, type, timestamp=None, level=None, message=None,
-               category=None, data=None, processor=None):
+    def record(self, timestamp=None, level=None, message=None,
+               category=None, data=None, type=None, processor=None):
         if timestamp is None:
             timestamp = time.time()
         self.buffer.append(({
-            'type': type,
+            'type': type or 'default',
             'timestamp': timestamp,
             'level': level,
             'message': message,
@@ -74,13 +74,19 @@ def make_buffer(enabled=True):
     return BlackholeBreadcrumbBuffer()
 
 
-def record_breadcrumb(type, timestamp=None, level=None,
-                      message=None, category=None, data=None,
-                      processor=None):
+def record_breadcrumb(type, *args, **kwargs):
+    # Legacy alias
+    kwargs['type'] = type
+    return record(*args, **kwargs)
+
+
+def record(message=None, timestamp=None, level=None, category=None,
+           data=None, type=None, processor=None):
     """Records a breadcrumb for all active clients.  This is what integration
     code should use rather than invoking the `captureBreadcrumb` method
     on a specific client.
     """
+
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
@@ -118,7 +124,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
             'level': logging.getLevelName(level).lower(),
             'data': kwargs,
         })
-    record_breadcrumb('default', processor=processor)
+    record(processor=processor)
 
 
 def _wrap_logging_method(meth, level=None):
@@ -261,7 +267,7 @@ def _hook_requests():
 
     def send(self, request, *args, **kwargs):
         def _record_request(response):
-            record_breadcrumb('http', category='requests', data={
+            record(type='http', category='requests', data={
                 'url': request.url,
                 'method': request.method,
                 'status_code': response and response.status_code or None,
@@ -313,8 +319,7 @@ def _install_httplib():
             }
             data['data'].update(status)
             return data
-        record_breadcrumb('http', category='requests',
-                          processor=processor)
+        record(type='http', category='requests', processor=processor)
         return real_putrequest(self, method, url, *args, **kwargs)
 
     def getresponse(self, *args, **kwargs):
