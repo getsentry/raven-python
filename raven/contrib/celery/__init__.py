@@ -10,7 +10,7 @@ from __future__ import absolute_import
 import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
-from celery.signals import after_setup_logger, task_failure
+from celery.signals import after_setup_logger, after_setup_task_logger, task_failure
 from raven.handlers.logging import SentryHandler
 
 
@@ -64,3 +64,4 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
         logger.addHandler(handler)
 
     after_setup_logger.connect(process_logger_event, weak=False)
+    after_setup_task_logger.connect(process_logger_event, weak=False)
