@@ -5,7 +5,7 @@ raven.utils.stacks
 :copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import inspect
 import linecache
@@ -198,18 +198,48 @@ def slim_frame_data(frames, frame_allowance=25):
 
     Returns ``frames``.
     """
-    frames_len = len(frames)
+    frames_len = 0
+    app_frames = []
+    system_frames = []
+    for frame in frames:
+        frames_len += 1
+        if frame.get('in_app'):
+            app_frames.append(frame)
+        else:
+            system_frames.append(frame)
 
     if frames_len <= frame_allowance:
         return frames
 
-    half_max = int(frame_allowance / 2)
+    remaining = frames_len - frame_allowance
+    app_count = len(app_frames)
+    system_allowance = max(frame_allowance - app_count, 0)
+    if system_allowance:
+        half_max = int(system_allowance / 2)
+        # prioritize trimming system frames
+        for frame in system_frames[half_max:-half_max]:
+            frame.pop('vars', None)
+            frame.pop('pre_context', None)
+            frame.pop('post_context', None)
+            remaining -= 1
 
-    for n in range(half_max, frames_len - half_max):
-        # remove heavy components
-        frames[n].pop('vars', None)
-        frames[n].pop('pre_context', None)
-        frames[n].pop('post_context', None)
+    else:
+        for frame in system_frames:
+            frame.pop('vars', None)
+            frame.pop('pre_context', None)
+            frame.pop('post_context', None)
+            remaining -= 1
+
+    if not remaining:
+        return frames
+
+    app_allowance = app_count - remaining
+    half_max = int(app_allowance / 2)
+
+    for frame in app_frames[half_max:-half_max]:
+        frame.pop('vars', None)
+        frame.pop('pre_context', None)
+        frame.pop('post_context', None)
     return frames
 
 
