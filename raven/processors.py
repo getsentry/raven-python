@@ -99,8 +99,11 @@ class SanitizePasswordsProcessor(Processor):
             if n not in data:
                 continue
 
-            if isinstance(data[n], six.string_types) and '=' in data[n]:
+            if ((isinstance(data[n], six.string_types) and '=' in data[n]) or
+                    isinstance(data[n], six.binary_type)):
                 # at this point we've assumed it's a standard HTTP query
+                if isinstance(data[n], six.binary_type):
+                    data[n] = data[n].decode()
                 querybits = []
                 for bit in data[n].split('&'):
                     chunk = bit.split('=')

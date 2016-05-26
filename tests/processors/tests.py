@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import six
 from mock import Mock
 
 import raven
@@ -118,6 +119,20 @@ class SanitizePasswordsProcessorTest(TestCase):
         for n in ('data', 'env', 'headers', 'cookies'):
             self.assertTrue(n in http)
             self._check_vars_sanitized(http[n], proc)
+
+    def test_http_data_as_bytes(self):
+        data = get_http_data()
+        data['request']['data'] = six.b(
+            'foo=bar&password=secury')
+
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+
+        self.assertEqual(
+            http['data'], 'foo=bar&password=%(m)s' % dict(m=proc.MASK))
 
     def test_querystring_as_string(self):
         data = get_http_data()
