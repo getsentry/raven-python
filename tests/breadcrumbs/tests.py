@@ -4,7 +4,7 @@ import logging
 from raven.utils.testutils import TestCase
 
 from raven.base import Client
-from raven.breadcrumbs import record_breadcrumb
+from raven import breadcrumbs
 
 from io import StringIO
 
@@ -16,8 +16,8 @@ class BreadcrumbTestCase(TestCase):
             client = Client('http://foo:bar@example.com/0',
                             enable_breadcrumbs=enable)
             with client.context:
-                record_breadcrumb('foo', data={'bar': 'baz'},
-                                  message='aha', category='huhu')
+                breadcrumbs.record(type='foo', data={'bar': 'baz'},
+                                   message='aha', category='huhu')
                 crumbs = client.context.breadcrumbs.get_buffer()
                 assert len(crumbs) == enable
 
@@ -92,3 +92,30 @@ class BreadcrumbTestCase(TestCase):
         assert crumbs[2]['type'] == 'default'
         assert crumbs[2]['category'] == 'whatever.foo'
         assert crumbs[2]['message'] == 'This is a message with 42!'
+
+    def test_manual_record(self):
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            def processor(data):
+                assert data['message'] == 'whatever'
+                assert data['level'] == 'warning'
+                assert data['category'] == 'category'
+                assert data['type'] == 'the_type'
+                assert data['data'] == {'foo': 'bar'}
+                data['data']['extra'] = 'something'
+
+            breadcrumbs.record(message='whatever',
+                               level='warning',
+                               category='category',
+                               data={'foo': 'bar'},
+                               type='the_type',
+                               processor=processor)
+
+            crumbs = client.context.breadcrumbs.get_buffer()
+            assert len(crumbs) == 1
+            data = crumbs[0]
+            assert data['message'] == 'whatever'
+            assert data['level'] == 'warning'
+            assert data['category'] == 'category'
+            assert data['type'] == 'the_type'
+            assert data['data'] == {'foo': 'bar', 'extra': 'something'}

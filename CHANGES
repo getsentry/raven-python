@@ -4,6 +4,7 @@ Version 5.19.0
 * remove duration from SQL query breadcrumbs. This was not rendered
   in the UI and will come back in future versions of Sentry with a
   different interface.
+* resolved a bug that caused crumbs to be recorded incorrectly.
 
 Version 5.18.0
 --------------

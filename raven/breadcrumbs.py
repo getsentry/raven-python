@@ -92,8 +92,8 @@ def record(message=None, timestamp=None, level=None, category=None,
     if timestamp is None:
         timestamp = time.time()
     for ctx in raven.context.get_active_contexts():
-        ctx.breadcrumbs.record(type, timestamp, level, message,
-                               category, data, processor)
+        ctx.breadcrumbs.record(timestamp, level, message, category,
+                               data, type, processor)
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
