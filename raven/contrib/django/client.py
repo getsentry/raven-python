@@ -94,7 +94,6 @@ def install_sql_hook():
             #   'default') ?
             data.update({
                 'message': real_sql,
-                'duration': duration,
                 'category': 'query',
             })
         breadcrumbs.record(processor=processor)

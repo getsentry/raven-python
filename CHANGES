@@ -1,3 +1,10 @@
+Version 5.19.0
+--------------
+
+* remove duration from SQL query breadcrumbs. This was not rendered
+  in the UI and will come back in future versions of Sentry with a
+  different interface.
+
 Version 5.18.0
 --------------
 
