@@ -7,7 +7,7 @@ Raven is a Python client for `Sentry <http://getsentry.com/>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
 `Django <djangoproject.com>`_, `Flask <http://flask.pocoo.org/>`_, and `Pylons
 <http://www.pylonsproject.org/>`_. Raven also includes drop-in support for any
-`WSGI <http://wsgi.readthedocs.org/>`_-compatible web application.
+`WSGI <https://wsgi.readthedocs.io/>`_-compatible web application.
 """
 
 # Hack to prevent stupid "TypeError: 'NoneType' object is not callable" error

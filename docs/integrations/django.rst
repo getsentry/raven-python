@@ -343,7 +343,7 @@ Circus
 ~~~~~~
 
 If you are running Django with `circus <http://circus.rtfd.org/>`_ and
-`chaussette <http://chaussette.readthedocs.org/>`_ you will also need
+`chaussette <https://chaussette.readthedocs.io/>`_ you will also need
 to add a hook to circus to activate Raven::
 
     from django.conf import settings
