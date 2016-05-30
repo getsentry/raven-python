@@ -1,3 +1,9 @@
+Version 5.20.0
+--------------
+
+* fixed an error that could cause certain SQL queries to fail to
+  record as breadcrumbs if no parameters were supplied.
+
 Version 5.19.0
 --------------
 

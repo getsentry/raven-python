@@ -51,8 +51,11 @@ def format_sql(sql, params):
 
     if isinstance(params, dict):
         conv = _FormatConverter(params)
-        sql = sql % conv
-        params = conv.params
+        if params:
+            sql = sql % conv
+            params = conv.params
+        else:
+            params = ()
 
     for param in params or ():
         if param is None:
