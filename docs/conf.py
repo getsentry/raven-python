@@ -93,7 +93,7 @@ pygments_style = 'sphinx'
 intersphinx_mapping = {
     'http://docs.python.org/2.7': None,
     'django': ('http://docs.djangoproject.com/en/dev/', 'http://docs.djangoproject.com/en/dev/_objects/'),
-    'http://raven.readthedocs.org/en/latest': None
+    'https://raven.readthedocs.io/en/latest': None
 }
 
 
