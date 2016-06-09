@@ -77,7 +77,11 @@ class TransportTest(TestCase):
         msg = c.build_msg('raven.events.Message', message='foo', date=d)
         expected = {
             'project': '1',
-            'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
+            'sentry.interfaces.Message': {
+                'message': 'foo',
+                'params': (),
+                'formatted': None,
+            },
             'server_name': 'test_server',
             'level': 40,
             'tags': {},

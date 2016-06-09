@@ -106,6 +106,7 @@ class Message(BaseEvent):
             self.name: {
                 'message': message,
                 'params': self.transform(params),
+                'formatted': formatted,
             },
         }
         if 'message' not in data:
