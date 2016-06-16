@@ -283,6 +283,9 @@ class FlaskTest(BaseTest):
         some_other_logger = logging.getLogger("some_other_logger")
         self.assertTrue(some_other_logger.propagate)
 
+    def test_check_client_type(self):
+        self.assertRaises(TypeError, lambda _: Sentry(self.app, "oops, I'm putting my DSN instead"))
+
 
 class FlaskLoginTest(BaseTest):
 
