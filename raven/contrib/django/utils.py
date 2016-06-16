@@ -47,6 +47,9 @@ def get_data_from_template(source, debug=None):
     else:
         raise TypeError('Source or debug needed')
 
+    if filename is None:
+        filename = '<unknown filename>'
+
     pre_context = source_lines[max(lineno - 3, 0):lineno]
     post_context = source_lines[(lineno + 1):(lineno + 4)]
     context_line = source_lines[lineno]
