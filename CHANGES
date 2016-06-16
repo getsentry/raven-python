@@ -1,3 +1,11 @@
+Version 5.21.0
+--------------
+
+* Add formatted attribute to message events
+* Fill in empty filename if django fails to give one for
+  template information on newer Django versions with disabled
+  debug mode.
+
 Version 5.20.0
 --------------
 
