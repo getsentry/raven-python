@@ -62,15 +62,24 @@ def get_lines_from_file(filename, lineno, context_lines,
     upper_bound = min(lineno + 1 + context_lines, len(source))
 
     try:
-        pre_context = [line.strip('\r\n') for line in source[lower_bound:lineno]]
+        pre_context = [
+            line.strip('\r\n')
+            for line in source[lower_bound:lineno]
+        ]
         context_line = source[lineno].strip('\r\n')
-        post_context = [line.strip('\r\n') for line in
-                        source[(lineno + 1):upper_bound]]
+        post_context = [
+            line.strip('\r\n')
+            for line in source[(lineno + 1):upper_bound]
+        ]
     except IndexError:
         # the file may have changed since it was loaded into memory
         return None, None, None
 
-    return pre_context, context_line, post_context
+    return (
+        slim_string(pre_context),
+        slim_string(context_line),
+        slim_string(post_context)
+    )
 
 
 def label_from_frame(frame):
@@ -241,6 +250,14 @@ def slim_frame_data(frames, frame_allowance=25):
         frame.pop('pre_context', None)
         frame.pop('post_context', None)
     return frames
+
+
+def slim_string(value, length=512):
+    if not value:
+        return value
+    if len(value) > length:
+        return value[:length - 3] + '...'
+    return value[:length]
 
 
 def get_stack_info(frames, transformer=transform, capture_locals=True,
