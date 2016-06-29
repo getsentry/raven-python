@@ -23,12 +23,13 @@ def linebreak_iter(template_source):
 
 def get_data_from_template(source, debug=None):
     if debug is not None:
-        start = debug['start']
-        end = debug['end']
-        source_lines = debug['source_lines']
         lineno = debug['line']
         filename = debug['name']
-        culprit = filename.split('/templates/')[-1]
+        source_lines = []
+        source_lines += [''] * (debug['source_lines'][0][0])
+        for num, line in debug['source_lines']:
+            source_lines.append(line)
+        source_lines += [''] * 4
     elif source:
         origin, (start, end) = source
         filename = culprit = getattr(origin, 'loadname', None)
@@ -49,6 +50,9 @@ def get_data_from_template(source, debug=None):
 
     if filename is None:
         filename = '<unknown filename>'
+        culprit = '<unknown filename>'
+    else:
+        culprit = filename.split('/templates/')[-1]
 
     pre_context = source_lines[max(lineno - 3, 0):lineno]
     post_context = source_lines[(lineno + 1):(lineno + 4)]
