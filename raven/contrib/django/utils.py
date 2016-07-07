@@ -22,6 +22,16 @@ def linebreak_iter(template_source):
 
 
 def get_data_from_template(source, debug=None):
+    def _remove_numbers(items):
+        rv = []
+        for item in items:
+            # Some debug info from django has tuples in the form (lineno,
+            # code) instead of just the code there.
+            if isinstance(item, (list, tuple)) and len(item) == 2:
+                item = item[1]
+            rv.append(item)
+        return rv
+
     if debug is not None:
         start = debug['start']
         end = debug['end']
@@ -50,9 +60,9 @@ def get_data_from_template(source, debug=None):
     if filename is None:
         filename = '<unknown filename>'
 
-    pre_context = source_lines[max(lineno - 3, 0):lineno]
-    post_context = source_lines[(lineno + 1):(lineno + 4)]
-    context_line = source_lines[lineno]
+    pre_context = _remove_numbers(source_lines[max(lineno - 3, 0):lineno])
+    post_context = _remove_numbers(source_lines[(lineno + 1):(lineno + 4)])
+    context_line = _remove_numbers([source_lines[lineno]])[0]
 
     return {
         'template': {
