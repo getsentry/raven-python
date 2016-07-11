@@ -6,7 +6,7 @@ import sys
 
 os.environ['PYFLAKES_NODOCTEST'] = '1'
 
-# pep8.py uses sys.argv to find setup.cfg
+# pycodestyle.py uses sys.argv to find setup.cfg
 sys.argv = [os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)]
 
 # git usurbs your bin path for hooks and will always run system python
