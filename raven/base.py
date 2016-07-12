@@ -628,9 +628,10 @@ class Client(object):
                 type(exc).__name__, exc.message)
         else:
             self.error_logger.error(
-                'Sentry responded with an error: %s (url: %s)\n%s',
-                exc, url, pformat(data),
-                exc_info=True
+                'Sentry responded with an error: %s (url: %s)',
+                exc, url,
+                exc_info=True,
+                extra={'data': data}
             )
 
         self._log_failed_submission(data)
