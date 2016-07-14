@@ -1,3 +1,9 @@
+Version 5.23.0
+--------------
+
+* Sentry failures now no longer log the failure data in the error
+  message.
+
 Version 5.22.0
 --------------
 
