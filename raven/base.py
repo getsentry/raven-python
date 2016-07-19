@@ -59,6 +59,13 @@ SDK_VALUE = {
 Raven = None
 
 
+def get_excepthook_client():
+    hook = sys.excepthook
+    client = getattr(hook, 'raven_client', None)
+    if client is not None:
+        return client
+
+
 class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
@@ -237,6 +244,7 @@ class Client(object):
         def handle_exception(*exc_info):
             self.captureException(exc_info=exc_info)
             __excepthook__(*exc_info)
+        handle_exception.raven_client = self
         sys.excepthook = handle_exception
 
     def install_logging_hook(self):
