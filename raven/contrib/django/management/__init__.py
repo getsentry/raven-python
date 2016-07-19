@@ -18,7 +18,7 @@ def patch_cli_runner():
     Patches ``cls.execute``, returning a boolean describing if the
     attempt was successful.
     """
-    from raven.baes import get_excepthook_client
+    from raven.base import get_excepthook_client
 
     try:
         from django.core.management.base import BaseCommand
