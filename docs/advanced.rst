@@ -129,6 +129,16 @@ The following are valid arguments which may be passed to the Raven client:
             'lxml.objectify',
         ]
 
+.. describe:: ignore_exceptions
+
+    A list of exceptions to ignore.
+
+        ignore_exceptions = [
+            'Http404',
+            'django.exceptions.http.Http404',
+            'django.exceptions.*',
+        ]
+
 .. describe:: max_list_length
 
     The maximum number of items a list-like container should store.

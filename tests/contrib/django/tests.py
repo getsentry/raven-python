@@ -755,39 +755,40 @@ class SentryExceptionHandlerTest(TestCase):
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(TempStoreClient, 'capture')
     @mock.patch('sys.exc_info')
-    @mock.patch('raven.contrib.django.models.get_option')
-    def test_does_exclude_filtered_types(self, get_option, exc_info, captureException):
+    def test_does_exclude_filtered_types(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['ValueError']
+        get_client().ignore_exceptions = set(['ValueError'])
 
         sentry_exception_handler(request=self.request)
 
-        assert not captureException.called
+        assert not mock_capture.called
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(TempStoreClient, 'capture')
     @mock.patch('sys.exc_info')
-    @mock.patch('raven.contrib.django.models.get_option')
-    def test_ignore_exceptions_with_expression_match(self, get_option, exc_info, captureException):
+    def test_ignore_exceptions_with_expression_match(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['builtins.*']
-        if not six.PY3:
-            get_option.return_value = ['exceptions.*']
+
+        if six.PY3:
+            get_client().ignore_exceptions = set(['builtins.*'])
+        else:
+            get_client().ignore_exceptions = set(['exceptions.*'])
 
         sentry_exception_handler(request=self.request)
 
-        assert not captureException.called
+        assert not mock_capture.called
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(TempStoreClient, 'capture')
     @mock.patch('sys.exc_info')
-    @mock.patch('raven.contrib.django.models.get_option')
-    def test_ignore_exceptions_with_module_match(self, get_option, exc_info, captureException):
+    def test_ignore_exceptions_with_module_match(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['builtins.ValueError']
-        if not six.PY3:
-            get_option.return_value = ['exceptions.ValueError']
+
+        if six.PY3:
+            get_client().ignore_exceptions = set(['builtins.ValueError'])
+        else:
+            get_client().ignore_exceptions = set(['exceptions.ValueError'])
 
         sentry_exception_handler(request=self.request)
 
-        assert not captureException.called
+        assert not mock_capture.called
