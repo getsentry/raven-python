@@ -1,7 +1,8 @@
-from raven.utils.testutils import TestCase
+import six
 
 from raven.base import Client
 from raven.events import Exception as ExceptionEvent
+from raven.utils.testutils import TestCase
 
 
 class ExceptionTest(TestCase):
@@ -54,7 +55,7 @@ class ExceptionTest(TestCase):
             raise ValueError()
         except Exception as exc:
             try:
-                raise KeyError() from exc
+                six.raise_from(KeyError(), exc)
             except Exception:
                 self.check_capture(['KeyError', 'ValueError'])
 
@@ -63,6 +64,6 @@ class ExceptionTest(TestCase):
             raise ValueError()
         except Exception as exc:
             try:
-                raise KeyError() from TypeError()
+                six.raise_from(KeyError(), TypeError())
             except Exception:
                 self.check_capture(['KeyError', 'TypeError'])
