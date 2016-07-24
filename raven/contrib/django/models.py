@@ -19,8 +19,8 @@ from django.conf import settings
 from django.core.signals import got_request_exception, request_started
 from threading import Lock
 
-from raven._compat import PY2, binary_type, text_type
 from raven.utils.conf import convert_options
+from raven.utils.compat import PY2, binary_type, text_type
 from raven.utils.imports import import_string
 
 logger = logging.getLogger('sentry.errors.client')

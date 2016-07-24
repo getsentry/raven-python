@@ -13,7 +13,7 @@ import logbook
 import sys
 import traceback
 
-from raven._compat import string_types
+from raven.utils.compat import string_types
 from raven.base import Client
 from raven.utils.encoding import to_string
 

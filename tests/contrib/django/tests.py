@@ -8,7 +8,6 @@ import logging
 import mock
 import pytest
 import re
-import six
 import sys
 
 from django.conf import settings
@@ -22,9 +21,9 @@ from django.template import TemplateSyntaxError
 from django.test import TestCase
 from django.utils.translation import gettext_lazy
 from exam import fixture
-from six import StringIO
 
 from raven.base import Client
+from raven.utils.compat import StringIO, iteritems, PY2, string_types, text_type
 from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
@@ -102,12 +101,12 @@ class Settings(object):
         self._orig = {}
 
     def __enter__(self):
-        for k, v in six.iteritems(self.overrides):
+        for k, v in iteritems(self.overrides):
             self._orig[k] = getattr(settings, k, self.NotDefined)
             setattr(settings, k, v)
 
     def __exit__(self, exc_type, exc_value, traceback):
-        for k, v in six.iteritems(self._orig):
+        for k, v in iteritems(self._orig):
             if v is self.NotDefined:
                 delattr(settings, k)
             else:
@@ -342,7 +341,7 @@ class DjangoClientTest(TestCase):
     #     assert event['data']['META']['REMOTE_ADDR'] == '127.0.0.1'
 
     # TODO: Python bug #10805
-    @pytest.mark.skipif(six.PY3, reason='Python 2')
+    @pytest.mark.skipif(not PY2, reason='Python 2')
     def test_record_none_exc_info(self):
         # sys.exc_info can return (None, None, None) if no exception is being
         # handled anywhere on the stack. See:
@@ -725,9 +724,9 @@ class PromiseSerializerTestCase(TestCase):
     def test_basic(self):
         from django.utils.functional import lazy
 
-        obj = lazy(lambda: 'bar', six.text_type)()
+        obj = lazy(lambda: 'bar', text_type)()
         res = transform(obj)
-        expected = "'bar'" if six.PY3 else "u'bar'"
+        expected = "'bar'" if not PY2 else "u'bar'"
         assert res == expected
 
     def test_handles_gettext_lazy(self):
@@ -736,17 +735,17 @@ class PromiseSerializerTestCase(TestCase):
         def fake_gettext(to_translate):
             return 'Igpay Atinlay'
 
-        fake_gettext_lazy = lazy(fake_gettext, six.text_type)
+        fake_gettext_lazy = lazy(fake_gettext, text_type)
 
         result = transform(fake_gettext_lazy("something"))
-        assert isinstance(result, six.string_types)
-        expected = "'Igpay Atinlay'" if six.PY3 else "u'Igpay Atinlay'"
+        assert isinstance(result, string_types)
+        expected = "'Igpay Atinlay'" if not PY2 else "u'Igpay Atinlay'"
         assert result == expected
 
     def test_real_gettext_lazy(self):
-        d = {six.text_type('lazy_translation'): gettext_lazy(six.text_type('testing'))}
-        key = "'lazy_translation'" if six.PY3 else "u'lazy_translation'"
-        value = "'testing'" if six.PY3 else "u'testing'"
+        d = {text_type('lazy_translation'): gettext_lazy(text_type('testing'))}
+        key = "'lazy_translation'" if not PY2 else "u'lazy_translation'"
+        value = "'testing'" if not PY2 else "u'testing'"
         assert transform(d) == {key: value}
 
 
@@ -755,7 +754,7 @@ class ModelInstanceSerializerTestCase(TestCase):
         instance = MyTestModel()
 
         result = transform(instance)
-        assert isinstance(result, six.string_types)
+        assert isinstance(result, string_types)
         assert result == '<MyTestModel: MyTestModel object>'
 
 
@@ -765,7 +764,7 @@ class QuerySetSerializerTestCase(TestCase):
         obj = QuerySet(model=MyTestModel)
 
         result = transform(obj)
-        assert isinstance(result, six.string_types)
+        assert isinstance(result, string_types)
         assert result == '<QuerySet: model=MyTestModel>'
 
 
@@ -810,7 +809,7 @@ class SentryExceptionHandlerTest(TestCase):
         exc_info.return_value = self.exc_info
 
         try:
-            if six.PY3:
+            if not PY2:
                 self.client.ignore_exceptions = set(['builtins.*'])
             else:
                 self.client.ignore_exceptions = set(['exceptions.*'])
@@ -826,7 +825,7 @@ class SentryExceptionHandlerTest(TestCase):
         exc_info.return_value = self.exc_info
 
         try:
-            if six.PY3:
+            if not PY2:
                 self.client.ignore_exceptions = set(['builtins.ValueError'])
             else:
                 self.client.ignore_exceptions = set(['exceptions.ValueError'])

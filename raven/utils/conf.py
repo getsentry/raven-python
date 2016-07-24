@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import copy
 import os
 
-from raven._compat import string_types
+from raven.utils.compat import string_types
 from raven.utils.imports import import_string
 
 

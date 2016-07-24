@@ -4,7 +4,7 @@ import logging
 import os
 import warnings
 
-from raven._compat import PY2, text_type
+from raven.utils.compat import PY2, text_type
 from raven.exceptions import InvalidDsn
 from raven.utils.encoding import to_string
 from raven.utils.urlparse import parse_qsl, urlparse

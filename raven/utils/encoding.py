@@ -9,7 +9,7 @@ from __future__ import absolute_import, unicode_literals
 
 import warnings
 
-from raven._compat import integer_types, text_type, binary_type, \
+from raven.utils.compat import integer_types, text_type, binary_type, \
     string_types, PY2
 
 

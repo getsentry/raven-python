@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 from contextlib import contextmanager
 
-from raven._compat import Iterator, next
+from raven.utils.compat import Iterator, next
 from raven.utils.wsgi import (
     get_current_url, get_headers, get_environ)
 

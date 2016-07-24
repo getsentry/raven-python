@@ -8,7 +8,7 @@ raven.contrib.bottle.utils
 from __future__ import absolute_import
 
 import logging
-from raven.utils.compat import _urlparse
+from raven.utils.compat import urlparse
 
 from raven.utils.wsgi import get_headers, get_environ
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_data_from_request(request):
-    urlparts = _urlparse.urlsplit(request.url)
+    urlparts = urlparse.urlsplit(request.url)
 
     try:
         form_dict = request.forms.dict
