@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import six
 
 from mock import Mock
+from raven.utils.compat import iterkeys, PY3
 from raven.utils.testutils import TestCase
-
 from raven.utils.stacks import get_culprit, get_stack_info, get_lines_from_file
 
 
@@ -15,7 +14,7 @@ class Context(object):
 
     __getitem__ = lambda s, *a: s.dict.__getitem__(*a)
     __setitem__ = lambda s, *a: s.dict.__setitem__(*a)
-    iterkeys = lambda s, *a: six.iterkeys(s.dict, *a)
+    iterkeys = lambda s, *a: iterkeys(s.dict, *a)
 
 
 class GetCulpritTest(TestCase):
@@ -62,7 +61,7 @@ class GetStackInfoTest(TestCase):
         assert len(results['frames']) == 1
         result = results['frames'][0]
         assert 'vars' in result
-        if six.PY3:
+        if PY3:
             expected = {
                 "foo": "'bar'",
                 "biz": "'baz'",

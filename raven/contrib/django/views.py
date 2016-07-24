@@ -15,7 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from raven._compat import string_types
+from raven.utils.compat import string_types
 from raven.contrib.django.models import client
 from raven.utils import json
 

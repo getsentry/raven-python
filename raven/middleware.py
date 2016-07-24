@@ -7,6 +7,7 @@ raven.middleware
 """
 from __future__ import absolute_import
 
+from raven.utils.compat import callable
 from raven.utils.wsgi import (
     get_current_url, get_headers, get_environ)
 

@@ -30,7 +30,7 @@ from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils import once
 from raven import breadcrumbs
-from raven._compat import string_types, binary_type
+from raven.utils.compat import string_types, binary_type
 
 __all__ = ('DjangoClient',)
 

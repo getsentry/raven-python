@@ -11,8 +11,8 @@ from __future__ import absolute_import
 import itertools
 import types
 
-from raven._compat import text_type, binary_type, string_types, iteritems, \
-    class_types, PY2
+from raven.utils.compat import text_type, binary_type, string_types, iteritems, \
+    class_types, PY2, PY3
 from raven.utils.encoding import to_unicode
 from .manager import manager as serialization_manager
 
@@ -113,7 +113,7 @@ class StringSerializer(Serializer):
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        if not PY2:
+        if PY3:
             return repr(value[:string_max_length])
 
         try:

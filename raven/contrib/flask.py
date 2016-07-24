@@ -23,12 +23,11 @@ from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
 from werkzeug.exceptions import ClientDisconnected
 
-from raven._compat import string_types
+from raven.utils.compat import string_types, urlparse
 from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
-from raven.utils.compat import _urlparse
 from raven.utils.encoding import to_unicode
 from raven.utils.imports import import_string
 from raven.utils.wsgi import get_headers, get_environ
@@ -209,7 +208,7 @@ class Sentry(object):
         if retriever is None:
             retriever = self.get_form_data
 
-        urlparts = _urlparse.urlsplit(request.url)
+        urlparts = urlparse.urlsplit(request.url)
 
         try:
             data = retriever(request)

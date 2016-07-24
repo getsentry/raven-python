@@ -14,7 +14,7 @@ import sys
 import warnings
 
 from raven.utils.serializer import transform
-from raven._compat import iteritems
+from raven.utils.compat import iteritems
 
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')

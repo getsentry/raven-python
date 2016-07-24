@@ -8,7 +8,7 @@ except ImportError:
     # pkg_resource is not available on Google App Engine
     pkg_resources = None
 
-from raven._compat import text_type
+from raven.utils.compat import text_type
 from .exceptions import InvalidGitRepository
 
 __all__ = ('fetch_git_sha', 'fetch_package_version')

@@ -12,7 +12,7 @@ from django.conf import settings
 from django.http import HttpRequest
 from django.utils.functional import Promise
 from raven.utils.serializer import Serializer, register
-from raven._compat import text_type
+from raven.utils.compat import text_type
 
 __all__ = ('PromiseSerializer',)
 

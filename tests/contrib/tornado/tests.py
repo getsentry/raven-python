@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import six
 from mock import patch
 from tornado import web, gen, testing
 from tornado.concurrent import Future
 from tornado.httpclient import HTTPError
+from raven.utils import compat
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
 
 
@@ -125,7 +125,7 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
-        if six.PY3:
+        if compat.PY3:
             expected = "'extra custom non-dict data'"
         else:
             expected = "u'extra custom non-dict data'"
@@ -153,7 +153,7 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
         self.assertEqual(user_data['is_authenticated'], False)
 
         assert 'extra_data' in kwargs['extra']
-        if six.PY3:
+        if compat.PY3:
             expected = "'extra custom dict data'"
         else:
             expected = "u'extra custom dict data'"

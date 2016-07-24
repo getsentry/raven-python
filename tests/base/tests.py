@@ -5,9 +5,9 @@ import inspect
 import mock
 import raven
 import time
-import six
 import os
 
+from raven.utils.compat import PY3
 from raven.base import Client, ClientState
 from raven.exceptions import RateLimited
 from raven.transport import AsyncTransport
@@ -505,7 +505,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        if six.PY3:
+        if PY3:
             expected = {'logger': "'test'", 'foo': "'bar'"}
         else:
             expected = {'logger': "u'test'", 'foo': "u'bar'"}
