@@ -30,7 +30,7 @@ def get_lines_from_file(filename, lineno, context_lines,
     if loader is not None and hasattr(loader, "get_source"):
         try:
             source = loader.get_source(module_name)
-        except ImportError:
+        except (ImportError, IOError):
             # Traceback (most recent call last):
             #   File "/Users/dcramer/Development/django-sentry/sentry/client/handlers.py", line 31, in emit
             #     get_client().create_from_record(record, request=request)

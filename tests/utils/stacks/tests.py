@@ -2,10 +2,10 @@
 from __future__ import unicode_literals
 
 import six
+import os.path
 
 from mock import Mock
 from raven.utils.testutils import TestCase
-
 from raven.utils.stacks import get_culprit, get_stack_info, get_lines_from_file
 
 
@@ -95,11 +95,40 @@ class GetStackInfoTest(TestCase):
         assert results['frames'][8]['filename'] == '8'
         assert results['frames'][9]['filename'] == '9'
 
+class FailLoader():
+    '''
+    Recreating the built-in loaders from a fake stack trace was brittle.
+    This method ensures its testing the path where the loader is defined
+    but fails with known exceptions.
+    '''
+    def get_source(self, module_name):
+        if '.py' in module_name:
+            raise ImportError('Cannot load .py files')
+        elif '.zip' in module_name:
+            raise IOError('Cannot load .zip files')
+        else:
+            raise ValueError('Invalid file extension')
 
 class GetLineFromFileTest(TestCase):
+    def setUp(self):
+        self.loader = FailLoader()
+
     def test_non_ascii_file(self):
-        import os.path
         filename = os.path.join(os.path.dirname(__file__), 'utf8_file.txt')
         self.assertEqual(
             get_lines_from_file(filename, 3, 1),
             (['Some code here'], '', ['lorem ipsum']))
+
+    def test_missing_zip_get_source(self):
+        filename = 'does_not_exist.zip'
+        module = 'not.zip.loadable'
+        self.assertEqual(
+            get_lines_from_file(filename, 3, 1, self.loader, module),
+            (None, None, None))
+
+    def test_missing_get_source(self):
+        filename = 'does_not_exist.py'
+        module = 'not.py.loadable'
+        self.assertEqual(
+            get_lines_from_file(filename, 3, 1, self.loader, module),
+            (None, None, None))
