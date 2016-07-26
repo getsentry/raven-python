@@ -180,6 +180,8 @@ class Client(object):
         self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
 
+        self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
+
         self.module_cache = ModuleProxyCache()
 
         if not self.is_enabled():
@@ -764,8 +766,28 @@ class Client(object):
         """
         if exc_info is None or exc_info is True:
             exc_info = sys.exc_info()
+
+        if not self.should_capture(exc_info):
+            self.logger.info(
+                'Not capturing exception due to filters: %s', exc_info[0],
+                exc_info=sys.exc_info())
+            return
+
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)
+
+    def should_capture(self, exc_info):
+        exc_type = exc_info[0]
+        exc_name = '%s.%s' % (exc_type.__module__, exc_type.__name__)
+        exclusions = self.ignore_exceptions
+
+        if exc_type.__name__ in exclusions:
+            return False
+        elif exc_name in exclusions:
+            return False
+        elif any(exc_name.startswith(e[:-1]) for e in exclusions if e.endswith('*')):
+            return False
+        return True
 
     def capture_exceptions(self, function_or_exceptions=None, **kwargs):
         """

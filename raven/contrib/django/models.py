@@ -137,6 +137,7 @@ def get_client(client=None, reset=False):
         options.setdefault('dsn', ga('DSN'))
         options.setdefault('context', ga('CONTEXT'))
         options.setdefault('release', ga('RELEASE'))
+        options.setdefault('ignore_exceptions', ga('IGNORE_EXCEPTIONS'))
 
         transport = ga('TRANSPORT') or options.get('transport')
         if isinstance(transport, string_types):
@@ -160,17 +161,6 @@ def get_client(client=None, reset=False):
 
 
 def sentry_exception_handler(request=None, **kwargs):
-    exc_type = sys.exc_info()[0]
-
-    exclusions = set(get_option('IGNORE_EXCEPTIONS', ()))
-
-    exc_name = '%s.%s' % (exc_type.__module__, exc_type.__name__)
-    if exc_type.__name__ in exclusions or exc_name in exclusions or any(exc_name.startswith(e[:-1]) for e in exclusions if e.endswith('*')):
-        logger.info(
-            'Not capturing exception due to filters: %s', exc_type,
-            exc_info=sys.exc_info())
-        return
-
     try:
         client.captureException(exc_info=sys.exc_info(), request=request)
     except Exception as exc:
