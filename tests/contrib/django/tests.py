@@ -157,6 +157,7 @@ class DjangoClientTest(TestCase):
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
         assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
+    @pytest.mark.skipif('sys.version_info[:2] == (2, 6)')
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
