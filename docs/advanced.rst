@@ -131,7 +131,7 @@ The following are valid arguments which may be passed to the Raven client:
 
 .. describe:: ignore_exceptions
 
-    A list of exceptions to ignore.
+    A list of exceptions to ignore::
 
         ignore_exceptions = [
             'Http404',
