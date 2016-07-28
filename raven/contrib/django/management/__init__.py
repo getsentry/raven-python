@@ -18,6 +18,8 @@ def patch_cli_runner():
     Patches ``cls.execute``, returning a boolean describing if the
     attempt was successful.
     """
+    from raven.base import get_excepthook_client
+
     try:
         from django.core.management.base import BaseCommand
     except ImportError:
@@ -42,9 +44,13 @@ def patch_cli_runner():
         except Exception:
             from raven.contrib.django.models import client
 
-            client.captureException(extra={
-                'argv': sys.argv
-            })
+            # Since this is an unhandled exception that falls through
+            # we only want to log it if the given client is not the
+            # one that handles the global exceptions.
+            if get_excepthook_client() is not client:
+                client.captureException(extra={
+                    'argv': sys.argv
+                })
             raise
 
     new_execute.__raven_patched = True
