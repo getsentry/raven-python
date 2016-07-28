@@ -157,6 +157,7 @@ class DjangoClientTest(TestCase):
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
         assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
+    @pytest.mark.skipif('sys.version_info[:2] == (2, 6)')
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
@@ -759,9 +760,12 @@ class SentryExceptionHandlerTest(TestCase):
     @mock.patch('sys.exc_info')
     def test_does_exclude_filtered_types(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
-        get_client().ignore_exceptions = set(['ValueError'])
+        try:
+            get_client().ignore_exceptions = set(['ValueError'])
 
-        sentry_exception_handler(request=self.request)
+            sentry_exception_handler(request=self.request)
+        finally:
+            get_client().ignore_exceptions.clear()
 
         assert not mock_capture.called
 
@@ -770,12 +774,14 @@ class SentryExceptionHandlerTest(TestCase):
     def test_ignore_exceptions_with_expression_match(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
 
-        if six.PY3:
-            get_client().ignore_exceptions = set(['builtins.*'])
-        else:
-            get_client().ignore_exceptions = set(['exceptions.*'])
-
-        sentry_exception_handler(request=self.request)
+        try:
+            if six.PY3:
+                get_client().ignore_exceptions = set(['builtins.*'])
+            else:
+                get_client().ignore_exceptions = set(['exceptions.*'])
+            sentry_exception_handler(request=self.request)
+        finally:
+            get_client().ignore_exceptions.clear()
 
         assert not mock_capture.called
 
@@ -784,11 +790,13 @@ class SentryExceptionHandlerTest(TestCase):
     def test_ignore_exceptions_with_module_match(self, exc_info, mock_capture):
         exc_info.return_value = self.exc_info
 
-        if six.PY3:
-            get_client().ignore_exceptions = set(['builtins.ValueError'])
-        else:
-            get_client().ignore_exceptions = set(['exceptions.ValueError'])
-
-        sentry_exception_handler(request=self.request)
+        try:
+            if six.PY3:
+                get_client().ignore_exceptions = set(['builtins.ValueError'])
+            else:
+                get_client().ignore_exceptions = set(['exceptions.ValueError'])
+            sentry_exception_handler(request=self.request)
+        finally:
+            get_client().ignore_exceptions.clear()
 
         assert not mock_capture.called
