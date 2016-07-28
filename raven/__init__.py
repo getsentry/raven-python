@@ -12,11 +12,7 @@ import os.path
 
 __all__ = ('VERSION', 'Client', 'get_version')
 
-try:
-    VERSION = __import__('pkg_resources') \
-        .get_distribution('raven').version
-except Exception as e:
-    VERSION = 'unknown'
+VERSION = '5.23.0'
 
 
 def _get_git_revision(path):
