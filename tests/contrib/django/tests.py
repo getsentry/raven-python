@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import with_statement
+from __future__ import absolute_import, print_function, with_statement
 
 import datetime
 import django
@@ -10,9 +9,7 @@ import mock
 import pytest
 import re
 import six
-import sys  # NOQA
-from exam import fixture
-from six import StringIO
+import sys
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -24,6 +21,8 @@ from django.http import QueryDict
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 from django.utils.translation import gettext_lazy
+from exam import fixture
+from six import StringIO
 
 from raven.base import Client
 from raven.contrib.django.client import DjangoClient
@@ -42,6 +41,7 @@ from .models import TestModel
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
+DJANGO_18 = django.VERSION >= (1, 8, 0)
 
 
 def make_request():
@@ -157,7 +157,7 @@ class DjangoClientTest(TestCase):
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
         assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
-    @pytest.mark.skipif('sys.version_info[:2] == (2, 6)')
+    @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
@@ -199,7 +199,7 @@ class DjangoClientTest(TestCase):
                 'email': user.email,
             }
 
-    @pytest.mark.skipif(str('not DJANGO_15'))
+    @pytest.mark.skipif(not DJANGO_15, reason='< Django 1.5')
     def test_get_user_info_abstract_user(self):
         from django.db import models
         from django.contrib.auth.models import AbstractBaseUser
@@ -320,6 +320,7 @@ class DjangoClientTest(TestCase):
         assert event['culprit'].startswith('django.shortcuts in ')
         self.raven.include_paths = include_paths
 
+    @pytest.mark.skipif(DJANGO_18, reason='Django 1.8+ not supported')
     def test_template_name_as_view(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
@@ -339,7 +340,7 @@ class DjangoClientTest(TestCase):
     #     assert event['data']['META']['REMOTE_ADDR'] == '127.0.0.1'
 
     # TODO: Python bug #10805
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif(six.PY3, reason='Python 2')
     def test_record_none_exc_info(self):
         # sys.exc_info can return (None, None, None) if no exception is being
         # handled anywhere on the stack. See:
@@ -630,62 +631,72 @@ class ReportViewTest(TestCase):
     urls = 'raven.contrib.django.urls'
 
     def setUp(self):
-        self.path = reverse('raven-report')
+        super(ReportViewTest, self).setUp()
+        self.path = reverse('raven-report', urlconf=self.urls)
 
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header(self, is_valid_origin):
-        self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            self.client.post(self.path, HTTP_ORIGIN='http://example.com')
         is_valid_origin.assert_called_once_with('http://example.com')
 
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header_as_get(self, is_valid_origin):
-        self.client.get(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            self.client.get(self.path, HTTP_ORIGIN='http://example.com')
         is_valid_origin.assert_called_once_with('http://example.com')
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=False))
     def test_fails_on_invalid_origin(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
         assert resp.status_code == 403
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_options_call_sends_headers(self):
-        resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
         assert resp.status_code == 200
         assert resp['Access-Control-Allow-Origin'] == 'http://example.com'
         assert resp['Access-Control-Allow-Methods'], 'GET, POST == OPTIONS'
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_missing_data(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
         assert resp.status_code == 400
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_invalid_data(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            data='[1', content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                data='[1', content_type='application/octet-stream')
         assert resp.status_code == 400
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_data(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            data='{}', content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                data='{}', content_type='application/octet-stream')
         assert resp.status_code == 200
         event = client.events.pop(0)
         assert event == {'auth_header': None}
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_authorization_header(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            HTTP_AUTHORIZATION='Sentry foo/bar', data='{}', content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                HTTP_AUTHORIZATION='Sentry foo/bar', data='{}', content_type='application/octet-stream')
         assert resp.status_code == 200
         event = client.events.pop(0)
         assert event == {'auth_header': 'Sentry foo/bar'}
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_x_sentry_auth_header(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}',
-            content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}',
+                content_type='application/octet-stream')
         assert resp.status_code == 200
         event = client.events.pop(0)
         assert event == {'auth_header': 'Sentry foo/bar'}
