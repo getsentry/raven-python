@@ -11,18 +11,16 @@ Acts as an implicit hook for Django installs.
 
 from __future__ import absolute_import, unicode_literals
 
-import copy
 import logging
 import sys
 import warnings
 
 from django.conf import settings
-from hashlib import md5
 
 from raven._compat import PY2, binary_type, text_type, string_types
-from raven.utils.imports import import_string
 from raven.contrib.django.management import patch_cli_runner
-
+from raven.utils.conf import convert_options
+from raven.utils.imports import import_string
 
 logger = logging.getLogger('sentry.errors.client')
 
@@ -121,28 +119,12 @@ def get_client(client=None, reset=False):
         client = getattr(settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
 
     if _client[0] != client or reset:
-        ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
-        options = copy.deepcopy(getattr(settings, 'RAVEN_CONFIG', {}))
-        options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
-        if not options['include_paths']:
-            options['include_paths'] = get_installed_apps()
-        options.setdefault('exclude_paths', ga('EXCLUDE_PATHS'))
-        options.setdefault('timeout', ga('TIMEOUT'))
-        options.setdefault('name', ga('NAME'))
-        options.setdefault('auto_log_stacks', ga('AUTO_LOG_STACKS'))
-        options.setdefault('string_max_length', ga('MAX_LENGTH_STRING'))
-        options.setdefault('list_max_length', ga('MAX_LENGTH_LIST'))
-        options.setdefault('site', ga('SITE'))
-        options.setdefault('processors', ga('PROCESSORS'))
-        options.setdefault('dsn', ga('DSN'))
-        options.setdefault('context', ga('CONTEXT'))
-        options.setdefault('release', ga('RELEASE'))
-        options.setdefault('ignore_exceptions', ga('IGNORE_EXCEPTIONS'))
-
-        transport = ga('TRANSPORT') or options.get('transport')
-        if isinstance(transport, string_types):
-            transport = import_string(transport)
-        options['transport'] = transport
+        options = convert_options(
+            settings,
+            defaults={
+                'include_paths': get_installed_apps(),
+            },
+        )
 
         try:
             Client = import_string(client)

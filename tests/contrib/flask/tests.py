@@ -228,27 +228,6 @@ class FlaskTest(BaseTest):
         _, _, app_ndebug = self.make_client_and_raven(debug=False)
         self.assertTrue(app_ndebug.extensions['sentry'].wrap_wsgi)
 
-    def test_error_handler_with_ignored_exception(self):
-        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[NameError, ValueError])
-
-        response = client.get('/an-error/')
-        self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(raven.events), 0)
-
-    def test_error_handler_with_exception_not_ignored(self):
-        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[NameError, KeyError])
-
-        response = client.get('/an-error/')
-        self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(raven.events), 1)
-
-    def test_error_handler_with_empty_ignore_exceptions_list(self):
-        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[])
-
-        response = client.get('/an-error/')
-        self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(raven.events), 1)
-
     def test_captureException_sets_last_event_id(self):
         with self.app.test_request_context('/'):
             try:

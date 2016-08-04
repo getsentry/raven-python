@@ -15,49 +15,41 @@ except ImportError:
 else:
     has_flask_login = True
 
-import sys
-import os
 import logging
 
 from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
 from werkzeug.exceptions import ClientDisconnected
 
-from raven._compat import string_types
 from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
 from raven.utils.compat import _urlparse
 from raven.utils.encoding import to_unicode
-from raven.utils.imports import import_string
 from raven.utils.wsgi import get_headers, get_environ
+from raven.utils.conf import convert_options
 
 
 def make_client(client_cls, app, dsn=None):
-    # TODO(dcramer): django and Flask share very similar concepts here, and
-    # should be refactored
-    transport = app.config.get('SENTRY_TRANSPORT')
-    if isinstance(transport, string_types):
-        transport = import_string(transport)
-
     return client_cls(
-        dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
-        transport=transport,
-        include_paths=set(app.config.get(
-            'SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
-        exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
-        name=app.config.get('SENTRY_NAME'),
-        site=app.config.get('SENTRY_SITE_NAME'),
-        processors=app.config.get('SENTRY_PROCESSORS'),
-        string_max_length=app.config.get('SENTRY_MAX_LENGTH_STRING'),
-        list_max_length=app.config.get('SENTRY_MAX_LENGTH_LIST'),
-        auto_log_stacks=app.config.get('SENTRY_AUTO_LOG_STACKS'),
-        tags=app.config.get('SENTRY_TAGS'),
-        release=app.config.get('SENTRY_RELEASE'),
-        extra={
-            'app': app,
-        },
+        **convert_options(
+            app.config,
+            defaults={
+                'include_paths': (
+                    set(app.config.get('SENTRY_INCLUDE_PATHS', []))
+                    | set([app.import_name]),
+                ),
+                # support legacy RAVEN_IGNORE_EXCEPTIONS
+                'ignore_exceptions': [
+                    '{0}.{1}'.format(x.__module__, x.__name__)
+                    for x in app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
+                ],
+                'extra': {
+                    'app': app,
+                },
+            },
+        )
     )
 
 
@@ -134,14 +126,6 @@ class Sentry(object):
 
     def handle_exception(self, *args, **kwargs):
         if not self.client:
-            return
-
-        ignored_exc_type_list = current_app.config.get(
-            'RAVEN_IGNORE_EXCEPTIONS', [])
-        exc = sys.exc_info()[1]
-
-        if any((isinstance(exc, ignored_exc_type)
-                for ignored_exc_type in ignored_exc_type_list)):
             return
 
         self.captureException(exc_info=kwargs.get('exc_info'))
