@@ -11,24 +11,21 @@ if sys.version_info[0] > 2:
         collect_ignore.append("tests/handlers/logbook")
 
 try:
-    import gevent
+    import gevent  # NOQA
 except ImportError:
     collect_ignore.append("tests/transport/gevent")
 
 try:
-    import web
+    import web  # NOQA
 except ImportError:
     collect_ignore.append("tests/contrib/webpy")
 
 
 INSTALLED_APPS = [
     'django.contrib.auth',
-    'django.contrib.admin',
+    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-
-    # Included to fix Disqus' test Django which solves IntegrityMessage case
-    'django.contrib.contenttypes',
 
     'raven.contrib.django',
     'tests.contrib.django',
@@ -37,7 +34,7 @@ INSTALLED_APPS = [
 
 use_djcelery = True
 try:
-    import djcelery
+    import djcelery  # NOQA
     INSTALLED_APPS.append('djcelery')
 except ImportError:
     use_djcelery = False
@@ -59,7 +56,7 @@ def pytest_configure(config):
             DATABASE_NAME=':memory:',
             TEST_DATABASE_NAME=':memory:',
             INSTALLED_APPS=INSTALLED_APPS,
-            ROOT_URLCONF='',
+            ROOT_URLCONF='tests.contrib.django.urls',
             DEBUG=False,
             SITE_ID=1,
             BROKER_HOST="localhost",
@@ -70,7 +67,18 @@ def pytest_configure(config):
             SENTRY_ALLOW_ORIGIN='*',
             CELERY_ALWAYS_EAGER=True,
             TEMPLATE_DEBUG=True,
+            LANGUAGE_CODE='en',
+            LANGUAGES=(('en', 'English'),),
             PROJECT_ROOT=where_am_i,
-            TEMPLATE_DIRS=[os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates')],
+            TEMPLATE_DIRS=[
+                os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates'),
+            ],
+            TEMPLATES=[{
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'APP_DIRS': True,
+                'DIRS': [
+                    os.path.join(where_am_i, 'tests', 'contrib', 'django', 'templates'),
+                ],
+            }],
             ALLOWED_HOSTS=['*'],
         )

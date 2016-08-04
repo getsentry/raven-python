@@ -18,7 +18,6 @@ import warnings
 from django.conf import settings
 
 from raven._compat import PY2, binary_type, text_type, string_types
-from raven.contrib.django.management import patch_cli_runner
 from raven.utils.conf import convert_options
 from raven.utils.imports import import_string
 
@@ -215,5 +214,3 @@ if ('raven.contrib.django' in settings.INSTALLED_APPS
         or 'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS):
     register_handlers()
     register_serializers()
-
-    patch_cli_runner()
