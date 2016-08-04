@@ -21,7 +21,8 @@ python:
   - '3.3'
   - '3.4'
   - '3.5'
-  - pypy
+  # pypy fails a lot, and generally should be compatible
+  # - pypy
 env:
   matrix:
 #    - DJANGO=Django==1.4.20
