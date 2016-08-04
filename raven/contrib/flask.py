@@ -38,7 +38,7 @@ def make_client(client_cls, app, dsn=None):
             defaults={
                 'include_paths': (
                     set(app.config.get('SENTRY_INCLUDE_PATHS', []))
-                    | set([app.import_name]),
+                    | set([app.import_name])
                 ),
                 # support legacy RAVEN_IGNORE_EXCEPTIONS
                 'ignore_exceptions': [
