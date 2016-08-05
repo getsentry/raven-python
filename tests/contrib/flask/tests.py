@@ -265,9 +265,13 @@ class FlaskTest(BaseTest):
     def test_check_client_type(self):
         self.assertRaises(TypeError, lambda _: Sentry(self.app, "oops, I'm putting my DSN instead"))
 
+    def test_uses_dsn(self):
+        app = Flask(__name__)
+        sentry = Sentry(app, dsn='http://public:secret@example.com/1')
+        assert sentry.client.remote.base_url == 'http://example.com/1'
+
 
 class FlaskLoginTest(BaseTest):
-
     @fixture
     def app(self):
         return create_app(SENTRY_USER_ATTRS=['name'])
