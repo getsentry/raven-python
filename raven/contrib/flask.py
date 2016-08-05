@@ -36,6 +36,7 @@ def make_client(client_cls, app, dsn=None):
         **convert_options(
             app.config,
             defaults={
+                'dsn': dsn,
                 'include_paths': (
                     set(app.config.get('SENTRY_INCLUDE_PATHS', []))
                     | set([app.import_name])

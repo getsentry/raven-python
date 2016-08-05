@@ -268,7 +268,7 @@ class FlaskTest(BaseTest):
     def test_uses_dsn(self):
         app = Flask(__name__)
         sentry = Sentry(app, dsn='http://public:secret@example.com/1')
-        assert sentry.client.remote.base_url == 'http://example.com/1'
+        assert sentry.client.remote.base_url == 'http://example.com'
 
 
 class FlaskLoginTest(BaseTest):
