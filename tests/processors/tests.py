@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
+import raven
 
 from mock import Mock
 
-import raven
+from raven import events
 from raven.utils.testutils import TestCase
 from raven.processors import SanitizePasswordsProcessor, \
     RemovePostDataProcessor, RemoveStackLocalsProcessor
@@ -41,7 +44,7 @@ def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
     try:
         _will_throw_type_error('bar')
     except exception_class:
-        data = client.build_msg('raven.events.Exception')
+        data = client.build_msg(events.Exception)
 
     return data
 

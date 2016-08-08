@@ -30,6 +30,8 @@ except ImportError:
     from _thread import get_ident as get_thread_ident
 
 import raven
+
+from raven import events
 from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
 from raven.exceptions import APIError, RateLimited
@@ -40,9 +42,6 @@ from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames, slim_string
 from raven.utils.transaction import TransactionStack
 from raven.transport.registry import TransportRegistry, default_transports
-
-# enforce imports to avoid obscure stacktraces with MemoryError
-import raven.events  # NOQA
 
 
 __all__ = ('Client',)
@@ -295,9 +294,6 @@ class Client(object):
                       DeprecationWarning)
         return result
 
-    def get_handler(self, name):
-        return self.module_cache[name](self)
-
     def get_public_dsn(self, scheme=None):
         """
         Returns a public DSN which is consumable by raven-js
@@ -341,7 +337,7 @@ class Client(object):
         key = self._get_exception_key(exc_info)
         self.context.exceptions_to_skip.add(key)
 
-    def build_msg(self, event_type, data=None, date=None,
+    def build_msg(self, event, data=None, date=None,
                   time_spent=None, extra=None, stack=None, public_key=None,
                   tags=None, fingerprint=None, **kwargs):
         """
@@ -359,12 +355,7 @@ class Client(object):
         data.setdefault('tags', {})
         data.setdefault('extra', {})
 
-        if '.' not in event_type:
-            # Assume it's a builtin
-            event_type = 'raven.events.%s' % event_type
-
-        handler = self.get_handler(event_type)
-        result = handler.capture(**kwargs)
+        result = event(self).capture(**kwargs)
 
         # data (explicit) culprit takes over auto event detection
         culprit = result.pop('culprit', None)
@@ -449,9 +440,6 @@ class Client(object):
         # Run the data through processors
         for processor in self.get_processors():
             data.update(processor.process(data))
-
-        if 'message' not in data:
-            data['message'] = kwargs.get('message', handler.to_string(data))
 
         # tags should only be key=>u'value'
         for key, value in iteritems(data['tags']):
@@ -540,14 +528,14 @@ class Client(object):
             'tags': data,
         })
 
-    def capture(self, event_type, data=None, date=None, time_spent=None,
+    def capture(self, event, data=None, date=None, time_spent=None,
                 extra=None, stack=None, tags=None, **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
         To use structured data (interfaces) with capture:
 
-        >>> capture('raven.events.Message', message='foo', data={
+        >>> capture(raven.events.Message, message='foo', data={
         >>>     'request': {
         >>>         'url': '...',
         >>>         'data': {},
@@ -577,9 +565,7 @@ class Client(object):
         >>>     }
         >>> }
 
-        :param event_type: the module path to the Event class. Builtins can use
-                           shorthand class notation and exclude the full module
-                           path.
+        :param event: the event class
         :param data: the data base, useful for specifying structured data
                            interfaces. Any key which contains a '.' will be
                            assumed to be a data interface.
@@ -607,7 +593,7 @@ class Client(object):
             self.record_exception_seen(exc_info)
 
         data = self.build_msg(
-            event_type, data, date, time_spent, extra, stack, tags=tags,
+            event, data, date, time_spent, extra, stack, tags=tags,
             **kwargs)
 
         self.send(**data)
@@ -759,7 +745,7 @@ class Client(object):
 
         >>> client.captureMessage('My event just happened!')
         """
-        return self.capture('raven.events.Message', message=message, **kwargs)
+        return self.capture(events.Message, message=message, **kwargs)
 
     def captureException(self, exc_info=None, **kwargs):
         """
@@ -780,8 +766,7 @@ class Client(object):
         if exc_info is None or exc_info is True:
             exc_info = sys.exc_info()
 
-        return self.capture(
-            'raven.events.Exception', exc_info=exc_info, **kwargs)
+        return self.capture(events.Exception, exc_info=exc_info, **kwargs)
 
     def should_capture(self, exc_info):
         exc_type = exc_info[0]
@@ -851,7 +836,8 @@ class Client(object):
         >>> client.captureQuery('SELECT * FROM foo')
         """
         return self.capture(
-            'raven.events.Query', query=query, params=params, engine=engine,
+            events.Query,
+            query=query, params=params, engine=engine,
             **kwargs)
 
     def captureExceptions(self, **kwargs):

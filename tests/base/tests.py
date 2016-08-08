@@ -229,8 +229,7 @@ class ClientTest(TestCase):
 
         # Test for the default behaviour in which a send error is handled by the client
         _send_remote.side_effect = Exception()
-        client.capture('Message', data={}, date=None, time_spent=10,
-                       extra={}, stack=None, tags=None, message='Test message')
+        client.captureMessage(message='Test message')
         assert client.state.status == client.state.ERROR
 
         # Test for the case in which a send error is raised to the calling frame.
@@ -239,8 +238,7 @@ class ClientTest(TestCase):
             raise_send_errors=True,
         )
         with self.assertRaises(Exception):
-            client.capture('Message', data={}, date=None, time_spent=10,
-                           extra={}, stack=None, tags=None, message='Test message')
+            client.captureMessage(message='Test message')
 
     def test_encode_decode(self):
         data = {'foo': 'bar'}
@@ -253,35 +251,6 @@ class ClientTest(TestCase):
         public_dsn = client.get_public_dsn()
         self.assertEquals(public_dsn, '//public@example.com/1')
 
-    def test_explicit_message_on_message_event(self):
-        self.client.captureMessage(message='test', data={
-            'message': 'foo'
-        })
-
-        self.assertEquals(len(self.client.events), 1)
-        event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'foo')
-
-    def test_message_from_kwargs(self):
-        try:
-            raise ValueError('foo')
-        except ValueError:
-            self.client.captureException(message='test', data={})
-
-        self.assertEquals(len(self.client.events), 1)
-        event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
-
-    def test_explicit_message_on_exception_event(self):
-        try:
-            raise ValueError('foo')
-        except ValueError:
-            self.client.captureException(data={'message': 'foobar'})
-
-        self.assertEquals(len(self.client.events), 1)
-        event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'foobar')
-
     def test_exception_event(self):
         try:
             raise ValueError('foo')
@@ -290,7 +259,6 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'ValueError: foo')
         self.assertTrue('exception' in event)
         exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'ValueError')
@@ -314,7 +282,6 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'ValueError: foo')
         self.assertTrue('exception' in event)
         exc = event['exception']['values'][0]
         stacktrace = exc['stacktrace']
@@ -346,7 +313,6 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'DecoratorTestException')
         exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
@@ -381,7 +347,6 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'DecoratorTestException')
         exc = event['exception']['values'][0]
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
@@ -409,7 +374,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
+        assert event['sentry.interfaces.Message'] == {'message': 'test'}
         assert 'stacktrace' not in event
         self.assertTrue('timestamp' in event)
 
@@ -448,7 +413,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
+        assert event['sentry.interfaces.Message'] == {'message': 'test'}
         assert 'stacktrace' in event
         self.assertEquals(len(frames), len(event['stacktrace']['frames']))
         for frame, frame_i in zip(frames, event['stacktrace']['frames']):
@@ -460,7 +425,7 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEquals(event['message'], 'test')
+        assert event['sentry.interfaces.Message'] == {'message': 'test'}
         self.assertTrue('stacktrace' in event)
         self.assertTrue('timestamp' in event)
 

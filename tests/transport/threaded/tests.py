@@ -54,7 +54,8 @@ class ThreadedTransportTest(TestCase):
         transport = DummyThreadedScheme(url)
         transport.send_delay = 0.5
 
-        data = self.client.build_msg('raven.events.Message', message='foo')
+        data = {}
+
         transport.async_send(data, None, None, None)
 
         time.sleep(0.1)
@@ -69,7 +70,7 @@ class ThreadedTransportTest(TestCase):
         transport = DummyThreadedScheme(url)
         transport.send_delay = 0.5
 
-        data = self.client.build_msg('raven.events.Message', message='foo')
+        data = {}
 
         pid = os.fork()
         if pid == 0:
@@ -91,8 +92,8 @@ class ThreadedTransportTest(TestCase):
         # Test threaded transport when forking with an active worker.
         # Forking a process doesn't clone the worker thread - make sure
         # logging from both processes still works.
-        event1 = self.client.build_msg('raven.events.Message', message='parent')
-        event2 = self.client.build_msg('raven.events.Message', message='child')
+        event1 = {'message': 'parent'}
+        event2 = {'message': 'child'}
         url = urlparse(self.url)
         fd, filename = mkstemp()
         try:

@@ -97,7 +97,6 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'ValueError: hello world')
 
         assert 'request' in event
         http = event['request']
@@ -144,7 +143,6 @@ class MiddlewareTestCase(TestCase):
         self.assertEquals(exc['type'], 'SystemExit')
         self.assertEquals(exc['value'], '1')
         self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'SystemExit: 1')
 
     def test_keyboard_interrupt_is_captured(self):
         iterable = ExitingIterable(lambda: KeyboardInterrupt())

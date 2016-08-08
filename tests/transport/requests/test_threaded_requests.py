@@ -41,7 +41,7 @@ class ThreadedTransportTest(TestCase):
         transport = DummyThreadedScheme(url)
         transport.send_delay = 0.5
 
-        data = self.client.build_msg('raven.events.Message', message='foo')
+        data = {'message': 'foo'}
         transport.async_send(data, None, None, None)
 
         time.sleep(0.1)

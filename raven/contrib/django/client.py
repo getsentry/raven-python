@@ -249,7 +249,7 @@ class DjangoClient(Client):
 
         return data
 
-    def capture(self, event_type, request=None, **kwargs):
+    def capture(self, event, request=None, **kwargs):
         if 'data' not in kwargs:
             kwargs['data'] = data = {}
         else:
@@ -282,7 +282,7 @@ class DjangoClient(Client):
                     self.logger.info('Unable to get template source from exception')
                 data.update(get_data_from_template(source, debug))
 
-        result = super(DjangoClient, self).capture(event_type, **kwargs)
+        result = super(DjangoClient, self).capture(event, **kwargs)
 
         if is_http_request and result:
             # attach the sentry object to the request

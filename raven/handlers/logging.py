@@ -14,6 +14,7 @@ import logging
 import sys
 import traceback
 
+from raven import events
 from raven._compat import string_types, iteritems, text_type
 from raven.base import Client
 from raven.utils.encoding import to_string
@@ -131,7 +132,7 @@ class SentryHandler(logging.Handler, object):
             stack = self._get_targetted_stack(stack, record)
 
         date = datetime.datetime.utcfromtimestamp(record.created)
-        event_type = 'raven.events.Message'
+        event = events.Message
         handler_kwargs = {
             'params': record.args,
         }
@@ -153,10 +154,9 @@ class SentryHandler(logging.Handler, object):
             # capture the standard message first so that we ensure
             # the event is recorded as an exception, in addition to having our
             # message interface attached
-            handler = self.client.get_handler(event_type)
-            data.update(handler.capture(**handler_kwargs))
+            data.update(events.Message(self.client).capture(**handler_kwargs))
 
-            event_type = 'raven.events.Exception'
+            event = events.Exception
             handler_kwargs = {'exc_info': record.exc_info}
 
         data['level'] = record.levelno
@@ -170,5 +170,5 @@ class SentryHandler(logging.Handler, object):
         kwargs.update(handler_kwargs)
 
         return self.client.capture(
-            event_type, stack=stack, data=data,
+            event=event, stack=stack, data=data,
             extra=extra, date=date, **kwargs)

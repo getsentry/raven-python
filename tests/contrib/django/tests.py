@@ -143,7 +143,6 @@ class DjangoClientTest(TestCase):
         message = event['sentry.interfaces.Message']
         assert message['message'] == 'foo'
         assert event['level'] == logging.ERROR
-        assert event['message'] == 'foo'
         assert isinstance(event['timestamp'], datetime.datetime)
 
     def test_signal_integration(self):
@@ -161,7 +160,6 @@ class DjangoClientTest(TestCase):
         assert exc['type'] == 'TypeError'
         assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
         assert event['level'] == logging.ERROR
-        assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
 
     @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
@@ -174,7 +172,6 @@ class DjangoClientTest(TestCase):
         assert exc['type'] == 'Exception'
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
-        assert event['message'] == 'Exception: view exception'
 
     def test_user_info(self):
         with Settings(MIDDLEWARE_CLASSES=[
@@ -265,7 +262,6 @@ class DjangoClientTest(TestCase):
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'request'
             assert event['level'] == logging.ERROR
-            assert event['message'] == 'ImportError: request'
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -281,7 +277,6 @@ class DjangoClientTest(TestCase):
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'response'
             assert event['level'] == logging.ERROR
-            assert event['message'] == 'ImportError: response'
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
@@ -298,7 +293,6 @@ class DjangoClientTest(TestCase):
             assert exc['type'] == 'Exception'
             assert exc['value'] == 'view exception'
             assert event['level'] == logging.ERROR
-            assert event['message'] == 'Exception: view exception'
 
             event = self.raven.events.pop(0)
 
@@ -307,7 +301,6 @@ class DjangoClientTest(TestCase):
             assert exc['type'] == 'ValueError'
             assert exc['value'] == 'handler500'
             assert event['level'] == logging.ERROR
-            assert event['message'] == 'ValueError: handler500'
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
@@ -321,7 +314,6 @@ class DjangoClientTest(TestCase):
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'view'
             assert event['level'] == logging.ERROR
-            assert event['message'] == 'ImportError: view'
 
     @pytest.mark.skipif(DJANGO_18, reason='Django 1.8+ not supported')
     def test_template_name_as_view(self):
@@ -362,7 +354,7 @@ class DjangoClientTest(TestCase):
 
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        assert event['message'] == 'test'
+        assert event['sentry.interfaces.Message'] == {'message': 'test'}
 
     def test_404_middleware(self):
         with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.Sentry404CatchMiddleware']):

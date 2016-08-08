@@ -25,8 +25,7 @@ class BaseEvent(object):
         raise NotImplementedError
 
     def capture(self, **kwargs):
-        return {
-        }
+        return {}
 
     def transform(self, value):
         return self.client.transform(value)
@@ -137,6 +136,12 @@ class Message(BaseEvent):
 
     def capture(self, message, params=(), formatted=None, **kwargs):
         message = to_unicode(message)
+        if not params and (message == formatted or formatted is None):
+            return {
+                self.name: {
+                    'message': message,
+                }
+            }
         data = {
             self.name: {
                 'message': message,
@@ -144,8 +149,6 @@ class Message(BaseEvent):
                 'formatted': formatted,
             },
         }
-        if 'message' not in data:
-            data['message'] = formatted or message
         return data
 
 

@@ -76,9 +76,10 @@ class BottleTest(BaseTest):
 
         event = self.raven.events.pop(0)
 
-        assert event['message'] == 'ValueError: Boom'
         assert 'request' in event
-        assert 'exception' in event
+        exc = event['exception']['values'][0]
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'Boom'
 
     def test_captureMessage_captures_http(self):
         response = self.client.get('/message/?foo=bar')

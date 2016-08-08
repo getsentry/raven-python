@@ -43,12 +43,10 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEqual(event['logger'], 'root')
         self.assertEqual(event['level'], logging.INFO)
-        self.assertEqual(event['message'], 'This is a test error')
+        assert event['sentry.interfaces.Message'] == {
+            'message': 'This is a test error',
+        }
         assert 'exception' not in event
-        self.assertTrue('sentry.interfaces.Message' in event)
-        msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test error')
-        self.assertEqual(msg['params'], ())
 
     def test_logger_ignore_exception(self):
         class Foo(Exception):
@@ -132,15 +130,10 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
 
-        self.assertEqual(event['message'], 'This is a test info with an exception')
         assert 'exception' in event
         exc = event['exception']['values'][0]
         self.assertEqual(exc['type'], 'ValueError')
         self.assertEqual(exc['value'], 'This is a test ValueError')
-        self.assertTrue('sentry.interfaces.Message' in event)
-        msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test info with an exception')
-        self.assertEqual(msg['params'], ())
 
     def test_message_params(self):
         record = self.make_record('This is a test of %s', args=('args',))
@@ -148,11 +141,11 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEqual(event['message'], 'This is a test of args')
-        msg = event['sentry.interfaces.Message']
-        self.assertEqual(msg['message'], 'This is a test of %s')
-        expected = ("'args'",) if six.PY3 else ("u'args'",)
-        self.assertEqual(msg['params'], expected)
+        assert event['sentry.interfaces.Message'] == {
+            'message': 'This is a test of %s',
+            'formatted': 'This is a test of args',
+            'params': ("'args'",) if six.PY3 else ("u'args'",)
+        }
 
     def test_record_stack(self):
         record = self.make_record('This is a test of stacks', extra={'stack': True})
@@ -166,8 +159,9 @@ class LoggingIntegrationTest(TestCase):
         frame = frames[0]
         self.assertEqual(frame['module'], 'raven.handlers.logging')
         assert 'exception' not in event
-        self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertEqual(event['message'], 'This is a test of stacks')
+        assert event['sentry.interfaces.Message'] == {
+            'message': 'This is a test of stacks',
+        }
 
     def test_no_record_stack(self):
         record = self.make_record('This is a test with no stacks', extra={'stack': False})
@@ -175,7 +169,9 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        self.assertEqual(event['message'], 'This is a test with no stacks')
+        assert event['sentry.interfaces.Message'] == {
+            'message': 'This is a test with no stacks',
+        }
         self.assertFalse('sentry.interfaces.Stacktrace' in event)
 
     def test_explicit_stack(self):
@@ -185,13 +181,10 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
         assert 'stacktrace' in event
-        self.assertTrue('message' in event, event)
-        self.assertEqual(event['message'], 'This is a test of stacks')
         assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test of stacks')
-        self.assertEqual(msg['params'], ())
 
     def test_extra_culprit(self):
         record = self.make_record('This is a test of stacks', extra={'culprit': 'foo in bar'})

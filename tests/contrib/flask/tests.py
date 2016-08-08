@@ -110,7 +110,6 @@ class FlaskTest(BaseTest):
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
-        self.assertEquals(event['message'], 'ValueError: hello world')
 
     def test_capture_plus_logging(self):
         client, raven, app = self.make_client_and_raven(debug=False)
@@ -180,9 +179,10 @@ class FlaskTest(BaseTest):
         event = self.raven.events.pop(0)
         self.assertEquals(event['event_id'], response.headers['X-Sentry-ID'])
 
-        assert event['message'] == 'ValueError: Boom'
         assert 'request' in event
-        assert 'exception' in event
+        exc = event['exception']['values'][0]
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'Boom'
 
     def test_captureMessage_captures_http(self):
         response = self.client.get('/message/?foo=bar')
@@ -281,7 +281,9 @@ class FlaskLoginTest(BaseTest):
         self.client.get('/login/')
         self.client.get('/an-error/')
         event = self.raven.events.pop(0)
-        assert event['message'] == 'ValueError: hello world'
+        exc = event['exception']['values'][0]
+        assert exc['type'] == 'ValueError'
+        assert exc['value'] == 'hello world'
         assert 'request' in event
         assert 'user' in event
         self.assertDictEqual(event['user'], User().to_dict())

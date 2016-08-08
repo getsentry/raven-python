@@ -4,11 +4,9 @@ from __future__ import unicode_literals
 from raven.utils.testutils import TestCase
 from raven.base import Client
 
-# Some internal stuff to extend the transport layer
+from raven import events
 from raven.transport import Transport
 from raven.transport.exceptions import DuplicateScheme
-
-# Simplify comparing dicts with primitive values:
 from raven.utils import json
 
 import datetime
@@ -74,20 +72,17 @@ class TransportTest(TestCase):
 
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
         d = calendar.timegm(mydate.timetuple())
-        msg = c.build_msg('raven.events.Message', message='foo', date=d)
+        msg = c.build_msg(events.Message, message='foo', date=d)
         expected = {
             'project': '1',
             'sentry.interfaces.Message': {
                 'message': 'foo',
-                'params': (),
-                'formatted': None,
             },
             'server_name': 'test_server',
             'level': 40,
             'tags': {},
             'time_spent': None,
             'timestamp': 1336089600,
-            'message': 'foo',
         }
 
         # The event_id is always overridden

@@ -36,24 +36,20 @@ class LogbookHandlerTest(TestCase):
             event = client.events.pop(0)
             self.assertEquals(event['logger'], __name__)
             self.assertEquals(event['level'], 'error')
-            self.assertEquals(event['message'], 'This is a test error')
+            assert event['sentry.interfaces.Message'] == {
+                'message': 'This is a test error',
+            }
             self.assertFalse('exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test error')
-            self.assertEquals(msg['params'], ())
 
             logger.warning('This is a test warning')
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
             self.assertEquals(event['logger'], __name__)
             self.assertEquals(event['level'], 'warning')
-            self.assertEquals(event['message'], 'This is a test warning')
+            assert event['sentry.interfaces.Message'] == {
+                'message': 'This is a test warning',
+            }
             self.assertFalse('exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test warning')
-            self.assertEquals(msg['params'], ())
 
             logger.info('This is a test info with a url', extra=dict(
                 url='http://example.com',
@@ -66,10 +62,9 @@ class LogbookHandlerTest(TestCase):
                 expected = "u'http://example.com'"
             self.assertEquals(event['extra']['url'], expected)
             self.assertFalse('exception' in event)
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test info with a url')
-            self.assertEquals(msg['params'], ())
+            assert event['sentry.interfaces.Message'] == {
+                'message': 'This is a test info with a url',
+            }
 
             try:
                 raise ValueError('This is a test ValueError')
@@ -79,27 +74,24 @@ class LogbookHandlerTest(TestCase):
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
 
-            self.assertEquals(event['message'], 'This is a test info with an exception')
+            assert event['sentry.interfaces.Message'] == {
+                'message': 'This is a test info with an exception',
+            }
             assert 'exception' in event
             exc = event['exception']['values'][0]
             self.assertEquals(exc['type'], 'ValueError')
             self.assertEquals(exc['value'], 'This is a test ValueError')
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test info with an exception')
-            self.assertEquals(msg['params'], ())
 
             # test args
             logger.info('This is a test of {0}', 'args')
             self.assertEquals(len(client.events), 1)
             event = client.events.pop(0)
-            self.assertEquals(event['message'], 'This is a test of args')
             assert 'exception' not in event
-            self.assertTrue('sentry.interfaces.Message' in event)
-            msg = event['sentry.interfaces.Message']
-            self.assertEquals(msg['message'], 'This is a test of {0}')
-            expected = ("'args'",) if six.PY3 else ("u'args'",)
-            self.assertEquals(msg['params'], expected)
+            assert event['sentry.interfaces.Message'] == {
+                'message': 'This is a test of {0}',
+                'formatted': 'This is a test of args',
+                'params': ("'args'",) if six.PY3 else ("u'args'",),
+            }
 
     def test_client_arg(self):
         client = TempStoreClient(include_paths=['tests'])

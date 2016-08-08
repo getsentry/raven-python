@@ -13,6 +13,7 @@ import logbook
 import sys
 import traceback
 
+from raven import events
 from raven._compat import string_types
 from raven.base import Client
 from raven.utils.encoding import to_string
@@ -65,7 +66,7 @@ class SentryHandler(logbook.Handler):
             'logger': record.channel,
         }
 
-        event_type = 'raven.events.Message'
+        event = events.Message
 
         handler_kwargs = {
             'message': record.msg,
@@ -79,10 +80,9 @@ class SentryHandler(logbook.Handler):
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
         if record.exc_info is True or (record.exc_info and all(record.exc_info)):
-            handler = self.client.get_handler(event_type)
-            data.update(handler.capture(**handler_kwargs))
+            data.update(events.Message(self.client).capture(**handler_kwargs))
 
-            event_type = 'raven.events.Exception'
+            event = events.Exception
             handler_kwargs['exc_info'] = record.exc_info
 
         extra = {
@@ -94,7 +94,8 @@ class SentryHandler(logbook.Handler):
         }
         extra.update(record.extra)
 
-        return self.client.capture(event_type,
+        return self.client.capture(
+            event=event,
             data=data,
             extra=extra,
             **handler_kwargs
