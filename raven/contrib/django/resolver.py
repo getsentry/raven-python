@@ -29,7 +29,10 @@ class RouteResolver(object):
         > "{sport_slug}/athletes/{athlete_slug}/"
         """
         # remove optional params
-        pattern = self._optional_group_matcher.sub(lambda m: '[%s]' % m.group(1), pattern)
+        # TODO(dcramer): it'd be nice to change these into [%s] but it currently
+        # conflicts with the other rules because we're doing regexp matches
+        # rather than parsing tokens
+        pattern = self._optional_group_matcher.sub(lambda m: '%s' % m.group(1), pattern)
 
         # handle named groups first
         pattern = self._named_group_matcher.sub(lambda m: '{%s}' % m.group(1), pattern)
