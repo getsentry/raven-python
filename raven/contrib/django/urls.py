@@ -16,6 +16,6 @@ except ImportError:
 import raven.contrib.django.views
 
 urlpatterns = (
-    url(r'^api/(?:(?P<project_id>[\w_-]+)/)?store/$', raven.contrib.django.views.report, name='raven-report'),
+    url(r'^api/(?P<project_id>[\w_-]+)/store/$', raven.contrib.django.views.report, name='raven-report'),
     url(r'^report/', raven.contrib.django.views.report),
 )
