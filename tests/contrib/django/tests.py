@@ -635,7 +635,7 @@ class ReportViewTest(TestCase):
 
     def setUp(self):
         super(ReportViewTest, self).setUp()
-        self.path = reverse('raven-report', urlconf=self.urls)
+        self.path = reverse('raven-report', args=['1'], urlconf=self.urls)
 
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header(self, is_valid_origin):
