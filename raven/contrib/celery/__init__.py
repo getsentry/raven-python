@@ -24,8 +24,11 @@ class CeleryFilter(logging.Filter):
         return extra_data.get('internal', record.funcName != '_log_error')
 
 
-def register_signal(client):
+def register_signal(client, ignore_expected=False):
     def process_failure_signal(sender, task_id, args, kwargs, einfo, **kw):
+        if ignore_expected and isinstance(einfo.exception, sender.throws):
+            return
+
         # This signal is fired inside the stack so let raven do its magic
         if isinstance(einfo.exception, SoftTimeLimitExceeded):
             fingerprint = ['celery', 'SoftTimeLimitExceeded', sender]
