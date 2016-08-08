@@ -2,7 +2,10 @@ from __future__ import absolute_import
 
 import re
 
-from django.urls import get_resolver, Resolver404
+try:
+    from django.urls import get_resolver, Resolver404
+except ImportError:
+    from django.core.urlresolvers import get_resolver, Resolver404
 
 
 class RouteResolver(object):
