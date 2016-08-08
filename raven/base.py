@@ -450,9 +450,6 @@ class Client(object):
         for processor in self.get_processors():
             data.update(processor.process(data))
 
-        if 'message' not in data:
-            data['message'] = kwargs.get('message', handler.to_string(data))
-
         # tags should only be key=>u'value'
         for key, value in iteritems(data['tags']):
             data['tags'][key] = to_unicode(value)
