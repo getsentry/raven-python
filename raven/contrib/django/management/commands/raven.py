@@ -39,6 +39,9 @@ class Command(BaseCommand):
     else:
         def add_arguments(self, parser):
             parser.add_argument(
+                'command', nargs=1,
+            )
+            parser.add_argument(
                 '--data', action=StoreJsonAction,
                 nargs=1, dest='data',
             )
@@ -48,7 +51,7 @@ class Command(BaseCommand):
             )
 
     def handle(self, command=None, *args, **options):
-        if command != 'test':
+        if command not in ('test', ['test']):
             print('Usage: manage.py raven test')
             sys.exit(1)
 
