@@ -1,16 +1,39 @@
 from __future__ import absolute_import
 
+import logging
+import os
 import warnings
 
 from raven._compat import PY2, text_type
 from raven.exceptions import InvalidDsn
-from raven.transport.threaded import ThreadedHTTPTransport
 from raven.utils.encoding import to_string
 from raven.utils.urlparse import parse_qsl, urlparse
 
 ERR_UNKNOWN_SCHEME = 'Unsupported Sentry DSN scheme: {0} ({1})'
 
-DEFAULT_TRANSPORT = ThreadedHTTPTransport
+logger = logging.getLogger('raven')
+
+
+def discover_default_transport():
+    from raven.transport.threaded import ThreadedHTTPTransport
+    from raven.transport.http import HTTPTransport
+
+    # Google App Engine
+    # https://cloud.google.com/appengine/docs/python/how-requests-are-handled#Python_The_environment
+    if 'CURRENT_VERSION_ID' in os.environ and 'INSTANCE_ID' in os.environ:
+        logger.info('Detected environment to be Google App Engine. Using synchronous HTTP transport.')
+        return HTTPTransport
+
+    # AWS Lambda
+    # https://alestic.com/2014/11/aws-lambda-environment/
+    if 'LAMBDA_TASK_ROOT' in os.environ:
+        logger.info('Detected environment to be AWS Lambda. Using synchronous HTTP transport.')
+        return HTTPTransport
+
+    return ThreadedHTTPTransport
+
+
+DEFAULT_TRANSPORT = discover_default_transport()
 
 
 class RemoteConfig(object):
