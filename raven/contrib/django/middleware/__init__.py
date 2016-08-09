@@ -88,7 +88,6 @@ class SentryMiddleware(threading.local):
                 self._get_transaction_from_request(request)
             )
         except Exception as exc:
-            raise
             client.error_logger.exception(repr(exc))
         return None
 
