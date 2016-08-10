@@ -76,7 +76,7 @@ using ``SENTRY_USER_ATTRS``::
         SENTRY_USER_ATTRS = ['username', 'first_name', 'last_name', 'email']
 
 ``email`` will be captured as ``sentry.interfaces.User.email``, and any
-additionl attributes will be available under
+additional attributes will be available under
 ``sentry.interfaces.User.data``
 
 You can specify the types of exceptions that should not be reported by
