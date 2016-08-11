@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+
+import pytest
 import six
 
 from raven.base import Client
@@ -67,3 +70,31 @@ class ExceptionTest(TestCase):
                 six.raise_from(KeyError(), TypeError())
             except Exception:
                 self.check_capture(['KeyError', 'TypeError'])
+
+    def test_handles_self_referencing(self):
+        try:
+            raise ValueError()
+        except Exception as exc:
+            try:
+                six.raise_from(exc, exc)
+            except Exception:
+                self.check_capture(['ValueError'])
+            else:
+                pytest.fail()
+        else:
+            pytest.fail()
+
+        try:
+            raise ValueError()
+        except Exception as exc:
+            try:
+                six.raise_from(KeyError(), exc)
+            except KeyError as exc2:
+                try:
+                    six.raise_from(exc, exc2)
+                except Exception:
+                    self.check_capture(['ValueError', 'KeyError'])
+            else:
+                pytest.fail()
+        else:
+            pytest.fail()
