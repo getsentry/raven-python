@@ -46,12 +46,17 @@ if hasattr(Exception, '__suppress_context__'):
         yield exc_info
         exc_type, exc, exc_traceback = exc_info
 
+        context = set()
+        context.add(exc)
         while True:
             if exc.__suppress_context__:
                 # Then __cause__ should be used instead.
                 exc = exc.__cause__
             else:
                 exc = exc.__context__
+            if exc in context:
+                break
+            context.add(exc)
             if exc is None:
                 break
             yield type(exc), exc, exc.__traceback__
