@@ -37,7 +37,7 @@ from raven.utils import json, get_versions, get_auth_header, merge_dicts
 from raven._compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames
+from raven.utils.stacks import get_stack_info, iter_stack_frames, slim_string
 from raven.utils.transaction import TransactionStack
 from raven.transport.registry import TransportRegistry, default_transports
 
@@ -188,6 +188,9 @@ class Client(object):
         self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
         self.transaction = TransactionStack()
+        # find the root transaction as the command which launched this
+        # process
+        self.transaction.push(slim_string(' '.join(sys.argv), 128))
 
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
 
