@@ -270,6 +270,17 @@ class FlaskTest(BaseTest):
         sentry = Sentry(app, dsn='http://public:secret@example.com/1')
         assert sentry.client.remote.base_url == 'http://example.com'
 
+    def test_binds_default_include_paths(self):
+        app = Flask(__name__)
+        sentry = Sentry(app, dsn='http://public:secret@example.com/1')
+        assert sentry.client.include_paths == set([app.import_name])
+
+    def test_overrides_default_include_paths(self):
+        app = Flask(__name__)
+        app.config['SENTRY_CONFIG'] = {'include_paths': ['foo.bar']}
+        sentry = Sentry(app, dsn='http://public:secret@example.com/1')
+        assert sentry.client.include_paths == set(['foo.bar'])
+
 
 class FlaskLoginTest(BaseTest):
     @fixture
