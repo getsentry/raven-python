@@ -12,6 +12,7 @@ import logging
 import threading
 
 from django.conf import settings
+from django.core.signals import request_finished
 
 from raven.contrib.django.resolver import RouteResolver
 
@@ -89,21 +90,21 @@ class SentryMiddleware(threading.local):
             )
         except Exception as exc:
             client.error_logger.exception(repr(exc))
+        else:
+            # we utilize request_finished as the exception gets reported
+            # *after* process_response is executed, and thus clearing the
+            # transaction there would leave it empty
+            request_finished.connect(self.request_finished)
+
         return None
 
-    def process_response(self, request, response):
+    def request_finished(self, **kwargs):
         from raven.contrib.django.models import client
 
         if self._txid:
             client.transaction.pop(self._txid)
             self._txid = None
-        return response
 
-    # def process_exception(self, request, exception):
-    #     from raven.contrib.django.models import client
-
-    #     if self._txid:
-    #         client.transaction.pop(self._txid)
-    #         self._txid = None
+        request_finished.disconnect(self.request_finished)
 
 SentryLogMiddleware = SentryMiddleware
