@@ -110,6 +110,17 @@ Log a generic message with ``captureMessage``::
 
     sentry.captureMessage('hello, world!')
 
+Configure
+---------
+
+To configure Sentry to add additional context to errors (such as
+release or environment), simply add the keys to ``app.config``
+
+    app.config['SENTRY_RELEASE'] = raven.fetch_git_sha(os.path.dirname(__file__))
+
+Sentry automatically looks for ``SENTRY_RELEASE``, ``SENTRY_CONTEXT``,
+``SENTRY_ENVIRONMENT``, ``SENTRY_TAGS``, and ``SENTRY_IGNORE_EXCEPTIONS``.
+
 Getting The Last Event ID
 -------------------------
 
