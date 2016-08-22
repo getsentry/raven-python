@@ -182,3 +182,44 @@ def get_code(func):
     if rv is None:
         raise TypeError('Could not get code from %r' % type(func).__name__)
     return rv
+
+try:
+    advance_iterator = next
+except NameError:
+    def advance_iterator(it):
+        return it.next()
+    next = advance_iterator
+
+try:
+    callable = callable
+except NameError:
+    def callable(obj):
+        return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
+
+
+if not PY2:
+    def get_unbound_function(unbound):
+        return unbound
+
+    create_bound_method = types.MethodType
+
+    def create_unbound_method(func, cls):
+        return func
+
+    Iterator = object
+else:
+    def get_unbound_function(unbound):
+        return unbound.im_func
+
+    def create_bound_method(func, obj):
+        return types.MethodType(func, obj, obj.__class__)
+
+    def create_unbound_method(func, cls):
+        return types.MethodType(func, None, cls)
+
+    class Iterator(object):
+
+        def next(self):
+            return type(self).__next__(self)
+
+        callable = callable
