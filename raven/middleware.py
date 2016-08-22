@@ -7,9 +7,32 @@ raven.middleware
 """
 from __future__ import absolute_import
 
+from contextlib import contextmanager
+
 from raven._compat import Iterator, next
 from raven.utils.wsgi import (
     get_current_url, get_headers, get_environ)
+
+
+@contextmanager
+def common_exception_handling(environ, client):
+    try:
+        yield
+    except (StopIteration, GeneratorExit):
+        # Make sure we do this explicitly here. At least GeneratorExit
+        # is handled implicitly by the rest of the logic but we want
+        # to make sure this does not regress
+        raise
+    except Exception:
+        client.handle_exception(environ)
+        raise
+    except KeyboardInterrupt:
+        client.handle_exception(environ)
+        raise
+    except SystemExit as e:
+        if e.code != 0:
+            client.handle_exception(environ)
+        raise
 
 
 class ClosingIterator(Iterator):
@@ -26,36 +49,15 @@ class ClosingIterator(Iterator):
         return self
 
     def __next__(self):
-        try:
+        with common_exception_handling(self.environ, self.sentry):
             return next(self.iterable)
-        except StopIteration:
-            # propagate up the normal StopIteration
-            raise
-        except Exception:
-            # but capture any other exception, then re-raise
-            self.sentry.handle_exception(self.environ)
-            raise
-        except KeyboardInterrupt:
-            self.sentry.handle_exception(self.environ)
-            raise
-        except SystemExit as e:
-            if e.code != 0:
-                self.sentry.handle_exception(self.environ)
-            raise
 
     def close(self):
-        if hasattr(self.iterable, 'close') and callable(self.iterable.close):
-            try:
-                self.iterable.close()
-            except Exception:
-                self.sentry.handle_exception(self.environ)
-            except KeyboardInterrupt:
-                self.sentry.handle_exception(self.environ)
-                raise
-            except SystemExit as e:
-                if e.code != 0:
-                    self.sentry.handle_exception(self.environ)
-                raise
+        try:
+            if hasattr(self.iterable, 'close'):
+                with common_exception_handling(self.environ, self.sentry):
+                    self.iterable.close()
+        finally:
             self.sentry.client.context.clear()
 
 
@@ -78,20 +80,8 @@ class Sentry(object):
         # TODO(dcramer): ideally this is lazy, but the context helpers must
         # support callbacks first
         self.client.http_context(self.get_http_context(environ))
-
-        try:
+        with common_exception_handling(environ, self):
             iterable = self.application(environ, start_response)
-        except Exception:
-            self.handle_exception(environ)
-            raise
-        except KeyboardInterrupt:
-            self.handle_exception(environ)
-            raise
-        except SystemExit as e:
-            if e.code != 0:
-                self.handle_exception(environ)
-            raise
-
         return ClosingIterator(self, iterable, environ)
 
     def get_http_context(self, environ):
