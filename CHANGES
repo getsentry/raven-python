@@ -1,3 +1,13 @@
+Version 5.25.0
+--------------
+
+* Added various improvements for the WSGI and Django support.
+* Prevent chained exception recursion
+* In environments which look like AWS Lambda or Google App Engine utilize the
+  synchronous transport.
+* Added Celery config option to ignore expected exceptions
+* Improved DSN handling in Flask client.
+
 Version 5.24.0
 --------------
 
