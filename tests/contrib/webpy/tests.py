@@ -1,5 +1,5 @@
 from exam import fixture
-from paste.fixture import TestApp
+from paste.fixture import TestApp as PasteTestApp  # prevent pytest-warning
 
 from raven.base import Client
 from raven.contrib.webpy import SentryApplication
@@ -43,7 +43,7 @@ class WebPyTest(TestCase):
 
     @fixture
     def client(self):
-        return TestApp(self.app.wsgifunc())
+        return PasteTestApp(self.app.wsgifunc())
 
     def test_get(self):
         resp = self.client.get('/test', expect_errors=True)
