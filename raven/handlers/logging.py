@@ -26,7 +26,7 @@ RESERVED = frozenset((
 ))
 
 
-def extract_extra(record):
+def extract_extra(record, reserved=RESERVED):
     data = {}
 
     extra = getattr(record, 'data', None)
@@ -37,7 +37,7 @@ def extract_extra(record):
             extra = {}
 
     for k, v in iteritems(vars(record)):
-        if k in RESERVED:
+        if k in reserved:
             continue
         if k.startswith('_'):
             continue
