@@ -115,6 +115,10 @@ class Sentry(object):
 
     @property
     def last_event_id(self):
+        try:
+            return g.sentry_event_id
+        except Exception:
+            pass
         return getattr(self, '_last_event_id', None)
 
     @last_event_id.setter

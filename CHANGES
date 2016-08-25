@@ -1,3 +1,8 @@
+Version 5.26.0
+--------------
+
+* Fixed potential concurrency issue with event IDs in the Flask integration.
+
 Version 5.25.0
 --------------
 
