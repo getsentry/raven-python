@@ -83,6 +83,14 @@ Asynchronous
 
    The value returned by the yield is a ``HTTPResponse`` object.
 
+   To dynamically use Python if configuration DSN available, change your base handler on fly and make sure all concrete handlers are imported after this.
+
+    .. code-block:: python
+
+        from raven.contrib.tornado import SentryMixin
+        app.sentry_client = AsyncSentryClient(dsn)
+        BaseHandler.__bases__ = (SentryMixin, ) + BaseHandler.__bases__
+
 
 Synchronous
 ~~~~~~~~~~~
