@@ -42,6 +42,7 @@ settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
 DJANGO_18 = django.VERSION >= (1, 8, 0)
+DJANGO_110 = django.VERSION >= (1, 10, 0)
 
 
 def make_request():
@@ -209,6 +210,32 @@ class DjangoClientTest(TestCase):
 
             username = models.CharField(max_length=32)
             email = models.EmailField()
+
+        user = MyUser(
+            username='admin',
+            email='admin@example.com',
+            id=1,
+        )
+        user_info = self.raven.get_user_info(user)
+        assert user_info == {
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
+
+    @pytest.mark.skipif(not DJANGO_110, reason='< Django 1.10')
+    def test_get_user_info_is_authenticated_property(self):
+        from django.db import models
+        from django.contrib.auth.models import AbstractBaseUser
+
+        class MyUser(AbstractBaseUser):
+            USERNAME_FIELD = 'username'
+            username = models.CharField(max_length=32)
+            email = models.EmailField()
+
+            @property
+            def is_authenticated(self):
+                return True
 
         user = MyUser(
             username='admin',
