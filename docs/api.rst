@@ -66,7 +66,7 @@ Client
 
             client.captureMessage('This just happened!')
 
-    .. py:method:: captureException(message, exc_info=None, **kwargs)
+    .. py:method:: captureException(exc_info=None, **kwargs)
 
         This is a shorthand to reporting an exception via :meth:`capture`.
         It passes ``'raven.events.Exception'`` as `event_type` and the
