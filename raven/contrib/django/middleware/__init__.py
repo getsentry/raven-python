@@ -94,7 +94,11 @@ class SentryMiddleware(threading.local):
             # we utilize request_finished as the exception gets reported
             # *after* process_response is executed, and thus clearing the
             # transaction there would leave it empty
-            request_finished.connect(self.request_finished)
+            # XXX(dcramer): weakref's cause a threading issue in certain
+            # versions of Django (e.g. 1.6). While they'd be ideal, we're under
+            # the assumption that Django will always call our function except
+            # in the situation of a process or thread dying.
+            request_finished.connect(self.request_finished, weak=False)
 
         return None
 
