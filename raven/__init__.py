@@ -12,7 +12,7 @@ import os.path
 
 __all__ = ('VERSION', 'Client', 'get_version')
 
-VERSION = '5.26.0'
+VERSION = '5.27.0.dev0'
 
 
 def _get_git_revision(path):
