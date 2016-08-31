@@ -44,21 +44,33 @@ class ClosingIterator(Iterator):
         self.sentry = sentry
         self.environ = environ
         self.iterable = iter(iterable)
+        self.closed = False
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        with common_exception_handling(self.environ, self.sentry):
-            return next(self.iterable)
+        try:
+            with common_exception_handling(self.environ, self.sentry):
+                return next(self.iterable)
+        except StopIteration:
+            # We auto close here if we reach the end because some WSGI
+            # middleware does not really like to close things.  To avoid
+            # massive leaks we just close automatically at the end of
+            # iteration.
+            self.close()
+            raise
 
     def close(self):
+        if self.closed:
+            return
         try:
             if hasattr(self.iterable, 'close'):
                 with common_exception_handling(self.environ, self.sentry):
                     self.iterable.close()
         finally:
             self.sentry.client.context.clear()
+            self.closed = True
 
 
 class Sentry(object):
