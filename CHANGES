@@ -2,6 +2,8 @@ Version 5.26.0
 --------------
 
 * Fixed potential concurrency issue with event IDs in the Flask integration.
+* Added a workaround for leakage when broken WSGI middlware or servers are
+  used that do not call `close()` on the iterat.r
 
 Version 5.25.0
 --------------
