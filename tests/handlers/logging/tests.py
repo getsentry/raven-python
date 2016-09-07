@@ -50,6 +50,23 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(msg['message'], 'This is a test error')
         self.assertEqual(msg['params'], ())
 
+    def test_logger_ignore_exception(self):
+        class Foo(Exception):
+            pass
+        old = self.client.ignore_exceptions
+        self.client.ignore_exceptions = set(['Foo'])
+        try:
+            try:
+                raise Foo()
+            except Exception:
+                exc_info = sys.exc_info()
+            record = self.make_record('This is a test error',
+                                      exc_info=exc_info)
+            self.handler.emit(record)
+            self.assertEqual(len(self.client.events), 0)
+        finally:
+            self.client.ignore_exceptions = old
+
     def test_can_record(self):
         tests = [
             ("raven", False),

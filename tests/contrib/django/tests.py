@@ -767,9 +767,9 @@ class SentryExceptionHandlerTest(TestCase):
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
 
-    @mock.patch.object(TempStoreClient, 'capture')
+    @mock.patch.object(TempStoreClient, 'send')
     @mock.patch('sys.exc_info')
-    def test_does_exclude_filtered_types(self, exc_info, mock_capture):
+    def test_does_exclude_filtered_types(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
         try:
             get_client().ignore_exceptions = set(['ValueError'])
@@ -778,11 +778,11 @@ class SentryExceptionHandlerTest(TestCase):
         finally:
             get_client().ignore_exceptions.clear()
 
-        assert not mock_capture.called
+        assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'capture')
+    @mock.patch.object(TempStoreClient, 'send')
     @mock.patch('sys.exc_info')
-    def test_ignore_exceptions_with_expression_match(self, exc_info, mock_capture):
+    def test_ignore_exceptions_with_expression_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
 
         try:
@@ -794,11 +794,11 @@ class SentryExceptionHandlerTest(TestCase):
         finally:
             get_client().ignore_exceptions.clear()
 
-        assert not mock_capture.called
+        assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'capture')
+    @mock.patch.object(TempStoreClient, 'send')
     @mock.patch('sys.exc_info')
-    def test_ignore_exceptions_with_module_match(self, exc_info, mock_capture):
+    def test_ignore_exceptions_with_module_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
 
         try:
@@ -810,4 +810,4 @@ class SentryExceptionHandlerTest(TestCase):
         finally:
             get_client().ignore_exceptions.clear()
 
-        assert not mock_capture.called
+        assert not mock_send.called
