@@ -282,7 +282,7 @@ class DjangoClient(Client):
             # attach the sentry object to the request
             request.sentry = {
                 'project_id': data.get('project', self.remote.project),
-                'id': self.get_ident(result),
+                'id': result,
             }
 
         return result
