@@ -10,7 +10,9 @@ from __future__ import absolute_import
 import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
-from celery.signals import after_setup_logger, task_failure
+from celery.signals import (
+    after_setup_logger, task_failure, task_prerun, task_postrun
+)
 from raven.handlers.logging import SentryHandler
 
 
@@ -25,26 +27,7 @@ class CeleryFilter(logging.Filter):
 
 
 def register_signal(client, ignore_expected=False):
-    def process_failure_signal(sender, task_id, args, kwargs, einfo, **kw):
-        if ignore_expected and isinstance(einfo.exception, sender.throws):
-            return
-
-        # This signal is fired inside the stack so let raven do its magic
-        if isinstance(einfo.exception, SoftTimeLimitExceeded):
-            fingerprint = ['celery', 'SoftTimeLimitExceeded', sender]
-        else:
-            fingerprint = None
-        client.captureException(
-            extra={
-                'task_id': task_id,
-                'task': sender,
-                'args': args,
-                'kwargs': kwargs,
-            },
-            fingerprint=fingerprint,
-        )
-
-    task_failure.connect(process_failure_signal, weak=False)
+    SentryCeleryHandler(client, ignore_expected=ignore_expected).install()
 
 
 def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
@@ -67,3 +50,45 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
         logger.addHandler(handler)
 
     after_setup_logger.connect(process_logger_event, weak=False)
+
+
+class SentryCeleryHandler(object):
+    def __init__(self, client, ignore_expected=False):
+        self.client = client
+        self.ignore_expected = ignore_expected
+
+    def install(self):
+        task_prerun.connect(self.handle_task_prerun, weak=False)
+        task_postrun.connect(self.handle_task_postrun, weak=False)
+        task_failure.connect(self.process_failure_signal, weak=False)
+
+    def uninstall(self):
+        task_prerun.disconnect(self.handle_task_prerun)
+        task_postrun.disconnect(self.handle_task_postrun)
+        task_failure.disconnect(self.process_failure_signal)
+
+    def process_failure_signal(self, sender, task_id, args, kwargs, einfo, **kw):
+        if self.ignore_expected and isinstance(einfo.exception, sender.throws):
+            return
+
+        # This signal is fired inside the stack so let raven do its magic
+        if isinstance(einfo.exception, SoftTimeLimitExceeded):
+            fingerprint = ['celery', 'SoftTimeLimitExceeded', sender]
+        else:
+            fingerprint = None
+
+        self.client.captureException(
+            extra={
+                'task_id': task_id,
+                'task': sender,
+                'args': args,
+                'kwargs': kwargs,
+            },
+            fingerprint=fingerprint,
+        )
+
+    def handle_task_prerun(self, sender, task_id, task, **kw):
+        self.client.transaction.push(task.name)
+
+    def handle_task_postrun(self, sender, task_id, task, **kw):
+        self.client.transaction.pop(task.name)

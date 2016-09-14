@@ -8,10 +8,13 @@ raven.contrib.django.middleware
 
 from __future__ import absolute_import
 
-import threading
 import logging
+import threading
 
 from django.conf import settings
+from django.core.signals import request_finished
+
+from raven.contrib.django.resolver import RouteResolver
 
 
 def is_ignorable_404(uri):
@@ -61,9 +64,51 @@ class SentryResponseErrorIdMiddleware(object):
         return response
 
 
-class SentryLogMiddleware(object):
-    # Create a threadlocal variable to store the session in for logging
-    thread = threading.local()
+class SentryMiddleware(threading.local):
+    resolver = RouteResolver()
+
+    # backwards compat
+    @property
+    def thread(self):
+        return self
+
+    def _get_transaction_from_request(self, request):
+        # TODO(dcramer): it'd be nice to pull out parameters
+        # and make this a normalized path
+        return self.resolver.resolve(request.path)
 
     def process_request(self, request):
+        self._txid = None
         self.thread.request = request
+
+    def process_view(self, request, func, args, kwargs):
+        from raven.contrib.django.models import client
+
+        try:
+            self._txid = client.transaction.push(
+                self._get_transaction_from_request(request)
+            )
+        except Exception as exc:
+            client.error_logger.exception(repr(exc))
+        else:
+            # we utilize request_finished as the exception gets reported
+            # *after* process_response is executed, and thus clearing the
+            # transaction there would leave it empty
+            # XXX(dcramer): weakref's cause a threading issue in certain
+            # versions of Django (e.g. 1.6). While they'd be ideal, we're under
+            # the assumption that Django will always call our function except
+            # in the situation of a process or thread dying.
+            request_finished.connect(self.request_finished, weak=False)
+
+        return None
+
+    def request_finished(self, **kwargs):
+        from raven.contrib.django.models import client
+
+        if self._txid:
+            client.transaction.pop(self._txid)
+            self._txid = None
+
+        request_finished.disconnect(self.request_finished)
+
+SentryLogMiddleware = SentryMiddleware

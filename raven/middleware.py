@@ -70,6 +70,7 @@ class ClosingIterator(Iterator):
                     self.iterable.close()
         finally:
             self.sentry.client.context.clear()
+            self.sentry.client.transaction.clear()
             self.closed = True
 
 

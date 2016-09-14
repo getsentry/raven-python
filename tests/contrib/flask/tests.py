@@ -6,22 +6,9 @@ from mock import patch
 from flask import Flask, current_app, g
 from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
 
-from raven.base import Client
 from raven.contrib.flask import Sentry
-from raven.utils.testutils import TestCase
+from raven.utils.testutils import InMemoryClient, TestCase
 from raven.handlers.logging import SentryHandler
-
-
-class TempStoreClient(Client):
-    def __init__(self, **kwargs):
-        self.events = []
-        super(TempStoreClient, self).__init__(**kwargs)
-
-    def is_enabled(self):
-        return True
-
-    def send(self, **kwargs):
-        self.events.append(kwargs)
 
 
 class User(AnonymousUserMixin):
@@ -96,12 +83,12 @@ class BaseTest(TestCase):
 
     @before
     def bind_sentry(self):
-        self.raven = TempStoreClient()
+        self.raven = InMemoryClient()
         self.middleware = Sentry(self.app, client=self.raven)
 
     def make_client_and_raven(self, *args, **kwargs):
         app = create_app(*args, **kwargs)
-        raven = TempStoreClient()
+        raven = InMemoryClient()
         Sentry(app, client=raven)
         return app.test_client(), raven, app
 
@@ -124,7 +111,6 @@ class FlaskTest(BaseTest):
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
-        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests in an_error')
 
     def test_capture_plus_logging(self):
         client, raven, app = self.make_client_and_raven(debug=False)
@@ -251,7 +237,7 @@ class FlaskTest(BaseTest):
 
     def test_logging_setup_with_exclusion_list(self):
         app = Flask(__name__)
-        raven = TempStoreClient()
+        raven = InMemoryClient()
 
         Sentry(app, client=raven, logging=True,
             logging_exclusions=("excluded_logger",))
