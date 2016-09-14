@@ -3,6 +3,24 @@ Version 5.27.0
 
 * Updated CA bundle.
 
+* Raven transports that have dependencies outside Python stdlib are no longer
+  imported by default, and must now be explicitly imported by the application.
+  The transports no longer imported by default are:
+    - raven.transport.eventlet.EventletHTTPTransport
+    - raven.transport.gevent.GeventedHTTPTransport
+    - raven.transport.requests.RequestsHTTPTransport
+    - raven.transport.twisted import TwistedHTTPTransport
+    - raven.transport.tornado import TornadoHTTPTransport
+
+  If you really need to have those transports available, you need to explicitly
+  import them and register them, as early as possible.  For example:
+  ```
+  from raven.transport.eventlet import EventletHTTPTransport
+  from raven.transport.registry import default_transports
+
+  default_transports.append(EventletHTTPTransport)
+  ```
+
 Version 5.26.0
 --------------
 
