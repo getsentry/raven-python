@@ -140,9 +140,14 @@ class DjangoClient(Client):
         install_sql_hook()
 
     def get_user_info(self, user):
-        if hasattr(user, 'is_authenticated') and \
-           not user.is_authenticated():
-            return None
+        if hasattr(user, 'is_authenticated'):
+            # is_authenticated was a method in Django < 1.10
+            if callable(user.is_authenticated):
+                authenticated = user.is_authenticated()
+            else:
+                authenticated = user.is_authenticated
+            if not authenticated:
+                return None
 
         user_info = {}
         try:
