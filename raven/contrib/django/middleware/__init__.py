@@ -14,6 +14,14 @@ import threading
 from django.conf import settings
 from django.core.signals import request_finished
 
+try:
+    # Django >= 1.10
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    # Not required for Django <= 1.9, see:
+    # https://docs.djangoproject.com/en/1.10/topics/http/middleware/#upgrading-pre-django-1-10-style-middleware
+    MiddlewareMixin = object
+
 from raven.contrib.django.resolver import RouteResolver
 
 
@@ -27,7 +35,7 @@ def is_ignorable_404(uri):
     )
 
 
-class Sentry404CatchMiddleware(object):
+class Sentry404CatchMiddleware(MiddlewareMixin):
     def process_response(self, request, response):
         from raven.contrib.django.models import client
 
@@ -52,7 +60,7 @@ class Sentry404CatchMiddleware(object):
     # sentry_exception_handler(sender=Sentry404CatchMiddleware, request=request)
 
 
-class SentryResponseErrorIdMiddleware(object):
+class SentryResponseErrorIdMiddleware(MiddlewareMixin):
     """
     Appends the X-Sentry-ID response header for referencing a message within
     the Sentry datastore.

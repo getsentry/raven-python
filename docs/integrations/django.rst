@@ -144,11 +144,11 @@ In certain conditions you may wish to log 404 events to the Sentry server. To
 do this, you simply need to enable a Django middleware:
 
 .. sourcecode:: python
-
-    MIDDLEWARE_CLASSES = (
+    # Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
+    MIDDLEWARE = (
         'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
         ...,
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
 
 It is recommended to put the middleware at the top, so that any only 404s
 that bubbled all the way up get logged. Certain middlewares (e.g. flatpages)
@@ -175,8 +175,8 @@ Sentry supports sending a message ID to your clients so that they can be
 tracked easily by your development team. There are two ways to access this
 information, the first is via the ``X-Sentry-ID`` HTTP response header.
 Adding this is as simple as appending a middleware to your stack::
-
-    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+    # Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
+    MIDDLEWARE = MIDDLEWARE + (
       # We recommend putting this as high in the chain as possible
       'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
       ...,
