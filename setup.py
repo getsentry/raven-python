@@ -79,7 +79,7 @@ tests_require = [
     'pytest-django==2.9.1',
     'pytest-timeout==0.4',
     'requests',
-    'tornado',
+    'tornado>=4.1',
     'webob',
     'webtest',
     'anyjson',
