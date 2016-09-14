@@ -8,3 +8,6 @@ raven.transport
 # TODO: deprecate this namespace and force non-default (sync + threaded) to
 # manually import/register transports somehow
 from __future__ import absolute_import
+
+from raven.transport.base import *  # NOQA
+from raven.transport.registry import *  # NOQA

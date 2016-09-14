@@ -32,7 +32,7 @@ from raven.contrib.django.models import client, get_client, sentry_exception_han
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
-from raven.transport import HTTPTransport
+from raven.transport.http import HTTPTransport
 from raven.utils.serializer import transform
 
 from django.test.client import Client as TestClient, ClientHandler as TestClientHandler

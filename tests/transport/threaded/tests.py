@@ -12,7 +12,7 @@ from raven.utils.urlparse import urlparse
 
 class DummyThreadedScheme(ThreadedHTTPTransport):
     def __init__(self, *args, **kwargs):
-        super(ThreadedHTTPTransport, self).__init__(*args, **kwargs)
+        super(DummyThreadedScheme, self).__init__(*args, **kwargs)
         self.events = []
         self.send_delay = 0
 

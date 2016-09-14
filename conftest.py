@@ -2,6 +2,14 @@ from django.conf import settings
 import os.path
 import sys
 
+from raven.transport.eventlet import EventletHTTPTransport
+from raven.transport.gevent import GeventedHTTPTransport
+from raven.transport.requests import RequestsHTTPTransport
+from raven.transport.twisted import TwistedHTTPTransport
+from raven.transport.tornado import TornadoHTTPTransport
+from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
+from raven.base import Client
+
 
 collect_ignore = []
 if sys.version_info[0] > 2:
@@ -82,3 +90,13 @@ def pytest_configure(config):
             }],
             ALLOWED_HOSTS=['*'],
         )
+
+
+
+for transport in [EventletHTTPTransport,
+                  GeventedHTTPTransport,
+                  RequestsHTTPTransport,
+                  ThreadedRequestsHTTPTransport,
+                  TwistedHTTPTransport,
+                  TornadoHTTPTransport]:
+    Client._registry.register_transport(transport)
