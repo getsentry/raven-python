@@ -657,9 +657,9 @@ class Client(object):
             # try to reconstruct a reasonable version of the exception
             for frame in data['exception']['values'][0]['stacktrace']['frames']:
                 output.append('  File "%(fn)s", line %(lineno)s, in %(func)s' % {
-                    'fn': frame['filename'],
-                    'lineno': frame['lineno'],
-                    'func': frame['function'],
+                    'fn': frame.get('filename', 'unknown_filename'),
+                    'lineno': frame.get('lineno', -1),
+                    'func': frame.get('function', 'unknown_function'),
                 })
 
         self.uncaught_logger.error(output)
