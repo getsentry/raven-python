@@ -599,6 +599,11 @@ class Client(object):
         if exc_info is not None:
             if self.skip_error_for_logging(exc_info):
                 return
+            elif not self.should_capture(exc_info):
+                self.logger.info(
+                    'Not capturing exception due to filters: %s', exc_info[0],
+                    exc_info=sys.exc_info())
+                return
             self.record_exception_seen(exc_info)
 
         data = self.build_msg(
@@ -774,12 +779,6 @@ class Client(object):
         """
         if exc_info is None or exc_info is True:
             exc_info = sys.exc_info()
-
-        if not self.should_capture(exc_info):
-            self.logger.info(
-                'Not capturing exception due to filters: %s', exc_info[0],
-                exc_info=sys.exc_info())
-            return
 
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)
