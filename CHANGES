@@ -2,6 +2,8 @@ Version 5.27.0
 --------------
 
 * Updated CA bundle.
+* Added transaction-based culprits for Celery, Django, and Flask.
+* Fixed an issue where ``ignore_exceptions`` wasn't respected.
 
 Version 5.26.0
 --------------
