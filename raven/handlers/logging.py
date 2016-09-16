@@ -56,7 +56,7 @@ class SentryHandler(logging.Handler, object):
             record.name.startswith(('sentry.errors', 'raven.'))
         )
 
-    def emit(self, record):
+    def emit(self, record, **kwargs):
         try:
             # Beware to python3 bug (see #10805) if exc_info is (None, None, None)
             self.format(record)
@@ -65,7 +65,7 @@ class SentryHandler(logging.Handler, object):
                 print(to_string(record.message), file=sys.stderr)
                 return
 
-            return self._emit(record)
+            return self._emit(record, **kwargs)
         except Exception:
             if self.client.raise_send_errors:
                 raise
@@ -119,7 +119,7 @@ class SentryHandler(logging.Handler, object):
                 continue
             if k.startswith('_'):
                 continue
-            if '.' not in k and k not in ('culprit', 'server_name'):
+            if '.' not in k and k not in ('culprit', 'server_name', 'fingerprint'):
                 extra[k] = v
             else:
                 data[k] = v
