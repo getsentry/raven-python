@@ -105,7 +105,7 @@ class SentryMiddleware(threading.local):
     def request_finished(self, **kwargs):
         from raven.contrib.django.models import client
 
-        if self._txid:
+        if getattr(self, '_txid', None):
             client.transaction.pop(self._txid)
             self._txid = None
 
