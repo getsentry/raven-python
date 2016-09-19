@@ -29,9 +29,15 @@ def is_ignorable_404(uri):
 
 class Sentry404CatchMiddleware(object):
     def process_response(self, request, response):
+        if response.status_code != 404:
+            return response
+
+        if is_ignorable_404(request.get_full_path()):
+            return response
+
         from raven.contrib.django.models import client
 
-        if response.status_code != 404 or is_ignorable_404(request.get_full_path()) or not client.is_enabled():
+        if not client.is_enabled():
             return response
 
         data = client.get_data_from_request(request)
