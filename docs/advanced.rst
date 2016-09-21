@@ -51,7 +51,7 @@ settings:
     import raven
 
     client = raven.Client(
-        dsn='___DSN___'
+        dsn='___DSN___',
 
         # inform the client which parts of code are yours
         # include_paths=['my.app']
