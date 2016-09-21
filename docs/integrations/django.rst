@@ -24,6 +24,7 @@ Using the Django integration is as simple as adding
 Additional settings for the client are configured using the
 ``RAVEN_CONFIG`` dictionary::
 
+    import os
     import raven
 
     RAVEN_CONFIG = {
