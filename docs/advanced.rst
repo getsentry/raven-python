@@ -105,6 +105,12 @@ The following are valid arguments which may be passed to the Raven client:
 
         release = '1.0.3'
 
+.. describe:: environment
+
+    The environment your application is running in::
+
+        environment = 'staging'
+
 .. describe:: exclude_paths
 
     Extending this allow you to ignore module prefixes when we attempt to
