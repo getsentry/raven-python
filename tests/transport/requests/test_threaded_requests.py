@@ -24,7 +24,8 @@ class DummyThreadedScheme(ThreadedRequestsHTTPTransport):
 class ThreadedTransportTest(TestCase):
     def setUp(self):
         self.url = "threaded+requests+http://some_username:some_password@localhost:8143/1"
-        self.client = Client(dsn=self.url)
+        self.client = Client(dsn=self.url,
+                             transport=ThreadedRequestsHTTPTransport)
 
     @mock.patch('requests.post')
     def test_does_send(self, send):

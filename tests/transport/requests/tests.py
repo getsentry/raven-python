@@ -4,12 +4,14 @@ import mock
 
 from raven.utils.testutils import TestCase
 from raven.base import Client
+from raven.transport.requests import RequestsHTTPTransport
 
 
 class RequestsTransportTest(TestCase):
     def setUp(self):
         self.client = Client(
             dsn="requests+http://some_username:some_password@localhost:8143/1",
+            transport=RequestsHTTPTransport,
         )
 
     @mock.patch('requests.post')

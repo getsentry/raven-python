@@ -90,13 +90,3 @@ def pytest_configure(config):
             }],
             ALLOWED_HOSTS=['*'],
         )
-
-
-
-for transport in [EventletHTTPTransport,
-                  GeventedHTTPTransport,
-                  RequestsHTTPTransport,
-                  ThreadedRequestsHTTPTransport,
-                  TwistedHTTPTransport,
-                  TornadoHTTPTransport]:
-    Client._registry.register_transport(transport)
