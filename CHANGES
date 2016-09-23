@@ -14,23 +14,15 @@ Version 5.27.0
     - raven.transport.tornado.TornadoHTTPTransport
 
   If you really need to have those transports available, you need to explicitly
-  import them and register them.  For full compatibility:
-  ```
-  from raven.transport.eventlet import EventletHTTPTransport
-  from raven.transport.gevent import GeventedHTTPTransport
-  from raven.transport.requests import RequestsHTTPTransport
-  from raven.transport.twisted import TwistedHTTPTransport
-  from raven.transport.tornado import TornadoHTTPTransport
-  from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
-  from raven.base import Client
+  import them and create a raven.Client() object passing a transport parameter.
+  Example:
 
-  for transport in [EventletHTTPTransport,
-                    GeventedHTTPTransport,
-                    RequestsHTTPTransport,
-                    ThreadedRequestsHTTPTransport,
-                    TwistedHTTPTransport,
-                    TornadoHTTPTransport]:
-      Client._registry.register_transport(transport)
+  ```python
+  from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
+  from raven import Client
+
+  client = Client(dsn="threaded+requests+http://some_username:some_password@localhost:8143/1",
+                  transport=ThreadedRequestsHTTPTransport)
 
   ```
 
