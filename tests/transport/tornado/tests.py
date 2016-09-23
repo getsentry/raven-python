@@ -45,7 +45,7 @@ class TornadoTransportTests(testing.AsyncTestCase):
 
     @testing.gen_test
     def test__sending_with_error_calls_error_callback(self):
-        c = Client(dsn='tornado+http://uver:pass@localhost:46754/1',
+        c = Client(dsn='http://uver:pass@localhost:46754/1',
                    transport=TornadoHTTPTransport)
 
         with mock.patch.object(Client, '_failed_send') as mock_failed:
