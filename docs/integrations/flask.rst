@@ -1,10 +1,6 @@
 Flask
 =====
 
-`Flask <http://flask.pocoo.org/>`_ is a popular Python micro webframework.
-Support for Flask is provided by Raven directly but for some dependencies
-you need to install raven with the flask feature set.
-
 Installation
 ------------
 
