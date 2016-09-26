@@ -145,7 +145,7 @@ The following are valid arguments which may be passed to the Raven client:
             'django.exceptions.*',
         ]
 
-.. describe:: max_list_length
+.. describe:: list_max_length
 
     The maximum number of items a list-like container should store.
 
