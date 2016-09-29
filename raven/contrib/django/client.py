@@ -169,7 +169,6 @@ class DjangoClient(Client):
             # as good as possible here.
             return None
 
-
     def get_data_from_request(self, request):
         result = {}
 
