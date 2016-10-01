@@ -70,7 +70,7 @@ def send_test_message(client, options):
     sys.stdout.write('Sending a test message... ')
     sys.stdout.flush()
 
-    ident = client.get_ident(client.captureMessage(
+    ident = client.captureMessage(
         message='This is a test message generated using ``raven test``',
         data=data,
         level=logging.INFO,
@@ -80,7 +80,7 @@ def send_test_message(client, options):
             'user': get_uid(),
             'loadavg': get_loadavg(),
         },
-    ))
+    )
 
     sys.stdout.write('Event ID was %r\n' % (ident,))
 
