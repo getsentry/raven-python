@@ -99,7 +99,7 @@ class Sentry(object):
                  logging=False, logging_exclusions=None, level=logging.NOTSET,
                  wrap_wsgi=None, register_signal=True):
         if client and not isinstance(client, Client):
-            raise TypeError('client should an instance of Client')
+            raise TypeError('client should be an instance of Client')
 
         self.dsn = dsn
         self.logging = logging
