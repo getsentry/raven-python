@@ -14,7 +14,6 @@ import os
 import sys
 import time
 import uuid
-import warnings
 
 from datetime import datetime
 from types import FunctionType
@@ -134,7 +133,7 @@ class Client(object):
     >>> try:
     >>>     1/0
     >>> except ZeroDivisionError:
-    >>>     ident = client.get_ident(client.captureException())
+    >>>     event_id = client.captureException()
     >>>     print "Exception caught; reference is %s" % ident
     """
     logger = logging.getLogger('raven')
@@ -281,18 +280,6 @@ class Client(object):
         )
 
         return modules
-
-    def get_ident(self, result):
-        """
-        Returns a searchable string representing a message.
-
-        >>> result = client.capture(**kwargs)
-        >>> ident = client.get_ident(result)
-        """
-        warnings.warn('Client.get_ident is deprecated. The event ID is now '
-                      'returned as the result of capture.',
-                      DeprecationWarning)
-        return result
 
     def get_public_dsn(self, scheme=None):
         """
@@ -839,12 +826,6 @@ class Client(object):
             events.Query,
             query=query, params=params, engine=engine,
             **kwargs)
-
-    def captureExceptions(self, **kwargs):
-        warnings.warn(
-            'captureExceptions is deprecated, used context() instead.',
-            DeprecationWarning)
-        return self.context(**kwargs)
 
     def captureBreadcrumb(self, *args, **kwargs):
         """Records a breadcrumb with the current context.  They will be

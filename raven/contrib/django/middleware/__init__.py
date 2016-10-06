@@ -51,7 +51,7 @@ class Sentry404CatchMiddleware(object):
 
         request.sentry = {
             'project_id': data.get('project', client.remote.project),
-            'id': client.get_ident(result),
+            'id': result,
         }
         return response
 
