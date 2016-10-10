@@ -161,14 +161,13 @@ class DjangoClient(Client):
                 user_info['username'] = user.get_username()
             elif hasattr(user, 'username'):
                 user_info['username'] = user.username
+
+            return user_info
         except Exception:
             # We expect that user objects can be somewhat broken at times
             # and try to just handle as much as possible and ignore errors
             # as good as possible here.
-            pass
-
-        if user_info:
-            return user_info
+            return None
 
     def get_data_from_request(self, request):
         result = {}
