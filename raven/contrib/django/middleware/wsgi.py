@@ -7,11 +7,19 @@ raven.contrib.django.middleware.wsgi
 """
 from __future__ import absolute_import
 
+try:
+    # Django >= 1.10
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    # Not required for Django <= 1.9, see:
+    # https://docs.djangoproject.com/en/1.10/topics/http/middleware/#upgrading-pre-django-1-10-style-middleware
+    MiddlewareMixin = object
+
 from raven.middleware import Sentry
 from raven.utils import memoize
 
 
-class Sentry(Sentry):
+class Sentry(Sentry, MiddlewareMixin):
     """
     Identical to the default WSGI middleware except that
     the client comes dynamically via ``get_client
