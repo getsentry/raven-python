@@ -142,6 +142,7 @@ In certain conditions you may wish to log 404 events to the Sentry server. To
 do this, you simply need to enable a Django middleware:
 
 .. sourcecode:: python
+
     # Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
     MIDDLEWARE = (
         'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
@@ -172,7 +173,10 @@ Message References
 Sentry supports sending a message ID to your clients so that they can be
 tracked easily by your development team. There are two ways to access this
 information, the first is via the ``X-Sentry-ID`` HTTP response header.
-Adding this is as simple as appending a middleware to your stack::
+Adding this is as simple as appending a middleware to your stack:
+
+.. sourcecode:: python
+
     # Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
     MIDDLEWARE = MIDDLEWARE + (
       # We recommend putting this as high in the chain as possible
@@ -185,7 +189,9 @@ Sentry will attach :attr:`request.sentry` when it catches a Django
 exception.  In our example, we will use this information to modify the
 default :file:`500.html` which is rendered, and show the user a case
 reference ID. The first step in doing this is creating a custom
-:func:`handler500` in your :file:`urls.py` file::
+:func:`handler500` in your :file:`urls.py` file:
+
+.. sourcecode:: python
 
     from django.conf.urls.defaults import *
 
@@ -304,14 +310,18 @@ If you already have middleware in place that handles :func:`process_exception`
 you will need to take extra care when using Sentry.
 
 For example, the following middleware would suppress Sentry logging due to it
-returning a response::
+returning a response:
+
+.. sourcecode:: python
 
     class MyMiddleware(object):
         def process_exception(self, request, exception):
             return HttpResponse('foo')
 
 To work around this, you can either disable your error handling middleware, or
-add something like the following::
+add something like the following:
+
+.. sourcecode:: python
 
     from django.core.signals import got_request_exception
 
@@ -327,7 +337,9 @@ Note that this technique may break unit tests using the Django test client
 because the exceptions won't be translated into the expected 404 or 403
 response codes.
 
-Or, alternatively, you can just enable Sentry responses::
+Or, alternatively, you can just enable Sentry responses:
+
+.. sourcecode:: python
 
     from raven.contrib.django.raven_compat.models import sentry_exception_handler
 
@@ -342,7 +354,9 @@ Circus
 
 If you are running Django with `circus <http://circus.rtfd.org/>`_ and
 `chaussette <https://chaussette.readthedocs.io/>`_ you will also need
-to add a hook to circus to activate Raven::
+to add a hook to circus to activate Raven:
+
+.. sourcecode:: python
 
     from django.conf import settings
     from django.core.management import call_command
