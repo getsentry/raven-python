@@ -1,3 +1,8 @@
+Version 5.29.0
+--------------
+
+* Added `register_logging_handler`.
+
 Version 5.28.0
 --------------
 
