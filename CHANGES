@@ -3,6 +3,7 @@ Version 5.28.0
 
 * Corrected an issue that caused `close()` on WSGI iterables to not be
   correctly called.
+* Fixes the new Django 1.10 `MIDDLEWARE_CLASSES` warning.
 
 Version 5.27.1
 --------------
