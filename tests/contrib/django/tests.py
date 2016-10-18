@@ -37,9 +37,8 @@ from raven.contrib.django.views import is_valid_origin
 from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
 
-from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
-
-from .models import TestModel
+from django.test.client import Client as DjangoTestClient, ClientHandler as DjangoTestClientHandler
+from .models import MyTestModel
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
@@ -59,7 +58,7 @@ def make_request():
     })
 
 
-class MockClientHandler(TestClientHandler):
+class MockClientHandler(DjangoTestClientHandler):
     def __call__(self, environ, start_response=[]):
         # this pretends doesn't require start_response
         return super(MockClientHandler, self).__call__(environ)
@@ -285,7 +284,7 @@ class DjangoClientTest(TestCase):
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
-            client = TestClient(REMOTE_ADDR='127.0.0.1')
+            client = DjangoTestClient(REMOTE_ADDR='127.0.0.1')
             client.handler = MockSentryMiddleware(MockClientHandler())
 
             self.assertRaises(Exception, client.get, reverse('sentry-raise-exc'))
@@ -736,21 +735,21 @@ class PromiseSerializerTestCase(TestCase):
 
 class ModelInstanceSerializerTestCase(TestCase):
     def test_basic(self):
-        instance = TestModel()
+        instance = MyTestModel()
 
         result = transform(instance)
         assert isinstance(result, six.string_types)
-        assert result == '<TestModel: TestModel object>'
+        assert result == '<MyTestModel: MyTestModel object>'
 
 
 class QuerySetSerializerTestCase(TestCase):
     def test_basic(self):
         from django.db.models.query import QuerySet
-        obj = QuerySet(model=TestModel)
+        obj = QuerySet(model=MyTestModel)
 
         result = transform(obj)
         assert isinstance(result, six.string_types)
-        assert result == '<QuerySet: model=TestModel>'
+        assert result == '<QuerySet: model=MyTestModel>'
 
 
 class SentryExceptionHandlerTest(TestCase):
