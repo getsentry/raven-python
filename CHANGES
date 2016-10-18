@@ -1,3 +1,14 @@
+Version 5.28.0
+--------------
+
+* Corrected an issue that caused `close()` on WSGI iterables to not be
+  correctly called.
+
+Version 5.27.1
+--------------
+
+* Bugfix for transaction based culprits.
+
 Version 5.27.0
 --------------
 
