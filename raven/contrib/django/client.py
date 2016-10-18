@@ -34,14 +34,6 @@ from raven._compat import string_types, binary_type
 
 __all__ = ('DjangoClient',)
 
-VALID_HTTP_REQUESTS = (HttpRequest, )
-
-try:
-    from rest_framework.request import Request
-    VALID_HTTP_REQUESTS += (Request, )
-except ImportError:
-    pass
-
 
 class _FormatConverter(object):
 
@@ -265,7 +257,7 @@ class DjangoClient(Client):
         if request is None:
             request = getattr(SentryLogMiddleware.thread, 'request', None)
 
-        is_http_request = isinstance(request, VALID_HTTP_REQUESTS)
+        is_http_request = isinstance(request, HttpRequest)
         if is_http_request:
             data.update(self.get_data_from_request(request))
 

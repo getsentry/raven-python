@@ -19,7 +19,6 @@ Version 5.27.1
 Version 5.27.0
 --------------
 
-* Added support for extracting data from rest_framework in Django integration
 * Updated CA bundle.
 * Added transaction-based culprits for Celery, Django, and Flask.
 * Fixed an issue where ``ignore_exceptions`` wasn't respected.
