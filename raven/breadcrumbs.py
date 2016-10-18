@@ -8,6 +8,7 @@ from raven._compat import iteritems, get_code, text_type, string_types
 from raven.utils import once
 
 
+special_logging_handlers = []
 special_logger_handlers = {}
 
 
@@ -97,6 +98,11 @@ def record(message=None, timestamp=None, level=None, category=None,
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
+    for handler in special_logging_handlers:
+        rv = handler(logger, level, msg, args, kwargs)
+        if rv:
+            return
+
     handler = special_logger_handlers.get(logger.name)
     if handler is not None:
         rv = handler(logger, level, msg, args, kwargs)
@@ -245,6 +251,15 @@ def register_special_log_handler(name_or_logger, callback):
     else:
         name = name_or_logger.name
     special_logger_handlers[name] = callback
+
+
+def register_logging_handler(callback):
+    """Registers a callback for log handling.  The callback is invoked
+    with give arguments: `logger`, `level`, `msg`, `args` and `kwargs`
+    which are the values passed to the logging system.  If the callback
+    returns `True` the default handling is disabled.
+    """
+    special_logging_handlers.append(callback)
 
 
 hooked_libraries = {}
