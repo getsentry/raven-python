@@ -26,6 +26,29 @@ RESERVED = frozenset((
 ))
 
 
+def extract_extra(record, reserved=RESERVED):
+    data = {}
+
+    extra = getattr(record, 'data', None)
+    if not isinstance(extra, dict):
+        if extra:
+            extra = {'data': extra}
+        else:
+            extra = {}
+
+    for k, v in iteritems(vars(record)):
+        if k in reserved:
+            continue
+        if k.startswith('_'):
+            continue
+        if '.' not in k and k not in ('culprit', 'server_name', 'fingerprint'):
+            extra[k] = v
+        else:
+            data[k] = v
+
+    return data, extra
+
+
 class SentryHandler(logging.Handler, object):
     def __init__(self, *args, **kwargs):
         client = kwargs.get('client_cls', Client)
@@ -104,24 +127,7 @@ class SentryHandler(logging.Handler, object):
         return frames
 
     def _emit(self, record, **kwargs):
-        data = {}
-
-        extra = getattr(record, 'data', None)
-        if not isinstance(extra, dict):
-            if extra:
-                extra = {'data': extra}
-            else:
-                extra = {}
-
-        for k, v in iteritems(vars(record)):
-            if k in RESERVED:
-                continue
-            if k.startswith('_'):
-                continue
-            if '.' not in k and k not in ('culprit', 'server_name', 'fingerprint'):
-                extra[k] = v
-            else:
-                data[k] = v
+        data, extra = extract_extra(record)
 
         stack = getattr(record, 'stack', None)
         if stack is True:
