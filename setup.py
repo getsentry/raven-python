@@ -75,7 +75,7 @@ tests_require = [
     'nose',
     'pycodestyle',
     'pytz',
-    'pytest',
+    'pytest>=3.0.0',
     'pytest-django==2.9.1',
     'pytest-timeout==0.4',
     'requests',
