@@ -28,7 +28,7 @@ Additional settings for the client are configured using the
         'dsn': '___DSN___',
         # If you are using git, you can also automatically configure the
         # release based on the git info.
-        'release': raven.fetch_git_sha(os.path.join(os.path.dirname(__file__), '..')),
+        'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
     }
 
 Once you've configured the client, you can test it using the standard Django
