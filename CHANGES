@@ -1,3 +1,9 @@
+Version 5.30.0
+--------------
+
+* Keep the original type for the django middleware settings if we
+  change them.
+
 Version 5.29.0
 --------------
 
@@ -5,8 +11,6 @@ Version 5.29.0
 * Removed bad mixin from django's WSGI middleware
 * Removed "support for extracing data from rest_framework" because
   this broke code.
-* Keep the original type for the django middleware settings if we
-  change them.
 
 Version 5.28.0
 --------------
