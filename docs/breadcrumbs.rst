@@ -67,7 +67,7 @@ the :py:func:`~raven.breadcrumbs.ignore_logger` and
 
 .. py:function:: raven.breadcrumbs.register_logging_handler(callback)
 
-    This is similar to :func:`~raven.breadcrumbs.register_special_log_handler`
+    This is similar to :py:func:`~raven.breadcrumbs.register_special_log_handler`
     but it adds a global callback that is invoked for all log entries.
     Otherwise it works the same but multiple handlers can be registered.
 
