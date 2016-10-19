@@ -240,7 +240,7 @@ def install_middleware():
         if set(all_names).isdisjoint(set(middleware)):
             setattr(settings,
                     middleware_attr,
-                    (name,) + tuple(middleware))
+                    type(middleware)((name,)) + middleware)
 
 
 if (
