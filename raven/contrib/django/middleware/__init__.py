@@ -78,7 +78,16 @@ class SentryResponseErrorIdMiddleware(MiddlewareMixin):
         return response
 
 
-class SentryMiddleware(threading.local):
+# We need to make a base class for our sentry middleware that is thread
+# local but at the same time has the new fnagled middleware mixin applied
+# if such a thing exists.
+if MiddlewareMixin is object:
+    _SentryMiddlewareBase = threading.local
+else:
+    _SentryMiddlewareBase = type('_SentryMiddlewareBase', (MiddlewareMixin, threading.local), {})
+
+
+class SentryMiddleware(_SentryMiddlewareBase):
     resolver = RouteResolver()
 
     # backwards compat
