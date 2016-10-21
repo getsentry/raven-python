@@ -78,7 +78,7 @@ class SentryResponseErrorIdMiddleware(MiddlewareMixin):
         return response
 
 
-class SentryMiddleware(MiddlewareMixin, threading.local):
+class SentryMiddleware(threading.local, MiddlewareMixin):
     resolver = RouteResolver()
 
     # backwards compat
