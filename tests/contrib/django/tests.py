@@ -162,7 +162,6 @@ class DjangoClientTest(TestCase):
         assert event['level'] == logging.ERROR
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
 
-    @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
@@ -779,7 +778,7 @@ class SentryExceptionHandlerTest(TestCase):
     def test_does_exclude_filtered_types(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
         try:
-            self.client.ignore_exceptions = set(['ValueError'])
+            self.client.ignore_exceptions = {'ValueError'}
 
             self.handler.exception_handler(request=self.request)
         finally:
@@ -794,9 +793,9 @@ class SentryExceptionHandlerTest(TestCase):
 
         try:
             if six.PY3:
-                self.client.ignore_exceptions = set(['builtins.*'])
+                self.client.ignore_exceptions = {'builtins.*'}
             else:
-                self.client.ignore_exceptions = set(['exceptions.*'])
+                self.client.ignore_exceptions = {'exceptions.*'}
             self.handler.exception_handler(request=self.request)
         finally:
             self.client.ignore_exceptions.clear()
@@ -810,9 +809,9 @@ class SentryExceptionHandlerTest(TestCase):
 
         try:
             if six.PY3:
-                self.client.ignore_exceptions = set(['builtins.ValueError'])
+                self.client.ignore_exceptions = {'builtins.ValueError'}
             else:
-                self.client.ignore_exceptions = set(['exceptions.ValueError'])
+                self.client.ignore_exceptions = {'exceptions.ValueError'}
             self.handler.exception_handler(request=self.request)
         finally:
             self.client.ignore_exceptions.clear()

@@ -11,10 +11,7 @@ import raven
 
 from exam import Exam
 
-try:
-    from unittest2 import TestCase as BaseTestCase
-except ImportError:
-    from unittest import TestCase as BaseTestCase  # NOQA
+from unittest import TestCase as BaseTestCase
 
 
 class TestCase(Exam, BaseTestCase):

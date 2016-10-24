@@ -7,8 +7,6 @@ raven.transport.eventlet
 """
 from __future__ import absolute_import
 
-import sys
-
 from raven.transport.http import HTTPTransport
 
 try:
@@ -36,11 +34,8 @@ class EventletHTTPTransport(HTTPTransport):
     def _send_payload(self, payload):
         req = eventlet_urllib2.Request(self._url, headers=payload[1])
         try:
-            if sys.version_info < (2, 6):
-                response = eventlet_urllib2.urlopen(req, payload[0]).read()
-            else:
-                response = eventlet_urllib2.urlopen(req, payload[0],
-                                                    self.timeout).read()
+            response = eventlet_urllib2.urlopen(req, payload[0],
+                                                self.timeout).read()
             return response
         except Exception as err:
             return err

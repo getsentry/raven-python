@@ -54,7 +54,7 @@ class LoggingIntegrationTest(TestCase):
         class Foo(Exception):
             pass
         old = self.client.ignore_exceptions
-        self.client.ignore_exceptions = set(['Foo'])
+        self.client.ignore_exceptions = {'Foo'}
         try:
             try:
                 raise Foo()
@@ -278,8 +278,7 @@ class LoggingHandlerTest(TestCase):
 
     def test_logging_level_set(self):
         handler = SentryHandler('http://public:secret@example.com/1', level="ERROR")
-        # XXX: some version of python 2.6 seem to pass the string on instead of coercing it
-        self.assertTrue(handler.level in (logging.ERROR, 'ERROR'))
+        self.assertEqual(handler.level, logging.ERROR)
 
     def test_logging_level_not_set(self):
         handler = SentryHandler('http://public:secret@example.com/1')

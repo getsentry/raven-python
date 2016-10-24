@@ -21,7 +21,7 @@ def get_data_from_request(request):
     try:
         form_dict = request.forms.dict
         # we only are about the most recent one
-        formdata = dict([(k, form_dict[k][-1]) for k in form_dict])
+        formdata = {k: form_dict[k][-1] for k in form_dict}
     except Exception:
         formdata = {}
 
