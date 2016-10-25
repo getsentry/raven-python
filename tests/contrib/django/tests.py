@@ -587,6 +587,23 @@ class DjangoLoggingTest(TestCase):
         http = event['request']
         assert http['method'] == 'POST'
 
+    def test_tags(self):
+        tags = {'tag1': 'test'}
+        handler = SentryHandler(tags=tags)
+
+        logger = self.logger
+        logger.handlers = []
+        logger.addHandler(handler)
+
+        logger.error('This is a test error')
+
+        assert len(self.raven.events) == 1
+        event = self.raven.events.pop(0)
+        assert 'tags' in event
+        # event['tags'] also contains some other data, like 'site'
+        assert 'tag1' in event['tags']
+        assert event['tags']['tag1'] == tags['tag1']
+
 
 class CeleryIsolatedClientTest(TestCase):
     def setUp(self):
