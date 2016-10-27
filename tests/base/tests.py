@@ -292,7 +292,7 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'ValueError: foo')
         self.assertTrue('exception' in event)
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'foo')
         self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
@@ -316,7 +316,7 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'ValueError: foo')
         self.assertTrue('exception' in event)
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         stacktrace = exc['stacktrace']
         self.assertEquals(len(stacktrace['frames']), 1)
         frame = stacktrace['frames'][0]
@@ -347,7 +347,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'DecoratorTestException')
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
         stacktrace = exc['stacktrace']
@@ -382,7 +382,7 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'DecoratorTestException')
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
         stacktrace = exc['stacktrace']
@@ -563,7 +563,7 @@ class ClientTest(TestCase):
         })
 
         event = client.events.pop(0)
-        frames = event['exception']['values'][0]['stacktrace']['frames']
+        frames = event['exception']['values'][-1]['stacktrace']['frames']
         assert frames[0]['in_app']
         assert not frames[1]['in_app']
         assert not frames[2]['in_app']

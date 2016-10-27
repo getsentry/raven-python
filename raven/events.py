@@ -78,7 +78,7 @@ class Exception(BaseEvent):
     name = 'exception'
 
     def to_string(self, data):
-        exc = data[self.name]['values'][0]
+        exc = data[self.name]['values'][-1]
         if exc['value']:
             return '%s: %s' % (exc['type'], exc['value'])
         return exc['type']
@@ -115,7 +115,7 @@ class Exception(BaseEvent):
         values = []
         for exc_info in _chained_exceptions(exc_info):
             value = self._get_value(*exc_info)
-            values.append(value)
+            values.insert(0, value)
 
         return {
             'level': kwargs.get('level', logging.ERROR),

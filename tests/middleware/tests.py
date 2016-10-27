@@ -93,7 +93,7 @@ class MiddlewareTestCase(TestCase):
         event = self.client.events.pop(0)
 
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
@@ -140,7 +140,7 @@ class MiddlewareTestCase(TestCase):
         event = self.client.events.pop(0)
 
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'SystemExit')
         self.assertEquals(exc['value'], '1')
         self.assertEquals(event['level'], logging.ERROR)
@@ -160,7 +160,7 @@ class MiddlewareTestCase(TestCase):
         event = self.client.events.pop(0)
 
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'KeyboardInterrupt')
         self.assertEquals(exc['value'], '')
         self.assertEquals(event['level'], logging.ERROR)

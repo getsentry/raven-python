@@ -127,12 +127,12 @@ class SanitizePasswordsProcessorTest(TestCase):
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
 
-        # data['exception']['values'][0]['stacktrace']['frames'][0]['vars']
+        # data['exception']['values'][-1]['stacktrace']['frames'][0]['vars']
         self.assertTrue('exception' in result)
         exception = result['exception']
         self.assertTrue('values' in exception)
         values = exception['values']
-        stack = values[0]['stacktrace']
+        stack = values[-1]['stacktrace']
         self.assertTrue('frames' in stack)
 
         self.assertEquals(len(stack['frames']), 2)

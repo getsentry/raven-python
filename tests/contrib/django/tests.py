@@ -156,7 +156,7 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         assert exc['type'] == 'TypeError'
         assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
         assert event['level'] == logging.ERROR
@@ -169,7 +169,7 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         assert exc['type'] == 'Exception'
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
@@ -260,7 +260,7 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'request'
             assert event['level'] == logging.ERROR
@@ -276,7 +276,7 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'response'
             assert event['level'] == logging.ERROR
@@ -293,7 +293,7 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'Exception'
             assert exc['value'] == 'view exception'
             assert event['level'] == logging.ERROR
@@ -302,7 +302,7 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ValueError'
             assert exc['value'] == 'handler500'
             assert event['level'] == logging.ERROR
@@ -316,7 +316,7 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'view'
             assert event['level'] == logging.ERROR
@@ -498,7 +498,7 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
-        frames = event['exception']['values'][0]['stacktrace']['frames']
+        frames = event['exception']['values'][-1]['stacktrace']['frames']
         for frame in frames:
             if frame['module'].startswith('django.'):
                 assert frame.get('in_app') is False

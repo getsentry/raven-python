@@ -18,7 +18,7 @@ class ExceptionTest(TestCase):
     else:
         # Otherwise, we only report the first element.
         def transform_expected(self, expected):
-            return expected[:1]
+            return expected[-1:]
 
     def check_capture(self, expected):
         """
@@ -51,7 +51,7 @@ class ExceptionTest(TestCase):
             try:
                 raise KeyError()
             except Exception:
-                self.check_capture(['KeyError', 'ValueError'])
+                self.check_capture(['ValueError', 'KeyError'])
 
     def test_raise_from(self):
         try:
@@ -60,7 +60,7 @@ class ExceptionTest(TestCase):
             try:
                 six.raise_from(KeyError(), exc)
             except Exception:
-                self.check_capture(['KeyError', 'ValueError'])
+                self.check_capture(['ValueError', 'KeyError'])
 
     def test_raise_from_different(self):
         try:
@@ -69,7 +69,7 @@ class ExceptionTest(TestCase):
             try:
                 six.raise_from(KeyError(), TypeError())
             except Exception:
-                self.check_capture(['KeyError', 'TypeError'])
+                self.check_capture(['TypeError', 'KeyError'])
 
     def test_handles_self_referencing(self):
         try:
@@ -93,7 +93,7 @@ class ExceptionTest(TestCase):
                 try:
                     six.raise_from(exc, exc2)
                 except Exception:
-                    self.check_capture(['ValueError', 'KeyError'])
+                    self.check_capture(['KeyError', 'ValueError'])
             else:
                 pytest.fail()
         else:

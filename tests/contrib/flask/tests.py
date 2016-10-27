@@ -106,7 +106,7 @@ class FlaskTest(BaseTest):
         event = self.raven.events.pop(0)
 
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
