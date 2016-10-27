@@ -84,7 +84,7 @@ reference to that.
 .. py:function:: raven.breadcrumbs.record(**options)
 
     This function accepts keyword arguments matching the attributes of a
-    breadcrumb.  For more information see :doc:`/clientdev/interfaces`.
+    breadcrumb.  For more information see :doc:`/clientdev/interfaces/index`.
     Additionally a `processor` callback can be passed which will be
     invoked to process the data if the crumb was not rejected.
 
