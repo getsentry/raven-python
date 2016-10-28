@@ -26,7 +26,7 @@ class CeleryTestCase(TestCase):
         dummy_task.delay(1, 0)
         assert len(self.client.events) == 1
         event = self.client.events[0]
-        exception = event['exception']['values'][0]
+        exception = event['exception']['values'][-1]
         assert event['culprit'] == 'dummy_task'
         assert exception['type'] == 'ZeroDivisionError'
 

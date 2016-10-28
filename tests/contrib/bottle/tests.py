@@ -66,7 +66,7 @@ class BottleTest(BaseTest):
         event = self.raven.events.pop(0)
         assert 'exception' in event
 
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
 
     def test_captureException_captures_http(self):

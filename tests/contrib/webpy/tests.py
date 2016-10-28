@@ -53,7 +53,7 @@ class WebPyTest(TestCase):
 
         event = self.store.events.pop()
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'That\'s what she said')
         self.assertEquals(event['message'], 'ValueError: That\'s what she said')

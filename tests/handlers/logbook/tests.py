@@ -81,7 +81,7 @@ class LogbookHandlerTest(TestCase):
 
             self.assertEquals(event['message'], 'This is a test info with an exception')
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             self.assertEquals(exc['type'], 'ValueError')
             self.assertEquals(exc['value'], 'This is a test ValueError')
             self.assertTrue('sentry.interfaces.Message' in event)

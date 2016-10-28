@@ -134,7 +134,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(event['message'], 'This is a test info with an exception')
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEqual(exc['type'], 'ValueError')
         self.assertEqual(exc['value'], 'This is a test ValueError')
         self.assertTrue('sentry.interfaces.Message' in event)
