@@ -38,7 +38,6 @@ install_requires = [
     'contextlib2',
 ]
 
-unittest2_requires = ['unittest2']
 flask_requires = [
     'Flask>=0.8',
     'blinker>=1.1',
@@ -53,9 +52,8 @@ webpy_tests_requires = [
     'web.py',
 ]
 
-# If it's python3, remove unittest2 & web.py
+# If it's python3, remove web.py
 if sys.version_info[0] == 3:
-    unittest2_requires = []
     webpy_tests_requires = []
 
     # If it's python3.2 or greater, don't use contextlib backport
@@ -84,7 +82,7 @@ tests_require = [
     'webtest',
     'anyjson',
 ] + (flask_requires + flask_tests_requires +
-     unittest2_requires + webpy_tests_requires)
+     webpy_tests_requires)
 
 
 class PyTest(TestCommand):
@@ -137,7 +135,6 @@ setup(
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',

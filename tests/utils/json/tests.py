@@ -18,7 +18,7 @@ class JSONTest(TestCase):
         assert json.dumps(res) == '"2011-01-01T01:01:01Z"'
 
     def test_set(self):
-        res = set(['foo', 'bar'])
+        res = {'foo', 'bar'}
         assert json.dumps(res) in ('["foo", "bar"]', '["bar", "foo"]')
 
     def test_frozenset(self):

@@ -9,7 +9,6 @@ from __future__ import absolute_import
 
 import socket
 import ssl
-import sys
 
 from raven.conf import defaults
 from raven.utils.compat import urllib2, httplib
@@ -56,11 +55,4 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
 
     opener = urllib2.build_opener(*handlers)
 
-    if sys.version_info < (2, 6):
-        default_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(timeout)
-        try:
-            return opener.open(url, data)
-        finally:
-            socket.setdefaulttimeout(default_timeout)
     return opener.open(url, data, timeout)

@@ -259,13 +259,13 @@ class FlaskTest(BaseTest):
     def test_binds_default_include_paths(self):
         app = Flask(__name__)
         sentry = Sentry(app, dsn='http://public:secret@example.com/1')
-        assert sentry.client.include_paths == set([app.import_name])
+        assert sentry.client.include_paths == {app.import_name}
 
     def test_overrides_default_include_paths(self):
         app = Flask(__name__)
         app.config['SENTRY_CONFIG'] = {'include_paths': ['foo.bar']}
         sentry = Sentry(app, dsn='http://public:secret@example.com/1')
-        assert sentry.client.include_paths == set(['foo.bar'])
+        assert sentry.client.include_paths == {'foo.bar'}
 
 
 class FlaskLoginTest(BaseTest):
