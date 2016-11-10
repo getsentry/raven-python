@@ -45,6 +45,7 @@ def get_version():
         base = '%s (%s)' % (base, __build__)
     return base
 
+
 __build__ = get_revision()
 __docformat__ = 'restructuredtext en'
 

@@ -134,4 +134,5 @@ class SentryMiddleware(_SentryMiddlewareBase):
 
         request_finished.disconnect(self.request_finished)
 
+
 SentryLogMiddleware = SentryMiddleware

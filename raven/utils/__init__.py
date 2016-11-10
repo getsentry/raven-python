@@ -53,6 +53,7 @@ def varmap(func, var, context=None, name=None):
     del context[objid]
     return ret
 
+
 # We store a cache of module_name->version string to avoid
 # continuous imports and lookups of modules
 _VERSION_CACHE = {}
