@@ -190,6 +190,7 @@ class Client(object):
         self.tags = o.get('tags') or {}
         self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
+        self.repos = self._format_repos(o.get('repos'))
         self.transaction = TransactionStack()
 
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
@@ -219,6 +220,17 @@ class Client(object):
             self.install_logging_hook()
 
         self.hook_libraries(hook_libraries)
+
+    def _format_repos(self, value):
+        if not value:
+            return {}
+        result = {}
+        for path, config in iteritems(value):
+            if path[0] != '/':
+                # assume its a module
+                path = os.path.abspath(__import__(path).__file__)
+            result[path] = config
+        return result
 
     def set_dsn(self, dsn=None, transport=None):
         if not dsn and os.environ.get('SENTRY_DSN'):
@@ -468,6 +480,7 @@ class Client(object):
         data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
         data.setdefault('sdk', SDK_VALUE)
+        data.setdefault('repos', self.repos)
 
         # insert breadcrumbs
         if self.enable_breadcrumbs:

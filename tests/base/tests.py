@@ -585,3 +585,21 @@ class ClientTest(TestCase):
             Client()
         finally:
             sys.argv = argv
+
+    def test_repos_configuration(self):
+        client = Client(repos={
+            '/foo/bar': {
+                'name': 'repo',
+            },
+            'raven': {
+                'name': 'getsentry/raven-python',
+            },
+        })
+        assert client.repos == {
+            '/foo/bar': {
+                'name': 'repo',
+            },
+            os.path.abspath(raven.__file__): {
+                'name': 'getsentry/raven-python',
+            },
+        }
