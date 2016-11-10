@@ -68,7 +68,7 @@ class SentryCeleryHandler(object):
         task_failure.disconnect(self.process_failure_signal)
 
     def process_failure_signal(self, sender, task_id, args, kwargs, einfo, **kw):
-        if self.ignore_expected and isinstance(einfo.exception, sender.throws):
+        if self.ignore_expected and hasattr(sender, 'throws') and isinstance(einfo.exception, sender.throws):
             return
 
         # This signal is fired inside the stack so let raven do its magic
