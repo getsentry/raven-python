@@ -1,13 +1,35 @@
-#!/bin/bash -eu
+#!/bin/bash -e
 
-pip install $DJANGO
+# we want wheel support when possible
+pip install "pip>=8.1"
+
+if [ -n "$DJANGO" ]; then
+    if [[ "$DJANGO" == "dev" ]]; then
+        pip install -e git+git://github.com/django/django.git#egg=Django
+    else
+        pip install "Django==$DJANGO"
+    fi
+fi
+if [ -n "$FLASK" ]; then
+    pip install "Flask==$FLASK"
+fi
+if [ -n "$CELERY" ]; then
+    pip install "celery==$CELERY"
+fi
 make bootstrap
 if [[ ${TRAVIS_PYTHON_VERSION::1} == '2' ]]; then
 	pip install gevent
 fi
-if [[ ${TRAVIS_PYTHON_VERSION} == '3.2' ]]; then
-	pip install -I https://github.com/celery/celery/archive/3.0.zip
-fi
-if [[ ${TRAVIS_PYTHON_VERSION::1} == '3' ]]; then
-	pip uninstall django-celery -y
+# if [[ ${TRAVIS_PYTHON_VERSION} == '3.2' ]]; then
+# 	pip install -I https://github.com/celery/celery/archive/3.0.zip
+# fi
+
+DJANGO_BITS=(${DJANGO//./ })
+if [[ ${DJANGO_BITS[0]} -eq 1 && ${DJANGO_BITS[1]} -lt 8 ]]; then
+    # django-celery has fickle dependencies as its deprecated
+    pip install "django-celery>=3.1" "celery>=3.1,<4"
+    # newer versions of pytest-django dont support older versions of django
+    pip install "pytest-django<3.0"
+elif [ -n "$DJANGO" ]; then
+    pip install "pytest-django>=3.0,<3.1"
 fi

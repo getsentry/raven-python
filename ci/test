@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+if [[ $TEST_SUITE == 'django' ]]; then
+    TEST_PATH=tests/contrib/django
+elif [[ $TEST_SUITE == 'flask' ]]; then
+    TEST_PATH=tests/contrib/flask
+elif [[ $TEST_SUITE == 'celery' ]]; then
+    TEST_PATH=tests/contrib/test_celery.py
+else
+    TEST_PATH=tests
+fi
+
+coverage run --source=raven -m py.test $TEST_PATH --timeout 10
