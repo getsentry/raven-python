@@ -189,8 +189,11 @@ def _wrap_logging_method(meth, level=None):
     new_func.__doc__ = func.__doc__
 
     assert code.co_firstlineno == get_code(func).co_firstlineno
-    assert new_func.__module__ == func.__module__
-    assert new_func.__name__ == func.__name__
+
+    # In theory this should already be set correctly, but in some cases
+    # it is not.  So override it.
+    new_func.__module__ == func.__module__
+    new_func.__name__ == func.__name__
     new_func.__patched_for_raven__ = True
 
     return new_func

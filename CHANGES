@@ -1,3 +1,9 @@
+Version 5.32.0
+--------------
+
+* Made raven python breadcrumb patches work when librato monkey
+  patches logging.
+
 Version 5.31.0
 --------------
 
