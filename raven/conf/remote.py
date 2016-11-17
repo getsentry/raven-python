@@ -84,7 +84,7 @@ class RemoteConfig(object):
         if PY2:
             value = to_string(value)
 
-        url = urlparse(value)
+        url = urlparse(value.strip())
 
         if url.scheme not in ('http', 'https'):
             warnings.warn('Transport selection via DSN is deprecated. You should explicitly pass the transport class to Client() instead.')
