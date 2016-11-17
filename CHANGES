@@ -1,7 +1,7 @@
 Version 5.33.0
 --------------
 
-* Strip whitespace from DNSs automatically.
+* Strip whitespace from DSNs automatically.
 
 Version 5.32.0
 --------------
