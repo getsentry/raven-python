@@ -227,7 +227,7 @@ def install_middleware():
     This ensures things like request context and transaction names are made
     available.
     """
-    name = 'raven.contrib.django.middleware.SentryMiddleware'
+    name = getattr(settings, 'SENTRY_MIDDLEWARE', 'raven.contrib.django.middleware.SentryMiddleware')
     all_names = (name, 'raven.contrib.django.middleware.SentryLogMiddleware')
     with settings_lock:
         # default settings.MIDDLEWARE is None
