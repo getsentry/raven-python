@@ -168,10 +168,10 @@ class SentryHandler(logging.Handler, object):
         data['level'] = record.levelno
         data['logger'] = record.name
 
-        if hasattr(record, 'tags'):
-            kwargs['tags'] = record.tags
-        elif self.tags:
-            kwargs['tags'] = self.tags
+        kwargs['tags'] = tags = {}
+        if self.tags:
+            tags.update(self.tags)
+        tags.update(getattr(record, 'tags', {}))
 
         kwargs.update(handler_kwargs)
 
