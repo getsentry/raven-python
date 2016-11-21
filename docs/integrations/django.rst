@@ -82,6 +82,10 @@ ERROR and above messages to sentry, the following config can be used::
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': True,
+        'root': {
+            'level': 'WARNING',
+            'handlers': ['sentry'],
+        },
         'formatters': {
             'verbose': {
                 'format': '%(levelname)s %(asctime)s %(module)s '
@@ -101,10 +105,6 @@ ERROR and above messages to sentry, the following config can be used::
             }
         },
         'loggers': {
-            'root': {
-                'level': 'WARNING',
-                'handlers': ['sentry'],
-            },
             'django.db.backends': {
                 'level': 'ERROR',
                 'handlers': ['console'],
