@@ -295,8 +295,6 @@ class DjangoClient(Client):
         return result
 
     def get_transaction_from_request(self, request):
-        # TODO(dcramer): it'd be nice to pull out parameters
-        # and make this a normalized path
         result = self.resolver.resolve(request.path)
         return result
 
