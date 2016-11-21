@@ -18,6 +18,7 @@ import warnings
 
 from datetime import datetime
 from types import FunctionType
+from threading import local
 
 if sys.version_info >= (3, 2):
     import contextlib
@@ -149,6 +150,8 @@ class Client(object):
         global Raven
 
         o = options
+
+        self._local_state = local()
 
         self.raise_send_errors = raise_send_errors
 
@@ -609,6 +612,8 @@ class Client(object):
 
         self.send(**data)
 
+        self._local_state.last_event_id = data['event_id']
+
         return data['event_id']
 
     def is_enabled(self):
@@ -867,6 +872,14 @@ class Client(object):
         self.context.breadcrumbs.record(*args, **kwargs)
 
     capture_breadcrumb = captureBreadcrumb
+
+    @property
+    def last_event_id(self):
+        return getattr(self._local_state, 'last_event_id', None)
+
+    @last_event_id.setter
+    def last_event_id(self, value):
+        self._local_state.last_event_id = value
 
 
 class DummyClient(Client):
