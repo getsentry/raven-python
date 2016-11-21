@@ -2,6 +2,7 @@ Version 5.33.0
 --------------
 
 * Strip whitespace from DSNs automatically.
+* Add `last_event_id` accessor to `Client`.
 
 Version 5.32.0
 --------------

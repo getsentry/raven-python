@@ -568,3 +568,9 @@ class ClientTest(TestCase):
         assert not frames[1]['in_app']
         assert not frames[2]['in_app']
         assert frames[3]['in_app']
+
+    def test_captures_last_event_id(self):
+        client = TempStoreClient()
+        result = client.captureMessage('hello')
+
+        assert result == client.last_event_id
