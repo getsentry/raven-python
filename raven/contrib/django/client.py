@@ -297,5 +297,3 @@ class DjangoClient(Client):
     def get_transaction_from_request(self, request):
         result = self.resolver.resolve(request.path)
         return result
-
-
