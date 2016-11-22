@@ -26,10 +26,10 @@ class RequestsHTTPTransport(HTTPTransport):
 
         super(RequestsHTTPTransport, self).__init__(*args, **kwargs)
 
-    def send(self, data, headers):
+    def send(self, url, data, headers):
         if self.verify_ssl:
             # If SSL verification is enabled use the provided CA bundle to
             # perform the verification.
             self.verify_ssl = self.ca_certs
-        requests.post(self._url, data=data, headers=headers,
+        requests.post(url, data=data, headers=headers,
                       verify=self.verify_ssl, timeout=self.timeout)

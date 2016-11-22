@@ -22,7 +22,7 @@ class Transport(object):
     async = False
     scheme = []
 
-    def send(self, data, headers):
+    def send(self, url, data, headers):
         """
         You need to override this to do something with the actual
         data. Usually - this is sending to a server
@@ -41,7 +41,7 @@ class AsyncTransport(Transport):
 
     async = True
 
-    def async_send(self, data, headers, success_cb, error_cb):
+    def async_send(self, url, data, headers, success_cb, error_cb):
         """
         Override this method for asynchronous transports. Call
         `success_cb()` if the send succeeds or `error_cb(exception)`
