@@ -2,6 +2,9 @@ Version 5.33.0
 --------------
 
 * Strip whitespace from DSNs automatically.
+* Refactored transports to support multiple URLs.  This might affect
+  you if you have custom subclasses of those.  The main change is that
+  the URL parameter moved from the constructor into the `send` method.
 
 Version 5.32.0
 --------------
