@@ -185,7 +185,7 @@ class Client(object):
 
         context = o.get('context')
         if context is None:
-            context = {'sys.argv': sys.argv[:]}
+            context = {'sys.argv': getattr(sys, 'argv', [])[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
         self.environment = o.get('environment') or None
