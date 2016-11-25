@@ -7,6 +7,7 @@ import raven
 import time
 import six
 import os
+import sys
 
 from raven.base import Client, ClientState
 from raven.exceptions import RateLimited
@@ -574,3 +575,13 @@ class ClientTest(TestCase):
         result = client.captureMessage('hello')
 
         assert result == client.last_event_id
+
+    def test_no_sys_argv(self):
+        # if the python interpreter is started from C, sys.argv might not be available
+        # see https://github.com/getsentry/raven-python/issues/918
+        argv = sys.argv
+        try:
+            del sys.argv
+            Client()
+        finally:
+            sys.argv = argv
