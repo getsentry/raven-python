@@ -4,6 +4,7 @@ Version 6.0.0
 * Strip whitespace from DSNs automatically.
 * Add `last_event_id` accessor to `Client`.
 * Do not require `sys.argv` to be available any more.
+* Tags defined on a logging handler will now be merged with individual log record's tags.
 
 Version 5.32.0
 --------------

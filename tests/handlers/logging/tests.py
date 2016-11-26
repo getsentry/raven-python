@@ -229,6 +229,15 @@ class LoggingIntegrationTest(TestCase):
         event = self.client.events.pop(0)
         assert event['tags'] == {'foo': 'bar'}
 
+    def test_tags_merge(self):
+        handler = SentryHandler(self.client, tags={'foo': 'bar', 'biz': 'baz'})
+        record = self.make_record('Message', extra={'tags': {'foo': 'faz'}})
+        handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['tags'] == {'foo': 'faz', 'biz': 'baz'}
+
     def test_fingerprint_on_event(self):
         record = self.make_record('Message', extra={'fingerprint': ['foo']})
         self.handler.emit(record)
