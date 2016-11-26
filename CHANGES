@@ -5,6 +5,7 @@ Version 6.0.0
 * Add `last_event_id` accessor to `Client`.
 * Do not require `sys.argv` to be available any more.
 * Tags defined on a logging handler will now be merged with individual log record's tags.
+* Added explicit support for multidicts in the django client.
 
 Version 5.32.0
 --------------
