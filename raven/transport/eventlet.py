@@ -34,7 +34,7 @@ class EventletHTTPTransport(HTTPTransport):
         self._url = self._url.split('+', 1)[-1]
 
     def _send_payload(self, payload):
-        req = eventlet_urllib2.Request(self._url, headers=payload[1])
+        req = eventlet_urllib2.Request(str(self._url), headers=payload[1])
         try:
             if sys.version_info < (2, 6):
                 response = eventlet_urllib2.urlopen(req, payload[0]).read()
