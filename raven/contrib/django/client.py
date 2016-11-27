@@ -17,7 +17,6 @@ from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
 from django.utils.datastructures import MultiValueDict
-from django.utils import six
 
 try:
     # support Django 1.9
@@ -32,7 +31,7 @@ from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils import once
 from raven import breadcrumbs
-from raven._compat import string_types, binary_type
+from raven._compat import string_types, binary_type, iterlists
 
 __all__ = ('DjangoClient',)
 
@@ -208,7 +207,7 @@ class DjangoClient(Client):
                         if isinstance(data, MultiValueDict):
                             data = dict(
                                 (k, v[0] if len(v) == 1 else v)
-                                for k, v in six.iterlists(data))
+                                for k, v in iterlists(data))
         else:
             data = None
 
