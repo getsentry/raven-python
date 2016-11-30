@@ -16,12 +16,12 @@ class DummyThreadedScheme(ThreadedHTTPTransport):
         self.events = []
         self.send_delay = 0
 
-    def send_sync(self, data, headers, success_cb, failure_cb):
+    def send_sync(self, url, data, headers, success_cb, failure_cb):
         # delay sending the message, to allow us to test that the shutdown
         # hook waits correctly
         time.sleep(self.send_delay)
 
-        self.events.append((data, headers, success_cb, failure_cb))
+        self.events.append((url, data, headers, success_cb, failure_cb))
 
 
 class LoggingThreadedScheme(ThreadedHTTPTransport):
@@ -29,7 +29,7 @@ class LoggingThreadedScheme(ThreadedHTTPTransport):
         super(LoggingThreadedScheme, self).__init__(*args, **kwargs)
         self.filename = filename
 
-    def send_sync(self, data, headers, success_cb, failure_cb):
+    def send_sync(self, url, data, headers, success_cb, failure_cb):
         with open(self.filename, 'a') as log:
             log.write("{0} {1}\n".format(os.getpid(), data['message']))
 
@@ -51,11 +51,11 @@ class ThreadedTransportTest(TestCase):
 
     def test_shutdown_waits_for_send(self):
         url = urlparse(self.url)
-        transport = DummyThreadedScheme(url)
+        transport = DummyThreadedScheme()
         transport.send_delay = 0.5
 
         data = self.client.build_msg('raven.events.Message', message='foo')
-        transport.async_send(data, None, None, None)
+        transport.async_send(url, data, None, None, None)
 
         time.sleep(0.1)
 
@@ -66,7 +66,7 @@ class ThreadedTransportTest(TestCase):
 
     def test_fork_spawns_anew(self):
         url = urlparse(self.url)
-        transport = DummyThreadedScheme(url)
+        transport = DummyThreadedScheme()
         transport.send_delay = 0.5
 
         data = self.client.build_msg('raven.events.Message', message='foo')
@@ -75,7 +75,7 @@ class ThreadedTransportTest(TestCase):
         if pid == 0:
             time.sleep(0.1)
 
-            transport.async_send(data, None, None, None)
+            transport.async_send(url, data, None, None, None)
 
             # this should wait for the message to get sent
             transport.get_worker().main_thread_terminated()
@@ -97,15 +97,15 @@ class ThreadedTransportTest(TestCase):
         fd, filename = mkstemp()
         try:
             os.close(fd)
-            transport = LoggingThreadedScheme(filename, url)
+            transport = LoggingThreadedScheme(filename)
 
             # Log from the parent process - starts the worker thread
-            transport.async_send(event1, None, None, None)
+            transport.async_send(url, event1, None, None, None)
             childpid = os.fork()
 
             if childpid == 0:
                 # Log from the child process
-                transport.async_send(event2, None, None, None)
+                transport.async_send(url, event2, None, None, None)
 
                 # Ensure threaded worker has finished
                 transport.get_worker().stop()

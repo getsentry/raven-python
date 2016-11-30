@@ -691,10 +691,10 @@ class Client(object):
         try:
             transport = self.remote.get_transport()
             if transport.async:
-                transport.async_send(data, headers, self._successful_send,
+                transport.async_send(url, data, headers, self._successful_send,
                                      failed_send)
             else:
-                transport.send(data, headers)
+                transport.send(url, data, headers)
                 self._successful_send()
         except Exception as e:
             if self.raise_send_errors:

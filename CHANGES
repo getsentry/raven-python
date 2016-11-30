@@ -6,6 +6,9 @@ Version 6.0.0
 * Do not require `sys.argv` to be available any more.
 * Tags defined on a logging handler will now be merged with individual log record's tags.
 * Added explicit support for multidicts in the django client.
+* Refactored transports to support multiple URLs.  This might affect
+  you if you have custom subclasses of those.  The main change is that
+  the URL parameter moved from the constructor into the `send` method.
 
 Version 5.32.0
 --------------

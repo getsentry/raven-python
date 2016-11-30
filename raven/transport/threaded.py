@@ -169,14 +169,14 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
             self._worker = AsyncWorker()
         return self._worker
 
-    def send_sync(self, data, headers, success_cb, failure_cb):
+    def send_sync(self, url, data, headers, success_cb, failure_cb):
         try:
-            super(ThreadedHTTPTransport, self).send(data, headers)
+            super(ThreadedHTTPTransport, self).send(url, data, headers)
         except Exception as e:
             failure_cb(e)
         else:
             success_cb()
 
-    def async_send(self, data, headers, success_cb, failure_cb):
+    def async_send(self, url, data, headers, success_cb, failure_cb):
         self.get_worker().queue(
-            self.send_sync, data, headers, success_cb, failure_cb)
+            self.send_sync, url, data, headers, success_cb, failure_cb)

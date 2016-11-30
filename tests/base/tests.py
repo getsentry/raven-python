@@ -164,13 +164,13 @@ class ClientTest(TestCase):
 
         # test recovery
         client.send_remote('http://example.com/api/1/store/', client.encode({}))
-        success_cb = async_send.call_args[0][2]
+        success_cb = async_send.call_args[0][3]
         success_cb()
         self.assertEquals(client.state.status, client.state.ONLINE)
 
         # test delayed raise of error
         client.send_remote('http://example.com/api/1/store/', client.encode({}))
-        failure_cb = async_send.call_args[0][3]
+        failure_cb = async_send.call_args[0][4]
         failure_cb(Exception())
         self.assertEquals(client.state.status, client.state.ERROR)
 

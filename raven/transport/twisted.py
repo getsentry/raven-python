@@ -26,11 +26,11 @@ except:
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
     scheme = ['twisted+http', 'twisted+https']
 
-    def __init__(self, parsed_url, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         if not has_twisted:
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
-        super(TwistedHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
+        super(TwistedHTTPTransport, self).__init__(*args, **kwargs)
 
         # Import reactor as late as possible.
         from twisted.internet import reactor
@@ -38,9 +38,9 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
         # Use a persistent connection pool.
         self._agent = Agent(reactor, pool=HTTPConnectionPool(reactor))
 
-    def async_send(self, data, headers, success_cb, failure_cb):
+    def async_send(self, url, data, headers, success_cb, failure_cb):
         d = self._agent.request(
-            b"POST", self._url,
+            b"POST", url,
             bodyProducer=FileBodyProducer(io.BytesIO(data)),
             headers=Headers(dict((k, [v]) for k, v in headers.items()))
         )
