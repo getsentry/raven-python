@@ -14,6 +14,11 @@ ERR_UNKNOWN_SCHEME = 'Unsupported Sentry DSN scheme: {0} ({1})'
 logger = logging.getLogger('raven')
 
 
+# XXX: this is transitional
+HEALTH_API = (os.environ.get('SENTRY_HEALTH_API') or
+              'https://ingest.sentry.io').rstrip('/')
+
+
 def discover_default_transport():
     from raven.transport.threaded import ThreadedHTTPTransport
     from raven.transport.http import HTTPTransport
@@ -42,8 +47,11 @@ class RemoteConfig(object):
         if base_url:
             base_url = base_url.rstrip('/')
             store_endpoint = '%s/api/%s/store/' % (base_url, project)
+            # XXX: make this configurable
+            health_endpoint = '%s/events/%s' % (HEALTH_API, project)
         else:
             store_endpoint = None
+            health_endpoint = None
 
         self.base_url = base_url
         self.project = project
@@ -51,6 +59,7 @@ class RemoteConfig(object):
         self.secret_key = secret_key
         self.options = options or {}
         self.store_endpoint = store_endpoint
+        self.health_endpoint = health_endpoint
 
         self._transport_cls = transport or DEFAULT_TRANSPORT
 

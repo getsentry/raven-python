@@ -19,6 +19,7 @@ import warnings
 from datetime import datetime
 from types import FunctionType
 from threading import local
+from collections import deque
 
 if sys.version_info >= (3, 2):
     import contextlib
@@ -40,6 +41,7 @@ from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames
 from raven.utils.transaction import TransactionStack
+from raven.utils.dates import to_timestamp
 from raven.transport.registry import TransportRegistry, default_transports
 
 # enforce imports to avoid obscure stacktraces with MemoryError
@@ -165,6 +167,8 @@ class Client(object):
 
         self._transport_cache = {}
         self.set_dsn(dsn, transport)
+
+        self._pending_health_events = deque()
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
@@ -614,6 +618,8 @@ class Client(object):
 
         self._local_state.last_event_id = data['event_id']
 
+        self._consider_flushing_health_events()
+
         return data['event_id']
 
     def is_enabled(self):
@@ -709,12 +715,14 @@ class Client(object):
 
         return self.send_encoded(message, auth_header=auth_header)
 
-    def send_encoded(self, message, auth_header=None, **kwargs):
+    def send_encoded(self, message, auth_header=None, url=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
         payload off to ``send_remote``.
         """
         client_string = 'raven-python/%s' % (raven.VERSION,)
+        if url is None:
+            url = self.remote.store_endpoint
 
         if not auth_header:
             timestamp = time.time()
@@ -734,7 +742,7 @@ class Client(object):
         }
 
         return self.send_remote(
-            url=self.remote.store_endpoint,
+            url=url,
             data=message,
             headers=headers,
             **kwargs
@@ -872,6 +880,49 @@ class Client(object):
         self.context.breadcrumbs.record(*args, **kwargs)
 
     capture_breadcrumb = captureBreadcrumb
+
+    def captureHealthEvent(self, event_type='basic', data=None, date=None,
+                           time_spent=None, okay=True, session_id=None,
+                           flush=False):
+        """Captures a health event.  This event might not be sent immediately
+        unless a flush is forced.
+        """
+        self._pending_health_events.append({
+            'ty': event_type,
+            'ts': to_timestamp(date),
+            'dt': time_spent,
+            'ok': okay,
+            'env': self.environment,
+            'sid': session_id,
+            'rel': self.release,
+            'dev': None,
+            'ip': self.context.get_remote_addr(),
+            'user': self.context.get('user'),
+            'data': data,
+        })
+        self._consider_flushing_health_events(force=flush)
+
+    capture_health_event = captureHealthEvent
+
+    def flush_health_events(self):
+        buffer = []
+        while 1:
+            try:
+                buffer.append(self._pending_health_events.popleft())
+            except IndexError:
+                self._send_health_events(buffer)
+                break
+            if len(buffer) > 100:
+                self._send_health_events(buffer)
+                buffer = []
+
+    def _consider_flushing_health_events(self, force=False):
+        if force or len(self._pending_health_events) > 100:
+            self.flush_health_events()
+
+    def _send_health_events(self, events):
+        body = b'\n'.join(json.dumps(x).encode('utf-8') for x in events)
+        self.send_encoded(message=body, url='...')
 
     @property
     def last_event_id(self):
