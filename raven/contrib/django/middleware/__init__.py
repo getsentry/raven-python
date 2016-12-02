@@ -8,6 +8,7 @@ raven.contrib.django.middleware
 
 from __future__ import absolute_import
 
+import time
 import logging
 import threading
 
@@ -101,6 +102,7 @@ class SentryMiddleware(_SentryMiddlewareBase):
         return self.resolver.resolve(request.path)
 
     def process_request(self, request):
+        self._started = time.time()
         self._txid = None
         self.thread.request = request
 
@@ -131,6 +133,12 @@ class SentryMiddleware(_SentryMiddlewareBase):
         if getattr(self, '_txid', None):
             client.transaction.pop(self._txid)
             self._txid = None
+
+        client.capture_health_event(
+            event_type='request',
+            time_spent=self._started - time.time(),
+            okay=True,
+        )
 
         request_finished.disconnect(self.request_finished)
 

@@ -887,9 +887,13 @@ class Client(object):
         """Captures a health event.  This event might not be sent immediately
         unless a flush is forced.
         """
+        try:
+            user = self.context['user']
+        except LookupError:
+            user = None
         self._pending_health_events.append({
             'ty': event_type,
-            'ts': to_timestamp(date),
+            'ts': to_timestamp(date or datetime.utcnow()),
             'dt': time_spent,
             'ok': okay,
             'env': self.environment,
@@ -897,7 +901,7 @@ class Client(object):
             'rel': self.release,
             'dev': None,
             'ip': self.context.get_remote_addr(),
-            'user': self.context.get('user'),
+            'user': user,
             'data': data,
         })
         self._consider_flushing_health_events(force=flush)

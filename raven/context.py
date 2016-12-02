@@ -139,13 +139,13 @@ class Context(local, Mapping, Iterable):
 
     def get_remote_addr(self):
         """Returns the remote addr of the context."""
-        req = self.get('request')
+        req = self.data.get('request')
         if req:
             env = req.get('env') or {}
             remote_addr = env.get('REMOTE_ADDR')
             if remote_addr:
                 return remote_addr
-        user = self.get('user')
+        user = self.data.get('user')
         if user:
             return user.get('ip_address')
 
