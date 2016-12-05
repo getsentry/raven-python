@@ -585,3 +585,26 @@ class ClientTest(TestCase):
             Client()
         finally:
             sys.argv = argv
+
+    def test_sys_hook(self):
+        client = TempStoreClient(install_sys_hook=True)
+        try:
+            1 / 0
+        except Exception:
+            sys.excepthook(*sys.exc_info())
+
+        event = client.events.pop(0)
+        exc = event['exception']['values'][-1]
+        assert exc['type'] == 'ZeroDivisionError'
+        assert not client.events
+
+        sys.stdin.isatty = lambda: True
+        try:
+            try:
+                1 / 0
+            except Exception:
+                sys.excepthook(*sys.exc_info())
+
+            assert not client.events
+        finally:
+            del sys.stdin.isatty
