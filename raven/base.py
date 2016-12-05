@@ -253,7 +253,7 @@ class Client(object):
                 capture = True
             else:
                 try:
-                    capture = not sys.stdout.isatty()
+                    capture = not sys.stdin.isatty()
                 except Exception:
                     capture = True
             if capture:
