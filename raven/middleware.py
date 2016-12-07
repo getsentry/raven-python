@@ -109,8 +109,5 @@ class Sentry(object):
             'env': dict(get_environ(environ)),
         }
 
-    def process_response(self, request, response):
-        self.client.context.clear()
-
     def handle_exception(self, environ=None):
         return self.client.captureException()
