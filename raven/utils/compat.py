@@ -54,6 +54,11 @@ def check_threads():
     except ImportError:
         return
 
+    # When `threads` is passed in as a uwsgi option,
+    # `enable-threads` is implied on.
+    if 'threads' in opt:
+        return
+
     if str(opt.get('enable-threads', '0')).lower() in ('false', 'off', 'no', '0'):
         from warnings import warn
         warn(Warning('We detected the use of uwsgi with disabled threads.  '
