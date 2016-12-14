@@ -14,7 +14,7 @@ import logging
 import sys
 import traceback
 
-from raven._compat import string_types, iteritems, text_type
+from raven.utils.compat import string_types, iteritems, text_type
 from raven.base import Client
 from raven.utils.encoding import to_string
 from raven.utils.stacks import iter_stack_frames

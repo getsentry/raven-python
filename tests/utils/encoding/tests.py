@@ -1,67 +1,67 @@
 # -*- coding: utf-8 -*-
 import pytest
 import uuid
-import six
 
+from raven.utils import compat
 from raven.utils import json
 from raven.utils.testutils import TestCase
 from raven.utils.serializer import transform
 
 
 class TransformTest(TestCase):
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_incorrect_unicode(self):
-        x = six.b('רונית מגן')
+        x = compat.b('רונית מגן')
         result = transform(x)
 
-        assert result == six.b("'רונית מגן'")
+        assert result == compat.b("'רונית מגן'")
 
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_truncating_unicode(self):
         # 'רונית מגן'
-        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+        x = compat.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x, string_max_length=5)
-        assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea'")
+        assert result == compat.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea'")
 
-    @pytest.mark.skipif('not six.PY3')
+    @pytest.mark.skipif('not compat.PY3')
     def test_unicode_in_python3(self):
         # 'רונית מגן'
-        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+        x = compat.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x)
-        assert result == six.u("'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+        assert result == compat.u("'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_unicode_in_python2(self):
         # 'רונית מגן'
-        x = six.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
+        x = compat.u('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df')
 
         result = transform(x)
-        assert result == six.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
+        assert result == compat.u("u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'")
 
-    @pytest.mark.skipif('not six.PY3')
+    @pytest.mark.skipif('not compat.PY3')
     def test_string_in_python3(self):
         # 'רונית מגן'
-        x = six.b('hello world')
+        x = compat.b('hello world')
 
         result = transform(x)
         assert result == "b'hello world'"
 
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_string_in_python2(self):
         # 'רונית מגן'
-        x = six.b('hello world')
+        x = compat.b('hello world')
 
         result = transform(x)
         assert result == "'hello world'"
 
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_bad_string(self):
-        x = six.b('The following character causes problems: \xd4')
+        x = compat.b('The following character causes problems: \xd4')
 
         result = transform(x)
-        assert result == six.b("'The following character causes problems: \\xd4'")
+        assert result == compat.b("'The following character causes problems: \\xd4'")
 
     def test_float(self):
         result = transform(13.0)
@@ -91,7 +91,7 @@ class TransformTest(TestCase):
         self.assertTrue(type(keys[0]), str)
         self.assertEqual(keys[0], "'foo'")
 
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_dict_keys_utf8_as_str(self):
         x = {'רונית מגן': 'bar'}
 
@@ -103,14 +103,14 @@ class TransformTest(TestCase):
 
     def test_dict_keys_utf8_as_unicode(self):
         x = {
-            six.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'): 'bar'
+            compat.text_type('\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'): 'bar'
         }
 
         result = transform(x)
         assert type(result) is dict
         keys = list(result.keys())
         assert len(keys) == 1
-        if six.PY3:
+        if compat.PY3:
             expected = "'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'"
         else:
             expected = "u'\u05e8\u05d5\u05e0\u05d9\u05ea \u05de\u05d2\u05df'"
@@ -121,15 +121,15 @@ class TransformTest(TestCase):
         result = transform(x)
         assert result == repr(x)
 
-    @pytest.mark.skipif('six.PY3')
+    @pytest.mark.skipif('compat.PY3')
     def test_recurse_exception(self):
         class NonAsciiRepr(object):
             def __repr__(self):
-                return six.b('中文')
+                return compat.b('中文')
 
         x = [NonAsciiRepr()]
         result = transform(x, max_depth=1)
-        self.assertEqual(json.dumps(result), six.b('["<class \'tests.utils.encoding.tests.NonAsciiRepr\'>"]'))
+        self.assertEqual(json.dumps(result), compat.b('["<class \'tests.utils.encoding.tests.NonAsciiRepr\'>"]'))
 
     def test_recursive(self):
         x = []
@@ -141,12 +141,12 @@ class TransformTest(TestCase):
     def test_custom_repr(self):
         class Foo(object):
             def __sentry__(self):
-                return six.u('example')
+                return compat.u('example')
 
         x = Foo()
 
         result = transform(x)
-        if six.PY3:
+        if compat.PY3:
             expected = "'example'"
         else:
             expected = "u'example'"
@@ -167,7 +167,7 @@ class TransformTest(TestCase):
     def test_recursion_max_depth(self):
         x = [[[[1]]]]
         result = transform(x, max_depth=3)
-        if six.PY3:
+        if compat.PY3:
             expected = ((("'[1]'",),),)
         else:
             expected = ((("u'[1]'",),),)
@@ -185,15 +185,15 @@ class TransformTest(TestCase):
         self.assertEqual(len(result), 3)
 
     def test_string_max_length(self):
-        x = six.u('1234')
+        x = compat.u('1234')
         result = transform(x, string_max_length=3)
-        expected = "'123'" if six.PY3 else "u'123'"
+        expected = "'123'" if compat.PY3 else "u'123'"
         self.assertEqual(result, expected)
 
     def test_bytes_max_length(self):
-        x = six.b('\xd7\xd7\xd7\xd7\xd7\xd7')
+        x = compat.b('\xd7\xd7\xd7\xd7\xd7\xd7')
         result = transform(x, string_max_length=1)
-        if six.PY3:
+        if compat.PY3:
             assert result == "b'\\xd7'"
         else:
             assert result == "'\\xd7'"

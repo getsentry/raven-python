@@ -7,8 +7,8 @@ raven.transport.twisted
 """
 from __future__ import absolute_import
 
-import io
 
+from raven.utils.compat import BytesIO
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
 
@@ -41,7 +41,7 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
     def async_send(self, url, data, headers, success_cb, failure_cb):
         d = self._agent.request(
             b"POST", url,
-            bodyProducer=FileBodyProducer(io.BytesIO(data)),
+            bodyProducer=FileBodyProducer(BytesIO(data)),
             headers=Headers(dict((k, [v]) for k, v in headers.items()))
         )
 

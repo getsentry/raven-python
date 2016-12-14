@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import logging
 from contextlib import closing
-from raven._compat import text_type
+from raven.utils.compat import text_type
 
 __all__ = ('register', 'transform')
 

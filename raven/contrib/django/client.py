@@ -28,10 +28,10 @@ except ImportError:
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
 from raven.contrib.django.middleware import SentryLogMiddleware
+from raven.utils.compat import string_types, binary_type, iterlists
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils import once
 from raven import breadcrumbs
-from raven._compat import string_types, binary_type, iterlists
 
 __all__ = ('DjangoClient',)
 

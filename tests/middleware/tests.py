@@ -3,11 +3,11 @@ from __future__ import with_statement
 import logging
 import webob
 from exam import fixture
-from six import Iterator
-from raven.utils.testutils import TestCase
 
 from raven.base import Client
 from raven.middleware import Sentry
+from raven.utils.compat import Iterator
+from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):

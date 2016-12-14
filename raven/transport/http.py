@@ -7,12 +7,11 @@ raven.transport.http
 """
 from __future__ import absolute_import
 
-from raven._compat import string_types
+from raven.utils.compat import string_types, urllib2
 from raven.conf import defaults
 from raven.exceptions import APIError, RateLimited
 from raven.transport.base import Transport
 from raven.utils.http import urlopen
-from raven.utils.compat import urllib2
 
 
 class HTTPTransport(Transport):

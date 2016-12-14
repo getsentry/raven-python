@@ -4,7 +4,7 @@ import time
 import logging
 from types import FunctionType
 
-from raven._compat import iteritems, get_code, text_type, string_types
+from raven.utils.compat import iteritems, get_code, text_type, string_types
 from raven.utils import once
 
 

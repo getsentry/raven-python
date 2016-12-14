@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from raven._compat import PY2
+from raven.utils.compat import PY2
 
 
 def import_string(key):

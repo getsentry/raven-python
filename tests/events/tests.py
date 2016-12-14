@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
 import pytest
-import six
 
 from raven.base import Client
 from raven.events import Exception as ExceptionEvent
 from raven.utils.testutils import TestCase
+from raven.utils.compat import raise_from
 
 
 class ExceptionTest(TestCase):
@@ -58,7 +58,7 @@ class ExceptionTest(TestCase):
             raise ValueError()
         except Exception as exc:
             try:
-                six.raise_from(KeyError(), exc)
+                raise_from(KeyError(), exc)
             except Exception:
                 self.check_capture(['ValueError', 'KeyError'])
 
@@ -67,7 +67,7 @@ class ExceptionTest(TestCase):
             raise ValueError()
         except Exception as exc:
             try:
-                six.raise_from(KeyError(), TypeError())
+                raise_from(KeyError(), TypeError())
             except Exception:
                 self.check_capture(['TypeError', 'KeyError'])
 
@@ -76,7 +76,7 @@ class ExceptionTest(TestCase):
             raise ValueError()
         except Exception as exc:
             try:
-                six.raise_from(exc, exc)
+                raise_from(exc, exc)
             except Exception:
                 self.check_capture(['ValueError'])
             else:
@@ -88,10 +88,10 @@ class ExceptionTest(TestCase):
             raise ValueError()
         except Exception as exc:
             try:
-                six.raise_from(KeyError(), exc)
+                raise_from(KeyError(), exc)
             except KeyError as exc2:
                 try:
-                    six.raise_from(exc, exc2)
+                    raise_from(exc, exc2)
                 except Exception:
                     self.check_capture(['KeyError', 'ValueError'])
             else:
