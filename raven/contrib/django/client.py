@@ -301,5 +301,4 @@ class DjangoClient(Client):
         return result
 
     def get_transaction_from_request(self, request):
-        result = self.resolver.resolve(request.path)
-        return result
+        return self.resolver.resolve(request.path)
