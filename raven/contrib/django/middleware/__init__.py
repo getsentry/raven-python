@@ -22,7 +22,6 @@ except ImportError:
     # https://docs.djangoproject.com/en/1.10/topics/http/middleware/#upgrading-pre-django-1-10-style-middleware
     MiddlewareMixin = object
 
-from raven.contrib.django.resolver import RouteResolver
 
 
 def is_ignorable_404(uri):
@@ -88,17 +87,11 @@ else:
 
 
 class SentryMiddleware(_SentryMiddlewareBase):
-    resolver = RouteResolver()
 
     # backwards compat
     @property
     def thread(self):
         return self
-
-    def _get_transaction_from_request(self, request):
-        # TODO(dcramer): it'd be nice to pull out parameters
-        # and make this a normalized path
-        return self.resolver.resolve(request.path)
 
     def process_request(self, request):
         self._txid = None
@@ -109,7 +102,7 @@ class SentryMiddleware(_SentryMiddlewareBase):
 
         try:
             self._txid = client.transaction.push(
-                self._get_transaction_from_request(request)
+                client.get_transaction_from_request(request)
             )
         except Exception as exc:
             client.error_logger.exception(repr(exc))
