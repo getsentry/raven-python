@@ -29,6 +29,7 @@ from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
 from raven.contrib.django.middleware import SentryLogMiddleware
 from raven.utils.compat import string_types, binary_type, iterlists
+from raven.contrib.django.resolver import RouteResolver
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils import once
 from raven import breadcrumbs
@@ -130,6 +131,7 @@ def install_sql_hook():
 
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
+    resolver = RouteResolver()
 
     def __init__(self, *args, **kwargs):
         install_sql_hook = kwargs.pop('install_sql_hook', True)
@@ -296,4 +298,8 @@ class DjangoClient(Client):
                 'id': result,
             }
 
+        return result
+
+    def get_transaction_from_request(self, request):
+        result = self.resolver.resolve(request.path)
         return result
