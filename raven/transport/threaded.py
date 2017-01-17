@@ -11,6 +11,7 @@ import atexit
 import logging
 import threading
 import os
+import sys
 
 from time import sleep, time
 
@@ -64,18 +65,20 @@ class AsyncWorker(object):
 
             if not self._timed_queue_join(initial_timeout):
                 # if that didn't work, wait a bit longer
-                # NB that size is an approximation, because other threads may
-                # add or remove items
-                size = self._queue.qsize()
 
-                print("Sentry is attempting to send %i pending error messages"
-                      % size)
-                print("Waiting up to %s seconds" % timeout)
+                if sys.stdout.isatty():
+                    # NB that size is an approximation, because other threads
+                    # may add or remove items
+                    size = self._queue.qsize()
 
-                if os.name == 'nt':
-                    print("Press Ctrl-Break to quit")
-                else:
-                    print("Press Ctrl-C to quit")
+                    print("Sentry is attempting to send %i "
+                          "pending error messages" % size)
+                    print("Waiting up to %s seconds" % timeout)
+
+                    if os.name == 'nt':
+                        print("Press Ctrl-Break to quit")
+                    else:
+                        print("Press Ctrl-C to quit")
 
                 self._timed_queue_join(timeout - initial_timeout)
 
