@@ -66,7 +66,7 @@ class AsyncWorker(object):
             if not self._timed_queue_join(initial_timeout):
                 # if that didn't work, wait a bit longer
 
-                if sys.stdout.isatty():
+                if sys.stdin.isatty() and sys.stdout.isatty():
                     # NB that size is an approximation, because other threads
                     # may add or remove items
                     size = self._queue.qsize()
