@@ -46,7 +46,7 @@ from raven.transport.registry import TransportRegistry, default_transports
 import raven.events  # NOQA
 
 
-__all__ = ('Client',)
+__all__ = ('Client', 'Raven')
 
 __excepthook__ = None
 
@@ -57,7 +57,7 @@ SDK_VALUE = {
     'version': raven.VERSION,
 }
 
-# singleton for the client
+# Singleton for Client
 Raven = None
 
 
@@ -146,7 +146,8 @@ class Client(object):
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
-                 hook_libraries=None, enable_breadcrumbs=True, **options):
+                 hook_libraries=None, enable_breadcrumbs=True,
+                 _check_enabled_status=True, **options):
         global Raven
 
         o = options
@@ -196,7 +197,7 @@ class Client(object):
 
         self.module_cache = ModuleProxyCache()
 
-        if not self.is_enabled():
+        if _check_enabled_status and not self.is_enabled():
             self.logger.info(
                 'Raven is not configured (logging is disabled). Please see the'
                 ' documentation for more information.')
@@ -886,3 +887,7 @@ class DummyClient(Client):
     "Sends messages into an empty void"
     def send(self, **kwargs):
         return None
+
+
+# Bind default client at runtime
+Raven = Client(_check_enabled_status=False)
