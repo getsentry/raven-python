@@ -111,6 +111,12 @@ The following are valid arguments which may be passed to the Raven client:
 
         environment = 'staging'
 
+.. describe:: tags
+
+    Default tags to send with events::
+
+        tags = {'site': 'foo.com'}
+
 .. describe:: exclude_paths
 
     Extending this allow you to ignore module prefixes when we attempt to
