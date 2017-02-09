@@ -13,10 +13,7 @@ class Transport(object):
     All transport implementations need to subclass this class
 
     You must implement a send method (or an async_send method if
-    sub-classing AsyncTransport) and the compute_scope method.
-
-    Please see the HTTPTransport class for an example of a
-    compute_scope implementation.
+    sub-classing AsyncTransport).
     """
 
     async = False
@@ -35,8 +32,7 @@ class AsyncTransport(Transport):
     All asynchronous transport implementations should subclass this
     class.
 
-    You must implement a async_send method (and the compute_scope
-    method as describe on the base Transport class).
+    You must implement a async_send method.
     """
 
     async = True
