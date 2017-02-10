@@ -10,6 +10,7 @@ from __future__ import absolute_import
 import sys
 
 import web
+from web import webapi
 
 from raven.conf import setup_logging
 from raven.handlers.logging import SentryHandler
@@ -53,11 +54,12 @@ class SentryApplication(web.application):
             },
         )
 
-    def handle(self):
+    def handle_with_processors(self):
         try:
-            return web.application.handle(self)
-        except:
-            self.handle_exception(exc_info=sys.exc_info())
+            return web.application.handle_with_processors(self)
+        except Exception as e:
+            if isinstance(e, webapi._InternalError):
+                self.handle_exception(exc_info=sys.exc_info())
             raise
 
     def captureException(self, *args, **kwargs):
