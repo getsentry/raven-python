@@ -163,7 +163,8 @@ class DjangoClientTest(TestCase):
 
     @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+        path = reverse('sentry-raise-exc')
+        self.assertRaises(Exception, self.client.get, path)
 
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
@@ -173,6 +174,19 @@ class DjangoClientTest(TestCase):
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
         assert event['message'] == 'Exception: view exception'
+        assert 'request' in event
+        assert event['request']['url'] == 'http://testserver{}'.format(path)
+
+    def test_capture_event_with_request_middleware(self):
+        path = reverse('sentry-trigger-event')
+        resp = self.client.get(path)
+        assert resp.status_code == 200
+
+        assert len(self.raven.events) == 1
+        event = self.raven.events.pop(0)
+        assert event['message'] == 'test'
+        assert 'request' in event
+        assert event['request']['url'] == 'http://testserver{}'.format(path)
 
     def test_user_info(self):
         with Settings(MIDDLEWARE_CLASSES=[
