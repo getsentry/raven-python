@@ -50,6 +50,7 @@ def convert_options(settings, defaults=None):
     options.setdefault('context', getopt('context'))
     options.setdefault('tags', getopt('tags'))
     options.setdefault('release', getopt('release'))
+    options.setdefault('repos', getopt('repos'))
     options.setdefault('environment', getopt('environment'))
     options.setdefault('ignore_exceptions', getopt('ignore_exceptions'))
 

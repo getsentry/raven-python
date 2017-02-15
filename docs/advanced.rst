@@ -117,6 +117,25 @@ The following are valid arguments which may be passed to the Raven client:
 
         tags = {'site': 'foo.com'}
 
+.. describe:: repos
+
+    This describes local repositories that are reflected in your source code::
+
+        repos = {
+            'raven': {
+                # the name of the repository as registered in Sentry
+                'name': 'getsentry/raven-python',
+                # the prefix where the local source code is found in the repo
+                'prefix': 'src',
+            }
+        }
+
+    The repository key can either be a module name or the absolute path. When
+    a module name is given it will be automatically converted to its absolute path.
+
+    For more information, see the :doc:`repos interface <../../../interfaces/repos>`
+    docs.
+
 .. describe:: exclude_paths
 
     Extending this allow you to ignore module prefixes when we attempt to
