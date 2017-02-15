@@ -242,14 +242,22 @@ class Client(object):
 
         self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
 
-    def install_sys_hook(self):
+    def install_sys_hook(self, skip_for_tty=True):
         global __excepthook__
 
         if __excepthook__ is None:
             __excepthook__ = sys.excepthook
 
         def handle_exception(*exc_info):
-            self.captureException(exc_info=exc_info, level='fatal')
+            if not skip_for_tty:
+                capture = True
+            else:
+                try:
+                    capture = not sys.stdin.isatty()
+                except Exception:
+                    capture = True
+            if capture:
+                self.captureException(exc_info=exc_info, level='fatal')
             __excepthook__(*exc_info)
         handle_exception.raven_client = self
         sys.excepthook = handle_exception
