@@ -81,7 +81,16 @@ class SentryMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         self._txid = None
+
         SentryMiddleware.thread.request = request
+        # we utilize request_finished as the exception gets reported
+        # *after* process_response is executed, and thus clearing the
+        # transaction there would leave it empty
+        # XXX(dcramer): weakref's cause a threading issue in certain
+        # versions of Django (e.g. 1.6). While they'd be ideal, we're under
+        # the assumption that Django will always call our function except
+        # in the situation of a process or thread dying.
+        request_finished.connect(self.request_finished, weak=False)
 
     def process_view(self, request, func, args, kwargs):
         from raven.contrib.django.models import client
@@ -91,16 +100,7 @@ class SentryMiddleware(MiddlewareMixin):
                 client.get_transaction_from_request(request)
             )
         except Exception as exc:
-            client.error_logger.exception(repr(exc))
-        else:
-            # we utilize request_finished as the exception gets reported
-            # *after* process_response is executed, and thus clearing the
-            # transaction there would leave it empty
-            # XXX(dcramer): weakref's cause a threading issue in certain
-            # versions of Django (e.g. 1.6). While they'd be ideal, we're under
-            # the assumption that Django will always call our function except
-            # in the situation of a process or thread dying.
-            request_finished.connect(self.request_finished, weak=False)
+            client.error_logger.exception(repr(exc), extra={'request': request})
 
         return None
 
@@ -110,6 +110,8 @@ class SentryMiddleware(MiddlewareMixin):
         if getattr(self, '_txid', None):
             client.transaction.pop(self._txid)
             self._txid = None
+
+        SentryMiddleware.thread.request = None
 
         request_finished.disconnect(self.request_finished)
 

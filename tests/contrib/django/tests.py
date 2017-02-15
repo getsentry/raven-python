@@ -19,6 +19,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 from django.template import TemplateSyntaxError
 from django.test import TestCase
+from django.test.client import Client as DjangoTestClient, ClientHandler as DjangoTestClientHandler
 from django.utils.translation import gettext_lazy
 from exam import fixture
 
@@ -36,10 +37,7 @@ from raven.contrib.django.views import is_valid_origin
 from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
 
-from django.test.client import Client as DjangoTestClient, ClientHandler as DjangoTestClientHandler
 from .models import MyTestModel
-
-settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
 DJANGO_18 = django.VERSION >= (1, 8, 0)
@@ -69,10 +67,10 @@ class MockSentryMiddleware(Sentry):
         return list(super(MockSentryMiddleware, self).__call__(environ, start_response))
 
 
-class TempStoreClient(DjangoClient):
+class MockClient(DjangoClient):
     def __init__(self, *args, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(*args, **kwargs)
+        super(MockClient, self).__init__(*args, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)
@@ -81,7 +79,7 @@ class TempStoreClient(DjangoClient):
         return True
 
 
-class DisabledTempStoreClient(TempStoreClient):
+class DisabledMockClient(MockClient):
     def is_enabled(self, **kwargs):
         return False
 
@@ -117,7 +115,7 @@ class ClientProxyTest(TestCase):
     def test_proxy_responds_as_client(self):
         assert get_client() == client
 
-    @mock.patch.object(TempStoreClient, 'captureMessage')
+    @mock.patch.object(MockClient, 'captureMessage')
     def test_basic(self, captureMessage):
         client.captureMessage(message='foo')
         captureMessage.assert_called_once_with(message='foo')
@@ -397,7 +395,7 @@ class DjangoClientTest(TestCase):
     def test_404_middleware_when_disabled(self):
         extra_settings = {
             'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
-            'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledTempStoreClient',
+            'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledMockClient',
         }
         with Settings(**extra_settings):
             resp = self.client.get('/non-existent-page')
@@ -408,7 +406,7 @@ class DjangoClientTest(TestCase):
         extra_settings = {
             'SENTRY_CLIENT': 'raven.contrib.django.DjangoClient',  # default
         }
-        # Should return fallback client (TempStoreClient)
+        # Should return fallback client (MockClient)
         client = get_client('nonexistent.and.invalid')
 
         # client should be valid, and the same as with the next call.
@@ -796,7 +794,7 @@ class SentryExceptionHandlerTest(TestCase):
         self.client = get_client()
         self.handler = SentryDjangoHandler(self.client)
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(MockClient, 'captureException')
     @mock.patch('sys.exc_info')
     def test_does_capture_exception(self, exc_info, captureException):
         exc_info.return_value = self.exc_info
@@ -804,7 +802,7 @@ class SentryExceptionHandlerTest(TestCase):
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
 
-    @mock.patch.object(TempStoreClient, 'send')
+    @mock.patch.object(MockClient, 'send')
     @mock.patch('sys.exc_info')
     def test_does_exclude_filtered_types(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
@@ -817,7 +815,7 @@ class SentryExceptionHandlerTest(TestCase):
 
         assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'send')
+    @mock.patch.object(MockClient, 'send')
     @mock.patch('sys.exc_info')
     def test_ignore_exceptions_with_expression_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
@@ -833,7 +831,7 @@ class SentryExceptionHandlerTest(TestCase):
 
         assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'send')
+    @mock.patch.object(MockClient, 'send')
     @mock.patch('sys.exc_info')
     def test_ignore_exceptions_with_module_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info

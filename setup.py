@@ -39,6 +39,7 @@ install_requires = [
 ]
 
 unittest2_requires = ['unittest2']
+
 flask_requires = [
     'Flask>=0.8',
     'blinker>=1.1',
@@ -79,8 +80,10 @@ tests_require = [
     'webob',
     'webtest',
     'anyjson',
-] + (flask_requires + flask_tests_requires +
-     unittest2_requires + webpy_tests_requires)
+] + (
+    flask_requires + flask_tests_requires +
+    unittest2_requires + webpy_tests_requires
+)
 
 
 class PyTest(TestCommand):
