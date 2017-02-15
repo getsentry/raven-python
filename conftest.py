@@ -4,29 +4,33 @@ import os.path
 import pytest
 import sys
 
-
 collect_ignore = []
 if sys.version_info[0] > 2:
     if sys.version_info[1] < 3:
-        collect_ignore.append("tests/contrib/flask")
+        collect_ignore.append('tests/contrib/flask')
     if sys.version_info[1] == 2:
-        collect_ignore.append("tests/handlers/logbook")
+        collect_ignore.append('tests/handlers/logbook')
 
 try:
     import gevent  # NOQA
 except ImportError:
-    collect_ignore.append("tests/transport/gevent")
+    collect_ignore.append('tests/transport/gevent')
 
 try:
     import web  # NOQA
 except ImportError:
-    collect_ignore.append("tests/contrib/webpy")
+    collect_ignore.append('tests/contrib/webpy')
 
 try:
     import django  # NOQA
 except ImportError:
     django = None
-    collect_ignore.append("tests/contrib/django")
+    collect_ignore.append('tests/contrib/django')
+
+try:
+    import tastypie  # NOQA
+except ImportError:
+    collect_ignore.append('tests/contrib/django/test_tastypie.py')
 
 
 INSTALLED_APPS = [
@@ -88,12 +92,19 @@ def configure_django(project_root):
         }],
         ALLOWED_HOSTS=['*'],
         DISABLE_SENTRY_INSTRUMENTATION=True,
+        SENTRY_CLIENT='tests.contrib.django.tests.MockClient'
     )
 
 
 def pytest_configure(config):
     if django:
         configure_django(os.path.dirname(os.path.abspath(__file__)))
+
+
+def pytest_runtest_teardown(item):
+    if django:
+        from raven.contrib.django.models import client
+        client.events = []
 
 
 @pytest.fixture
