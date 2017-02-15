@@ -27,7 +27,7 @@ except ImportError:
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
-from raven.contrib.django.middleware import SentryLogMiddleware
+from raven.contrib.django.middleware import SentryMiddleware
 from raven.utils.compat import string_types, binary_type, iterlists
 from raven.contrib.django.resolver import RouteResolver
 from raven.utils.wsgi import get_headers, get_environ
@@ -263,7 +263,7 @@ class DjangoClient(Client):
             data = kwargs['data']
 
         if request is None:
-            request = getattr(SentryLogMiddleware.thread, 'request', None)
+            request = getattr(SentryMiddleware.thread, 'request', None)
 
         is_http_request = isinstance(request, HttpRequest)
         if is_http_request:

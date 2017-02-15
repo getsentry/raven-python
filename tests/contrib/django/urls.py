@@ -30,4 +30,5 @@ urlpatterns = (
     url(r'^trigger-500-django$', tests.contrib.django.views.django_exc, name='sentry-django-exc'),
     url(r'^trigger-500-template$', tests.contrib.django.views.template_exc, name='sentry-template-exc'),
     url(r'^trigger-500-log-request$', tests.contrib.django.views.logging_request_exc, name='sentry-log-request-exc'),
+    url(r'^trigger-event$', tests.contrib.django.views.capture_event, name='sentry-trigger-event'),
 )

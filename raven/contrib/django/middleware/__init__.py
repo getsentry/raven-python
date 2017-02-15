@@ -76,25 +76,12 @@ class SentryResponseErrorIdMiddleware(MiddlewareMixin):
         return response
 
 
-# We need to make a base class for our sentry middleware that is thread
-# local but at the same time has the new fnagled middleware mixin applied
-# if such a thing exists.
-if MiddlewareMixin is object:
-    _SentryMiddlewareBase = threading.local
-else:
-    _SentryMiddlewareBase = type('_SentryMiddlewareBase', (MiddlewareMixin, threading.local), {})
-
-
-class SentryMiddleware(_SentryMiddlewareBase):
-
-    # backwards compat
-    @property
-    def thread(self):
-        return self
+class SentryMiddleware(MiddlewareMixin):
+    thread = threading.local()
 
     def process_request(self, request):
         self._txid = None
-        self.thread.request = request
+        SentryMiddleware.thread.request = request
 
     def process_view(self, request, func, args, kwargs):
         from raven.contrib.django.models import client
