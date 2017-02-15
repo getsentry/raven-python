@@ -108,12 +108,6 @@ class ProxyClient(object):
 client = ProxyClient()
 
 
-def get_option(x, d=None):
-    options = getattr(settings, 'RAVEN_CONFIG', {})
-
-    return getattr(settings, 'SENTRY_%s' % x, options.get(x, d))
-
-
 def get_client(client=None, reset=False):
     global _client
 
