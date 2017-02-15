@@ -93,5 +93,5 @@ def to_unicode(value):
 def to_string(value):
     try:
         return binary_type(value.decode('utf-8').encode('utf-8'))
-    except:
+    except Exception:
         return to_unicode(value).encode('utf-8')

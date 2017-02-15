@@ -18,7 +18,7 @@ try:
     except ImportError:
         from gevent.coros import Semaphore  # NOQA
     has_gevent = True
-except:
+except ImportError:
     has_gevent = None
 
 

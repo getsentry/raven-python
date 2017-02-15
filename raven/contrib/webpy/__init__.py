@@ -56,7 +56,7 @@ class SentryApplication(web.application):
     def handle(self):
         try:
             return web.application.handle(self)
-        except:
+        except Exception:
             self.handle_exception(exc_info=sys.exc_info())
             raise
 

@@ -16,7 +16,7 @@ try:
     from tornado import ioloop
     from tornado.httpclient import AsyncHTTPClient, HTTPClient
     has_tornado = True
-except:
+except ImportError:
     has_tornado = False
 
 

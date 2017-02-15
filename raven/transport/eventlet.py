@@ -18,7 +18,7 @@ try:
     except ImportError:
         from eventlet.green.urllib import request as eventlet_urllib2
     has_eventlet = True
-except:
+except ImportError:
     has_eventlet = False
 
 
