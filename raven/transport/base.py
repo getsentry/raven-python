@@ -16,7 +16,7 @@ class Transport(object):
     sub-classing AsyncTransport).
     """
 
-    async = False
+    is_async = False
     scheme = []
 
     def send(self, url, data, headers):
@@ -35,7 +35,7 @@ class AsyncTransport(Transport):
     You must implement a async_send method.
     """
 
-    async = True
+    is_async = True
 
     def async_send(self, url, data, headers, success_cb, error_cb):
         """
