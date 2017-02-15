@@ -19,7 +19,7 @@ try:
     )
     from twisted.web.http_headers import Headers
     has_twisted = True
-except:
+except ImportError:
     has_twisted = False
 
 
