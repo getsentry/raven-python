@@ -8,6 +8,10 @@ raven.transport.base
 from __future__ import absolute_import
 
 
+# Helper for external transports
+has_newstyle_transports = True
+
+
 class Transport(object):
     """
     All transport implementations need to subclass this class
