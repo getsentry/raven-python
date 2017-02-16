@@ -133,7 +133,7 @@ The following are valid arguments which may be passed to the Raven client:
     The repository key can either be a module name or the absolute path. When
     a module name is given it will be automatically converted to its absolute path.
 
-    For more information, see the :doc:`repos interface <../../../interfaces/repos>`
+    For more information, see the :doc:`repos interface <../../../clientdev/interfaces/repos>`
     docs.
 
 .. describe:: exclude_paths
