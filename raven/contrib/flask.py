@@ -42,10 +42,7 @@ def make_client(client_cls, app, dsn=None):
                     | set([app.import_name])
                 ),
                 # support legacy RAVEN_IGNORE_EXCEPTIONS
-                'ignore_exceptions': [
-                    '{0}.{1}'.format(x.__module__, x.__name__)
-                    for x in app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
-                ],
+                'ignore_exceptions': app.config.get('RAVEN_IGNORE_EXCEPTIONS', []),
                 'extra': {
                     'app': app,
                 },

@@ -13,6 +13,8 @@ Version 6.0.0
   affected things like django-tastyepie.
 * Corrected an issue where Django's HTTP request was not always available
   within events.
+* Support both string and class values for ``ignore_exceptions`` parameters.
+  Class values also support child exceptions.
 
 Version 5.32.0
 --------------
