@@ -27,6 +27,11 @@ except ImportError:
     django = None
     collect_ignore.append('tests/contrib/django')
 
+try:
+    import tastypie  # NOQA
+except ImportError:
+    collect_ignore.append('tests/contrib/django/test_tastypie.py')
+
 
 INSTALLED_APPS = [
     'django.contrib.auth',
