@@ -1,10 +1,15 @@
 from __future__ import absolute_import
 
+import django
+import pytest
+
 from django.core.urlresolvers import get_resolver
 from tastypie.test import ResourceTestCase
 
 from raven.contrib.django.models import client
 from raven.contrib.django.resolver import RouteResolver
+
+DJANGO_19 = django.VERSION >= (1, 9, 0) and django.VERSION <= (1, 10, 0)
 
 
 class TastypieTest(ResourceTestCase):
@@ -48,6 +53,7 @@ class TastypieTest(ResourceTestCase):
         assert 'request' in event
         assert event['request']['url'] == 'http://testserver/api/v1/example/foo/'
 
+    @pytest.mark.skipif(not DJANGO_19, reason='Django != 1.9')
     def test_resolver(self):
         resolver = get_resolver()
         route_resolver = RouteResolver()
