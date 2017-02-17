@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 
+from django.core.urlresolvers import get_resolver
 from tastypie.test import ResourceTestCase
 
 from raven.contrib.django.models import client
+from raven.contrib.django.resolver import RouteResolver
 
 
 class TastypieTest(ResourceTestCase):
@@ -45,3 +47,9 @@ class TastypieTest(ResourceTestCase):
         assert exc['value'] == 'oops'
         assert 'request' in event
         assert event['request']['url'] == 'http://testserver/api/v1/example/foo/'
+
+    def test_resolver(self):
+        resolver = get_resolver()
+        route_resolver = RouteResolver()
+        result = route_resolver._resolve(resolver, '/api/v1/example/')
+        assert result == '/api/{api_name}/{resource_name}/'

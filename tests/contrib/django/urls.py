@@ -39,10 +39,11 @@ try:
 except ImportError:
     pass
 else:
-    from tests.contrib.django.api import ExampleResource
+    from tests.contrib.django.api import ExampleResource, AnotherExampleResource
 
     v1_api = Api(api_name='v1')
     v1_api.register(ExampleResource())
+    v1_api.register(AnotherExampleResource())
 
     urlpatterns += (
         url(r'^api/', include(v1_api.urls)),

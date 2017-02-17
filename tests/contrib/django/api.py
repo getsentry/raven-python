@@ -47,3 +47,39 @@ class ExampleResource(Resource):
 
     def obj_update(self, bundle, **kwargs):
         return self.obj_create(bundle, **kwargs)
+
+
+class AnotherExampleResource(Resource):
+    class Meta:
+        resource_name = 'another'
+        object_class = Item
+
+    def detail_uri_kwargs(self, bundle_or_obj):
+        kwargs = {}
+
+        if isinstance(bundle_or_obj, Bundle):
+            kwargs['pk'] = bundle_or_obj.obj.pk
+        else:
+            kwargs['pk'] = bundle_or_obj.pk
+
+        return kwargs
+
+    def obj_get_list(self, bundle, **kwargs):
+        try:
+            raise Exception('oops')
+        except:
+            client.captureException()
+        return []
+
+    def obj_create(self, bundle, **kwargs):
+        try:
+            raise Exception('oops')
+        except:
+            client.captureException()
+
+        bundle.obj = Item(**kwargs)
+        bundle = self.full_hydrate(bundle)
+        return bundle
+
+    def obj_update(self, bundle, **kwargs):
+        return self.obj_create(bundle, **kwargs)
