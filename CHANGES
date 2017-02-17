@@ -9,6 +9,8 @@ Version 6.0.0
 * Refactored transports to support multiple URLs.  This might affect
   you if you have custom subclasses of those.  The main change is that
   the URL parameter moved from the constructor into the `send` method.
+* Corrected an issue with recursive route resolvers which commonly
+  affected things like django-tastyepie.
 
 Version 5.32.0
 --------------
