@@ -11,6 +11,8 @@ Version 6.0.0
   the URL parameter moved from the constructor into the `send` method.
 * Corrected an issue with recursive route resolvers which commonly
   affected things like django-tastyepie.
+* Corrected an issue where Django's HTTP request was not always available
+  within events.
 
 Version 5.32.0
 --------------
