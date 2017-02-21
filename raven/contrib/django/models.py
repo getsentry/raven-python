@@ -25,8 +25,6 @@ from raven.utils.imports import import_string
 
 logger = logging.getLogger('sentry.errors.client')
 
-settings_lock = Lock()
-
 
 def get_installed_apps():
     """
@@ -223,28 +221,39 @@ def install_middleware():
     """
     name = 'raven.contrib.django.middleware.SentryMiddleware'
     all_names = (name, 'raven.contrib.django.middleware.SentryLogMiddleware')
-    with settings_lock:
-        # default settings.MIDDLEWARE is None
-        middleware_attr = 'MIDDLEWARE' if getattr(settings,
-                                                  'MIDDLEWARE',
-                                                  None) is not None \
-            else 'MIDDLEWARE_CLASSES'
-        # make sure to get an empty tuple when attr is None
-        middleware = getattr(settings, middleware_attr, ()) or ()
-        if set(all_names).isdisjoint(set(middleware)):
-            setattr(settings,
-                    middleware_attr,
-                    type(middleware)((name,)) + middleware)
+    # default settings.MIDDLEWARE is None
+    middleware_attr = 'MIDDLEWARE' if getattr(settings,
+                                              'MIDDLEWARE',
+                                              None) is not None \
+        else 'MIDDLEWARE_CLASSES'
+    # make sure to get an empty tuple when attr is None
+    middleware = getattr(settings, middleware_attr, ()) or ()
+    if set(all_names).isdisjoint(set(middleware)):
+        setattr(settings,
+                middleware_attr,
+                type(middleware)((name,)) + middleware)
 
+
+_setup_lock = Lock()
+
+_initialized = False
 
 def initialize():
-    register_serializers()
-    install_middleware()
+    global _initialized
 
-    # XXX(dcramer): maybe this setting should disable ALL of this?
-    if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
-        handler = SentryDjangoHandler()
-        handler.install()
+    with _setup_lock:
+        if _initialized:
+            return
 
-    # instantiate client so hooks get registered
-    get_client()  # NOQA
+        register_serializers()
+        install_middleware()
+
+        # XXX(dcramer): maybe this setting should disable ALL of this?
+        if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
+            handler = SentryDjangoHandler()
+            handler.install()
+
+        # instantiate client so hooks get registered
+        get_client()  # NOQA
+
+        _initialized = True
