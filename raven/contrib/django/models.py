@@ -237,13 +237,14 @@ def install_middleware():
                     type(middleware)((name,)) + middleware)
 
 
-if (
-    'raven.contrib.django' in settings.INSTALLED_APPS or
-    'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS
-):
+def initialize():
     register_serializers()
     install_middleware()
 
+    # XXX(dcramer): maybe this setting should disable ALL of this?
     if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
         handler = SentryDjangoHandler()
         handler.install()
+
+    # instantiate client so hooks get registered
+    get_client()  # NOQA
