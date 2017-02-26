@@ -13,4 +13,7 @@ def import_string(key):
 
     module_name, class_name = key.rsplit('.', 1)
     module = __import__(module_name, {}, {}, [class_name], 0)
-    return getattr(module, class_name)
+    try:
+        return getattr(module, class_name)
+    except AttributeError as ex:
+        raise ImportError(unicode(ex))
