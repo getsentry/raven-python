@@ -5,6 +5,11 @@ import time
 import socket
 import gevent.monkey
 
+try:
+    from importlib import reload
+except ImportError:
+    from imp import reload
+
 from raven.utils.testutils import TestCase
 from raven.base import Client
 from raven.transport.gevent import GeventedHTTPTransport
