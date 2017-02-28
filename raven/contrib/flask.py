@@ -143,11 +143,18 @@ class Sentry(object):
         Requires Flask-Login (https://pypi.python.org/pypi/Flask-Login/)
         to be installed and setup.
         """
+        try:
+            user_info = {
+                'ip_address': request.access_route[0],
+            }
+        except IndexError:
+            user_info = {}
+
         if not has_flask_login:
-            return
+            return user_info
 
         if not hasattr(current_app, 'login_manager'):
-            return
+            return user_info
 
         try:
             is_authenticated = current_user.is_authenticated
@@ -155,17 +162,15 @@ class Sentry(object):
             # HACK: catch the attribute error thrown by flask-login is not attached
             # >   current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
             # E   AttributeError: 'RequestContext' object has no attribute 'user'
-            return {}
+            return user_info
 
         if callable(is_authenticated):
             is_authenticated = is_authenticated()
 
         if not is_authenticated:
-            return {}
+            return user_info
 
-        user_info = {
-            'id': current_user.get_id(),
-        }
+        user_info['id'] = current_user.get_id()
 
         if 'SENTRY_USER_ATTRS' in current_app.config:
             for attr in current_app.config['SENTRY_USER_ATTRS']:
