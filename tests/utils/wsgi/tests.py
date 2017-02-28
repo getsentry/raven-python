@@ -1,5 +1,5 @@
 from raven.utils.testutils import TestCase
-from raven.utils.wsgi import get_headers, get_host, get_environ
+from raven.utils.wsgi import get_headers, get_host, get_environ, get_client_ip
 
 
 class GetHeadersTest(TestCase):
@@ -84,3 +84,13 @@ class GetHostTest(TestCase):
             'SERVER_PORT': '81',
         })
         self.assertEquals(result, 'example.com:81')
+
+
+class GetClientIpTest(TestCase):
+    def test_has_remote_addr(self):
+        result = get_client_ip({'REMOTE_ADDR': '127.0.0.1'})
+        self.assertEquals(result, '127.0.0.1')
+
+    def test_xff(self):
+        result = get_client_ip({'HTTP_X_FORWARDED_FOR': '1.1.1.1, 127.0.0.1'})
+        self.assertEquals(result, '1.1.1.1')

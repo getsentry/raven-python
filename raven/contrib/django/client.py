@@ -30,7 +30,7 @@ from raven.contrib.django.utils import get_data_from_template, get_host
 from raven.contrib.django.middleware import SentryMiddleware
 from raven.utils.compat import string_types, binary_type, iterlists
 from raven.contrib.django.resolver import RouteResolver
-from raven.utils.wsgi import get_headers, get_environ
+from raven.utils.wsgi import get_headers, get_environ, get_client_ip
 from raven.utils import once
 from raven import breadcrumbs
 
@@ -142,7 +142,14 @@ class DjangoClient(Client):
     def install_sql_hook(self):
         install_sql_hook()
 
-    def get_user_info(self, user):
+    def get_user_info(self, request):
+        user_info = {
+            'ip_address': get_client_ip(request.META),
+        }
+        user = getattr(request, 'user', None)
+        if user is None:
+            return user_info
+
         try:
             if hasattr(user, 'is_authenticated'):
                 # is_authenticated was a method in Django < 1.10
@@ -151,7 +158,7 @@ class DjangoClient(Client):
                 else:
                     authenticated = user.is_authenticated
                 if not authenticated:
-                    return None
+                    return user_info
 
             user_info = {}
 
@@ -164,22 +171,18 @@ class DjangoClient(Client):
                 user_info['username'] = user.get_username()
             elif hasattr(user, 'username'):
                 user_info['username'] = user.username
-
-            return user_info
         except Exception:
             # We expect that user objects can be somewhat broken at times
             # and try to just handle as much as possible and ignore errors
             # as good as possible here.
-            return None
+            pass
+
+        return user_info
 
     def get_data_from_request(self, request):
         result = {}
 
-        user = getattr(request, 'user', None)
-        if user is not None:
-            user_info = self.get_user_info(user)
-            if user_info:
-                result['user'] = user_info
+        result['user'] = self.get_user_info(request)
 
         try:
             uri = request.build_absolute_uri()

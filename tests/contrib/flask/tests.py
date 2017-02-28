@@ -59,7 +59,7 @@ def create_app(ignore_exceptions=None, debug=False, **config):
     def capture_exception():
         try:
             raise ValueError('Boom')
-        except:
+        except Exception:
             current_app.extensions['sentry'].captureException()
         return 'Hello'
 
@@ -318,4 +318,4 @@ class FlaskLoginTest(BaseTest):
         assert event['message'] == 'ValueError: hello world'
         assert 'request' in event
         assert 'user' in event
-        self.assertDictEqual(event['user'], User().to_dict())
+        self.assertDictEqual(event['user'], dict({'ip_address': '127.0.0.1'}, **User().to_dict()))

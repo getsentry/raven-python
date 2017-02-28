@@ -250,6 +250,7 @@ class DjangoClientTest(TestCase):
     @pytest.mark.skipif(not DJANGO_15, reason='< Django 1.5')
     def test_get_user_info_abstract_user(self):
         from django.db import models
+        from django.http import HttpRequest
         from django.contrib.auth.models import AbstractBaseUser
 
         class MyUser(AbstractBaseUser):
@@ -263,8 +264,25 @@ class DjangoClientTest(TestCase):
             email='admin@example.com',
             id=1,
         )
-        user_info = self.raven.get_user_info(user)
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.user = user
+        user_info = self.raven.get_user_info(request)
         assert user_info == {
+            'ip_address': '127.0.0.1',
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.META['HTTP_X_FORWARDED_FOR'] = '1.1.1.1, 2.2.2.2'
+        request.user = user
+        user_info = self.raven.get_user_info(request)
+        assert user_info == {
+            'ip_address': '1.1.1.1',
             'username': user.username,
             'id': user.id,
             'email': user.email,
@@ -273,6 +291,7 @@ class DjangoClientTest(TestCase):
     @pytest.mark.skipif(not DJANGO_110, reason='< Django 1.10')
     def test_get_user_info_is_authenticated_property(self):
         from django.db import models
+        from django.http import HttpRequest
         from django.contrib.auth.models import AbstractBaseUser
 
         class MyUser(AbstractBaseUser):
@@ -289,8 +308,25 @@ class DjangoClientTest(TestCase):
             email='admin@example.com',
             id=1,
         )
-        user_info = self.raven.get_user_info(user)
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.user = user
+        user_info = self.raven.get_user_info(request)
         assert user_info == {
+            'ip_address': '127.0.0.1',
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.META['HTTP_X_FORWARDED_FOR'] = '1.1.1.1, 2.2.2.2'
+        request.user = user
+        user_info = self.raven.get_user_info(request)
+        assert user_info == {
+            'ip_address': '1.1.1.1',
             'username': user.username,
             'id': user.id,
             'email': user.email,
