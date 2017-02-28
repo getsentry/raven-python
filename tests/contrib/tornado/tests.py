@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import six
 from mock import patch
 from tornado import web, gen, testing
+from tornado.concurrent import Future
+from tornado.httpclient import HTTPError
 from raven.contrib.tornado import SentryMixin, AsyncSentryClient
-from raven.utils import six
 
 
 class AnErrorProneHandler(SentryMixin, web.RequestHandler):
@@ -60,6 +62,11 @@ class AsyncMessageHandler(SentryMixin, web.RequestHandler):
         }
 
 
+class HTTPErrorHandler(SentryMixin, web.RequestHandler):
+    def get(self):
+        raise web.HTTPError(int(self.get_query_argument('code', 500)), "Oops")
+
+
 class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
     def get_app(self):
         app = web.Application([
@@ -69,6 +76,7 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
             web.url(r'/send-error-async', SendErrorAsyncHandler),
             web.url(r'/an-error-with-custom-non-dict-data', AnErrorWithCustomNonDictData),
             web.url(r'/an-error-with-custom-dict-data', AnErrorWithCustomDictData),
+            web.url(r'/http-error', HTTPErrorHandler)
         ])
         app.sentry_client = AsyncSentryClient(
             'http://public_key:secret_key@host:9000/project'
@@ -212,3 +220,52 @@ class TornadoAsyncClientTestCase(testing.AsyncHTTPTestCase):
 
         user_data = kwargs['user']
         self.assertEqual(user_data['is_authenticated'], False)
+
+    @testing.gen_test
+    def test_sending_to_unresponsive_sentry_server_logs_error(self):
+        client = self.get_app().sentry_client
+        with patch.object(client, '_failed_send') as mock_failed:
+            client.send()
+
+            yield gen.sleep(0.01)  # we need to run after the async send
+            assert mock_failed.called
+
+    @testing.gen_test
+    def test_non_successful_responses_marks_client_as_failed(self):
+        client = self.get_app().sentry_client
+        with patch.object(client, '_failed_send') as mock_failed:
+            with patch.object(client, '_send_remote') as mock_send:
+
+                f = Future()
+                f.set_exception(HTTPError(499, 'error'))
+                mock_send.return_value = f
+                client.send()
+
+                yield gen.sleep(0.01)  # we need to run after the async send
+                assert mock_failed.called
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send')
+    def test_http_error_500(self, send):
+        response = self.fetch('/http-error?code=500')
+        self.assertEqual(response.code, 500)
+        self.assertEqual(send.call_count, 1)
+        args, kwargs = send.call_args
+
+        assert 'user' in kwargs
+        assert 'request' in kwargs
+        assert 'exception' in kwargs
+
+        http_data = kwargs['request']
+        self.assertEqual(http_data['cookies'], None)
+        self.assertEqual(http_data['url'], response.effective_url)
+        self.assertEqual(http_data['query_string'], 'code=500')
+        self.assertEqual(http_data['method'], 'GET')
+
+        user_data = kwargs['user']
+        self.assertEqual(user_data['is_authenticated'], False)
+
+    @patch('raven.contrib.tornado.AsyncSentryClient.send')
+    def test_http_error_400(self, send):
+        response = self.fetch('/http-error?code=400')
+        self.assertEqual(response.code, 400)
+        self.assertEqual(send.call_count, 0)

@@ -11,6 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import os
+import sys
 import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -91,7 +93,7 @@ pygments_style = 'sphinx'
 intersphinx_mapping = {
     'http://docs.python.org/2.7': None,
     'django': ('http://docs.djangoproject.com/en/dev/', 'http://docs.djangoproject.com/en/dev/_objects/'),
-    'http://raven.readthedocs.org/en/latest': None
+    'https://raven.readthedocs.io/en/latest': None
 }
 
 
@@ -222,3 +224,8 @@ man_pages = [
     ('index', 'raven', u'Raven Documentation',
      [u'David Cramer'], 1)
 ]
+
+if os.environ.get('SENTRY_FEDERATED_DOCS') != '1':
+    sys.path.insert(0, os.path.abspath('_sentryext'))
+    import sentryext
+    sentryext.activate()

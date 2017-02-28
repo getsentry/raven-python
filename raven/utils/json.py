@@ -11,10 +11,7 @@ from __future__ import absolute_import
 import codecs
 import datetime
 import uuid
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 try:
     JSONDecodeError = json.JSONDecodeError

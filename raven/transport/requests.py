@@ -7,7 +7,6 @@ raven.transport.requests
 """
 from __future__ import absolute_import
 
-from raven.conf import defaults
 from raven.transport.http import HTTPTransport
 
 try:
@@ -21,18 +20,11 @@ class RequestsHTTPTransport(HTTPTransport):
 
     scheme = ['requests+http', 'requests+https']
 
-    def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=True,
-                 ca_certs=defaults.CA_BUNDLE):
+    def __init__(self, *args, **kwargs):
         if not has_requests:
             raise ImportError('RequestsHTTPTransport requires requests.')
 
-        super(RequestsHTTPTransport, self).__init__(parsed_url,
-                                                    timeout=timeout,
-                                                    verify_ssl=verify_ssl,
-                                                    ca_certs=ca_certs)
-
-        # remove the requests+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
+        super(RequestsHTTPTransport, self).__init__(*args, **kwargs)
 
     def send(self, data, headers):
         if self.verify_ssl:

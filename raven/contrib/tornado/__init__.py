@@ -7,12 +7,13 @@ raven.contrib.tornado
 """
 from __future__ import absolute_import
 
-import time
+from functools import partial
 
-import raven
-from raven.base import Client
-from raven.utils import get_auth_header
+from tornado import ioloop
 from tornado.httpclient import AsyncHTTPClient, HTTPError
+from tornado.web import HTTPError as WebHTTPError
+
+from raven.base import Client
 
 
 class AsyncSentryClient(Client):
@@ -30,16 +31,16 @@ class AsyncSentryClient(Client):
         and extracts the keyword argument callback which will be called on
         asynchronous sending of the request
 
-        :return: a 32-length string identifying this event and checksum
+        :return: a 32-length string identifying this event
         """
         if not self.is_enabled():
             return
 
         data = self.build_msg(*args, **kwargs)
 
-        self.send(callback=kwargs.get('callback', None), **data)
+        future = self.send(callback=kwargs.get('callback', None), **data)
 
-        return (data['event_id'],)
+        return (data['event_id'], future)
 
     def send(self, auth_header=None, callback=None, **data):
         """
@@ -49,64 +50,30 @@ class AsyncSentryClient(Client):
 
         return self.send_encoded(message, auth_header=auth_header, callback=callback)
 
-    def send_encoded(self, message, auth_header=None, **kwargs):
-        """
-        Given an already serialized message, signs the message and passes the
-        payload off to ``send_remote`` for each server specified in the servers
-        configuration.
-
-        callback can be specified as a keyword argument
-        """
-        if not auth_header:
-            timestamp = time.time()
-            auth_header = get_auth_header(
-                protocol=self.protocol_version,
-                timestamp=timestamp,
-                client='raven-python/%s' % (raven.VERSION,),
-                api_key=self.public_key,
-                api_secret=self.secret_key,
-            )
-
-        for url in self.servers:
-            headers = {
-                'X-Sentry-Auth': auth_header,
-                'Content-Type': 'application/octet-stream',
-            }
-
-            self.send_remote(
-                url=url, data=message, headers=headers,
-                callback=kwargs.get('callback', None)
-            )
-
     def send_remote(self, url, data, headers=None, callback=None):
         if headers is None:
             headers = {}
 
         if not self.state.should_try():
-            message = self._get_log_message(data)
-            self.error_logger.error(message)
+            data = self.decode(data)
+            self._log_failed_submission(data)
             return
 
+        future = self._send_remote(
+            url=url, data=data, headers=headers, callback=callback
+        )
+        ioloop.IOLoop.current().add_future(future, partial(self._handle_result, url, data))
+        return future
+
+    def _handle_result(self, url, data, future):
         try:
-            self._send_remote(
-                url=url, data=data, headers=headers, callback=callback
-            )
+            future.result()
         except HTTPError as e:
-            body = e.response.body
-            self.error_logger.error(
-                'Unable to reach Sentry log server: %s '
-                '(url: %%s, body: %%s)' % (e,),
-                url, body, exc_info=True,
-                extra={'data': {'body': body, 'remote_url': url}}
-            )
+            data = self.decode(data)
+            self._failed_send(e, url, data)
         except Exception as e:
-            self.error_logger.error(
-                'Unable to reach Sentry log server: %s (url: %%s)' % (e,),
-                url, exc_info=True, extra={'data': {'remote_url': url}}
-            )
-            message = self._get_log_message(data)
-            self.error_logger.error('Failed to submit message: %r', message)
-            self.state.set_fail()
+            data = self.decode(data)
+            self._failed_send(e, url, data)
         else:
             self.state.set_success()
 
@@ -201,9 +168,13 @@ class SentryMixin(object):
         `tornado.web.RequestHandler.get_current_user` tests postitively for on
         Truth calue testing
         """
+        try:
+            user = self.get_current_user()
+        except Exception:
+            return {}
         return {
             'user': {
-                'is_authenticated': True if self.get_current_user() else False
+                'is_authenticated': True if user else False
             }
         }
 
@@ -257,6 +228,9 @@ class SentryMixin(object):
         log_exception() is added in Tornado v3.1.
         """
         rv = super(SentryMixin, self).log_exception(typ, value, tb)
+        # Do not capture tornado.web.HTTPErrors outside the 500 range.
+        if isinstance(value, WebHTTPError) and (value.status_code < 500 or value.status_code > 599):
+            return rv
         self.captureException(exc_info=(typ, value, tb))
         return rv
 

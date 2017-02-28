@@ -11,26 +11,28 @@ Acts as an implicit hook for Django installs.
 
 from __future__ import absolute_import, unicode_literals
 
-import copy
 import logging
 import sys
 import warnings
 
-from django.conf import settings as django_settings
-from hashlib import md5
+from django.conf import settings
+from django.core.signals import got_request_exception, request_started
+from threading import Lock
 
-from raven.utils import six
-from raven.contrib.django.management import patch_cli_runner
-
+from raven._compat import PY2, binary_type, text_type
+from raven.utils.conf import convert_options
+from raven.utils.imports import import_string
 
 logger = logging.getLogger('sentry.errors.client')
+
+settings_lock = Lock()
 
 
 def get_installed_apps():
     """
     Modules in settings.INSTALLED_APPS as a set.
     """
-    return set(django_settings.INSTALLED_APPS)
+    return set(settings.INSTALLED_APPS)
 
 
 _client = (None, None)
@@ -60,7 +62,7 @@ class ProxyClient(object):
     __ne__ = lambda x, o: get_client() != o
     __gt__ = lambda x, o: get_client() > o
     __ge__ = lambda x, o: get_client() >= o
-    if not six.PY3:
+    if PY2:
         __cmp__ = lambda x, o: cmp(get_client(), o)  # NOQA
     __hash__ = lambda x: hash(get_client())
     # attributes are currently not callable
@@ -91,11 +93,11 @@ class ProxyClient(object):
     __invert__ = lambda x: ~(get_client())
     __complex__ = lambda x: complex(get_client())
     __int__ = lambda x: int(get_client())
-    if not six.PY3:
+    if PY2:
         __long__ = lambda x: long(get_client())  # NOQA
     __float__ = lambda x: float(get_client())
-    __str__ = lambda x: six.binary_type(get_client())
-    __unicode__ = lambda x: six.text_type(get_client())
+    __str__ = lambda x: binary_type(get_client())
+    __unicode__ = lambda x: text_type(get_client())
     __oct__ = lambda x: oct(get_client())
     __hex__ = lambda x: hex(get_client())
     __index__ = lambda x: get_client().__index__()
@@ -107,46 +109,28 @@ client = ProxyClient()
 
 
 def get_option(x, d=None):
-    options = getattr(django_settings, 'RAVEN_CONFIG', {})
+    options = getattr(settings, 'RAVEN_CONFIG', {})
 
-    return getattr(django_settings, 'SENTRY_%s' % x, options.get(x, d))
+    return getattr(settings, 'SENTRY_%s' % x, options.get(x, d))
 
 
-def get_client(client=None):
+def get_client(client=None, reset=False):
     global _client
 
     tmp_client = client is not None
     if not tmp_client:
-        client = getattr(django_settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
+        client = getattr(settings, 'SENTRY_CLIENT', 'raven.contrib.django.DjangoClient')
 
-    if _client[0] != client:
-        module, class_name = client.rsplit('.', 1)
-
-        ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-        options = copy.deepcopy(getattr(django_settings, 'RAVEN_CONFIG', {}))
-        options.setdefault('servers', ga('SERVERS'))
-        options.setdefault('include_paths', ga('INCLUDE_PATHS', []))
-        options['include_paths'] = set(options['include_paths']) | get_installed_apps()
-        options.setdefault('exclude_paths', ga('EXCLUDE_PATHS'))
-        options.setdefault('timeout', ga('TIMEOUT'))
-        options.setdefault('name', ga('NAME'))
-        options.setdefault('auto_log_stacks', ga('AUTO_LOG_STACKS'))
-        options.setdefault('key', ga('KEY', md5(django_settings.SECRET_KEY.encode('utf8')).hexdigest()))
-        options.setdefault('string_max_length', ga('MAX_LENGTH_STRING'))
-        options.setdefault('list_max_length', ga('MAX_LENGTH_LIST'))
-        options.setdefault('site', ga('SITE'))
-        options.setdefault('public_key', ga('PUBLIC_KEY'))
-        options.setdefault('secret_key', ga('SECRET_KEY'))
-        options.setdefault('project', ga('PROJECT'))
-        options.setdefault('processors', ga('PROCESSORS'))
-        options.setdefault('dsn', ga('DSN'))
-        options.setdefault('context', ga('CONTEXT'))
-        options.setdefault('release', ga('RELEASE'))
-
-        class_name = str(class_name)
+    if _client[0] != client or reset:
+        options = convert_options(
+            settings,
+            defaults={
+                'include_paths': get_installed_apps(),
+            },
+        )
 
         try:
-            Client = getattr(__import__(module, {}, {}, class_name), class_name)
+            Client = import_string(client)
         except ImportError:
             logger.exception('Failed to import client: %s', client)
             if not _client[1]:
@@ -162,17 +146,6 @@ def get_client(client=None):
 
 
 def sentry_exception_handler(request=None, **kwargs):
-    exc_type = sys.exc_info()[0]
-
-    exclusions = set(get_option('IGNORE_EXCEPTIONS', ()))
-
-    exc_name = '%s.%s' % (exc_type.__module__, exc_type.__name__)
-    if exc_type.__name__ in exclusions or exc_name in exclusions or any(exc_name.startswith(e[:-1]) for e in exclusions if e.endswith('*')):
-        logger.info(
-            'Not capturing exception due to filters: %s', exc_type,
-            exc_info=sys.exc_info())
-        return
-
     try:
         client.captureException(exc_info=sys.exc_info(), request=request)
     except Exception as exc:
@@ -182,54 +155,64 @@ def sentry_exception_handler(request=None, **kwargs):
             warnings.warn('Unable to process log entry: %s' % (exc,))
 
 
-def register_handlers():
-    from django.core.signals import got_request_exception
+class SentryDjangoHandler(object):
+    def __init__(self, client=client):
+        self.client = client
 
-    # HACK: support Sentry's internal communication
-    if 'sentry' in django_settings.INSTALLED_APPS:
-        from django.db import transaction
-        # Django 1.6
-        if hasattr(transaction, 'atomic'):
-            commit_on_success = transaction.atomic
-        else:
-            commit_on_success = transaction.commit_on_success
-
-        @commit_on_success
-        def wrap_sentry(request, **kwargs):
-            if transaction.is_dirty():
-                transaction.rollback()
-            return sentry_exception_handler(request, **kwargs)
-
-        exception_handler = wrap_sentry
-    else:
-        exception_handler = sentry_exception_handler
-
-    # Connect to Django's internal signal handler
-    got_request_exception.connect(exception_handler, weak=False)
-
-    # If Celery is installed, register a signal handler
-    if 'djcelery' in django_settings.INSTALLED_APPS:
         try:
-            # Celery < 2.5? is not supported
-            from raven.contrib.celery import (
-                register_signal, register_logger_signal)
+            import celery
         except ImportError:
-            logger.exception('Failed to install Celery error handler')
+            self.has_celery = False
         else:
+            self.has_celery = celery.VERSION >= (2, 5)
+
+        self.celery_handler = None
+
+    def install_celery(self):
+        from raven.contrib.celery import (
+            SentryCeleryHandler, register_logger_signal
+        )
+
+        self.celery_handler = SentryCeleryHandler(client).install()
+
+        # try:
+        #     ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
+        #     options = getattr(settings, 'RAVEN_CONFIG', {})
+        #     loglevel = options.get('celery_loglevel',
+        #                            ga('CELERY_LOGLEVEL', logging.ERROR))
+
+        #     register_logger_signal(client, loglevel=loglevel)
+        # except Exception:
+        #     logger.exception('Failed to install Celery error handler')
+
+    def install(self):
+        request_started.connect(self.before_request, weak=False)
+        got_request_exception.connect(self.exception_handler, weak=False)
+
+        if self.has_celery:
             try:
-                register_signal(client)
+                self.install_celery()
             except Exception:
                 logger.exception('Failed to install Celery error handler')
 
-            try:
-                ga = lambda x, d=None: getattr(django_settings, 'SENTRY_%s' % x, d)
-                options = getattr(django_settings, 'RAVEN_CONFIG', {})
-                loglevel = options.get('celery_loglevel',
-                                       ga('CELERY_LOGLEVEL', logging.ERROR))
+    def uninstall(self):
+        request_started.disconnect(self.before_request)
+        got_request_exception.disconnect(self.exception_handler)
 
-                register_logger_signal(client, loglevel=loglevel)
-            except Exception:
-                logger.exception('Failed to install Celery error handler')
+        if self.celery_handler:
+            self.celery_handler.uninstall()
+
+    def exception_handler(self, request=None, **kwargs):
+        try:
+            self.client.captureException(exc_info=sys.exc_info(), request=request)
+        except Exception as exc:
+            try:
+                logger.exception('Unable to process log entry: %s' % (exc,))
+            except Exception as exc:
+                warnings.warn('Unable to process log entry: %s' % (exc,))
+
+    def before_request(self, *args, **kwargs):
+        self.client.context.activate()
 
 
 def register_serializers():
@@ -237,9 +220,36 @@ def register_serializers():
     import raven.contrib.django.serializers  # NOQA
 
 
-if ('raven.contrib.django' in django_settings.INSTALLED_APPS
-        or 'raven.contrib.django.raven_compat' in django_settings.INSTALLED_APPS):
-    register_handlers()
-    register_serializers()
+def install_middleware():
+    """
+    Force installation of SentryMiddlware if it's not explicitly present.
 
-    patch_cli_runner()
+    This ensures things like request context and transaction names are made
+    available.
+    """
+    name = 'raven.contrib.django.middleware.SentryMiddleware'
+    all_names = (name, 'raven.contrib.django.middleware.SentryLogMiddleware')
+    with settings_lock:
+        # default settings.MIDDLEWARE is None
+        middleware_attr = 'MIDDLEWARE' if getattr(settings,
+                                                  'MIDDLEWARE',
+                                                  None) is not None \
+            else 'MIDDLEWARE_CLASSES'
+        # make sure to get an empty tuple when attr is None
+        middleware = getattr(settings, middleware_attr, ()) or ()
+        if set(all_names).isdisjoint(set(middleware)):
+            setattr(settings,
+                    middleware_attr,
+                    type(middleware)((name,)) + middleware)
+
+
+if (
+    'raven.contrib.django' in settings.INSTALLED_APPS or
+    'raven.contrib.django.raven_compat' in settings.INSTALLED_APPS
+):
+    register_serializers()
+    install_middleware()
+
+    if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
+        handler = SentryDjangoHandler()
+        handler.install()

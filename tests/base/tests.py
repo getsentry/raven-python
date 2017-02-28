@@ -5,19 +5,21 @@ import inspect
 import mock
 import raven
 import time
+import six
+import os
 
 from raven.base import Client, ClientState
 from raven.exceptions import RateLimited
 from raven.transport import AsyncTransport
+from raven.transport.http import HTTPTransport
 from raven.utils.stacks import iter_stack_frames
-from raven.utils import six
 from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
-    def __init__(self, servers=None, **kwargs):
+    def __init__(self, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
+        super(TempStoreClient, self).__init__(**kwargs)
 
     def is_enabled(self):
         return True
@@ -93,6 +95,15 @@ class ClientTest(TestCase):
         assert base.Raven is client
         assert client is not client2
 
+    def test_client_picks_up_env_dsn(self):
+        DSN = 'sync+http://public:secret@example.com/1'
+        PUBLIC_DSN = '//public@example.com/1'
+        with mock.patch.dict(os.environ, {'SENTRY_DSN': DSN}):
+            client = Client()
+            assert client.remote.get_public_dsn() == PUBLIC_DSN
+            client = Client('')
+            assert client.remote.get_public_dsn() == PUBLIC_DSN
+
     @mock.patch('raven.transport.http.HTTPTransport.send')
     @mock.patch('raven.base.ClientState.should_try')
     def test_send_remote_failover(self, should_try, send):
@@ -123,17 +134,17 @@ class ClientTest(TestCase):
 
         # test error
         send.side_effect = RateLimited('foo', 5)
-        client.send_remote('sync+http://example.com/api/store', client.encode({}))
+        client.send_remote('sync+http://example.com/api/1/store/', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
         self.assertEqual(client.state.retry_after, 5)
 
         # test recovery
         send.side_effect = None
-        client.send_remote('sync+http://example.com/api/store', client.encode({}))
+        client.send_remote('sync+http://example.com/api/1/store/', client.encode({}))
         self.assertEquals(client.state.status, client.state.ONLINE)
         self.assertEqual(client.state.retry_after, 0)
 
-    @mock.patch('raven.base.Client._registry.get_transport')
+    @mock.patch('raven.conf.remote.RemoteConfig.get_transport')
     @mock.patch('raven.base.ClientState.should_try')
     def test_async_send_remote_failover(self, should_try, get_transport):
         should_try.return_value = True
@@ -142,25 +153,22 @@ class ClientTest(TestCase):
         get_transport.return_value = async_transport
 
         client = Client(
-            servers=['http://example.com'],
-            public_key='public',
-            secret_key='secret',
-            project=1,
+            dsn='http://public:secret@example.com/1',
         )
 
         # test immediate raise of error
         async_send.side_effect = Exception()
-        client.send_remote('http://example.com/api/store', client.encode({}))
+        client.send_remote('http://example.com/api/1/store/', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
 
         # test recovery
-        client.send_remote('http://example.com/api/store', client.encode({}))
+        client.send_remote('http://example.com/api/1/store/', client.encode({}))
         success_cb = async_send.call_args[0][2]
         success_cb()
         self.assertEquals(client.state.status, client.state.ONLINE)
 
         # test delayed raise of error
-        client.send_remote('http://example.com/api/store', client.encode({}))
+        client.send_remote('http://example.com/api/1/store/', client.encode({}))
         failure_cb = async_send.call_args[0][3]
         failure_cb(Exception())
         self.assertEquals(client.state.status, client.state.ERROR)
@@ -177,10 +185,11 @@ class ClientTest(TestCase):
         })
         send_remote.assert_called_once_with(
             url='http://example.com/api/1/store/',
-            data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
+            data=client.encode({'foo': 'bar'}),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
+                'Content-Encoding': client.get_content_encoding(),
                 'X-Sentry-Auth': (
                     'Sentry sentry_timestamp=1328055286.51, '
                     'sentry_client=raven-python/%s, sentry_version=6, '
@@ -201,11 +210,12 @@ class ClientTest(TestCase):
         })
         send_remote.assert_called_once_with(
             url='http://example.com/api/1/store/',
-            data=six.b('eJyrVkrLz1eyUlBKSixSqgUAIJgEVA=='),
+            data=client.encode({'foo': 'bar'}),
             headers={
                 'User-Agent': 'raven-python/%s' % (raven.VERSION,),
                 'Content-Type': 'application/octet-stream',
-                'X-Sentry-Auth': 'foo'
+                'Content-Encoding': client.get_content_encoding(),
+                'X-Sentry-Auth': 'foo',
             },
         )
 
@@ -238,36 +248,10 @@ class ClientTest(TestCase):
         self.assertTrue(type(encoded), str)
         self.assertEquals(data, self.client.decode(encoded))
 
-    def test_dsn(self):
-        client = Client(dsn='http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
-        self.assertEquals(client.project, '1')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
-
-    def test_dsn_as_first_arg(self):
-        client = Client('http://public:secret@example.com/1')
-        self.assertEquals(client.servers, ['http://example.com/api/1/store/'])
-        self.assertEquals(client.project, '1')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
-
-    def test_slug_in_dsn(self):
-        client = Client('http://public:secret@example.com/slug-name')
-        self.assertEquals(client.servers, ['http://example.com/api/slug-name/store/'])
-        self.assertEquals(client.project, 'slug-name')
-        self.assertEquals(client.public_key, 'public')
-        self.assertEquals(client.secret_key, 'secret')
-
     def test_get_public_dsn(self):
-        client = Client('threaded+http://public:secret@example.com/1')
+        client = Client('http://public:secret@example.com/1')
         public_dsn = client.get_public_dsn()
         self.assertEquals(public_dsn, '//public@example.com/1')
-
-    def test_get_public_dsn_override_scheme(self):
-        client = Client('threaded+http://public:secret@example.com/1')
-        public_dsn = client.get_public_dsn('https')
-        self.assertEquals(public_dsn, 'https://public@example.com/1')
 
     def test_explicit_message_on_message_event(self):
         self.client.captureMessage(message='test', data={
@@ -308,7 +292,7 @@ class ClientTest(TestCase):
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'ValueError: foo')
         self.assertTrue('exception' in event)
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'foo')
         self.assertEquals(exc['module'], ValueError.__module__)  # this differs in some Python versions
@@ -321,6 +305,24 @@ class ClientTest(TestCase):
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
+
+    def test_exception_event_true_exc_info(self):
+        try:
+            raise ValueError('foo')
+        except ValueError:
+            self.client.captureException(exc_info=True)
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'ValueError: foo')
+        self.assertTrue('exception' in event)
+        exc = event['exception']['values'][-1]
+        stacktrace = exc['stacktrace']
+        self.assertEquals(len(stacktrace['frames']), 1)
+        frame = stacktrace['frames'][0]
+        self.assertEquals(frame['abs_path'], __file__.replace('.pyc', '.py'))
+        self.assertEquals(frame['filename'], 'tests/base/tests.py')
+        self.assertEquals(frame['module'], __name__)
 
     def test_decorator_preserves_function(self):
         @self.client.capture_exceptions
@@ -345,13 +347,13 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 1)
         event = self.client.events.pop(0)
         self.assertEquals(event['message'], 'DecoratorTestException')
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'DecoratorTestException')
         self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
         stacktrace = exc['stacktrace']
-        # this is a wrapped function so two frames are expected
-        self.assertEquals(len(stacktrace['frames']), 2)
-        frame = stacktrace['frames'][1]
+        # this is a wrapped class object with __call__ so three frames are expected
+        self.assertEquals(len(stacktrace['frames']), 3)
+        frame = stacktrace['frames'][-1]
         self.assertEquals(frame['module'], __name__)
         self.assertEquals(frame['function'], 'test2')
 
@@ -367,6 +369,41 @@ class ClientTest(TestCase):
 
         self.assertEquals(len(self.client.events), 0)
 
+    def test_context_manager_functionality(self):
+        def test4():
+            raise self.DecoratorTestException()
+
+        try:
+            with self.client.capture_exceptions():
+                test4()
+        except self.DecoratorTestException:
+            pass
+
+        self.assertEquals(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        self.assertEquals(event['message'], 'DecoratorTestException')
+        exc = event['exception']['values'][-1]
+        self.assertEquals(exc['type'], 'DecoratorTestException')
+        self.assertEquals(exc['module'], self.DecoratorTestException.__module__)
+        stacktrace = exc['stacktrace']
+        # three frames are expected: test4, `with` block and context manager internals
+        self.assertEquals(len(stacktrace['frames']), 3)
+        frame = stacktrace['frames'][-1]
+        self.assertEquals(frame['module'], __name__)
+        self.assertEquals(frame['function'], 'test4')
+
+    def test_content_manager_filtering(self):
+        def test5():
+            raise Exception()
+
+        try:
+            with self.client.capture_exceptions(self.DecoratorTestException):
+                test5()
+        except Exception:
+            pass
+
+        self.assertEquals(len(self.client.events), 0)
+
     def test_message_event(self):
         self.client.captureMessage(message='test')
 
@@ -375,6 +412,16 @@ class ClientTest(TestCase):
         self.assertEquals(event['message'], 'test')
         assert 'stacktrace' not in event
         self.assertTrue('timestamp' in event)
+
+    def test_fingerprint(self):
+        self.client.captureMessage(
+            message='test',
+            fingerprint=['{{ default }}', 'foobar'],
+        )
+
+        assert len(self.client.events) == 1
+        event = self.client.events.pop(0)
+        assert event['fingerprint'] == ['{{ default }}', 'foobar']
 
     def test_context(self):
         self.client.context.merge({
@@ -463,3 +510,61 @@ class ClientTest(TestCase):
         else:
             expected = {'logger': "u'test'", 'foo': "u'bar'"}
         self.assertEquals(event['extra'], expected)
+
+    def test_transport_registration(self):
+        client = Client('http://public:secret@example.com/1',
+                        transport=HTTPTransport)
+        assert type(client.remote.get_transport()) is HTTPTransport
+
+        client = Client('sync+http://public:secret@example.com/1')
+        assert type(client.remote.get_transport()) is HTTPTransport
+
+    def test_marks_in_app_frames_for_stacktrace(self):
+        client = TempStoreClient(
+            include_paths=['foo'],
+            exclude_paths=['foo.bar'],
+        )
+        client.captureMessage('hello', data={
+            'stacktrace': {
+                'frames': [
+                    {'module': 'foo'},
+                    {'module': 'bar'},
+                    {'module': 'foo.bar'},
+                    {'module': 'foo.baz'},
+                ]
+            }
+        })
+
+        event = client.events.pop(0)
+        frames = event['stacktrace']['frames']
+        assert frames[0]['in_app']
+        assert not frames[1]['in_app']
+        assert not frames[2]['in_app']
+        assert frames[3]['in_app']
+
+    def test_marks_in_app_frames_for_exception(self):
+        client = TempStoreClient(
+            include_paths=['foo'],
+            exclude_paths=['foo.bar'],
+        )
+        client.captureMessage('hello', data={
+            'exception': {
+                'values': [{
+                    'stacktrace': {
+                        'frames': [
+                            {'module': 'foo'},
+                            {'module': 'bar'},
+                            {'module': 'foo.bar'},
+                            {'module': 'foo.baz'},
+                        ]
+                    }
+                }]
+            }
+        })
+
+        event = client.events.pop(0)
+        frames = event['exception']['values'][-1]['stacktrace']['frames']
+        assert frames[0]['in_app']
+        assert not frames[1]['in_app']
+        assert not frames[2]['in_app']
+        assert frames[3]['in_app']

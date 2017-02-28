@@ -9,4 +9,5 @@ from __future__ import absolute_import
 
 default_app_config = 'raven.contrib.django.apps.RavenConfig'
 
+
 from .client import DjangoClient  # NOQA

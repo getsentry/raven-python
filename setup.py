@@ -7,7 +7,7 @@ Raven is a Python client for `Sentry <http://getsentry.com/>`_. It provides
 full out-of-the-box support for many of the popular frameworks, including
 `Django <djangoproject.com>`_, `Flask <http://flask.pocoo.org/>`_, and `Pylons
 <http://www.pylonsproject.org/>`_. Raven also includes drop-in support for any
-`WSGI <http://wsgi.readthedocs.org/>`_-compatible web application.
+`WSGI <https://wsgi.readthedocs.io/>`_-compatible web application.
 """
 
 # Hack to prevent stupid "TypeError: 'NoneType' object is not callable" error
@@ -22,14 +22,20 @@ for m in ('multiprocessing', 'billiard'):
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+import re
 import sys
+import ast
 
-setup_requires = [
-    'pytest',
-]
 
-dev_requires = [
-    'flake8>=2.0,<2.1',
+_version_re = re.compile(r'VERSION\s+=\s+(.*)')
+
+with open('raven/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1)))
+
+
+install_requires = [
+    'contextlib2',
 ]
 
 unittest2_requires = ['unittest2']
@@ -52,32 +58,29 @@ if sys.version_info[0] == 3:
     unittest2_requires = []
     webpy_tests_requires = []
 
-if sys.version_info >= (3, 3):
-    aiohttp_requires = ['aiohttp']
-else:
-    aiohttp_requires = []
-
+    # If it's python3.2 or greater, don't use contextlib backport
+    if sys.version_info[1] >= 2:
+        install_requires.remove('contextlib2')
 
 tests_require = [
+    'six',
     'bottle',
     'celery>=2.5',
-    'Django>=1.4',
-    'django-celery>=2.5',
     'exam>=0.5.2',
+    'flake8>=2.6,<2.7',
     'logbook',
     'mock',
     'nose',
-    'pep8',
+    'pycodestyle',
     'pytz',
-    'pytest',
-    'pytest-cov>=1.4',
-    'pytest-django',
+    'pytest>=3.0.0,<3.1.0',
+    'pytest-timeout==0.4',
     'requests',
-    'tornado',
+    'tornado>=4.1',
     'webob',
     'webtest',
     'anyjson',
-] + (aiohttp_requires + flask_requires + flask_tests_requires +
+] + (flask_requires + flask_tests_requires +
      unittest2_requires + webpy_tests_requires)
 
 
@@ -101,21 +104,21 @@ class PyTest(TestCommand):
 
 setup(
     name='raven',
-    version='5.3.1.3',
-    author='David Cramer',
-    author_email='dcramer@gmail.com',
-    url='http://github.com/getsentry/raven-python',
-    description='Raven is a client for Sentry (https://www.getsentry.com)',
+    version=version,
+    author='Sentry',
+    author_email='hello@getsentry.com',
+    url='https://github.com/getsentry/raven-python',
+    description='Raven is a client for Sentry (https://getsentry.com)',
     long_description=__doc__,
     packages=find_packages(exclude=("tests", "tests.*",)),
     zip_safe=False,
     extras_require={
         'flask': flask_requires,
         'tests': tests_require,
-        'dev': dev_requires,
     },
     license='BSD',
     tests_require=tests_require,
+    install_requires=install_requires,
     cmdclass={'test': PyTest},
     include_package_data=True,
     entry_points={
@@ -131,12 +134,11 @@ setup(
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python',
         'Topic :: Software Development',
     ],

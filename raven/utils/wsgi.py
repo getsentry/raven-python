@@ -6,7 +6,7 @@ This module implements WSGI related helpers adapted from ``werkzeug.wsgi``
 """
 from __future__ import absolute_import
 
-from raven.utils import six
+from raven._compat import iteritems
 from raven.utils.compat import urllib_quote
 
 
@@ -15,7 +15,7 @@ def get_headers(environ):
     """
     Returns only proper HTTP headers.
     """
-    for key, value in six.iteritems(environ):
+    for key, value in iteritems(environ):
         key = str(key)
         if key.startswith('HTTP_') and key not in \
            ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):

@@ -7,8 +7,10 @@ raven.utils
 """
 from __future__ import absolute_import
 
-from raven.utils import six
+from raven._compat import iteritems, string_types
 import logging
+import threading
+from functools import update_wrapper
 try:
     import pkg_resources
 except ImportError:
@@ -24,7 +26,7 @@ def merge_dicts(*dicts):
         if not d:
             continue
 
-        for k, v in six.iteritems(d):
+        for k, v in iteritems(d):
             out[k] = v
     return out
 
@@ -42,7 +44,8 @@ def varmap(func, var, context=None, name=None):
         return func(name, '<...>')
     context[objid] = 1
     if isinstance(var, dict):
-        ret = dict((k, varmap(func, v, context, k)) for k, v in six.iteritems(var))
+        ret = dict((k, varmap(func, v, context, k))
+                   for k, v in iteritems(var))
     elif isinstance(var, (list, tuple)):
         ret = [varmap(func, f, context, name) for f in var]
     else:
@@ -50,31 +53,40 @@ def varmap(func, var, context=None, name=None):
     del context[objid]
     return ret
 
+
 # We store a cache of module_name->version string to avoid
 # continuous imports and lookups of modules
 _VERSION_CACHE = {}
 
 
 def get_version_from_app(module_name, app):
+    version = None
+
+    # Try to pull version from pkg_resource first
+    # as it is able to detect version tagged with egg_info -b
+    if pkg_resources is not None:
+        # pull version from pkg_resources if distro exists
+        try:
+            return pkg_resources.get_distribution(module_name).version
+        except Exception:
+            pass
+
     if hasattr(app, 'get_version'):
-        get_version = app.get_version
-        if callable(get_version):
-            version = get_version()
-        else:
-            version = get_version
+        version = app.get_version
     elif hasattr(app, '__version__'):
         version = app.__version__
     elif hasattr(app, 'VERSION'):
         version = app.VERSION
     elif hasattr(app, 'version'):
         version = app.version
-    elif pkg_resources:
-        # pull version from pkg_resources if distro exists
-        try:
-            version = pkg_resources.get_distribution(module_name).version
-        except pkg_resources.DistributionNotFound:
-            return None
-    else:
+
+    if callable(version):
+        version = version()
+
+    if not isinstance(version, (string_types, list, tuple)):
+        version = None
+
+    if version is None:
         return None
 
     if isinstance(version, (list, tuple)):
@@ -90,7 +102,8 @@ def get_versions(module_list=None):
     ext_module_list = set()
     for m in module_list:
         parts = m.split('.')
-        ext_module_list.update('.'.join(parts[:idx]) for idx in range(1, len(parts) + 1))
+        ext_module_list.update('.'.join(parts[:idx])
+                               for idx in range(1, len(parts) + 1))
 
     versions = {}
     for module_name in ext_module_list:
@@ -120,7 +133,8 @@ def get_versions(module_list=None):
     return versions
 
 
-def get_auth_header(protocol, timestamp, client, api_key, api_secret=None, **kwargs):
+def get_auth_header(protocol, timestamp, client, api_key,
+                    api_secret=None, **kwargs):
     header = [
         ('sentry_timestamp', timestamp),
         ('sentry_client', client),
@@ -154,6 +168,24 @@ class memoize(object):
             return self
         d, n = vars(obj), self.__name__
         if n not in d:
-            value = self.func(obj)
-            d[n] = value
-        return value
+            d[n] = self.func(obj)
+        return d[n]
+
+
+def once(func):
+    """Runs a thing once and once only."""
+    lock = threading.Lock()
+
+    def new_func(*args, **kwargs):
+        if new_func.called:
+            return
+        with lock:
+            if new_func.called:
+                return
+            rv = func(*args, **kwargs)
+            new_func.called = True
+            return rv
+
+    new_func = update_wrapper(new_func, func)
+    new_func.called = False
+    return new_func

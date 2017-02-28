@@ -8,7 +8,6 @@ raven.transport.twisted
 from __future__ import absolute_import
 
 import io
-import logging
 
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
@@ -25,18 +24,13 @@ except:
 
 
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
-
     scheme = ['twisted+http', 'twisted+https']
 
-    def __init__(self, parsed_url):
+    def __init__(self, parsed_url, *args, **kwargs):
         if not has_twisted:
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
-        super(TwistedHTTPTransport, self).__init__(parsed_url)
-        self.logger = logging.getLogger('sentry.errors')
-
-        # remove the twisted+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
+        super(TwistedHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
 
         # Import reactor as late as possible.
         from twisted.internet import reactor

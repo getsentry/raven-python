@@ -9,10 +9,10 @@ raven.utils.serializer.base
 from __future__ import absolute_import
 
 import itertools
-import uuid
 import types
 
-from raven.utils import six
+from raven._compat import text_type, binary_type, string_types, iteritems, \
+    class_types, PY2
 from raven.utils.encoding import to_unicode
 from .manager import manager as serialization_manager
 
@@ -50,16 +50,19 @@ class Serializer(object):
         Given ``value``, recurse (using the parent serializer) to handle
         coercing of newly defined values.
         """
+        string_max_length = kwargs.get('string_max_length', None)
+
         _depth += 1
         if _depth >= max_depth:
             try:
-                value = six.text_type(repr(value))
+                value = text_type(repr(value))[:string_max_length]
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 self.manager.logger.exception(e)
-                return six.text_type(type(value))
-        return self.manager.transform(value, max_depth=max_depth, _depth=_depth, **kwargs)
+                return text_type(type(value))
+        return self.manager.transform(value, max_depth=max_depth,
+                                      _depth=_depth, **kwargs)
 
 
 class IterableSerializer(Serializer):
@@ -70,22 +73,16 @@ class IterableSerializer(Serializer):
         return tuple(
             self.recurse(o, **kwargs)
             for n, o
-            in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(value))
+            in itertools.takewhile(lambda x: x[0] < list_max_length,
+                                   enumerate(value))
         )
-
-
-class UUIDSerializer(Serializer):
-    types = (uuid.UUID,)
-
-    def serialize(self, value, **kwargs):
-        return repr(value)
 
 
 class DictSerializer(Serializer):
     types = (dict,)
 
     def make_key(self, key):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, string_types):
             return to_unicode(key)
         return key
 
@@ -94,12 +91,13 @@ class DictSerializer(Serializer):
         return dict(
             (self.make_key(self.recurse(k, **kwargs)), self.recurse(v, **kwargs))
             for n, (k, v)
-            in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(six.iteritems(value)))
+            in itertools.takewhile(lambda x: x[0] < list_max_length, enumerate(
+                iteritems(value)))
         )
 
 
 class UnicodeSerializer(Serializer):
-    types = (six.text_type,)
+    types = (text_type,)
 
     def serialize(self, value, **kwargs):
         # try to return a reasonable string that can be decoded
@@ -107,21 +105,22 @@ class UnicodeSerializer(Serializer):
         # unicode character
         # e.g. we want the output to be like: "u'רונית מגן'"
         string_max_length = kwargs.get('string_max_length', None)
-        return repr(six.text_type('%s')) % (value[:string_max_length],)
+        return repr(text_type('%s')) % (value[:string_max_length],)
 
 
 class StringSerializer(Serializer):
-    types = (six.binary_type,)
+    types = (binary_type,)
 
     def serialize(self, value, **kwargs):
         string_max_length = kwargs.get('string_max_length', None)
-        if six.PY3:
+        if not PY2:
             return repr(value[:string_max_length])
 
         try:
             # Python2 madness: let's try to recover from developer's issues
             # Try to process the string as if it was a unicode.
-            return "'" + value.decode('utf8')[:string_max_length].encode('utf8') + "'"
+            return "'" + value.decode('utf8')[:string_max_length] \
+                .encode('utf8') + "'"
         except UnicodeDecodeError:
             pass
 
@@ -129,10 +128,11 @@ class StringSerializer(Serializer):
 
 
 class TypeSerializer(Serializer):
-    types = six.class_types
+    types = class_types
 
     def can(self, value):
-        return not super(TypeSerializer, self).can(value) and has_sentry_metadata(value)
+        return not super(TypeSerializer, self).can(value) \
+            and has_sentry_metadata(value)
 
     def serialize(self, value, **kwargs):
         return self.recurse(value.__sentry__(), **kwargs)
@@ -163,10 +163,11 @@ class FunctionSerializer(Serializer):
     types = (types.FunctionType,)
 
     def serialize(self, value, **kwargs):
-        return '<function %s from %s at 0x%x>' % (value.__name__, value.__module__, id(value))
+        return '<function %s from %s at 0x%x>' % (
+            value.__name__, value.__module__, id(value))
 
 
-if not six.PY3:
+if PY2:
     class LongSerializer(Serializer):
         types = (long,)  # noqa
 
@@ -176,7 +177,6 @@ if not six.PY3:
 
 # register all serializers, order matters
 serialization_manager.register(IterableSerializer)
-serialization_manager.register(UUIDSerializer)
 serialization_manager.register(DictSerializer)
 serialization_manager.register(UnicodeSerializer)
 serialization_manager.register(StringSerializer)
@@ -185,5 +185,5 @@ serialization_manager.register(BooleanSerializer)
 serialization_manager.register(FloatSerializer)
 serialization_manager.register(IntegerSerializer)
 serialization_manager.register(FunctionSerializer)
-if not six.PY3:
+if PY2:
     serialization_manager.register(LongSerializer)

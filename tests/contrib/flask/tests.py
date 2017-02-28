@@ -6,34 +6,32 @@ from mock import patch
 from flask import Flask, current_app, g
 from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
 
-from raven.base import Client
 from raven.contrib.flask import Sentry
-from raven.utils.testutils import TestCase
-
-
-class TempStoreClient(Client):
-    def __init__(self, servers=None, **kwargs):
-        self.events = []
-        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
-
-    def is_enabled(self):
-        return True
-
-    def send(self, **kwargs):
-        self.events.append(kwargs)
+from raven.utils.testutils import InMemoryClient, TestCase
+from raven.handlers.logging import SentryHandler
 
 
 class User(AnonymousUserMixin):
     is_active = lambda x: True
     is_authenticated = lambda x: True
     get_id = lambda x: 1
+    name = 'TestUser'
+
+    def to_dict(self):
+        return {
+            'id': self.get_id(),
+            'name': self.name
+        }
 
 
-def create_app(ignore_exceptions=None, debug=False):
+def create_app(ignore_exceptions=None, debug=False, **config):
     import os
 
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.urandom(40)
+    for key, value in config.items():
+        app.config[key] = value
+
     app.debug = debug
 
     if ignore_exceptions:
@@ -56,10 +54,10 @@ def create_app(ignore_exceptions=None, debug=False):
         current_app.extensions['sentry'].captureMessage('Interesting')
         return 'World'
 
-    @app.route('/an-error-logged-in/', methods=['GET', 'POST'])
+    @app.route('/login/', methods=['GET', 'POST'])
     def login():
         login_user(User())
-        raise ValueError('hello world')
+        return "hello world"
     return app
 
 
@@ -85,12 +83,12 @@ class BaseTest(TestCase):
 
     @before
     def bind_sentry(self):
-        self.raven = TempStoreClient()
+        self.raven = InMemoryClient()
         self.middleware = Sentry(self.app, client=self.raven)
 
     def make_client_and_raven(self, *args, **kwargs):
         app = create_app(*args, **kwargs)
-        raven = TempStoreClient()
+        raven = InMemoryClient()
         Sentry(app, client=raven)
         return app.test_client(), raven, app
 
@@ -108,12 +106,17 @@ class FlaskTest(BaseTest):
         event = self.raven.events.pop(0)
 
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
         self.assertEquals(exc['value'], 'hello world')
         self.assertEquals(event['level'], logging.ERROR)
         self.assertEquals(event['message'], 'ValueError: hello world')
-        self.assertEquals(event['culprit'], 'tests.contrib.flask.tests in an_error')
+
+    def test_capture_plus_logging(self):
+        client, raven, app = self.make_client_and_raven(debug=False)
+        app.logger.addHandler(SentryHandler(raven))
+        client.get('/an-error/')
+        assert len(raven.events) == 1
 
     def test_get(self):
         response = self.client.get('/an-error/?foo=bar')
@@ -211,27 +214,6 @@ class FlaskTest(BaseTest):
         _, _, app_ndebug = self.make_client_and_raven(debug=False)
         self.assertTrue(app_ndebug.extensions['sentry'].wrap_wsgi)
 
-    def test_error_handler_with_ignored_exception(self):
-        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[NameError, ValueError])
-
-        response = client.get('/an-error/')
-        self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(raven.events), 0)
-
-    def test_error_handler_with_exception_not_ignored(self):
-        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[NameError, KeyError])
-
-        response = client.get('/an-error/')
-        self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(raven.events), 1)
-
-    def test_error_handler_with_empty_ignore_exceptions_list(self):
-        client, raven, _ = self.make_client_and_raven(ignore_exceptions=[])
-
-        response = client.get('/an-error/')
-        self.assertEquals(response.status_code, 500)
-        self.assertEquals(len(raven.events), 1)
-
     def test_captureException_sets_last_event_id(self):
         with self.app.test_request_context('/'):
             try:
@@ -253,15 +235,53 @@ class FlaskTest(BaseTest):
             assert self.middleware.last_event_id == event_id
             assert g.sentry_event_id == event_id
 
+    def test_logging_setup_with_exclusion_list(self):
+        app = Flask(__name__)
+        raven = InMemoryClient()
+
+        Sentry(app, client=raven, logging=True,
+            logging_exclusions=("excluded_logger",))
+
+        excluded_logger = logging.getLogger("excluded_logger")
+        self.assertFalse(excluded_logger.propagate)
+
+        some_other_logger = logging.getLogger("some_other_logger")
+        self.assertTrue(some_other_logger.propagate)
+
+    def test_check_client_type(self):
+        self.assertRaises(TypeError, lambda _: Sentry(self.app, "oops, I'm putting my DSN instead"))
+
+    def test_uses_dsn(self):
+        app = Flask(__name__)
+        sentry = Sentry(app, dsn='http://public:secret@example.com/1')
+        assert sentry.client.remote.base_url == 'http://example.com'
+
+    def test_binds_default_include_paths(self):
+        app = Flask(__name__)
+        sentry = Sentry(app, dsn='http://public:secret@example.com/1')
+        assert sentry.client.include_paths == set([app.import_name])
+
+    def test_overrides_default_include_paths(self):
+        app = Flask(__name__)
+        app.config['SENTRY_CONFIG'] = {'include_paths': ['foo.bar']}
+        sentry = Sentry(app, dsn='http://public:secret@example.com/1')
+        assert sentry.client.include_paths == set(['foo.bar'])
+
 
 class FlaskLoginTest(BaseTest):
+    @fixture
+    def app(self):
+        return create_app(SENTRY_USER_ATTRS=['name'])
+
     @before
     def setup_login(self):
         self.login_manager = init_login(self.app)
 
     def test_user(self):
-        self.client.get('/an-error-logged-in/')
+        self.client.get('/login/')
+        self.client.get('/an-error/')
         event = self.raven.events.pop(0)
         assert event['message'] == 'ValueError: hello world'
         assert 'request' in event
         assert 'user' in event
+        self.assertDictEqual(event['user'], User().to_dict())

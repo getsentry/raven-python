@@ -65,7 +65,8 @@ class Sentry(object):
         # catch ANY exception that goes through...
         except Exception:
             self.handle_exception(exc_info=sys.exc_info())
-            return self.app(environ, session_start_response)
+            # re-raise the exception to let parent handlers deal with it
+            raise
 
     def captureException(self, *args, **kwargs):
         assert self.client, 'captureException called before application configured'

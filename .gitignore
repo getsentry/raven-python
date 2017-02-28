@@ -13,13 +13,14 @@ pip-log.txt
 /cover
 /dist
 /example_project/local_settings.py
-/docs/html
-/docs/doctrees
+/docs/_build
 /sentry_index/
 /sentry_test_index
 /example_project/*.db
 bin/
 include/
 lib/
+.cache
 .idea
 .eggs
+venv

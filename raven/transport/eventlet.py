@@ -13,7 +13,10 @@ from raven.transport.http import HTTPTransport
 
 try:
     import eventlet
-    from eventlet.green import urllib2 as eventlet_urllib2
+    try:
+        from eventlet.green import urllib2 as eventlet_urllib2
+    except ImportError:
+        from eventlet.green.urllib import request as eventlet_urllib2
     has_eventlet = True
 except:
     has_eventlet = False

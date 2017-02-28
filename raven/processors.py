@@ -9,8 +9,8 @@ from __future__ import absolute_import
 
 import re
 
+from raven._compat import string_types, text_type
 from raven.utils import varmap
-from raven.utils import six
 
 
 class Processor(object):
@@ -82,6 +82,7 @@ class SanitizePasswordsProcessor(Processor):
         'sentry_dsn',
         'sessionid',
         'token',
+        'access_token',
     ])
     VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
 
@@ -89,11 +90,18 @@ class SanitizePasswordsProcessor(Processor):
         if value is None:
             return
 
-        if isinstance(value, six.string_types) and self.VALUES_RE.match(value):
+        if isinstance(value, string_types) and self.VALUES_RE.match(value):
             return self.MASK
 
         if not key:  # key can be a NoneType
             return value
+
+        # Just in case we have bytes here, we want to make them into text
+        # properly without failing so we can perform our check.
+        if isinstance(key, bytes):
+            key = key.decode('utf-8', 'replace')
+        else:
+            key = text_type(key)
 
         key = key.lower()
         for field in self.FIELDS:
@@ -113,7 +121,7 @@ class SanitizePasswordsProcessor(Processor):
             if n not in data:
                 continue
 
-            if isinstance(data[n], six.string_types) and '=' in data[n]:
+            if isinstance(data[n], string_types) and '=' in data[n]:
                 # at this point we've assumed it's a standard HTTP query
                 # or cookie
                 if n == 'cookies':

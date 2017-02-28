@@ -10,21 +10,29 @@ from raven.processors import SanitizePasswordsProcessor, \
 
 VARS = {
     'foo': 'bar',
+    'vars_dict': {
+        42: 'bar',
+        ('foo', 'bar'): 'hello',
+        'password': 'hello',
+    },
     'password': 'hello',
     'the_secret': 'hello',
     'a_password_here': 'hello',
     'api_key': 'secret_key',
     'apiKey': 'secret_key',
+    'access_token': 'oauth2 access token',
 }
 
 
 def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
     def _will_throw_type_error(foo, **kwargs):
+        vars_dict = VARS['vars_dict']
         password = "you should not see this"    # NOQA F841
         the_secret = "nor this"                 # NOQA F841
         a_password_here = "Don't look at me!"   # NOQA F841
         api_key = "I'm hideous!"                # NOQA F841
         apiKey = "4567000012345678"             # NOQA F841
+        access_token = "secret stuff!"          # NOQA F841
 
         # TypeError: unsupported operand type(s) for /: 'str' and 'str'
         raise exception_class()
@@ -79,6 +87,24 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertIn(vars['foo'], (
             VARS['foo'], "'%s'" % VARS['foo'], '"%s"' % VARS['foo'])
         )
+        self.assertTrue('vars_dict' in vars)
+        vars_dict = vars['vars_dict']
+        ref_dict = VARS['vars_dict'].copy()
+        ref_dict['password'] = proc.MASK
+        self.assertTrue(42 in vars_dict or '42' in vars_dict)
+        if 42 in vars_dict:
+            # Extra data - dictionary keys are not changed.
+            self.assertDictEqual(vars_dict, ref_dict)
+        else:
+            # Stack trace - dictionary keys are converted to strings.
+            self.assertTrue('42' in vars_dict)
+            self.assertIn(vars_dict['42'], "'%s'" % ref_dict[42], '"%s"' % ref_dict[42])
+            self.assertTrue('("\'foo\'", "\'bar\'")' in vars_dict or "('\"foo\"', '\"bar\"')" in vars_dict)
+            self.assertTrue('"password"' in vars_dict or "'password'" in vars_dict)
+            if "'password'" in vars_dict:
+                self.assertEqual(vars_dict["'password'"], proc.MASK)
+            else:
+                self.assertEqual(vars_dict['"password"'], proc.MASK)
         self.assertTrue('password' in vars)
         self.assertEquals(vars['password'], proc.MASK)
         self.assertTrue('the_secret' in vars)
@@ -89,6 +115,8 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertEquals(vars['api_key'], proc.MASK)
         self.assertTrue('apiKey' in vars)
         self.assertEquals(vars['apiKey'], proc.MASK)
+        self.assertTrue('access_token' in vars)
+        self.assertEquals(vars['access_token'], proc.MASK)
 
     def test_stacktrace(self, *args, **kwargs):
         """
@@ -99,12 +127,12 @@ class SanitizePasswordsProcessorTest(TestCase):
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
 
-        # data['exception']['values'][0]['stacktrace']['frames'][0]['vars']
+        # data['exception']['values'][-1]['stacktrace']['frames'][0]['vars']
         self.assertTrue('exception' in result)
         exception = result['exception']
         self.assertTrue('values' in exception)
         values = exception['values']
-        stack = values[0]['stacktrace']
+        stack = values[-1]['stacktrace']
         self.assertTrue('frames' in stack)
 
         self.assertEquals(len(stack['frames']), 2)
@@ -191,7 +219,8 @@ class SanitizePasswordsProcessorTest(TestCase):
     def test_cookie_header(self):
         data = get_http_data()
         data['request']['headers']['Cookie'] = 'foo=bar;password=hello'\
-                ';the_secret=hello;a_password_here=hello;api_key=secret_key'
+            ';the_secret=hello;a_password_here=hello;api_key=secret_key'\
+            ';access_token=at'
 
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.process(data)
@@ -201,7 +230,8 @@ class SanitizePasswordsProcessorTest(TestCase):
         self.assertEquals(
             http['headers']['Cookie'],
             'foo=bar;password=%(m)s'
-            ';the_secret=%(m)s;a_password_here=%(m)s;api_key=%(m)s' % dict(m=proc.MASK))
+            ';the_secret=%(m)s;a_password_here=%(m)s;api_key=%(m)s'
+            ';access_token=%(m)s' % dict(m=proc.MASK))
 
     def test_sanitize_credit_card(self):
         proc = SanitizePasswordsProcessor(Mock())
@@ -213,6 +243,11 @@ class SanitizePasswordsProcessorTest(TestCase):
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.sanitize('foo', '424242424242424')
         self.assertEquals(result, proc.MASK)
+
+    def test_sanitize_non_ascii(self):
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('__repr__: жили-были', '42')
+        self.assertEquals(result, '42')
 
 
 class RemovePostDataProcessorTest(TestCase):

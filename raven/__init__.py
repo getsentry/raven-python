@@ -9,18 +9,10 @@ from __future__ import absolute_import
 
 import os
 import os.path
-from raven.base import *  # NOQA
-from raven.conf import *  # NOQA
-from raven.versioning import *  # NOQA
 
+__all__ = ('VERSION', 'Client', 'get_version')
 
-__all__ = ('VERSION', 'Client', 'load', 'get_version')
-
-try:
-    VERSION = __import__('pkg_resources') \
-        .get_distribution('raven').version
-except Exception as e:
-    VERSION = 'unknown'
+VERSION = '5.32.0'
 
 
 def _get_git_revision(path):
@@ -53,5 +45,12 @@ def get_version():
         base = '%s (%s)' % (base, __build__)
     return base
 
+
 __build__ = get_revision()
 __docformat__ = 'restructuredtext en'
+
+
+# Declare child imports last to prevent recursion
+from raven.base import *  # NOQA
+from raven.conf import *  # NOQA
+from raven.versioning import *  # NOQA

@@ -1,2 +1,0 @@
-pytest-django
--e .[dev,tests]

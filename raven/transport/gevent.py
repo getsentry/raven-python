@@ -26,15 +26,13 @@ class GeventedHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['gevent+http', 'gevent+https']
 
-    def __init__(self, parsed_url, maximum_outstanding_requests=100):
+    def __init__(self, parsed_url, maximum_outstanding_requests=100, *args, **kwargs):
         if not has_gevent:
             raise ImportError('GeventedHTTPTransport requires gevent.')
+
         self._lock = Semaphore(maximum_outstanding_requests)
 
-        super(GeventedHTTPTransport, self).__init__(parsed_url)
-
-        # remove the gevent+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
+        super(GeventedHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
 
     def async_send(self, data, headers, success_cb, failure_cb):
         """

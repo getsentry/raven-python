@@ -6,6 +6,7 @@ from raven.base import Client
 
 # Some internal stuff to extend the transport layer
 from raven.transport import Transport
+from raven.transport.exceptions import DuplicateScheme
 
 # Simplify comparing dicts with primitive values:
 from raven.utils import json
@@ -13,7 +14,6 @@ from raven.utils import json
 import datetime
 import calendar
 import pytz
-import base64
 import zlib
 
 
@@ -22,7 +22,6 @@ class DummyScheme(Transport):
     scheme = ['mock']
 
     def __init__(self, parsed_url, timeout=5):
-        self.check_scheme(parsed_url)
         self._parsed_url = parsed_url
         self.timeout = timeout
 
@@ -38,7 +37,7 @@ class TransportTest(TestCase):
     def setUp(self):
         try:
             Client.register_scheme('mock', DummyScheme)
-        except:
+        except DuplicateScheme:
             pass
 
     def test_basic_config(self):
@@ -46,7 +45,7 @@ class TransportTest(TestCase):
             dsn="mock://some_username:some_password@localhost:8143/1?timeout=1",
             name="test_server"
         )
-        assert c.transport_options == {
+        assert c.remote.options == {
             'timeout': '1',
         }
 
@@ -56,11 +55,10 @@ class TransportTest(TestCase):
         data = dict(a=42, b=55, c=list(range(50)))
         c.send(**data)
 
-        expected_message = zlib.decompress(base64.b64decode(c.encode(data)))
-        self.assertIn('mock://localhost:8143/api/1/store/', Client._registry._transports)
-        mock_cls = Client._registry._transports['mock://localhost:8143/api/1/store/']
+        mock_cls = c._transport_cache['mock://some_username:some_password@localhost:8143/1'].get_transport()
 
-        actual_message = zlib.decompress(base64.b64decode(mock_cls._data))
+        expected_message = zlib.decompress(c.encode(data))
+        actual_message = zlib.decompress(mock_cls._data)
 
         # These loads()/dumps() pairs order the dict keys before comparing the string.
         # See GH504
@@ -79,7 +77,11 @@ class TransportTest(TestCase):
         msg = c.build_msg('raven.events.Message', message='foo', date=d)
         expected = {
             'project': '1',
-            'sentry.interfaces.Message': {'message': 'foo', 'params': ()},
+            'sentry.interfaces.Message': {
+                'message': 'foo',
+                'params': (),
+                'formatted': None,
+            },
             'server_name': 'test_server',
             'level': 40,
             'tags': {},

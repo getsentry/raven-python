@@ -7,8 +7,72 @@ raven.middleware
 """
 from __future__ import absolute_import
 
+from contextlib import contextmanager
+
+from raven._compat import Iterator, next
 from raven.utils.wsgi import (
     get_current_url, get_headers, get_environ)
+
+
+@contextmanager
+def common_exception_handling(environ, client):
+    try:
+        yield
+    except (StopIteration, GeneratorExit):
+        # Make sure we do this explicitly here. At least GeneratorExit
+        # is handled implicitly by the rest of the logic but we want
+        # to make sure this does not regress
+        raise
+    except Exception:
+        client.handle_exception(environ)
+        raise
+    except KeyboardInterrupt:
+        client.handle_exception(environ)
+        raise
+    except SystemExit as e:
+        if e.code != 0:
+            client.handle_exception(environ)
+        raise
+
+
+class ClosingIterator(Iterator):
+    """
+    An iterator that is implements a ``close`` method as-per
+    WSGI recommendation.
+    """
+    def __init__(self, sentry, iterable, environ):
+        self.sentry = sentry
+        self.environ = environ
+        self._close = getattr(iterable, 'close', None)
+        self.iterable = iter(iterable)
+        self.closed = False
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            with common_exception_handling(self.environ, self.sentry):
+                return next(self.iterable)
+        except StopIteration:
+            # We auto close here if we reach the end because some WSGI
+            # middleware does not really like to close things.  To avoid
+            # massive leaks we just close automatically at the end of
+            # iteration.
+            self.close()
+            raise
+
+    def close(self):
+        if self.closed:
+            return
+        try:
+            if self._close is not None:
+                with common_exception_handling(self.environ, self.sentry):
+                    self._close()
+        finally:
+            self.sentry.client.context.clear()
+            self.sentry.client.transaction.clear()
+            self.closed = True
 
 
 class Sentry(object):
@@ -30,28 +94,9 @@ class Sentry(object):
         # TODO(dcramer): ideally this is lazy, but the context helpers must
         # support callbacks first
         self.client.http_context(self.get_http_context(environ))
-
-        try:
+        with common_exception_handling(environ, self):
             iterable = self.application(environ, start_response)
-        except Exception:
-            self.handle_exception(environ)
-            raise
-
-        try:
-            for event in iterable:
-                yield event
-        except Exception:
-            self.handle_exception(environ)
-            raise
-        finally:
-            # wsgi spec requires iterable to call close if it exists
-            # see http://blog.dscpl.com.au/2012/10/obligations-for-calling-close-on.html
-            if iterable and hasattr(iterable, 'close') and callable(iterable.close):
-                try:
-                    iterable.close()
-                except Exception:
-                    self.handle_exception(environ)
-            self.client.context.clear()
+        return ClosingIterator(self, iterable, environ)
 
     def get_http_context(self, environ):
         return {

@@ -8,12 +8,14 @@ raven.contrib.django.urls
 from __future__ import absolute_import
 
 try:
-    from django.conf.urls import patterns, url
+    from django.conf.urls import url
 except ImportError:
     # for Django version less than 1.4
-    from django.conf.urls.defaults import patterns, url  # NOQA
+    from django.conf.urls.defaults import url  # NOQA
 
-urlpatterns = patterns('',
-    url(r'^api/(?:(?P<project_id>[\w_-]+)/)?store/$', 'raven.contrib.django.views.report', name='raven-report'),
-    url(r'^report/', 'raven.contrib.django.views.report'),
+import raven.contrib.django.views
+
+urlpatterns = (
+    url(r'^api/(?P<project_id>[\w_-]+)/store/$', raven.contrib.django.views.report, name='raven-report'),
+    url(r'^report/', raven.contrib.django.views.report),
 )

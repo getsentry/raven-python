@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
 import uuid
+import six
 
-from raven.utils import six, json
+from raven.utils import json
 from raven.utils.testutils import TestCase
 from raven.utils.serializer import transform
 

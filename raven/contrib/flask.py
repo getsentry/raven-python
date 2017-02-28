@@ -15,40 +15,42 @@ except ImportError:
 else:
     has_flask_login = True
 
-import sys
-import os
 import logging
 
 from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
+from werkzeug.exceptions import ClientDisconnected
+
 from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
 from raven.utils.compat import _urlparse
+from raven.utils.encoding import to_unicode
 from raven.utils.wsgi import get_headers, get_environ
-from werkzeug.exceptions import ClientDisconnected
+from raven.utils.conf import convert_options
 
 
 def make_client(client_cls, app, dsn=None):
     return client_cls(
-        dsn=dsn or app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN'),
-        include_paths=set(app.config.get('SENTRY_INCLUDE_PATHS', [])) | set([app.import_name]),
-        exclude_paths=app.config.get('SENTRY_EXCLUDE_PATHS'),
-        servers=app.config.get('SENTRY_SERVERS'),
-        name=app.config.get('SENTRY_NAME'),
-        public_key=app.config.get('SENTRY_PUBLIC_KEY'),
-        secret_key=app.config.get('SENTRY_SECRET_KEY'),
-        project=app.config.get('SENTRY_PROJECT'),
-        site=app.config.get('SENTRY_SITE_NAME'),
-        processors=app.config.get('SENTRY_PROCESSORS'),
-        string_max_length=app.config.get('SENTRY_MAX_LENGTH_STRING'),
-        list_max_length=app.config.get('SENTRY_MAX_LENGTH_LIST'),
-        auto_log_stacks=app.config.get('SENTRY_AUTO_LOG_STACKS'),
-        tags=app.config.get('SENTRY_TAGS'),
-        extra={
-            'app': app,
-        },
+        **convert_options(
+            app.config,
+            defaults={
+                'dsn': dsn,
+                'include_paths': (
+                    set(app.config.get('SENTRY_INCLUDE_PATHS', []))
+                    | set([app.import_name])
+                ),
+                # support legacy RAVEN_IGNORE_EXCEPTIONS
+                'ignore_exceptions': [
+                    '{0}.{1}'.format(x.__module__, x.__name__)
+                    for x in app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
+                ],
+                'extra': {
+                    'app': app,
+                },
+            },
+        )
     )
 
 
@@ -94,10 +96,14 @@ class Sentry(object):
     # TODO(dcramer): the client isn't using local context and therefore
     # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
-                 logging=False, level=logging.NOTSET, wrap_wsgi=None,
-                 register_signal=True):
+                 logging=False, logging_exclusions=None, level=logging.NOTSET,
+                 wrap_wsgi=None, register_signal=True):
+        if client and not isinstance(client, Client):
+            raise TypeError('client should be an instance of Client')
+
         self.dsn = dsn
         self.logging = logging
+        self.logging_exclusions = logging_exclusions
         self.client_cls = client_cls
         self.client = client
         self.level = level
@@ -109,6 +115,10 @@ class Sentry(object):
 
     @property
     def last_event_id(self):
+        try:
+            return g.sentry_event_id
+        except Exception:
+            pass
         return getattr(self, '_last_event_id', None)
 
     @last_event_id.setter
@@ -123,17 +133,12 @@ class Sentry(object):
         if not self.client:
             return
 
-        ignored_exc_type_list = current_app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
-        exc = sys.exc_info()[1]
-
-        if any((isinstance(exc, ignored_exc_type) for ignored_exc_type in ignored_exc_type_list)):
-            return
-
         self.captureException(exc_info=kwargs.get('exc_info'))
 
     def get_user_info(self, request):
         """
-        Requires Flask-Login (https://pypi.python.org/pypi/Flask-Login/) to be installed
+        Requires Flask-Login (https://pypi.python.org/pypi/Flask-Login/)
+        to be installed
         and setup
         """
         if not has_flask_login:
@@ -143,60 +148,97 @@ class Sentry(object):
             return
 
         try:
-            is_authenticated = current_user.is_authenticated()
+            is_authenticated = current_user.is_authenticated
         except AttributeError:
             # HACK: catch the attribute error thrown by flask-login is not attached
             # >   current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
             # E   AttributeError: 'RequestContext' object has no attribute 'user'
             return {}
 
-        if is_authenticated:
-            user_info = {
-                'is_authenticated': True,
-                'is_anonymous': current_user.is_anonymous(),
-                'id': current_user.get_id(),
-            }
+        if callable(is_authenticated):
+            is_authenticated = is_authenticated()
 
-            if 'SENTRY_USER_ATTRS' in current_app.config:
-                for attr in current_app.config['SENTRY_USER_ATTRS']:
-                    if hasattr(current_user, attr):
-                        user_info[attr] = getattr(current_user, attr)
-        else:
-            user_info = {
-                'is_authenticated': False,
-                'is_anonymous': current_user.is_anonymous(),
-            }
+        if not is_authenticated:
+            return {}
+
+        user_info = {
+            'id': current_user.get_id(),
+        }
+
+        if 'SENTRY_USER_ATTRS' in current_app.config:
+            for attr in current_app.config['SENTRY_USER_ATTRS']:
+                if hasattr(current_user, attr):
+                    user_info[attr] = getattr(current_user, attr)
 
         return user_info
 
     def get_http_info(self, request):
+        """
+        Determine how to retrieve actual data by using request.mimetype.
+        """
+        if self.is_json_type(request.mimetype):
+            retriever = self.get_json_data
+        else:
+            retriever = self.get_form_data
+        return self.get_http_info_with_retriever(request, retriever)
+
+    def is_json_type(self, content_type):
+        return content_type == 'application/json'
+
+    def get_form_data(self, request):
+        return request.form
+
+    def get_json_data(self, request):
+        return request.data
+
+    def get_http_info_with_retriever(self, request, retriever=None):
+        """
+        Exact method for getting http_info but with form data work around.
+        """
+        if retriever is None:
+            retriever = self.get_form_data
+
         urlparts = _urlparse.urlsplit(request.url)
 
         try:
-            formdata = request.form
+            data = retriever(request)
         except ClientDisconnected:
-            formdata = {}
+            data = {}
 
         return {
             'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
             'query_string': urlparts.query,
             'method': request.method,
-            'data': formdata,
+            'data': data,
             'headers': dict(get_headers(request.environ)),
             'env': dict(get_environ(request.environ)),
         }
 
     def before_request(self, *args, **kwargs):
         self.last_event_id = None
-        self.client.http_context(self.get_http_info(request))
-        self.client.user_context(self.get_user_info(request))
+
+        if request.url_rule:
+            self.client.transaction.push(request.url_rule.rule)
+
+        try:
+            self.client.http_context(self.get_http_info(request))
+        except Exception as e:
+            self.client.logger.exception(to_unicode(e))
+        try:
+            self.client.user_context(self.get_user_info(request))
+        except Exception as e:
+            self.client.logger.exception(to_unicode(e))
 
     def after_request(self, sender, response, *args, **kwargs):
-        response.headers['X-Sentry-ID'] = self.last_event_id
+        if self.last_event_id:
+            response.headers['X-Sentry-ID'] = self.last_event_id
         self.client.context.clear()
+        if request.url_rule:
+            self.client.transaction.pop(request.url_rule.rule)
         return response
 
-    def init_app(self, app, dsn=None, logging=None, level=None, wrap_wsgi=None,
+    def init_app(self, app, dsn=None, logging=None, level=None,
+                 logging_exclusions=None, wrap_wsgi=None,
                  register_signal=None):
         if dsn is not None:
             self.dsn = dsn
@@ -206,7 +248,7 @@ class Sentry(object):
 
         if wrap_wsgi is not None:
             self.wrap_wsgi = wrap_wsgi
-        else:
+        elif self.wrap_wsgi is None:
             # Fix https://github.com/getsentry/raven-python/issues/412
             # the gist is that we get errors twice in debug mode if we don't do this
             if app and app.debug:
@@ -220,11 +262,18 @@ class Sentry(object):
         if logging is not None:
             self.logging = logging
 
+        if logging_exclusions is not None:
+            self.logging_exclusions = logging_exclusions
+
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)
 
         if self.logging:
-            setup_logging(SentryHandler(self.client, level=self.level))
+            kwargs = {}
+            if self.logging_exclusions is not None:
+                kwargs['exclude'] = self.logging_exclusions
+
+            setup_logging(SentryHandler(self.client, level=self.level), **kwargs)
 
         if self.wrap_wsgi:
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)

@@ -1,58 +1,55 @@
 language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.2"
-  - "3.3"
-  - "3.4"
-  - "pypy"
-env:
-  matrix:
-    - DJANGO=Django==1.4.20
-    - DJANGO=Django==1.5.12
-    - DJANGO=Django==1.6.11
-    - DJANGO=Django==1.7.7
-    - DJANGO=Django==1.8
-    - 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
-  global:
-    - 'PIP_DOWNLOAD_CACHE=".pip_download_cache"'
-    - 'WAD_FILES="package.json,Makefile,setup.py"'
-    - 'WAD_INSTALL_COMMAND=ci/setup'
-
-    # This should be specified with:
-    # travis encrypt S3_BUCKET_NAME=secretvalue S3_CREDENTIALS=accesskey:secretkey
-    # - S3_BUCKET_NAME=
-    # - S3_CREDENTIALS=
-    - secure: "QEFKt0HhaMlCW0FCLTz3NDY/P4UuVl1Pw8kSUVKKjbaKn2jZdaLKS68yl3Vyrd9AqrBfRNNLBAnvpZjYL6EwqqnZzpRH3KnAf0WRxE6d5ytrUkwZtOnQaN0Tumuqc3xnoXXalPXvs+abhXZpjfOzx0oPBa2WbtMF/RJZ/bwsTKE="
-before_install:
-  # Use closer nameservers
-  - printf "nameserver 199.91.168.70\nnameserver 199.91.168.71\n" | sudo tee /etc/resolv.conf
-
-  # These need to be here and not in the env hash because they need to be
-  # evaluated after the virtualenv has been setup
-  - mkdir -p $PIP_DOWNLOAD_CACHE
-  - 'export WAD_ENVIRONMENT_VARIABLES="TRAVIS_PYTHON_VERSION,TRAVIS_NODE_VERSION,WAD_CACHE_PATH"'
-  - 'export WAD_CACHE_PATH="node_modules,$PIP_DOWNLOAD_CACHE,$VIRTUAL_ENV"'
+sudo: false
+addons:
+  apt:
+    packages:
+      - libevent-dev
+cache:
+  directories:
+    - "$HOME/.cache/pip"
+#deploy:
+#  provider: pypi
+#  user: getsentry
+#  password:
+#    secure: NMwOI1H9arp2vbgaidx9OY6y8990hiu0WsHtowEvEdGKXNzAQcy0sW3SoKcB6FN0bk11xhj49+5C++KAwMYwE/SL8Y5OoZ1/iYVI4/XlWNukr+1/pfPKVMgw3v5W+pL5Ba9TBdFfIoFPNYUDPLItSSjg94Bm95034gBkYWC5Hl0=
+#  on:
+#    tags: true
 install:
-  - time ci/wad
+  - time ci/setup
+  - pip install codecov "coverage<4"
+before_script:
+  - pip freeze
 script:
-  - "if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi"
-  - py.test tests/ --cov raven --cov-report term-missing
+  - if [[ ${TRAVIS_PYTHON_VERSION} != 'pypy' ]]; then make lint; fi
+  - time ci/test
+after_success:
+  - codecov -e DJANGO
 matrix:
+  fast_finish: true
   allow_failures:
-    - env: 'DJANGO="-e git+git://github.com/django/django.git#egg=Django"'
-  exclude:
-    - python: "3.2"
-      env: DJANGO=Django==1.4.20
-    - python: "3.3"
-      env: DJANGO=Django==1.4.20
-    - python: "3.4"
-      env: DJANGO=Django==1.4.20
-    - python: "2.6"
-      env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
-    - python: "3.2"
-      env: DJANGO="-e git+git://github.com/django/django.git#egg=Django"
-    - python: "2.6"
-      env: DJANGO=Django==1.8
-    - python: "2.6"
-      env: DJANGO=Django==1.7.7
+    - python: 3.5
+      env: DJANGO=dev TEST_SUITE=django
+  include:
+    - python: 2.7
+      env: FLASK=0.10.1 TEST_SUITE=flask
+    - python: 2.7
+      env: FLASK=0.11.1 TEST_SUITE=flask
+    - python: 2.7
+      env: DJANGO=1.6.11 TEST_SUITE=django
+    - python: 2.7
+      env: DJANGO=1.8.7 TEST_SUITE=django
+    - python: 2.7
+      env: DJANGO=1.9 TEST_SUITE=django
+    - python: 2.7
+      env: DJANGO=1.10 TEST_SUITE=django
+    - python: 3.5
+      env: DJANGO=1.10 TEST_SUITE=django
+    - python: 3.5
+      env: DJANGO=dev TEST_SUITE=django
+    - python: 2.7
+      env: CELERY=3.1 TEST_SUITE=celery
+    - python: 2.7
+      env: CELERY=4.0 TEST_SUITE=celery
+    - python: 3.3
+    - python: 3.4
+    - python: 3.5

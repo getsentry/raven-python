@@ -3,10 +3,16 @@ from __future__ import absolute_import
 import mock
 
 from raven.base import Client
-from raven.utils.testutils import TestCase
+from tornado import gen, testing, httpclient
 
 
-class TornadoTransportTests(TestCase):
+class TornadoTransportTests(testing.AsyncTestCase):
+
+    def get_new_ioloop(self):
+        io_loop = super(TornadoTransportTests, self).get_new_ioloop()
+        io_loop.make_current()
+        return io_loop
+
     @mock.patch("raven.transport.tornado.HTTPClient")
     def test_send(self, fake_client):
         url = "https://user:pass@host:1234/1"
@@ -34,3 +40,24 @@ class TornadoTransportTests(TestCase):
         self.assertEqual(kwargs["connect_timeout"], timeout)
         self.assertEqual(kwargs["validate_cert"], bool(verify_ssl))
         self.assertEqual(kwargs["ca_certs"], ca_certs)
+
+    @testing.gen_test
+    def test__sending_with_error_calls_error_callback(self):
+        c = Client(dsn='tornado+http://uver:pass@localhost:46754/1')
+
+        with mock.patch.object(Client, '_failed_send') as mock_failed:
+            c.captureMessage(message='test')
+            yield gen.sleep(0.01)  # we need to run after the async send
+
+            assert mock_failed.called
+
+    @testing.gen_test
+    def test__sending_successfully_calls_success_callback(self):
+        c = Client(dsn='tornado+http://uver:pass@localhost:46754/1')
+        with mock.patch.object(Client, '_successful_send') as mock_successful:
+            with mock.patch.object(httpclient.AsyncHTTPClient, 'fetch') as mock_fetch:
+                mock_fetch.return_value = gen.maybe_future(True)
+                c.captureMessage(message='test')
+                yield gen.sleep(0.01)  # we need to run after the async send
+
+                assert mock_successful.called

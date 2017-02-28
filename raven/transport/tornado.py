@@ -7,6 +7,9 @@ raven.transport.tornado
 """
 from __future__ import absolute_import
 
+from functools import partial
+
+from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
 
 try:
@@ -17,20 +20,17 @@ except:
     has_tornado = False
 
 
-class TornadoHTTPTransport(HTTPTransport):
+class TornadoHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['tornado+http', 'tornado+https']
 
-    def __init__(self, parsed_url, **kwargs):
+    def __init__(self, parsed_url, *args, **kwargs):
         if not has_tornado:
             raise ImportError('TornadoHTTPTransport requires tornado.')
 
-        super(TornadoHTTPTransport, self).__init__(parsed_url, **kwargs)
+        super(TornadoHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
 
-        # remove the tornado+ from the protocol, as it is not a real protocol
-        self._url = self._url.split('+', 1)[-1]
-
-    def send(self, data, headers):
+    def async_send(self, data, headers, success_cb, failure_cb):
         kwargs = dict(method='POST', headers=headers, body=data)
         kwargs["validate_cert"] = self.verify_ssl
         kwargs["connect_timeout"] = self.timeout
@@ -40,7 +40,21 @@ class TornadoHTTPTransport(HTTPTransport):
         if ioloop.IOLoop.initialized():
             client = AsyncHTTPClient()
             kwargs['callback'] = None
+
+            future = client.fetch(self._url, **kwargs)
+            ioloop.IOLoop.current().add_future(future, partial(self.handler, success_cb, failure_cb))
         else:
             client = HTTPClient()
+            try:
+                client.fetch(self._url, **kwargs)
+                success_cb()
+            except Exception as e:
+                failure_cb(e)
 
-        client.fetch(self._url, **kwargs)
+    @staticmethod
+    def handler(success, error, future):
+        try:
+            future.result()
+            success()
+        except Exception as e:
+            error(e)

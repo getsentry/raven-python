@@ -1,6 +1,6 @@
 from exam import fixture
 
-from webtest import TestApp
+from webtest import TestApp as WebtestApp  # prevent pytest-warning
 
 import bottle
 
@@ -10,9 +10,9 @@ from raven.utils.testutils import TestCase
 
 
 class TempStoreClient(Client):
-    def __init__(self, servers=None, **kwargs):
+    def __init__(self, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(servers=servers, **kwargs)
+        super(TempStoreClient, self).__init__(**kwargs)
 
     def is_enabled(self):
         return True
@@ -25,7 +25,7 @@ def create_app(raven):
     app = bottle.app()
     app.catchall = False
     app = Sentry(app, client=raven)
-    tapp = TestApp(app)
+    tapp = WebtestApp(app)
 
     @bottle.route('/error/', ['GET', 'POST'])
     def an_error():
@@ -66,7 +66,7 @@ class BottleTest(BaseTest):
         event = self.raven.events.pop(0)
         assert 'exception' in event
 
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEquals(exc['type'], 'ValueError')
 
     def test_captureException_captures_http(self):

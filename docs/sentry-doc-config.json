@@ -1,0 +1,93 @@
+{
+  "support_level": "production",
+  "platforms": {
+    "python": {
+      "name": "Python",
+      "type": "language",
+      "doc_link": "",
+      "wizard": [
+        "index#installation",
+        "usage#capture-an-error",
+        "usage#reporting-an-event"
+      ]
+    },
+    "python.flask": {
+      "name": "Flask",
+      "type": "framework",
+      "doc_link": "integrations/flask/",
+      "wizard": [
+        "index#installation",
+        "integrations/flask#installation",
+        "integrations/flask#setup"
+      ]
+    },
+    "python.bottle": {
+      "name": "Bottle",
+      "type": "framework",
+      "doc_link": "integrations/bottle/",
+      "wizard": [
+        "index#installation",
+        "integrations/bottle#setup",
+        "integrations/bottle#usage"
+      ]
+    },
+    "python.celery": {
+      "name": "Celery",
+      "type": "library",
+      "doc_link": "integrations/celery/",
+      "wizard": [
+        "index#installation",
+        "integrations/celery"
+      ]
+    },
+    "python.django": {
+      "name": "Django",
+      "type": "framework",
+      "doc_link": "integrations/django/",
+      "wizard": [
+        "index#installation",
+        "integrations/django#setup"
+      ]
+    },
+    "python.pylons": {
+      "name": "Pylons",
+      "type": "framework",
+      "doc_link": "integrations/pylons/",
+      "wizard": [
+        "index#installation",
+        "integrations/pylons#wsgi-middleware",
+        "integrations/pylons#logger-setup"
+      ]
+    },
+    "python.pyramid": {
+      "name": "Pyramid",
+      "type": "framework",
+      "doc_link": "integrations/pyramid/",
+      "wizard": [
+        "index#installation",
+        "integrations/pyramid#pastedeploy-filter",
+        "integrations/pyramid#logger-setup"
+      ]
+    },
+    "python.rq": {
+      "name": "RQ",
+      "type": "framework",
+      "doc_link": "integrations/rq/",
+      "wizard": [
+        "index#installation",
+        "integrations/rq#usage",
+        "integrations/rq#extended-setup"
+      ]
+    },
+    "python.tornado": {
+      "name": "Tornado",
+      "type": "framework",
+      "doc_link": "integrations/tornado/",
+      "wizard": [
+        "index#installation",
+        "integrations/tornado#setup",
+        "integrations/tornado#usage"
+      ]
+    }
+  }
+}

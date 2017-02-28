@@ -8,7 +8,6 @@ raven.base
 
 from __future__ import absolute_import
 
-import base64
 import zlib
 import logging
 import os
@@ -18,27 +17,54 @@ import uuid
 import warnings
 
 from datetime import datetime
-from functools import wraps
-from pprint import pformat
 from types import FunctionType
+
+if sys.version_info >= (3, 2):
+    import contextlib
+else:
+    import contextlib2 as contextlib
+
+try:
+    from thread import get_ident as get_thread_ident
+except ImportError:
+    from _thread import get_ident as get_thread_ident
 
 import raven
 from raven.conf import defaults
-from raven.context import Context
+from raven.conf.remote import RemoteConfig
 from raven.exceptions import APIError, RateLimited
-from raven.utils import six, json, get_versions, get_auth_header, merge_dicts
+from raven.utils import json, get_versions, get_auth_header, merge_dicts
+from raven._compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
-from raven.utils.stacks import get_stack_info, iter_stack_frames, get_culprit
-from raven.utils.urlparse import urlparse
+from raven.utils.stacks import get_stack_info, iter_stack_frames
+from raven.utils.transaction import TransactionStack
 from raven.transport.registry import TransportRegistry, default_transports
+
+# enforce imports to avoid obscure stacktraces with MemoryError
+import raven.events  # NOQA
+
 
 __all__ = ('Client',)
 
+__excepthook__ = None
+
 PLATFORM_NAME = 'python'
+
+SDK_VALUE = {
+    'name': 'raven-python',
+    'version': raven.VERSION,
+}
 
 # singleton for the client
 Raven = None
+
+
+def get_excepthook_client():
+    hook = sys.excepthook
+    client = getattr(hook, 'raven_client', None)
+    if client is not None:
+        return client
 
 
 class ModuleProxyCache(dict):
@@ -117,12 +143,12 @@ class Client(object):
 
     _registry = TransportRegistry(transports=default_transports)
 
-    def __init__(self, dsn=None, raise_send_errors=False, **options):
+    def __init__(self, dsn=None, raise_send_errors=False, transport=None,
+                 install_sys_hook=True, install_logging_hook=True,
+                 hook_libraries=None, enable_breadcrumbs=True, **options):
         global Raven
 
         o = options
-
-        self.configure_logging()
 
         self.raise_send_errors = raise_send_errors
 
@@ -134,12 +160,12 @@ class Client(object):
         self.error_logger = logging.getLogger('sentry.errors')
         self.uncaught_logger = logging.getLogger('sentry.errors.uncaught')
 
-        self.dsns = {}
-        self.set_dsn(dsn, **options)
+        self._transport_cache = {}
+        self.set_dsn(dsn, transport)
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
-        self.name = six.text_type(o.get('name') or defaults.NAME)
+        self.name = text_type(o.get('name') or o.get('machine') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
         self.capture_locals = bool(
@@ -148,7 +174,7 @@ class Client(object):
             o.get('string_max_length') or defaults.MAX_LENGTH_STRING)
         self.list_max_length = int(
             o.get('list_max_length') or defaults.MAX_LENGTH_LIST)
-        self.site = o.get('site', defaults.SITE)
+        self.site = o.get('site')
         self.include_versions = o.get('include_versions', True)
         self.processors = o.get('processors')
         if self.processors is None:
@@ -159,11 +185,14 @@ class Client(object):
             context = {'sys.argv': sys.argv[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
-        self.release = o.get('release')
+        self.environment = o.get('environment') or None
+        self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
+        self.transaction = TransactionStack()
+
+        self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
 
         self.module_cache = ModuleProxyCache()
 
-        # servers may be set to a NoneType (for Django)
         if not self.is_enabled():
             self.logger.info(
                 'Raven is not configured (logging is disabled). Please see the'
@@ -172,56 +201,67 @@ class Client(object):
         if Raven is None:
             Raven = self
 
-        self._context = Context()
+        # We want to remember the creating thread id here because this
+        # comes in useful for the context special handling
+        self.main_thread_id = get_thread_ident()
+        self.enable_breadcrumbs = enable_breadcrumbs
 
-    def set_dsn(self, dsn=None, **options):
-        o = options
+        from raven.context import Context
+        self._context = Context(self)
 
-        if dsn is None and os.environ.get('SENTRY_DSN'):
+        if install_sys_hook:
+            self.install_sys_hook()
+
+        if install_logging_hook:
+            self.install_logging_hook()
+
+        self.hook_libraries(hook_libraries)
+
+    def set_dsn(self, dsn=None, transport=None):
+        if not dsn and os.environ.get('SENTRY_DSN'):
             msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
             self.logger.debug(msg)
             dsn = os.environ['SENTRY_DSN']
 
-        try:
-            servers, public_key, secret_key, project, transport_options = self.dsns[dsn]
-        except KeyError:
-            if dsn:
-                # TODO: should we validate other options weren't sent?
-                urlparts = urlparse(dsn)
-                self.logger.debug(
-                    "Configuring Raven for host: %s://%s:%s" % (urlparts.scheme,
-                    urlparts.netloc, urlparts.path))
-                dsn_config = raven.load(dsn, transport_registry=self._registry)
-                servers = dsn_config['SENTRY_SERVERS']
-                project = dsn_config['SENTRY_PROJECT']
-                public_key = dsn_config['SENTRY_PUBLIC_KEY']
-                secret_key = dsn_config['SENTRY_SECRET_KEY']
-                transport_options = dsn_config.get('SENTRY_TRANSPORT_OPTIONS', {})
+        if dsn not in self._transport_cache:
+            if not dsn:
+                result = RemoteConfig(transport=transport)
             else:
-                servers = ()
-                project = None
-                public_key = None
-                secret_key = None
-                transport_options = {}
-            self.dsns[dsn] = servers, public_key, secret_key, project, transport_options
+                result = RemoteConfig.from_string(
+                    dsn,
+                    transport=transport,
+                    transport_registry=self._registry,
+                )
+            self._transport_cache[dsn] = result
+            self.remote = result
+        else:
+            self.remote = self._transport_cache[dsn]
 
-        self.servers = servers
-        self.public_key = public_key
-        self.secret_key = secret_key
-        self.project = project or defaults.PROJECT
-        self.transport_options = transport_options
+        self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+
+    def install_sys_hook(self):
+        global __excepthook__
+
+        if __excepthook__ is None:
+            __excepthook__ = sys.excepthook
+
+        def handle_exception(*exc_info):
+            self.captureException(exc_info=exc_info, level='fatal')
+            __excepthook__(*exc_info)
+        handle_exception.raven_client = self
+        sys.excepthook = handle_exception
+
+    def install_logging_hook(self):
+        from raven.breadcrumbs import install_logging_hook
+        install_logging_hook()
+
+    def hook_libraries(self, libraries):
+        from raven.breadcrumbs import hook_libraries
+        hook_libraries(libraries)
 
     @classmethod
     def register_scheme(cls, scheme, transport_class):
         cls._registry.register_scheme(scheme, transport_class)
-
-    def configure_logging(self):
-        for name in ('raven', 'sentry'):
-            logger = logging.getLogger(name)
-            if logger.handlers:
-                continue
-            logger.addHandler(logging.StreamHandler())
-            logger.setLevel(logging.INFO)
 
     def get_processors(self):
         for processor in self.processors:
@@ -247,18 +287,13 @@ class Client(object):
         >>> result = client.capture(**kwargs)
         >>> ident = client.get_ident(result)
         """
-        return '$'.join(result)
+        warnings.warn('Client.get_ident is deprecated. The event ID is now '
+                      'returned as the result of capture.',
+                      DeprecationWarning)
+        return result
 
     def get_handler(self, name):
         return self.module_cache[name](self)
-
-    def _get_public_dsn(self):
-        url = urlparse(self.servers[0])
-        netloc = url.hostname
-        if url.port:
-            netloc += ':%s' % url.port
-        path = url.path.replace('api/%s/store/' % (self.project,), self.project)
-        return '//%s@%s%s' % (self.public_key, netloc, path)
 
     def get_public_dsn(self, scheme=None):
         """
@@ -272,14 +307,40 @@ class Client(object):
         """
         if not self.is_enabled():
             return
-        url = self._get_public_dsn()
+        url = self.remote.get_public_dsn()
         if not scheme:
             return url
         return '%s:%s' % (scheme, url)
 
+    def _get_exception_key(self, exc_info):
+        # On certain celery versions the tb_frame attribute might
+        # not exist or be `None`.
+        code_id = 0
+        last_id = 0
+        try:
+            code_id = id(exc_info[2] and exc_info[2].tb_frame.f_code)
+            last_id = exc_info[2] and exc_info[2].tb_lasti or 0
+        except (AttributeError, IndexError):
+            pass
+        return (
+            exc_info[0],
+            id(exc_info[1]),
+            code_id,
+            id(exc_info[2]),
+            last_id,
+        )
+
+    def skip_error_for_logging(self, exc_info):
+        key = self._get_exception_key(exc_info)
+        return key in self.context.exceptions_to_skip
+
+    def record_exception_seen(self, exc_info):
+        key = self._get_exception_key(exc_info)
+        self.context.exceptions_to_skip.add(key)
+
     def build_msg(self, event_type, data=None, date=None,
                   time_spent=None, extra=None, stack=None, public_key=None,
-                  tags=None, **kwargs):
+                  tags=None, fingerprint=None, **kwargs):
         """
         Captures, processes and serializes an event into a dict object
 
@@ -307,7 +368,7 @@ class Client(object):
         if data.get('culprit'):
             culprit = data['culprit']
 
-        for k, v in six.iteritems(result):
+        for k, v in iteritems(result):
             if k not in data:
                 data[k] = v
 
@@ -333,8 +394,8 @@ class Client(object):
                 'stacktrace': stack_info,
             })
 
-        if 'stacktrace' in data and self.include_paths:
-            for frame in data['stacktrace']['frames']:
+        if self.include_paths:
+            for frame in self._iter_frames(data):
                 if frame.get('in_app') is not None:
                     continue
 
@@ -351,12 +412,7 @@ class Client(object):
                     )
 
         if not culprit:
-            if 'stacktrace' in data:
-                culprit = get_culprit(data['stacktrace']['frames'])
-            elif 'exception' in data:
-                stacktrace = data['exception']['values'][0].get('stacktrace')
-                if stacktrace:
-                    culprit = get_culprit(stacktrace['frames'])
+            culprit = self.transaction.peek()
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
@@ -370,6 +426,9 @@ class Client(object):
         if self.release is not None:
             data['release'] = self.release
 
+        if self.environment is not None:
+            data['environment'] = self.environment
+
         data['tags'] = merge_dicts(self.tags, data['tags'], tags)
         data['extra'] = merge_dicts(self.extra, data['extra'], extra)
 
@@ -381,6 +440,9 @@ class Client(object):
         if culprit:
             data['culprit'] = culprit
 
+        if fingerprint:
+            data['fingerprint'] = fingerprint
+
         # Run the data through processors
         for processor in self.get_processors():
             data.update(processor.process(data))
@@ -389,19 +451,30 @@ class Client(object):
             data['message'] = kwargs.get('message', handler.to_string(data))
 
         # tags should only be key=>u'value'
-        for key, value in six.iteritems(data['tags']):
+        for key, value in iteritems(data['tags']):
             data['tags'][key] = to_unicode(value)
 
         # extra data can be any arbitrary value
-        for k, v in six.iteritems(data['extra']):
+        for k, v in iteritems(data['extra']):
             data['extra'][k] = self.transform(v)
 
         # It's important date is added **after** we serialize
-        data.setdefault('project', self.project)
+        data.setdefault('project', self.remote.project)
         data.setdefault('timestamp', date or datetime.utcnow())
         data.setdefault('time_spent', time_spent)
         data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
+        data.setdefault('sdk', SDK_VALUE)
+
+        # insert breadcrumbs
+        if self.enable_breadcrumbs:
+            crumbs = self.context.breadcrumbs.get_buffer()
+            if crumbs:
+                # Make sure we send the crumbs here as "values" as we use the
+                # raven client internally in sentry and the alternative
+                # submission option of a list here is not supported by the
+                # internal sender.
+                data.setdefault('breadcrumbs', {'values': crumbs})
 
         return data
 
@@ -512,12 +585,23 @@ class Client(object):
                            event (in milliseconds)
         :param extra: a dictionary of additional standard metadata
         :param stack: a stacktrace for the event
-        :param tags: list of extra tags
+        :param tags: dict of extra tags
         :return: a tuple with a 32-length string identifying this event
         """
 
         if not self.is_enabled():
             return
+
+        exc_info = kwargs.get('exc_info')
+        if exc_info is not None:
+            if self.skip_error_for_logging(exc_info):
+                return
+            elif not self.should_capture(exc_info):
+                self.logger.info(
+                    'Not capturing exception due to filters: %s', exc_info[0],
+                    exc_info=sys.exc_info())
+                return
+            self.record_exception_seen(exc_info)
 
         data = self.build_msg(
             event_type, data, date, time_spent, extra, stack, tags=tags,
@@ -525,14 +609,22 @@ class Client(object):
 
         self.send(**data)
 
-        return (data.get('event_id'),)
+        return data['event_id']
 
     def is_enabled(self):
         """
         Return a boolean describing whether the client should attempt to send
         events.
         """
-        return bool(self.servers)
+        return self.remote.is_active()
+
+    def _iter_frames(self, data):
+        if 'stacktrace' in data:
+            for frame in data['stacktrace']['frames']:
+                yield frame
+        if 'exception' in data:
+            for frame in data['exception']['values'][-1]['stacktrace']['frames']:
+                yield frame
 
     def _successful_send(self):
         self.state.set_success()
@@ -543,12 +635,14 @@ class Client(object):
             if isinstance(exc, RateLimited):
                 retry_after = exc.retry_after
             self.error_logger.error(
-                'Sentry responed with an API error: %s(%s)', type(exc).__name__, exc.message)
+                'Sentry responded with an API error: %s(%s)',
+                type(exc).__name__, exc.message)
         else:
             self.error_logger.error(
-                'Sentry responded with an error: %s (url: %s)\n%s',
-                exc, url, pformat(data),
-                exc_info=True
+                'Sentry responded with an error: %s (url: %s)',
+                exc, url,
+                exc_info=True,
+                extra={'data': data}
             )
 
         self._log_failed_submission(data)
@@ -561,13 +655,13 @@ class Client(object):
         """
         message = data.pop('message', '<no message value>')
         output = [message]
-        if 'exception' in data and 'stacktrace' in data['exception']['values'][0]:
+        if 'exception' in data and 'stacktrace' in data['exception']['values'][-1]:
             # try to reconstruct a reasonable version of the exception
-            for frame in data['exception']['values'][0]['stacktrace']['frames']:
-                output.append('  File "%(filename)s", line %(lineno)s, in %(function)s' % {
-                    'filename': frame['filename'],
-                    'lineno': frame['lineno'],
-                    'function': frame['function'],
+            for frame in data['exception']['values'][-1]['stacktrace']['frames']:
+                output.append('  File "%(fn)s", line %(lineno)s, in %(func)s' % {
+                    'fn': frame.get('filename', 'unknown_filename'),
+                    'lineno': frame.get('lineno', -1),
+                    'func': frame.get('function', 'unknown_function'),
                 })
 
         self.uncaught_logger.error(output)
@@ -590,9 +684,7 @@ class Client(object):
             self._failed_send(e, url, self.decode(data))
 
         try:
-            parsed = urlparse(url)
-            transport = self._registry.get_transport(
-                parsed, **self.transport_options)
+            transport = self.remote.get_transport()
             if transport.async:
                 transport.async_send(data, headers, self._successful_send,
                                      failed_send)
@@ -615,8 +707,7 @@ class Client(object):
     def send_encoded(self, message, auth_header=None, **kwargs):
         """
         Given an already serialized message, signs the message and passes the
-        payload off to ``send_remote`` for each server specified in the servers
-        configuration.
+        payload off to ``send_remote``.
         """
         client_string = 'raven-python/%s' % (raven.VERSION,)
 
@@ -626,30 +717,38 @@ class Client(object):
                 protocol=self.protocol_version,
                 timestamp=timestamp,
                 client=client_string,
-                api_key=self.public_key,
-                api_secret=self.secret_key,
+                api_key=self.remote.public_key,
+                api_secret=self.remote.secret_key,
             )
 
-        for url in self.servers:
-            headers = {
-                'User-Agent': client_string,
-                'X-Sentry-Auth': auth_header,
-                'Content-Type': 'application/octet-stream',
-            }
+        headers = {
+            'User-Agent': client_string,
+            'X-Sentry-Auth': auth_header,
+            'Content-Encoding': self.get_content_encoding(),
+            'Content-Type': 'application/octet-stream',
+        }
 
-            self.send_remote(url=url, data=message, headers=headers)
+        return self.send_remote(
+            url=self.remote.store_endpoint,
+            data=message,
+            headers=headers,
+            **kwargs
+        )
+
+    def get_content_encoding(self):
+        return 'deflate'
 
     def encode(self, data):
         """
         Serializes ``data`` into a raw string.
         """
-        return base64.b64encode(zlib.compress(json.dumps(data).encode('utf8')))
+        return zlib.compress(json.dumps(data).encode('utf8'))
 
     def decode(self, data):
         """
         Unserializes a string, ``data``.
         """
-        return json.loads(zlib.decompress(base64.b64decode(data)).decode('utf8'))
+        return json.loads(zlib.decompress(data).decode('utf8'))
 
     def captureMessage(self, message, **kwargs):
         """
@@ -675,13 +774,30 @@ class Client(object):
 
         ``kwargs`` are passed through to ``.capture``.
         """
+        if exc_info is None or exc_info is True:
+            exc_info = sys.exc_info()
+
         return self.capture(
             'raven.events.Exception', exc_info=exc_info, **kwargs)
 
-    def capture_exceptions(self, function_or_exceptions, **kwargs):
+    def should_capture(self, exc_info):
+        exc_type = exc_info[0]
+        exc_name = '%s.%s' % (exc_type.__module__, exc_type.__name__)
+        exclusions = self.ignore_exceptions
+
+        if exc_type.__name__ in exclusions:
+            return False
+        elif exc_name in exclusions:
+            return False
+        elif any(exc_name.startswith(e[:-1]) for e in exclusions if e.endswith('*')):
+            return False
+        return True
+
+    def capture_exceptions(self, function_or_exceptions=None, **kwargs):
         """
-        Wrap a function in try/except and automatically call ``.captureException``
-        if it raises an exception, then the exception is reraised.
+        Wrap a function or code block in try/except and automatically call
+        ``.captureException`` if it raises an exception, then the exception
+        is reraised.
 
         By default, it will capture ``Exception``
 
@@ -689,28 +805,41 @@ class Client(object):
         >>> def foo():
         >>>     raise Exception()
 
+        >>> with client.capture_exceptions():
+        >>>    raise Exception()
+
         You can also specify exceptions to be caught specifically
 
         >>> @client.capture_exceptions((IOError, LookupError))
         >>> def bar():
         >>>     ...
 
+        >>> with client.capture_exceptions((IOError, LookupError)):
+        >>>    ...
+
         ``kwargs`` are passed through to ``.captureException``.
         """
-        def make_decorator(exceptions):
-            def decorator(func):
-                @wraps(func)
-                def wrapper(*funcargs, **funckwargs):
-                    try:
-                        return func(*funcargs, **funckwargs)
-                    except exceptions:
-                        self.captureException(**kwargs)
-                        raise
-                return wrapper
-            return decorator
+        function = None
+        exceptions = (Exception,)
         if isinstance(function_or_exceptions, FunctionType):
-            return make_decorator((Exception,))(function_or_exceptions)
-        return make_decorator(function_or_exceptions)
+            function = function_or_exceptions
+        elif function_or_exceptions is not None:
+            exceptions = function_or_exceptions
+
+        # In python3.2 contextmanager acts both as contextmanager and decorator
+        @contextlib.contextmanager
+        def make_decorator(exceptions):
+            try:
+                yield
+            except exceptions:
+                self.captureException(**kwargs)
+                raise
+
+        decorator = make_decorator(exceptions)
+
+        if function:
+            return decorator(function)
+        return decorator
 
     def captureQuery(self, query, params=(), engine=None, **kwargs):
         """
@@ -727,6 +856,17 @@ class Client(object):
             'captureExceptions is deprecated, used context() instead.',
             DeprecationWarning)
         return self.context(**kwargs)
+
+    def captureBreadcrumb(self, *args, **kwargs):
+        """Records a breadcrumb with the current context.  They will be
+        sent with the next event.
+        """
+        # Note: framework integration should not call this method but
+        # instead use the raven.breadcrumbs.record_breadcrumb function
+        # which will record to the correct client automatically.
+        self.context.breadcrumbs.record(*args, **kwargs)
+
+    capture_breadcrumb = captureBreadcrumb
 
 
 class DummyClient(Client):

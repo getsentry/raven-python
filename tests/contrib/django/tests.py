@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import with_statement
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, with_statement
 
 import datetime
 import django
@@ -10,8 +8,8 @@ import logging
 import mock
 import pytest
 import re
-import sys  # NOQA
-from exam import fixture
+import six
+import sys
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -23,25 +21,30 @@ from django.http import QueryDict
 from django.template import TemplateSyntaxError
 from django.test import TestCase
 from django.utils.translation import gettext_lazy
+from exam import fixture
+from six import StringIO
 
 from raven.base import Client
 from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
-from raven.contrib.django.models import client, get_client, sentry_exception_handler
+from raven.contrib.django.models import (
+    SentryDjangoHandler, client, get_client
+)
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
+from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
-from raven.utils import six
-from raven.utils.six import StringIO
 
-from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
-from .models import TestModel
+from django.test.client import Client as DjangoTestClient, ClientHandler as DjangoTestClientHandler
+from .models import MyTestModel
 
 settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
+DJANGO_18 = django.VERSION >= (1, 8, 0)
+DJANGO_110 = django.VERSION >= (1, 10, 0)
 
 
 def make_request():
@@ -55,7 +58,7 @@ def make_request():
     })
 
 
-class MockClientHandler(TestClientHandler):
+class MockClientHandler(DjangoTestClientHandler):
     def __call__(self, environ, start_response=[]):
         # this pretends doesn't require start_response
         return super(MockClientHandler, self).__call__(environ)
@@ -127,6 +130,9 @@ class DjangoClientTest(TestCase):
 
     def setUp(self):
         self.raven = get_client()
+        self.handler = SentryDjangoHandler(self.raven)
+        self.handler.install()
+        self.addCleanup(self.handler.uninstall)
 
     def test_basic(self):
         self.raven.captureMessage(message='foo')
@@ -150,25 +156,24 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         assert exc['type'] == 'TypeError'
         assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
         assert event['level'] == logging.ERROR
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
-        assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
+    @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
         self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         assert exc['type'] == 'Exception'
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
         assert event['message'] == 'Exception: view exception'
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
     def test_user_info(self):
         with Settings(MIDDLEWARE_CLASSES=[
@@ -193,13 +198,12 @@ class DjangoClientTest(TestCase):
             assert 'user' in event
             user_info = event['user']
             assert user_info == {
-                'is_authenticated': True,
                 'username': user.username,
                 'id': user.id,
                 'email': user.email,
             }
 
-    @pytest.mark.skipif(str('not DJANGO_15'))
+    @pytest.mark.skipif(not DJANGO_15, reason='< Django 1.5')
     def test_get_user_info_abstract_user(self):
         from django.db import models
         from django.contrib.auth.models import AbstractBaseUser
@@ -217,7 +221,32 @@ class DjangoClientTest(TestCase):
         )
         user_info = self.raven.get_user_info(user)
         assert user_info == {
-            'is_authenticated': True,
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
+
+    @pytest.mark.skipif(not DJANGO_110, reason='< Django 1.10')
+    def test_get_user_info_is_authenticated_property(self):
+        from django.db import models
+        from django.contrib.auth.models import AbstractBaseUser
+
+        class MyUser(AbstractBaseUser):
+            USERNAME_FIELD = 'username'
+            username = models.CharField(max_length=32)
+            email = models.EmailField()
+
+            @property
+            def is_authenticated(self):
+                return True
+
+        user = MyUser(
+            username='admin',
+            email='admin@example.com',
+            id=1,
+        )
+        user_info = self.raven.get_user_info(user)
+        assert user_info == {
             'username': user.username,
             'id': user.id,
             'email': user.email,
@@ -231,12 +260,11 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'request'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: request'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_request'
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -248,16 +276,15 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'response'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: response'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_response'
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
-            client = TestClient(REMOTE_ADDR='127.0.0.1')
+            client = DjangoTestClient(REMOTE_ADDR='127.0.0.1')
             client.handler = MockSentryMiddleware(MockClientHandler())
 
             self.assertRaises(Exception, client.get, reverse('sentry-raise-exc'))
@@ -266,22 +293,20 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'Exception'
             assert exc['value'] == 'view exception'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'Exception: view exception'
-            assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ValueError'
             assert exc['value'] == 'handler500'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ValueError: handler500'
-            assert event['culprit'] == 'tests.contrib.django.urls in handler500'
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
@@ -291,36 +316,13 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'view'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: view'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_view'
 
-    def test_exclude_modules_view(self):
-        exclude_paths = self.raven.exclude_paths
-        self.raven.exclude_paths = ['tests.views']
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
-        self.raven.exclude_paths = exclude_paths
-
-    def test_include_modules(self):
-        include_paths = self.raven.include_paths
-        self.raven.include_paths = ['django.shortcuts']
-
-        self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'].startswith('django.shortcuts in ')
-        self.raven.include_paths = include_paths
-
+    @pytest.mark.skipif(DJANGO_18, reason='Django 1.8+ not supported')
     def test_template_name_as_view(self):
         self.assertRaises(TemplateSyntaxError, self.client.get, reverse('sentry-template-exc'))
 
@@ -340,7 +342,7 @@ class DjangoClientTest(TestCase):
     #     assert event['data']['META']['REMOTE_ADDR'] == '127.0.0.1'
 
     # TODO: Python bug #10805
-    @pytest.mark.skipif(str('six.PY3'))
+    @pytest.mark.skipif(six.PY3, reason='Python 2')
     def test_record_none_exc_info(self):
         # sys.exc_info can return (None, None, None) if no exception is being
         # handled anywhere on the stack. See:
@@ -366,7 +368,7 @@ class DjangoClientTest(TestCase):
             resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
 
-            assert len(self.raven.events) == 1
+            assert len(self.raven.events) == 1, [e['message'] for e in self.raven.events]
             event = self.raven.events.pop(0)
 
             assert event['level'] == logging.INFO
@@ -401,6 +403,15 @@ class DjangoClientTest(TestCase):
 
         with Settings(**extra_settings):
             assert isinstance(get_client(), DjangoClient)
+
+    def test_transport_specification(self):
+        extra_settings = {
+            'SENTRY_TRANSPORT': 'raven.transport.HTTPTransport',
+            'SENTRY_DSN': 'http://public:secret@example.com/1',
+        }
+        with Settings(**extra_settings):
+            client = get_client(reset=True)
+            assert type(client.remote.get_transport()) is HTTPTransport
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
@@ -487,7 +498,7 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
-        frames = event['exception']['values'][0]['stacktrace']['frames']
+        frames = event['exception']['values'][-1]['stacktrace']['frames']
         for frame in frames:
             if frame['module'].startswith('django.'):
                 assert frame.get('in_app') is False
@@ -622,62 +633,72 @@ class ReportViewTest(TestCase):
     urls = 'raven.contrib.django.urls'
 
     def setUp(self):
-        self.path = reverse('raven-report')
+        super(ReportViewTest, self).setUp()
+        self.path = reverse('raven-report', args=['1'], urlconf=self.urls)
 
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header(self, is_valid_origin):
-        self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            self.client.post(self.path, HTTP_ORIGIN='http://example.com')
         is_valid_origin.assert_called_once_with('http://example.com')
 
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header_as_get(self, is_valid_origin):
-        self.client.get(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            self.client.get(self.path, HTTP_ORIGIN='http://example.com')
         is_valid_origin.assert_called_once_with('http://example.com')
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=False))
     def test_fails_on_invalid_origin(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
         assert resp.status_code == 403
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_options_call_sends_headers(self):
-        resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.options(self.path, HTTP_ORIGIN='http://example.com')
         assert resp.status_code == 200
         assert resp['Access-Control-Allow-Origin'] == 'http://example.com'
         assert resp['Access-Control-Allow-Methods'], 'GET, POST == OPTIONS'
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_missing_data(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com')
         assert resp.status_code == 400
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_invalid_data(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            data='[1', content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                data='[1', content_type='application/octet-stream')
         assert resp.status_code == 400
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_data(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            data='{}', content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                data='{}', content_type='application/octet-stream')
         assert resp.status_code == 200
         event = client.events.pop(0)
         assert event == {'auth_header': None}
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_authorization_header(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            HTTP_AUTHORIZATION='Sentry foo/bar', data='{}', content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                HTTP_AUTHORIZATION='Sentry foo/bar', data='{}', content_type='application/octet-stream')
         assert resp.status_code == 200
         event = client.events.pop(0)
         assert event == {'auth_header': 'Sentry foo/bar'}
 
     @mock.patch('raven.contrib.django.views.is_valid_origin', mock.Mock(return_value=True))
     def test_sends_x_sentry_auth_header(self):
-        resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
-            HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}',
-            content_type='application/octet-stream')
+        with self.settings(ROOT_URLCONF=self.urls):
+            resp = self.client.post(self.path, HTTP_ORIGIN='http://example.com',
+                HTTP_X_SENTRY_AUTH='Sentry foo/bar', data='{}',
+                content_type='application/octet-stream')
         assert resp.status_code == 200
         event = client.events.pop(0)
         assert event == {'auth_header': 'Sentry foo/bar'}
@@ -706,7 +727,7 @@ class PromiseSerializerTestCase(TestCase):
         assert result == expected
 
     def test_real_gettext_lazy(self):
-        d = {'lazy_translation': gettext_lazy('testing')}
+        d = {six.text_type('lazy_translation'): gettext_lazy(six.text_type('testing'))}
         key = "'lazy_translation'" if six.PY3 else "u'lazy_translation'"
         value = "'testing'" if six.PY3 else "u'testing'"
         assert transform(d) == {key: value}
@@ -714,21 +735,21 @@ class PromiseSerializerTestCase(TestCase):
 
 class ModelInstanceSerializerTestCase(TestCase):
     def test_basic(self):
-        instance = TestModel()
+        instance = MyTestModel()
 
         result = transform(instance)
         assert isinstance(result, six.string_types)
-        assert result == '<TestModel: TestModel object>'
+        assert result == '<MyTestModel: MyTestModel object>'
 
 
 class QuerySetSerializerTestCase(TestCase):
     def test_basic(self):
         from django.db.models.query import QuerySet
-        obj = QuerySet(model=TestModel)
+        obj = QuerySet(model=MyTestModel)
 
         result = transform(obj)
         assert isinstance(result, six.string_types)
-        assert result == '<QuerySet: model=TestModel>'
+        assert result == '<QuerySet: model=MyTestModel>'
 
 
 class SentryExceptionHandlerTest(TestCase):
@@ -740,47 +761,60 @@ class SentryExceptionHandlerTest(TestCase):
     def exc_info(self):
         return (ValueError, ValueError('lol world'), None)
 
+    def setUp(self):
+        super(SentryExceptionHandlerTest, self).setUp()
+        self.client = get_client()
+        self.handler = SentryDjangoHandler(self.client)
+
     @mock.patch.object(TempStoreClient, 'captureException')
     @mock.patch('sys.exc_info')
     def test_does_capture_exception(self, exc_info, captureException):
         exc_info.return_value = self.exc_info
-        sentry_exception_handler(request=self.request)
+        self.handler.exception_handler(request=self.request)
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(TempStoreClient, 'send')
     @mock.patch('sys.exc_info')
-    @mock.patch('raven.contrib.django.models.get_option')
-    def test_does_exclude_filtered_types(self, get_option, exc_info, captureException):
+    def test_does_exclude_filtered_types(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['ValueError']
+        try:
+            self.client.ignore_exceptions = set(['ValueError'])
 
-        sentry_exception_handler(request=self.request)
+            self.handler.exception_handler(request=self.request)
+        finally:
+            self.client.ignore_exceptions.clear()
 
-        assert not captureException.called
+        assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(TempStoreClient, 'send')
     @mock.patch('sys.exc_info')
-    @mock.patch('raven.contrib.django.models.get_option')
-    def test_ignore_exceptions_with_expression_match(self, get_option, exc_info, captureException):
+    def test_ignore_exceptions_with_expression_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['builtins.*']
-        if not six.PY3:
-            get_option.return_value = ['exceptions.*']
 
-        sentry_exception_handler(request=self.request)
+        try:
+            if six.PY3:
+                self.client.ignore_exceptions = set(['builtins.*'])
+            else:
+                self.client.ignore_exceptions = set(['exceptions.*'])
+            self.handler.exception_handler(request=self.request)
+        finally:
+            self.client.ignore_exceptions.clear()
 
-        assert not captureException.called
+        assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    @mock.patch.object(TempStoreClient, 'send')
     @mock.patch('sys.exc_info')
-    @mock.patch('raven.contrib.django.models.get_option')
-    def test_ignore_exceptions_with_module_match(self, get_option, exc_info, captureException):
+    def test_ignore_exceptions_with_module_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
-        get_option.return_value = ['builtins.ValueError']
-        if not six.PY3:
-            get_option.return_value = ['exceptions.ValueError']
 
-        sentry_exception_handler(request=self.request)
+        try:
+            if six.PY3:
+                self.client.ignore_exceptions = set(['builtins.ValueError'])
+            else:
+                self.client.ignore_exceptions = set(['exceptions.ValueError'])
+            self.handler.exception_handler(request=self.request)
+        finally:
+            self.client.ignore_exceptions.clear()
 
-        assert not captureException.called
+        assert not mock_send.called

@@ -1,5 +1,5 @@
 bootstrap:
-	pip install -r test-requirements.txt
+	pip install -e "file://`pwd`#egg=raven[tests]"
 	make setup-git
 
 test: bootstrap lint
@@ -21,6 +21,10 @@ setup-git:
 	cd .git/hooks && ln -sf ../../hooks/* ./
 
 publish:
+	rm -rf dist build
 	python setup.py sdist bdist_wheel upload
 
-.PHONY: bootstrap test lint coverage setup-git publish
+update-ca:
+	curl -sSL https://mkcert.org/generate/ -o raven/data/cacert.pem
+
+.PHONY: bootstrap test lint coverage setup-git publish update-ca

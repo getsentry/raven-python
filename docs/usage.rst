@@ -1,78 +1,110 @@
-Usage
-=====
+Basic Usage
+===========
+
+This gives a basic overview of how to use the raven client with Python
+directly.
 
 Capture an Error
 ----------------
 
-::
+The most basic use for raven is to record one specific error that occurs::
 
     from raven import Client
 
-    client = Client('http://dd2c825ff9b1417d88a99573903ebf80:91631495b10b45f8a1cdbc492088da6a@localhost:9000/1')
+    client = Client('___DSN___')
 
     try:
         1 / 0
     except ZeroDivisionError:
         client.captureException()
 
+Reporting an Event
+------------------
+
+To report an arbitrary event you can use the
+:py:meth:`~raven.Client.capture` method.  This is the most low-level
+method available.  In most cases you would want to use the
+:py:meth:`~raven.Client.captureMessage` method instead however which
+directly reports a message::
+
+    client.captureMessage('Something went fundamentally wrong')
+
 
 Adding Context
 --------------
 
-A few helpers exist for adding context to a request. These are most useful within a middleware, or some kind of context wrapper.
+The raven client internally keeps a thread local mapping that can carry
+additional information.  Whenever a message is submitted to Sentry that
+additional data will be passed along.
 
-::
+For instance if you use a web framework, you can use this to inject
+additional information into the context.  The basic primitive for this is
+the :py:attr:`~raven.Client.context` attribute.  It provides a `merge()`
+and `clear()` function that can be used::
 
-    # If you're using the Django client, we already deal with this for you.
-    class DjangoUserContext(object):
-        def process_request(self, request):
-            client.user_context({
-                'email': request.user.email,
-            })
-
-        def process_response(self, request):
+    def handle_request(request):
+        client.context.merge({'user': {
+            'email': request.user.email
+        }})
+        try:
+            ...
+        finally:
             client.context.clear()
 
+Additionally starting with Raven 5.14 you can bind the context to the
+current thread to enable crumb support by calling `activate()`.  The
+deactivation happens upon calling `clear()`.  This can also be achieved by
+using the context object with the `with` statement.  This is needed to
+enable breadcrumb capturing.  Framework integrations typically do this
+automatically.
 
-See also:
+These two examples are equivalent::
 
-- Client.extra_context
-- Client.http_context
-- Client.tags_context
+    def handle_request(request):
+        client.context.activate()
+        client.context.merge({'user': {
+            'email': request.user.email
+        }})
+        try:
+            ...
+        finally:
+            client.context.clear()
 
+With a context manager::
+
+    def handle_request(request):
+        with client.context:
+            client.context.merge({'user': {
+                'email': request.user.email
+            }})
+            try:
+                ...
+            finally:
+                client.context.clear()
 
 Testing the Client
 ------------------
 
-Once you've got your server configured, you can test the Raven client by using its CLI::
+Once you've got your server configured, you can test the Raven client by
+using its CLI::
 
-  raven test <DSN value>
+    raven test ___DSN___
 
-If you've configured your environment to have SENTRY_DSN available, you can simply drop
-the optional DSN argument::
+If you've configured your environment to have ``SENTRY_DSN`` available, you
+can simply drop the optional DSN argument::
 
-  raven test
+    raven test
 
 You should get something like the following, assuming you're configured everything correctly::
 
-  $ raven test sync+http://dd2c825ff9b1417d88a99573903ebf80:91631495b10b45f8a1cdbc492088da6a@localhost:9000/1
-  Using DSN configuration:
-    sync+http://dd2c825ff9b1417d88a99573903ebf80:91631495b10b45f8a1cdbc492088da6a@localhost:9000/1
+    $ raven test sync+___DSN___
+    Using DSN configuration:
+      sync+___DSN___
 
-  Client configuration:
-    servers        : ['http://localhost:9000/api/store/']
-    project        : 1
-    public_key     : dd2c825ff9b1417d88a99573903ebf80
-    secret_key     : 91631495b10b45f8a1cdbc492088da6a
+    Client configuration:
+      servers        : ___API_URL___/api/store/
+      project        : ___PROJECT_ID___
+      public_key     : ___PUBLIC_KEY___
+      secret_key     : ___SECRET_KEY___
 
-  Sending a test message... success!
-
-  The test message can be viewed at the following URL:
-    http://localhost:9000/1/search/?q=c988bf5cb7db4653825c92f6864e7206$b8a6fbd29cc9113a149ad62cf7e0ddd5
-
-
-Client API
-----------
-
-.. autoclass:: raven.base.Client
-   :members:
+    Sending a test message... success!
