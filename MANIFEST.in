@@ -1,4 +1,4 @@
-include setup.py README.rst MANIFEST.in LICENSE *.txt
+include setup.py conftest.py README.rst MANIFEST.in LICENSE *.txt
 recursive-include raven/contrib/zope *.xml
 recursive-include raven/data *
 graft tests
