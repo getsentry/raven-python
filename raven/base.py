@@ -641,7 +641,7 @@ class Client(object):
             for frame in data['stacktrace']['frames']:
                 yield frame
         if 'exception' in data:
-            for frame in data['exception']['values'][-1]['stacktrace']['frames']:
+            for frame in data['exception']['values'][-1]['stacktrace'].get('frames', []):
                 yield frame
 
     def _successful_send(self):
@@ -675,7 +675,7 @@ class Client(object):
         output = [message]
         if 'exception' in data and 'stacktrace' in data['exception']['values'][-1]:
             # try to reconstruct a reasonable version of the exception
-            for frame in data['exception']['values'][-1]['stacktrace']['frames']:
+            for frame in data['exception']['values'][-1]['stacktrace'].get('frames', []):
                 output.append('  File "%(fn)s", line %(lineno)s, in %(func)s' % {
                     'fn': frame.get('filename', 'unknown_filename'),
                     'lineno': frame.get('lineno', -1),
