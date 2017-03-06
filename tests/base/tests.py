@@ -325,6 +325,45 @@ class ClientTest(TestCase):
         self.assertEquals(frame['filename'], 'tests/base/tests.py')
         self.assertEquals(frame['module'], __name__)
 
+    def test_exception_event_ignore_string(self):
+        class Foo(Exception):
+            pass
+
+        client = TempStoreClient(ignore_exceptions=['Foo'])
+        try:
+            raise Foo()
+        except Foo:
+            client.captureException()
+
+        self.assertEquals(len(client.events), 0)
+
+    def test_exception_event_ignore_class(self):
+        class Foo(Exception):
+            pass
+
+        client = TempStoreClient(ignore_exceptions=[Foo])
+        try:
+            raise Foo()
+        except Foo:
+            client.captureException()
+
+        self.assertEquals(len(client.events), 0)
+
+    def test_exception_event_ignore_child(self):
+        class Foo(Exception):
+            pass
+
+        class Bar(Foo):
+            pass
+
+        client = TempStoreClient(ignore_exceptions=[Foo])
+        try:
+            raise Bar()
+        except Bar:
+            client.captureException()
+
+        self.assertEquals(len(client.events), 0)
+
     def test_decorator_preserves_function(self):
         @self.client.capture_exceptions
         def test1():

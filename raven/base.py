@@ -17,6 +17,7 @@ import uuid
 import warnings
 
 from datetime import datetime
+from inspect import isclass
 from types import FunctionType
 from threading import local
 
@@ -59,6 +60,9 @@ SDK_VALUE = {
 
 # singleton for the client
 Raven = None
+
+if sys.version_info >= (3, 2):
+    basestring = str
 
 
 def get_excepthook_client():
@@ -802,12 +806,19 @@ class Client(object):
         exc_type = exc_info[0]
         exc_name = '%s.%s' % (exc_type.__module__, exc_type.__name__)
         exclusions = self.ignore_exceptions
+        string_exclusions = (e for e in exclusions if isinstance(e, basestring))
+        wildcard_exclusions = (e for e in string_exclusions if e.endswith('*'))
+        class_exclusions = (e for e in exclusions if isclass(e))
 
-        if exc_type.__name__ in exclusions:
+        if exc_type in exclusions:
+            return False
+        elif exc_type.__name__ in exclusions:
             return False
         elif exc_name in exclusions:
             return False
-        elif any(exc_name.startswith(e[:-1]) for e in exclusions if e.endswith('*')):
+        elif any(issubclass(exc_type, e) for e in class_exclusions):
+            return False
+        elif any(exc_name.startswith(e[:-1]) for e in wildcard_exclusions):
             return False
         return True
 
