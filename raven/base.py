@@ -18,6 +18,7 @@ import warnings
 
 from datetime import datetime
 from inspect import isclass
+from random import Random
 from types import FunctionType
 from threading import local
 
@@ -150,7 +151,8 @@ class Client(object):
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
-                 hook_libraries=None, enable_breadcrumbs=True, **options):
+                 hook_libraries=None, enable_breadcrumbs=True,
+                 _random_seed=None, **options):
         global Raven
 
         o = options
@@ -195,11 +197,13 @@ class Client(object):
         self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
         self.repos = self._format_repos(o.get('repos'))
+        self.sample_rate = o.get('sample_rate') or 1
         self.transaction = TransactionStack()
-
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
 
         self.module_cache = ModuleProxyCache()
+
+        self._random = Random(_random_seed)
 
         if not self.is_enabled():
             self.logger.info(
@@ -627,7 +631,9 @@ class Client(object):
             event_type, data, date, time_spent, extra, stack, tags=tags,
             **kwargs)
 
-        self.send(**data)
+        # should this event be sampled?
+        if self._random.random() <= self.sample_rate:
+            self.send(**data)
 
         self._local_state.last_event_id = data['event_id']
 
