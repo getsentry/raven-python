@@ -175,6 +175,16 @@ The following are valid arguments which may be passed to the Raven client:
     String declaration is strict (ie. does not works for child exceptions)
     whereas class declaration handle inheritance (ie. child exceptions are also ignored).
 
+.. describe:: sample_rate
+
+    The sampling factor to apply to events. A value of 0.00 will deny sending
+    any events, and a value of 1.00 will send 100% of events.
+
+    .. code-block:: python
+
+        # send 50% of events
+        sample_rate = 0.5
+
 .. describe:: list_max_length
 
     The maximum number of items a list-like container should store.
