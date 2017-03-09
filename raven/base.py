@@ -632,7 +632,7 @@ class Client(object):
             **kwargs)
 
         # should this event be sampled?
-        if self._random.random() <= self.sample_rate:
+        if self._random.random() < self.sample_rate:
             self.send(**data)
 
         self._local_state.last_event_id = data['event_id']
