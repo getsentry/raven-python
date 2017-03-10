@@ -197,7 +197,11 @@ class Client(object):
         self.environment = o.get('environment') or None
         self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
         self.repos = self._format_repos(o.get('repos'))
-        self.sample_rate = o.get('sample_rate') or 1
+        self.sample_rate = (
+            o.get('sample_rate')
+            if o.get('sample_rate') is not None
+            else 1
+        )
         self.transaction = TransactionStack()
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
 
