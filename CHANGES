@@ -1,3 +1,9 @@
+Version 5.33.0
+--------------
+
+* Backport fix for capturing errors from Django management commands. See GH-884.
+
+
 Version 5.32.0
 --------------
 
