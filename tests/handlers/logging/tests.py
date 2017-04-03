@@ -273,12 +273,6 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
 
-    def test_sample_rate_bad_values(self):
-        record = self.make_record('Message', extra={'sample_rate': 'foo'})
-        self.handler.emit(record)
-
-        self.assertEqual(len(self.client.events), 1)
-
 
 class LoggingHandlerTest(TestCase):
     def test_client_arg(self):
