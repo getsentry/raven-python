@@ -566,7 +566,8 @@ class Client(object):
         })
 
     def capture(self, event_type, data=None, date=None, time_spent=None,
-                extra=None, stack=None, tags=None, **kwargs):
+                extra=None, stack=None, tags=None, sample_rate=None,
+                **kwargs):
         """
         Captures and processes an event and pipes it off to SentryClient.send.
 
@@ -636,11 +637,8 @@ class Client(object):
             **kwargs)
 
         # should this event be sampled?
-        sample_rate = self.sample_rate
-        try:
-            sample_rate = float(extra['sample_rate'])
-        except (TypeError, KeyError, ValueError):
-            pass
+        if sample_rate is None:
+            sample_rate = self.sample_rate
 
         if self._random.random() < sample_rate:
             self.send(**data)
