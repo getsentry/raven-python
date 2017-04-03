@@ -551,6 +551,20 @@ class ClientTest(TestCase):
             expected = {'logger': "u'test'", 'foo': "u'bar'"}
         self.assertEquals(event['extra'], expected)
 
+    def test_sample_rate(self):
+        self.client.sample_rate = 0.0
+        self.client.captureMessage(message='test')
+        self.assertEquals(len(self.client.events), 0)
+
+    def test_sample_rate_per_message(self):
+        self.client.sample_rate = 1
+        self.client.captureMessage(message='test', sample_rate=0.0)
+        self.assertEquals(len(self.client.events), 0)
+
+        self.client.sample_rate = 0
+        self.client.captureMessage(message='test', sample_rate=1.0)
+        self.assertEquals(len(self.client.events), 1)
+
     def test_transport_registration(self):
         client = Client('http://public:secret@example.com/1',
                         transport=HTTPTransport)
