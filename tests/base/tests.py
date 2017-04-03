@@ -557,36 +557,12 @@ class ClientTest(TestCase):
         self.assertEquals(len(self.client.events), 0)
 
     def test_sample_rate_per_message(self):
-        self.client.extra = {
-            'foo': 'bar',
-        }
         self.client.sample_rate = 1
-        self.client.captureMessage(message='test', extra={'sample_rate': 0.0})
+        self.client.captureMessage(message='test', sample_rate=0.0)
         self.assertEquals(len(self.client.events), 0)
 
         self.client.sample_rate = 0
-        self.client.captureMessage(message='test', extra={'sample_rate': 1.0})
-        self.assertEquals(len(self.client.events), 1)
-        event = self.client.events.pop(0)
-        if not PY2:
-            expected = {'sample_rate': 1.0, 'foo': "'bar'"}
-        else:
-            expected = {'sample_rate': 1.0, 'foo': "u'bar'"}
-        self.assertEquals(event['extra'], expected)
-
-    def test_sample_rate_per_message_is_resilient_to_bad_values(self):
-        self.client.sample_rate = 0
-
-        # sample_rate is not a number
-        self.client.captureMessage(message='test', extra={'sample_rate': 'foo'})
-        self.assertEquals(len(self.client.events), 0)
-
-        # sample_rate is not present
-        self.client.captureMessage(message='test', extra={'foo': '1.0'})
-        self.assertEquals(len(self.client.events), 0)
-
-        # sample_rate can be cast into a float
-        self.client.captureMessage(message='test', extra={'sample_rate': '1.0'})
+        self.client.captureMessage(message='test', sample_rate=1.0)
         self.assertEquals(len(self.client.events), 1)
 
     def test_transport_registration(self):
