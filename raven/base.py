@@ -615,6 +615,7 @@ class Client(object):
         :param extra: a dictionary of additional standard metadata
         :param stack: a stacktrace for the event
         :param tags: dict of extra tags
+        :param sample_rate: a float in the range [0, 1] to sample this message
         :return: a tuple with a 32-length string identifying this event
         """
 

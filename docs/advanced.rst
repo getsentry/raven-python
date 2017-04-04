@@ -267,6 +267,29 @@ deduplicate by taking into account the URL:
 
     For more information, see :ref:`custom-grouping`.
 
+Sampling Messages
+-----------------
+
+There are two ways to sample messages:
+
+- Add sample_rate to the Client object - This sends a percentage of messages the reaching the Client to Sentry
+
+    client = Client('___DSN___', sample_rate=0.5) # send 50% of events
+
+- Sample individual messages
+
+    client = Client('___DSN___') # No sample_rate provided
+
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        client.captureException(sample_rate=0.5) # Send 50% of this event
+
+Alternatively, if you have SentryHandler configured in your logging stack,
+you can send ``sample_rate`` in the ``extra`` kwarg in each log like this
+
+    some_logger.warning('foo', extra={'sample_rate': 0.5}) # Send 50% of this event
+
 A Note on uWSGI
 ---------------
 
