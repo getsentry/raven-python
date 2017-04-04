@@ -51,6 +51,8 @@ Client
         :param stack: If set to `True` a stack frame is recorded together
                       with the event.
         :param tags: dict of extra tags
+        :param sample_rate: a float in the range [0, 1] to sample this message.
+                            This overrides the Client object's sample_rate
         :param kwargs: extra keyword arguments are handled specific to the
                        reported event type.
         :return: a tuple with a 32-length string identifying this event
