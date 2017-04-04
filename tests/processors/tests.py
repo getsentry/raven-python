@@ -4,8 +4,8 @@ from mock import Mock
 
 import raven
 from raven.utils.testutils import TestCase
-from raven.processors import SanitizePasswordsProcessor, \
-    RemovePostDataProcessor, RemoveStackLocalsProcessor
+from raven.processors import SanitizeKeysProcessor, \
+    SanitizePasswordsProcessor, RemovePostDataProcessor, RemoveStackLocalsProcessor
 
 
 VARS = {
@@ -21,6 +21,8 @@ VARS = {
     'api_key': 'secret_key',
     'apiKey': 'secret_key',
     'access_token': 'oauth2 access token',
+    'custom_key1': 'you should not see this',
+    'custom_key2': 'you should not see this',
 }
 
 
@@ -33,6 +35,8 @@ def get_stack_trace_data_real(exception_class=TypeError, **kwargs):
         api_key = "I'm hideous!"                # NOQA F841
         apiKey = "4567000012345678"             # NOQA F841
         access_token = "secret stuff!"          # NOQA F841
+        custom_key1 = "you shouldn't see this"  # NOQA F841
+        custom_key2 = "you shouldn't see this"  # NOQA F841
 
         # TypeError: unsupported operand type(s) for /: 'str' and 'str'
         raise exception_class()
@@ -75,6 +79,110 @@ def get_extra_data():
 
     data['extra'] = VARS
     return data
+
+
+class SanitizeKeysProcessorTest(TestCase):
+
+    def setUp(self):
+        client = Mock(sanitize_keys=['custom_key1', 'custom_key2'])
+        self.proc = SanitizeKeysProcessor(client)
+
+    def _check_vars_sanitized(self, vars, MASK):
+        """
+        Helper to check that keys have been sanitized.
+        """
+        self.assertTrue('custom_key1' in vars)
+        self.assertEquals(vars['custom_key1'], MASK)
+        self.assertTrue('custom_key2' in vars)
+        self.assertEquals(vars['custom_key2'], MASK)
+
+    def test_stacktrace(self, *args, **kwargs):
+        data = get_stack_trace_data_real()
+        result = self.proc.process(data)
+
+        self.assertTrue('exception' in result)
+        exception = result['exception']
+        self.assertTrue('values' in exception)
+        values = exception['values']
+        stack = values[-1]['stacktrace']
+        self.assertTrue('frames' in stack)
+        self.assertEquals(len(stack['frames']), 2)
+        frame = stack['frames'][1]  # frame of will_throw_type_error()
+        self.assertTrue('vars' in frame)
+        self._check_vars_sanitized(frame['vars'], self.proc.MASK)
+
+    def test_http(self):
+        data = get_http_data()
+        result = self.proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        for n in ('data', 'env', 'headers', 'cookies'):
+            self.assertTrue(n in http)
+            self._check_vars_sanitized(http[n], self.proc.MASK)
+
+    def test_extra(self):
+        data = get_extra_data()
+        result = self.proc.process(data)
+
+        self.assertTrue('extra' in result)
+        extra = result['extra']
+        self._check_vars_sanitized(extra, self.proc.MASK)
+
+    def test_querystring_as_string(self):
+        data = get_http_data()
+        data['request']['query_string'] = 'foo=bar&custom_key1=nope&custom_key2=nope'
+        result = self.proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(
+            http['query_string'],
+            'foo=bar&custom_key1=%(m)s&custom_key2=%(m)s' % {'m': self.proc.MASK})
+
+    def test_querystring_as_string_with_partials(self):
+        data = get_http_data()
+        data['request']['query_string'] = 'foo=bar&custom_key1&baz=bar'
+        result = self.proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(http['query_string'], 'foo=bar&custom_key1&baz=bar' % {'m': self.proc.MASK})
+
+    def test_cookie_as_string(self):
+        data = get_http_data()
+        data['request']['cookies'] = 'foo=bar;custom_key1=nope;custom_key2=nope;'
+        result = self.proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(
+            http['cookies'],
+            'foo=bar;custom_key1=%(m)s;custom_key2=%(m)s;' % {'m': self.proc.MASK})
+
+    def test_cookie_as_string_with_partials(self):
+        data = get_http_data()
+        data['request']['cookies'] = 'foo=bar;custom_key1;baz=bar'
+        result = self.proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(http['cookies'], 'foo=bar;custom_key1;baz=bar' % dict(m=self.proc.MASK))
+
+    def test_cookie_header(self):
+        data = get_http_data()
+        data['request']['headers']['Cookie'] = 'foo=bar;custom_key1=nope;custom_key2=nope;'
+        result = self.proc.process(data)
+
+        self.assertTrue('request' in result)
+        http = result['request']
+        self.assertEquals(
+            http['headers']['Cookie'],
+            'foo=bar;custom_key1=%(m)s;custom_key2=%(m)s;' % {'m': self.proc.MASK})
+
+    def test_sanitize_non_ascii(self):
+        result = self.proc.sanitize('__repr__: жили-были', '42')
+        self.assertEquals(result, '42')
 
 
 class SanitizePasswordsProcessorTest(TestCase):
