@@ -66,30 +66,23 @@ class RemoveStackLocalsProcessor(Processor):
             frame.pop('vars', None)
 
 
-class SanitizePasswordsProcessor(Processor):
+class SanitizeKeysProcessor(Processor):
     """
     Asterisk out things that look like passwords, credit card numbers,
     and API keys in frames, http, and basic extra data.
     """
     MASK = '*' * 8
-    FIELDS = frozenset([
-        'password',
-        'secret',
-        'passwd',
-        'authorization',
-        'api_key',
-        'apikey',
-        'sentry_dsn',
-        'access_token',
-    ])
-    VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
+
+    def __init__(self, client):
+        super(SanitizeKeysProcessor, self).__init__(client)
+        fields = getattr(client, 'sanitize_keys')
+        if fields is None:
+            raise ValueError('The sanitize_keys setting must be present to use SanitizeKeysProcessor')
+        self.fields = fields
 
     def sanitize(self, key, value):
         if value is None:
             return
-
-        if isinstance(value, string_types) and self.VALUES_RE.match(value):
-            return self.MASK
 
         if not key:  # key can be a NoneType
             return value
@@ -102,7 +95,7 @@ class SanitizePasswordsProcessor(Processor):
             key = text_type(key)
 
         key = key.lower()
-        for field in self.FIELDS:
+        for field in self.fields:
             if field in key:
                 # store mask as a fixed length for security
                 return self.MASK
@@ -148,3 +141,27 @@ class SanitizePasswordsProcessor(Processor):
                 sanitized_keyvals.append(keyval)
 
         return delimiter.join('='.join(keyval) for keyval in sanitized_keyvals)
+
+
+class SanitizePasswordsProcessor(SanitizeKeysProcessor):
+    FIELDS = frozenset([
+        'password',
+        'secret',
+        'passwd',
+        'authorization',
+        'api_key',
+        'apikey',
+        'sentry_dsn',
+        'access_token',
+    ])
+    VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
+
+    def __init__(self, client):
+        super(SanitizeKeysProcessor, self).__init__(client)  # run the __init__ method of Processor, not SanitizeKeysProcessor
+        self.fields = self.FIELDS
+
+    def sanitize(self, key, value):
+        value = super(SanitizePasswordsProcessor, self).sanitize(key, value)
+        if isinstance(value, string_types) and self.VALUES_RE.match(value):
+            return self.MASK
+        return value
