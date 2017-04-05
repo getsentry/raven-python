@@ -68,8 +68,7 @@ class RemoveStackLocalsProcessor(Processor):
 
 class SanitizeKeysProcessor(Processor):
     """
-    Asterisk out things that look like passwords, credit card numbers,
-    and API keys in frames, http, and basic extra data.
+    Asterisk out things that correspond to a configurable set of keys.
     """
     MASK = '*' * 8
 
@@ -144,6 +143,10 @@ class SanitizeKeysProcessor(Processor):
 
 
 class SanitizePasswordsProcessor(SanitizeKeysProcessor):
+    """
+    Asterisk out things that look like passwords, credit card numbers,
+    and API keys in frames, http, and basic extra data.
+    """
     FIELDS = frozenset([
         'password',
         'secret',
