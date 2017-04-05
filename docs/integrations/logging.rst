@@ -92,7 +92,7 @@ Sentry to render it based on that information::
    not be an acceptable keyword argument for a logger's ``.exception()``
    method (``.debug()``, ``.info()``, ``.warning()``, ``.error()`` and
    ``.critical()`` should work fine regardless of Python version). This
-   should be fixed as of Python 3.2. Official issue here:
+   should be fixed as of Python 2.7.4 and 3.2. Official issue here:
    http://bugs.python.org/issue15541.
 
 While we don't recommend this, you can also enable implicit stack
