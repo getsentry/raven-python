@@ -196,8 +196,7 @@ reference ID. The first step in doing this is creating a custom
     from django.conf.urls.defaults import *
 
     from django.views.defaults import page_not_found, server_error
-    from django.template import Context, loader
-    from django.http import HttpResponseServerError
+    from django.template.response import TemplateResponse
 
     def handler500(request):
         """500 error handler which includes ``request`` in the context.
@@ -206,10 +205,9 @@ reference ID. The first step in doing this is creating a custom
         Context: None
         """
 
-        t = loader.get_template('500.html') # You need to create a 500.html template.
-        return HttpResponseServerError(t.render(Context({
-            'request': request,
-        })))
+        context = {'request': request}
+        template_name = '500.html'  # You need to create a 500.html template.
+        return TemplateResponse(request, template_name, context, status=500)
 
 Once we've successfully added the :data:`request` context variable, adding the
 Sentry reference ID to our :file:`500.html` is simple:
