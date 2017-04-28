@@ -112,6 +112,8 @@ def get_versions(module_list=None):
                 __import__(module_name)
             except ImportError:
                 continue
+	    except ValueError:
+		continue
 
             try:
                 app = sys.modules[module_name]
