@@ -34,8 +34,13 @@ with open('raven/__init__.py', 'rb') as f:
         f.read().decode('utf-8')).group(1)))
 
 
+contextlib2_that_works_on_py26 = "contextlib2<=0.4.0"
+if sys.version_info[:2] <= (2, 6):
+    contextlib2 = contextlib2_that_works_on_py26
+else:
+    contextlib2 = "contextlib2"
 install_requires = [
-    'contextlib2',
+    contextlib2,
 ]
 
 unittest2_requires = ['unittest2']
@@ -117,6 +122,7 @@ setup(
     extras_require={
         'flask': flask_requires,
         'tests': tests_require,
+        ":python_version=='2.6'": [contextlib2_that_works_on_py26],
     },
     license='BSD',
     tests_require=tests_require,
