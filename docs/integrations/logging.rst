@@ -19,6 +19,10 @@ You can also automatically configure the default client with a DSN::
     # Configure the default client
     handler = SentryHandler('___DSN___')
 
+You may want to specify the logging level at this point so you don't send INFO or DEBUG messages to Sentry::
+
+    handler.setLevel(logging.ERROR)
+
 Finally, call the :func:`setup_logging` helper function::
 
     from raven.conf import setup_logging
