@@ -48,7 +48,7 @@ the logging system or to disable loggers entirely.  For this you can use
 the :py:func:`~raven.breadcrumbs.ignore_logger` and
 :py:func:`~raven.breadcrumbs.register_special_log_handler` functions:
 
-.. py:function:: raven.breadcrumbs.ignore_logger(name_or_logger)
+.. py:function:: raven.breadcrumbs.ignore_logger(name_or_logger, allow_level=None)
 
     If called with the name of a logger, this will ignore all messages
     that come from that logger.  For instance if you have a very spammy
@@ -56,14 +56,17 @@ the :py:func:`~raven.breadcrumbs.ignore_logger` and
 
 .. py:function:: raven.breadcrumbs.register_special_log_handler(name_or_logger, callback)
 
-    This registers a callback as a handler for a given logger.  This can
-    be used to ignore or convert log messages.  The callback is invoked
-    with the following arguments: ``logger, level, msg, args, kwargs``.
-    If the callback returns `False` nothing is logged, if it returns
-    `True` the default handling kicks in.
+    Registers a callback for log handling. The callback is invoked
+    with given arguments: `logger`, `level`, `msg`, `args` and `kwargs`
+    which are the values passed to the logging system. If the callback
+    returns true value the default handling is disabled. Only one callback
+    can be registered per one logger name. Logger tree is not traversed
+    so calling this method with `spammy_module` argument will not silence
+    messages from `spammy_module.child`.
 
     Typically it makes sense to invoke
-    :py:func:`~raven.breadcrumbs.record` from it.
+    :py:func:`~raven.breadcrumbs.record` from it unless you want to silence
+    a message based on its attributes other than `level`.
 
 .. py:function:: raven.breadcrumbs.register_logging_handler(callback)
 
