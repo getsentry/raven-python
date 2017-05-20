@@ -133,6 +133,8 @@ class SentryMixin(object):
     :py:class:`AsyncSentryClient`. This can be changed by implementing your
     own get_sentry_client method on your request handler.
     """
+    SENTRY_REQUEST_BODY_LIMIT = 1024 * 20
+    SENTRY_REQUEST_BODY_TRUNCATE = 200
 
     def get_sentry_client(self):
         """
@@ -149,11 +151,22 @@ class SentryMixin(object):
 
         :param return: A dictionary.
         """
+        if self.request.files:
+            body_length = len(self.request.body)
+            body = '<body with file(s), size:%s>' % body_length
+        elif body_length > self.SENTRY_REQUEST_BODY_LIMIT:
+            body_length = len(self.request.body)
+            truncate = self.SENTRY_REQUEST_BODY_TRUNCATE
+            body = '<large body, size:%s, first %s bytes: %s>' %\
+                   (body_length, truncate, self.request.body[:truncate])
+        else:
+            body = self.request.body
+
         return {
             'request': {
                 'url': self.request.full_url(),
                 'method': self.request.method,
-                'data': self.request.body,
+                'data': body,
                 'query_string': self.request.query,
                 'cookies': self.request.headers.get('Cookie', None),
                 'headers': dict(self.request.headers),
