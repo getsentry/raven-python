@@ -7,6 +7,8 @@ raven.utils.testutils
 """
 from __future__ import absolute_import
 
+import raven
+
 from exam import Exam
 
 try:
@@ -17,3 +19,15 @@ except ImportError:
 
 class TestCase(Exam, BaseTestCase):
     pass
+
+
+class InMemoryClient(raven.Client):
+    def __init__(self, **kwargs):
+        self.events = []
+        super(InMemoryClient, self).__init__(**kwargs)
+
+    def is_enabled(self):
+        return True
+
+    def send(self, **kwargs):
+        self.events.append(kwargs)

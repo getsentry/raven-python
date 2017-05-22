@@ -4,10 +4,11 @@ import time
 import logging
 from types import FunctionType
 
-from raven._compat import iteritems, get_code, text_type, string_types
+from raven.utils.compat import iteritems, get_code, text_type, string_types
 from raven.utils import once
 
 
+special_logging_handlers = []
 special_logger_handlers = {}
 
 
@@ -97,6 +98,11 @@ def record(message=None, timestamp=None, level=None, category=None,
 
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
+    for handler in special_logging_handlers:
+        rv = handler(logger, level, msg, args, kwargs)
+        if rv:
+            return
+
     handler = special_logger_handlers.get(logger.name)
     if handler is not None:
         rv = handler(logger, level, msg, args, kwargs)
@@ -183,8 +189,11 @@ def _wrap_logging_method(meth, level=None):
     new_func.__doc__ = func.__doc__
 
     assert code.co_firstlineno == get_code(func).co_firstlineno
-    assert new_func.__module__ == func.__module__
-    assert new_func.__name__ == func.__name__
+
+    # In theory this should already be set correctly, but in some cases
+    # it is not.  So override it.
+    new_func.__module__ == func.__module__
+    new_func.__name__ == func.__name__
     new_func.__patched_for_raven__ = True
 
     return new_func
@@ -245,6 +254,15 @@ def register_special_log_handler(name_or_logger, callback):
     else:
         name = name_or_logger.name
     special_logger_handlers[name] = callback
+
+
+def register_logging_handler(callback):
+    """Registers a callback for log handling.  The callback is invoked
+    with give arguments: `logger`, `level`, `msg`, `args` and `kwargs`
+    which are the values passed to the logging system.  If the callback
+    returns `True` the default handling is disabled.
+    """
+    special_logging_handlers.append(callback)
 
 
 hooked_libraries = {}

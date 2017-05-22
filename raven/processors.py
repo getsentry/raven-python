@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import re
 
-from raven._compat import string_types, text_type
+from raven.utils.compat import string_types, text_type
 from raven.utils import varmap
 
 

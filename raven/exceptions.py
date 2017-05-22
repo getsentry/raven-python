@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from raven._compat import text_type
+from raven.utils.compat import text_type
 
 
 class APIError(Exception):

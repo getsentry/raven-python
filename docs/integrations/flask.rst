@@ -1,10 +1,6 @@
 Flask
 =====
 
-`Flask <http://flask.pocoo.org/>`_ is a popular Python micro webframework.
-Support for Flask is provided by Raven directly but for some dependencies
-you need to install raven with the flask feature set.
-
 Installation
 ------------
 
@@ -26,14 +22,18 @@ your environment under the ``SENTRY_DSN`` key.
 Extended Setup
 --------------
 
-You can optionally configure logging too::
+You can optionally configure logging too:
+
+.. sourcecode:: python
 
     import logging
     from raven.contrib.flask import Sentry
     sentry = Sentry(app, logging=True, level=logging.ERROR, \
                     logging_exclusions=("logger1", "logger2", ...))
 
-Building applications on the fly? You can use Raven's ``init_app`` hook::
+Building applications on the fly? You can use Raven's ``init_app`` hook:
+
+.. sourcecode:: python
 
     sentry = Sentry(dsn='http://public_key:secret_key@example.com/1')
 
@@ -42,7 +42,9 @@ Building applications on the fly? You can use Raven's ``init_app`` hook::
         sentry.init_app(app)
         return app
 
-You can pass parameters in the ``init_app`` hook::
+You can pass parameters in the ``init_app`` hook:
+
+.. sourcecode:: python
 
     sentry = Sentry()
 
@@ -57,11 +59,16 @@ Settings
 --------
 
 Additional settings for the client can be configured using
-``SENTRY_<setting name>`` in your application's configuration::
+``SENTRY_CONFIG`` in your application's configuration:
+
+.. sourcecode:: python
 
     class MyConfig(object):
-        SENTRY_DSN = '___DSN___'
-        SENTRY_INCLUDE_PATHS = ['myproject']
+        SENTRY_CONFIG = {
+            'dsn': '___DSN___',
+            'include_paths': ['myproject'],
+            'release': raven.fetch_git_sha(os.path.dirname(__file__)),
+        }
 
 If `Flask-Login <https://pypi.python.org/pypi/Flask-Login/>`_ is used by
 your application (including `Flask-Security
@@ -70,7 +77,9 @@ be captured when an exception or message is captured.  By default, only
 the ``id`` (current_user.get_id()), ``is_authenticated``, and
 ``is_anonymous`` is captured for the user.  If you would like additional
 attributes on the ``current_user`` to be captured,  you can configure them
-using ``SENTRY_USER_ATTRS``::
+using ``SENTRY_USER_ATTRS``:
+
+.. sourcecode:: python
 
     class MyConfig(object):
         SENTRY_USER_ATTRS = ['username', 'first_name', 'last_name', 'email']
@@ -80,16 +89,19 @@ additional attributes will be available under
 ``sentry.interfaces.User.data``
 
 You can specify the types of exceptions that should not be reported by
-Sentry client in your application by setting the
-``RAVEN_IGNORE_EXCEPTIONS`` configuration value on your Flask app
-configuration::
+Sentry client in your application by setting the ``ignore_exceptions``
+configuration value:
+
+.. sourcecode:: python
 
     class MyExceptionType(Exception):
         def __init__(self, message):
             super(MyExceptionType, self).__init__(message)
 
     app = Flask(__name__)
-    app.config["RAVEN_IGNORE_EXCEPTIONS"] = [MyExceptionType]
+    app.config['SENTRY_CONFIG'] = {
+        'ignore_exceptions': [MyExceptionType],
+    }
 
 Usage
 -----
@@ -99,27 +111,20 @@ capture uncaught exceptions within Flask. If you want to send additional
 events, a couple of shortcuts are provided on the Sentry Flask middleware
 object.
 
-Capture an arbitrary exception by calling ``captureException``::
+Capture an arbitrary exception by calling ``captureException``:
+
+.. sourcecode:: python
 
     try:
         1 / 0
     except ZeroDivisionError:
         sentry.captureException()
 
-Log a generic message with ``captureMessage``::
+Log a generic message with ``captureMessage``:
+
+.. sourcecode:: python
 
     sentry.captureMessage('hello, world!')
-
-Configure
----------
-
-To configure Sentry to add additional context to errors (such as
-release or environment), simply add the keys to ``app.config``
-
-    app.config['SENTRY_RELEASE'] = raven.fetch_git_sha(os.path.dirname(__file__))
-
-Sentry automatically looks for ``SENTRY_RELEASE``, ``SENTRY_CONTEXT``,
-``SENTRY_ENVIRONMENT``, ``SENTRY_TAGS``, and ``SENTRY_IGNORE_EXCEPTIONS``.
 
 Getting The Last Event ID
 -------------------------
@@ -128,7 +133,7 @@ If possible, the last Sentry event ID is stored in the request context
 ``g.sentry_event_id`` variable.  This allow to present the user an error
 ID if have done a custom error 500 page.
 
-.. code-block:: html+jinja
+.. sourcecode:: html+jinja
 
     <h2>Error 500</h2>
     {% if g.sentry_event_id %}

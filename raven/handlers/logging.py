@@ -14,16 +14,39 @@ import logging
 import sys
 import traceback
 
-from raven._compat import string_types, iteritems, text_type
+from raven.utils.compat import string_types, iteritems, text_type
 from raven.base import Client
 from raven.utils.encoding import to_string
-from raven.utils.stacks import iter_stack_frames, label_from_frame
+from raven.utils.stacks import iter_stack_frames
 
 RESERVED = frozenset((
     'stack', 'name', 'module', 'funcName', 'args', 'msg', 'levelno',
     'exc_text', 'exc_info', 'data', 'created', 'levelname', 'msecs',
     'relativeCreated', 'tags', 'message',
 ))
+
+
+def extract_extra(record, reserved=RESERVED):
+    data = {}
+
+    extra = getattr(record, 'data', None)
+    if not isinstance(extra, dict):
+        if extra:
+            extra = {'data': extra}
+        else:
+            extra = {}
+
+    for k, v in iteritems(vars(record)):
+        if k in reserved:
+            continue
+        if k.startswith('_'):
+            continue
+        if '.' not in k and k not in ('culprit', 'server_name', 'fingerprint'):
+            extra[k] = v
+        else:
+            data[k] = v
+
+    return data, extra
 
 
 class SentryHandler(logging.Handler, object):
@@ -104,24 +127,7 @@ class SentryHandler(logging.Handler, object):
         return frames
 
     def _emit(self, record, **kwargs):
-        data = {}
-
-        extra = getattr(record, 'data', None)
-        if not isinstance(extra, dict):
-            if extra:
-                extra = {'data': extra}
-            else:
-                extra = {}
-
-        for k, v in iteritems(vars(record)):
-            if k in RESERVED:
-                continue
-            if k.startswith('_'):
-                continue
-            if '.' not in k and k not in ('culprit', 'server_name', 'fingerprint'):
-                extra[k] = v
-            else:
-                data[k] = v
+        data, extra = extract_extra(record)
 
         stack = getattr(record, 'stack', None)
         if stack is True:
@@ -159,26 +165,18 @@ class SentryHandler(logging.Handler, object):
             event_type = 'raven.events.Exception'
             handler_kwargs = {'exc_info': record.exc_info}
 
-        # HACK: discover a culprit when we normally couldn't
-        elif not (data.get('stacktrace') or data.get('culprit')) \
-                and (record.name or record.funcName):
-            culprit = label_from_frame({
-                'module': record.name,
-                'function': record.funcName
-            })
-            if culprit:
-                data['culprit'] = culprit
-
         data['level'] = record.levelno
         data['logger'] = record.name
 
-        if hasattr(record, 'tags'):
-            kwargs['tags'] = record.tags
-        elif self.tags:
-            kwargs['tags'] = self.tags
+        kwargs['tags'] = tags = {}
+        if self.tags:
+            tags.update(self.tags)
+        tags.update(getattr(record, 'tags', {}))
 
         kwargs.update(handler_kwargs)
+        sample_rate = extra.pop('sample_rate', None)
 
         return self.client.capture(
             event_type, stack=stack, data=data,
-            extra=extra, date=date, **kwargs)
+            extra=extra, date=date, sample_rate=sample_rate,
+            **kwargs)

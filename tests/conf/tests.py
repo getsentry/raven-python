@@ -10,6 +10,16 @@ from raven.utils.testutils import TestCase
 
 
 class RemoteConfigTest(TestCase):
+    def test_path_strip(self):
+        dsn = 'https://foo:bar@sentry.local/app/1\n'
+        res = RemoteConfig.from_string(dsn)
+        assert res.project == '1'
+        assert res.base_url == 'https://sentry.local/app'
+        assert res.store_endpoint == 'https://sentry.local/app/api/1/store/'
+        assert res.public_key == 'foo'
+        assert res.secret_key == 'bar'
+        assert res.options == {}
+
     def test_path(self):
         dsn = 'https://foo:bar@sentry.local/app/1'
         res = RemoteConfig.from_string(dsn)

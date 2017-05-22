@@ -7,8 +7,8 @@ raven.transport.twisted
 """
 from __future__ import absolute_import
 
-import io
 
+from raven.utils.compat import BytesIO
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
 
@@ -19,18 +19,18 @@ try:
     )
     from twisted.web.http_headers import Headers
     has_twisted = True
-except:
+except ImportError:
     has_twisted = False
 
 
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
     scheme = ['twisted+http', 'twisted+https']
 
-    def __init__(self, parsed_url, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         if not has_twisted:
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
-        super(TwistedHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
+        super(TwistedHTTPTransport, self).__init__(*args, **kwargs)
 
         # Import reactor as late as possible.
         from twisted.internet import reactor
@@ -38,10 +38,10 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
         # Use a persistent connection pool.
         self._agent = Agent(reactor, pool=HTTPConnectionPool(reactor))
 
-    def async_send(self, data, headers, success_cb, failure_cb):
+    def async_send(self, url, data, headers, success_cb, failure_cb):
         d = self._agent.request(
-            b"POST", self._url,
-            bodyProducer=FileBodyProducer(io.BytesIO(data)),
+            b"POST", url,
+            bodyProducer=FileBodyProducer(BytesIO(data)),
             headers=Headers(dict((k, [v]) for k, v in headers.items()))
         )
 

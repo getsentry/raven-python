@@ -11,7 +11,7 @@ from collections import Mapping, Iterable
 from threading import local
 from weakref import ref as weakref
 
-from raven._compat import iteritems
+from raven.utils.compat import iteritems
 
 try:
     from thread import get_ident as get_thread_ident

@@ -39,6 +39,7 @@ install_requires = [
 ]
 
 unittest2_requires = ['unittest2']
+
 flask_requires = [
     'Flask>=0.8',
     'blinker>=1.1',
@@ -63,11 +64,8 @@ if sys.version_info[0] == 3:
         install_requires.remove('contextlib2')
 
 tests_require = [
-    'six',
     'bottle',
     'celery>=2.5',
-    'Django>=1.4',
-    'django-celery>=2.5',
     'exam>=0.5.2',
     'flake8>=2.6,<2.7',
     'logbook',
@@ -75,16 +73,17 @@ tests_require = [
     'nose',
     'pycodestyle',
     'pytz',
-    'pytest',
-    'pytest-django==2.9.1',
+    'pytest>=3.0.0,<3.1.0',
     'pytest-timeout==0.4',
     'requests',
-    'tornado',
+    'tornado>=4.1',
     'webob',
     'webtest',
     'anyjson',
-] + (flask_requires + flask_tests_requires +
-     unittest2_requires + webpy_tests_requires)
+] + (
+    flask_requires + flask_tests_requires +
+    unittest2_requires + webpy_tests_requires
+)
 
 
 class PyTest(TestCommand):
@@ -137,7 +136,6 @@ setup(
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',

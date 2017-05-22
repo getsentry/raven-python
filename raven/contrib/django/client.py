@@ -16,6 +16,7 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
 from django.template import TemplateSyntaxError
+from django.utils.datastructures import MultiValueDict
 
 try:
     # support Django 1.9
@@ -26,11 +27,12 @@ except ImportError:
 
 from raven.base import Client
 from raven.contrib.django.utils import get_data_from_template, get_host
-from raven.contrib.django.middleware import SentryLogMiddleware
+from raven.contrib.django.middleware import SentryMiddleware
+from raven.utils.compat import string_types, binary_type, iterlists
+from raven.contrib.django.resolver import RouteResolver
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils import once
 from raven import breadcrumbs
-from raven._compat import string_types, binary_type
 
 __all__ = ('DjangoClient',)
 
@@ -129,6 +131,7 @@ def install_sql_hook():
 
 class DjangoClient(Client):
     logger = logging.getLogger('sentry.errors.client.django')
+    resolver = RouteResolver()
 
     def __init__(self, *args, **kwargs):
         install_sql_hook = kwargs.pop('install_sql_hook', True)
@@ -140,12 +143,18 @@ class DjangoClient(Client):
         install_sql_hook()
 
     def get_user_info(self, user):
-        if hasattr(user, 'is_authenticated') and \
-           not user.is_authenticated():
-            return None
-
-        user_info = {}
         try:
+            if hasattr(user, 'is_authenticated'):
+                # is_authenticated was a method in Django < 1.10
+                if callable(user.is_authenticated):
+                    authenticated = user.is_authenticated()
+                else:
+                    authenticated = user.is_authenticated
+                if not authenticated:
+                    return None
+
+            user_info = {}
+
             user_info['id'] = user.pk
 
             if hasattr(user, 'email'):
@@ -155,14 +164,13 @@ class DjangoClient(Client):
                 user_info['username'] = user.get_username()
             elif hasattr(user, 'username'):
                 user_info['username'] = user.username
+
+            return user_info
         except Exception:
             # We expect that user objects can be somewhat broken at times
             # and try to just handle as much as possible and ignore errors
             # as good as possible here.
-            pass
-
-        if user_info:
-            return user_info
+            return None
 
     def get_data_from_request(self, request):
         result = {}
@@ -197,6 +205,11 @@ class DjangoClient(Client):
                         data = request.POST or '<unavailable>'
                     except Exception:
                         data = '<unavailable>'
+                    else:
+                        if isinstance(data, MultiValueDict):
+                            data = dict(
+                                (k, v[0] if len(v) == 1 else v)
+                                for k, v in iterlists(data))
         else:
             data = None
 
@@ -250,7 +263,7 @@ class DjangoClient(Client):
             data = kwargs['data']
 
         if request is None:
-            request = getattr(SentryLogMiddleware.thread, 'request', None)
+            request = getattr(SentryMiddleware.thread, 'request', None)
 
         is_http_request = isinstance(request, HttpRequest)
         if is_http_request:
@@ -282,7 +295,10 @@ class DjangoClient(Client):
             # attach the sentry object to the request
             request.sentry = {
                 'project_id': data.get('project', self.remote.project),
-                'id': self.get_ident(result),
+                'id': result,
             }
 
         return result
+
+    def get_transaction_from_request(self, request):
+        return self.resolver.resolve(request.path)

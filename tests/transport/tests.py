@@ -21,14 +21,14 @@ class DummyScheme(Transport):
 
     scheme = ['mock']
 
-    def __init__(self, parsed_url, timeout=5):
-        self._parsed_url = parsed_url
+    def __init__(self, timeout=5):
         self.timeout = timeout
 
-    def send(self, data, headers):
+    def send(self, url, data, headers):
         """
         Sends a request to a remote webserver
         """
+        self._url = url
         self._data = data
         self._headers = headers
 
@@ -56,6 +56,7 @@ class TransportTest(TestCase):
         c.send(**data)
 
         mock_cls = c._transport_cache['mock://some_username:some_password@localhost:8143/1'].get_transport()
+        print(mock_cls.__dict__)
 
         expected_message = zlib.decompress(c.encode(data))
         actual_message = zlib.decompress(mock_cls._data)

@@ -1,7 +1,65 @@
+Version 6.0.0
+-------------
+
+* Strip whitespace from DSNs automatically.
+* Add `last_event_id` accessor to `Client`.
+* Do not require `sys.argv` to be available any more.
+* Tags defined on a logging handler will now be merged with individual log record's tags.
+* Added explicit support for multidicts in the django client.
+* Refactored transports to support multiple URLs.  This might affect
+  you if you have custom subclasses of those.  The main change is that
+  the URL parameter moved from the constructor into the `send` method.
+* Corrected an issue with recursive route resolvers which commonly
+  affected things like django-tastyepie.
+* Corrected an issue where Django's HTTP request was not always available
+  within events.
+* Support both string and class values for ``ignore_exceptions`` parameters.
+  Class values also support child exceptions.
+
+Version 5.32.0
+--------------
+
+* Made raven python breadcrumb patches work when librato monkey
+  patches logging.
+
+Version 5.31.0
+--------------
+
+* Improved fix for the Django middleware regression.
+
+Version 5.30.0
+--------------
+
+* Keep the original type for the django middleware settings if we
+  change them.
+
+Version 5.29.0
+--------------
+
+* Added `register_logging_handler`.
+* Removed bad mixin from django's WSGI middleware
+* Removed "support for extracing data from rest_framework" because
+  this broke code.
+
+Version 5.28.0
+--------------
+
+* Corrected an issue that caused `close()` on WSGI iterables to not be
+  correctly called.
+* Fixes the new Django 1.10 `MIDDLEWARE_CLASSES` warning.
+
+Version 5.27.1
+--------------
+
+* Bugfix for transaction based culprits.
+
 Version 5.27.0
 --------------
 
+* Added support for extracting data from rest_framework in Django integration
 * Updated CA bundle.
+* Added transaction-based culprits for Celery, Django, and Flask.
+* Fixed an issue where ``ignore_exceptions`` wasn't respected.
 
 * Raven transports that have dependencies outside Python stdlib are no longer
   imported by default, and must now be explicitly imported by the application.

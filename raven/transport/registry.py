@@ -55,14 +55,6 @@ class TransportRegistry(object):
     def get_transport_cls(self, scheme):
         return self._schemes[scheme]
 
-    def compute_scope(self, url, scope):
-        """
-        Compute a scope dictionary.  This may be overridden by custom
-        transports
-        """
-        transport = self._schemes[url.scheme](url)
-        return transport.compute_scope(url, scope)
-
 
 default_transports = [
     HTTPTransport,

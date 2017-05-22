@@ -8,7 +8,6 @@ import logging
 import mock
 import pytest
 import re
-import six
 import sys
 
 from django.conf import settings
@@ -20,28 +19,29 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 from django.template import TemplateSyntaxError
 from django.test import TestCase
+from django.test.client import Client as DjangoTestClient, ClientHandler as DjangoTestClientHandler
 from django.utils.translation import gettext_lazy
 from exam import fixture
-from six import StringIO
 
 from raven.base import Client
+from raven.utils.compat import StringIO, iteritems, PY2, string_types, text_type
 from raven.contrib.django.client import DjangoClient
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
-from raven.contrib.django.models import client, get_client, sentry_exception_handler
+from raven.contrib.django.models import (
+    SentryDjangoHandler, client, get_client
+)
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
 from raven.transport.http import HTTPTransport
 from raven.utils.serializer import transform
 
-from django.test.client import Client as TestClient, ClientHandler as TestClientHandler
-from .models import TestModel
-
-settings.SENTRY_CLIENT = 'tests.contrib.django.tests.TempStoreClient'
+from .models import MyTestModel
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
 DJANGO_18 = django.VERSION >= (1, 8, 0)
+DJANGO_110 = django.VERSION >= (1, 10, 0)
 
 
 def make_request():
@@ -55,7 +55,7 @@ def make_request():
     })
 
 
-class MockClientHandler(TestClientHandler):
+class MockClientHandler(DjangoTestClientHandler):
     def __call__(self, environ, start_response=[]):
         # this pretends doesn't require start_response
         return super(MockClientHandler, self).__call__(environ)
@@ -67,10 +67,10 @@ class MockSentryMiddleware(Sentry):
         return list(super(MockSentryMiddleware, self).__call__(environ, start_response))
 
 
-class TempStoreClient(DjangoClient):
+class MockClient(DjangoClient):
     def __init__(self, *args, **kwargs):
         self.events = []
-        super(TempStoreClient, self).__init__(*args, **kwargs)
+        super(MockClient, self).__init__(*args, **kwargs)
 
     def send(self, **kwargs):
         self.events.append(kwargs)
@@ -79,7 +79,7 @@ class TempStoreClient(DjangoClient):
         return True
 
 
-class DisabledTempStoreClient(TempStoreClient):
+class DisabledMockClient(MockClient):
     def is_enabled(self, **kwargs):
         return False
 
@@ -99,12 +99,12 @@ class Settings(object):
         self._orig = {}
 
     def __enter__(self):
-        for k, v in six.iteritems(self.overrides):
+        for k, v in iteritems(self.overrides):
             self._orig[k] = getattr(settings, k, self.NotDefined)
             setattr(settings, k, v)
 
     def __exit__(self, exc_type, exc_value, traceback):
-        for k, v in six.iteritems(self._orig):
+        for k, v in iteritems(self._orig):
             if v is self.NotDefined:
                 delattr(settings, k)
             else:
@@ -115,7 +115,7 @@ class ClientProxyTest(TestCase):
     def test_proxy_responds_as_client(self):
         assert get_client() == client
 
-    @mock.patch.object(TempStoreClient, 'captureMessage')
+    @mock.patch.object(MockClient, 'captureMessage')
     def test_basic(self, captureMessage):
         client.captureMessage(message='foo')
         captureMessage.assert_called_once_with(message='foo')
@@ -127,6 +127,9 @@ class DjangoClientTest(TestCase):
 
     def setUp(self):
         self.raven = get_client()
+        self.handler = SentryDjangoHandler(self.raven)
+        self.handler.install()
+        self.addCleanup(self.handler.uninstall)
 
     def test_basic(self):
         self.raven.captureMessage(message='foo')
@@ -150,26 +153,38 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         assert exc['type'] == 'TypeError'
         assert exc['value'], "int() argument must be a string or a number == not 'NoneType'"
         assert event['level'] == logging.ERROR
         assert event['message'], "TypeError: int() argument must be a string or a number == not 'NoneType'"
-        assert event['culprit'] == 'tests.contrib.django.tests in test_signal_integration'
 
     @pytest.mark.skipif(sys.version_info[:2] == (2, 6), reason='Python 2.6')
     def test_view_exception(self):
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
+        path = reverse('sentry-raise-exc')
+        self.assertRaises(Exception, self.client.get, path)
 
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         assert exc['type'] == 'Exception'
         assert exc['value'] == 'view exception'
         assert event['level'] == logging.ERROR
         assert event['message'] == 'Exception: view exception'
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
+        assert 'request' in event
+        assert event['request']['url'] == 'http://testserver{}'.format(path)
+
+    def test_capture_event_with_request_middleware(self):
+        path = reverse('sentry-trigger-event')
+        resp = self.client.get(path)
+        assert resp.status_code == 200
+
+        assert len(self.raven.events) == 1
+        event = self.raven.events.pop(0)
+        assert event['message'] == 'test'
+        assert 'request' in event
+        assert event['request']['url'] == 'http://testserver{}'.format(path)
 
     def test_user_info(self):
         with Settings(MIDDLEWARE_CLASSES=[
@@ -222,6 +237,32 @@ class DjangoClientTest(TestCase):
             'email': user.email,
         }
 
+    @pytest.mark.skipif(not DJANGO_110, reason='< Django 1.10')
+    def test_get_user_info_is_authenticated_property(self):
+        from django.db import models
+        from django.contrib.auth.models import AbstractBaseUser
+
+        class MyUser(AbstractBaseUser):
+            USERNAME_FIELD = 'username'
+            username = models.CharField(max_length=32)
+            email = models.EmailField()
+
+            @property
+            def is_authenticated(self):
+                return True
+
+        user = MyUser(
+            username='admin',
+            email='admin@example.com',
+            id=1,
+        )
+        user_info = self.raven.get_user_info(user)
+        assert user_info == {
+            'username': user.username,
+            'id': user.id,
+            'email': user.email,
+        }
+
     def test_request_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenRequestMiddleware']):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-raise-exc'))
@@ -230,12 +271,11 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'request'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: request'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_request'
 
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
@@ -247,16 +287,15 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'response'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: response'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_response'
 
     def test_broken_500_handler_with_middleware(self):
         with Settings(BREAK_THAT_500=True, INSTALLED_APPS=['raven.contrib.django']):
-            client = TestClient(REMOTE_ADDR='127.0.0.1')
+            client = DjangoTestClient(REMOTE_ADDR='127.0.0.1')
             client.handler = MockSentryMiddleware(MockClientHandler())
 
             self.assertRaises(Exception, client.get, reverse('sentry-raise-exc'))
@@ -265,22 +304,20 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'Exception'
             assert exc['value'] == 'view exception'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'Exception: view exception'
-            assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
 
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ValueError'
             assert exc['value'] == 'handler500'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ValueError: handler500'
-            assert event['culprit'] == 'tests.contrib.django.urls in handler500'
 
     def test_view_middleware_exception(self):
         with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
@@ -290,35 +327,11 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
 
             assert 'exception' in event
-            exc = event['exception']['values'][0]
+            exc = event['exception']['values'][-1]
             assert exc['type'] == 'ImportError'
             assert exc['value'] == 'view'
             assert event['level'] == logging.ERROR
             assert event['message'] == 'ImportError: view'
-            assert event['culprit'] == 'tests.contrib.django.middleware in process_view'
-
-    def test_exclude_modules_view(self):
-        exclude_paths = self.raven.exclude_paths
-        self.raven.exclude_paths = ['tests.views']
-        self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc-decor'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'] == 'tests.contrib.django.views in raise_exc'
-        self.raven.exclude_paths = exclude_paths
-
-    def test_include_modules(self):
-        include_paths = self.raven.include_paths
-        self.raven.include_paths = ['django.shortcuts']
-
-        self.assertRaises(Exception, self.client.get, reverse('sentry-django-exc'))
-
-        assert len(self.raven.events) == 1
-        event = self.raven.events.pop(0)
-
-        assert event['culprit'].startswith('django.shortcuts in ')
-        self.raven.include_paths = include_paths
 
     @pytest.mark.skipif(DJANGO_18, reason='Django 1.8+ not supported')
     def test_template_name_as_view(self):
@@ -340,7 +353,7 @@ class DjangoClientTest(TestCase):
     #     assert event['data']['META']['REMOTE_ADDR'] == '127.0.0.1'
 
     # TODO: Python bug #10805
-    @pytest.mark.skipif(six.PY3, reason='Python 2')
+    @pytest.mark.skipif(not PY2, reason='Python 2')
     def test_record_none_exc_info(self):
         # sys.exc_info can return (None, None, None) if no exception is being
         # handled anywhere on the stack. See:
@@ -366,7 +379,7 @@ class DjangoClientTest(TestCase):
             resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
 
-            assert len(self.raven.events) == 1
+            assert len(self.raven.events) == 1, [e['message'] for e in self.raven.events]
             event = self.raven.events.pop(0)
 
             assert event['level'] == logging.INFO
@@ -382,7 +395,7 @@ class DjangoClientTest(TestCase):
     def test_404_middleware_when_disabled(self):
         extra_settings = {
             'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
-            'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledTempStoreClient',
+            'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledMockClient',
         }
         with Settings(**extra_settings):
             resp = self.client.get('/non-existent-page')
@@ -393,7 +406,7 @@ class DjangoClientTest(TestCase):
         extra_settings = {
             'SENTRY_CLIENT': 'raven.contrib.django.DjangoClient',  # default
         }
-        # Should return fallback client (TempStoreClient)
+        # Should return fallback client (MockClient)
         client = get_client('nonexistent.and.invalid')
 
         # client should be valid, and the same as with the next call.
@@ -496,7 +509,7 @@ class DjangoClientTest(TestCase):
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
 
-        frames = event['exception']['values'][0]['stacktrace']['frames']
+        frames = event['exception']['values'][-1]['stacktrace']['frames']
         for frame in frames:
             if frame['module'].startswith('django.'):
                 assert frame.get('in_app') is False
@@ -585,6 +598,23 @@ class DjangoLoggingTest(TestCase):
         http = event['request']
         assert http['method'] == 'POST'
 
+    def test_tags(self):
+        tags = {'tag1': 'test'}
+        handler = SentryHandler(tags=tags)
+
+        logger = self.logger
+        logger.handlers = []
+        logger.addHandler(handler)
+
+        logger.error('This is a test error')
+
+        assert len(self.raven.events) == 1
+        event = self.raven.events.pop(0)
+        assert 'tags' in event
+        # event['tags'] also contains some other data, like 'site'
+        assert 'tag1' in event['tags']
+        assert event['tags']['tag1'] == tags['tag1']
+
 
 class CeleryIsolatedClientTest(TestCase):
     def setUp(self):
@@ -632,7 +662,7 @@ class ReportViewTest(TestCase):
 
     def setUp(self):
         super(ReportViewTest, self).setUp()
-        self.path = reverse('raven-report', urlconf=self.urls)
+        self.path = reverse('raven-report', args=['1'], urlconf=self.urls)
 
     @mock.patch('raven.contrib.django.views.is_valid_origin')
     def test_calls_is_valid_origin_with_header(self, is_valid_origin):
@@ -706,9 +736,9 @@ class PromiseSerializerTestCase(TestCase):
     def test_basic(self):
         from django.utils.functional import lazy
 
-        obj = lazy(lambda: 'bar', six.text_type)()
+        obj = lazy(lambda: 'bar', text_type)()
         res = transform(obj)
-        expected = "'bar'" if six.PY3 else "u'bar'"
+        expected = "'bar'" if not PY2 else "u'bar'"
         assert res == expected
 
     def test_handles_gettext_lazy(self):
@@ -717,37 +747,37 @@ class PromiseSerializerTestCase(TestCase):
         def fake_gettext(to_translate):
             return 'Igpay Atinlay'
 
-        fake_gettext_lazy = lazy(fake_gettext, six.text_type)
+        fake_gettext_lazy = lazy(fake_gettext, text_type)
 
         result = transform(fake_gettext_lazy("something"))
-        assert isinstance(result, six.string_types)
-        expected = "'Igpay Atinlay'" if six.PY3 else "u'Igpay Atinlay'"
+        assert isinstance(result, string_types)
+        expected = "'Igpay Atinlay'" if not PY2 else "u'Igpay Atinlay'"
         assert result == expected
 
     def test_real_gettext_lazy(self):
-        d = {six.text_type('lazy_translation'): gettext_lazy(six.text_type('testing'))}
-        key = "'lazy_translation'" if six.PY3 else "u'lazy_translation'"
-        value = "'testing'" if six.PY3 else "u'testing'"
+        d = {text_type('lazy_translation'): gettext_lazy(text_type('testing'))}
+        key = "'lazy_translation'" if not PY2 else "u'lazy_translation'"
+        value = "'testing'" if not PY2 else "u'testing'"
         assert transform(d) == {key: value}
 
 
 class ModelInstanceSerializerTestCase(TestCase):
     def test_basic(self):
-        instance = TestModel()
+        instance = MyTestModel()
 
         result = transform(instance)
-        assert isinstance(result, six.string_types)
-        assert result == '<TestModel: TestModel object>'
+        assert isinstance(result, string_types)
+        assert result == '<MyTestModel: MyTestModel object>'
 
 
 class QuerySetSerializerTestCase(TestCase):
     def test_basic(self):
         from django.db.models.query import QuerySet
-        obj = QuerySet(model=TestModel)
+        obj = QuerySet(model=MyTestModel)
 
         result = transform(obj)
-        assert isinstance(result, six.string_types)
-        assert result == '<QuerySet: model=TestModel>'
+        assert isinstance(result, string_types)
+        assert result == '<QuerySet: model=MyTestModel>'
 
 
 class SentryExceptionHandlerTest(TestCase):
@@ -759,55 +789,60 @@ class SentryExceptionHandlerTest(TestCase):
     def exc_info(self):
         return (ValueError, ValueError('lol world'), None)
 
-    @mock.patch.object(TempStoreClient, 'captureException')
+    def setUp(self):
+        super(SentryExceptionHandlerTest, self).setUp()
+        self.client = get_client()
+        self.handler = SentryDjangoHandler(self.client)
+
+    @mock.patch.object(MockClient, 'captureException')
     @mock.patch('sys.exc_info')
     def test_does_capture_exception(self, exc_info, captureException):
         exc_info.return_value = self.exc_info
-        sentry_exception_handler(request=self.request)
+        self.handler.exception_handler(request=self.request)
 
         captureException.assert_called_once_with(exc_info=self.exc_info, request=self.request)
 
-    @mock.patch.object(TempStoreClient, 'capture')
+    @mock.patch.object(MockClient, 'send')
     @mock.patch('sys.exc_info')
-    def test_does_exclude_filtered_types(self, exc_info, mock_capture):
+    def test_does_exclude_filtered_types(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
         try:
-            get_client().ignore_exceptions = set(['ValueError'])
+            self.client.ignore_exceptions = set(['ValueError'])
 
-            sentry_exception_handler(request=self.request)
+            self.handler.exception_handler(request=self.request)
         finally:
-            get_client().ignore_exceptions.clear()
+            self.client.ignore_exceptions.clear()
 
-        assert not mock_capture.called
+        assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'capture')
+    @mock.patch.object(MockClient, 'send')
     @mock.patch('sys.exc_info')
-    def test_ignore_exceptions_with_expression_match(self, exc_info, mock_capture):
+    def test_ignore_exceptions_with_expression_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
 
         try:
-            if six.PY3:
-                get_client().ignore_exceptions = set(['builtins.*'])
+            if not PY2:
+                self.client.ignore_exceptions = set(['builtins.*'])
             else:
-                get_client().ignore_exceptions = set(['exceptions.*'])
-            sentry_exception_handler(request=self.request)
+                self.client.ignore_exceptions = set(['exceptions.*'])
+            self.handler.exception_handler(request=self.request)
         finally:
-            get_client().ignore_exceptions.clear()
+            self.client.ignore_exceptions.clear()
 
-        assert not mock_capture.called
+        assert not mock_send.called
 
-    @mock.patch.object(TempStoreClient, 'capture')
+    @mock.patch.object(MockClient, 'send')
     @mock.patch('sys.exc_info')
-    def test_ignore_exceptions_with_module_match(self, exc_info, mock_capture):
+    def test_ignore_exceptions_with_module_match(self, exc_info, mock_send):
         exc_info.return_value = self.exc_info
 
         try:
-            if six.PY3:
-                get_client().ignore_exceptions = set(['builtins.ValueError'])
+            if not PY2:
+                self.client.ignore_exceptions = set(['builtins.ValueError'])
             else:
-                get_client().ignore_exceptions = set(['exceptions.ValueError'])
-            sentry_exception_handler(request=self.request)
+                self.client.ignore_exceptions = set(['exceptions.ValueError'])
+            self.handler.exception_handler(request=self.request)
         finally:
-            get_client().ignore_exceptions.clear()
+            self.client.ignore_exceptions.clear()
 
-        assert not mock_capture.called
+        assert not mock_send.called

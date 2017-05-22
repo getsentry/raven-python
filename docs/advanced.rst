@@ -51,7 +51,7 @@ settings:
     import raven
 
     client = raven.Client(
-        dsn='___DSN___'
+        dsn='___DSN___',
 
         # inform the client which parts of code are yours
         # include_paths=['my.app']
@@ -105,6 +105,37 @@ The following are valid arguments which may be passed to the Raven client:
 
         release = '1.0.3'
 
+.. describe:: environment
+
+    The environment your application is running in::
+
+        environment = 'staging'
+
+.. describe:: tags
+
+    Default tags to send with events::
+
+        tags = {'site': 'foo.com'}
+
+.. describe:: repos
+
+    This describes local repositories that are reflected in your source code::
+
+        repos = {
+            'raven': {
+                # the name of the repository as registered in Sentry
+                'name': 'getsentry/raven-python',
+                # the prefix where the local source code is found in the repo
+                'prefix': 'src',
+            }
+        }
+
+    The repository key can either be a module name or the absolute path. When
+    a module name is given it will be automatically converted to its absolute path.
+
+    For more information, see the :doc:`repos interface <../../../clientdev/interfaces/repos>`
+    docs.
+
 .. describe:: exclude_paths
 
     Extending this allow you to ignore module prefixes when we attempt to
@@ -137,9 +168,24 @@ The following are valid arguments which may be passed to the Raven client:
             'Http404',
             'django.exceptions.http.Http404',
             'django.exceptions.*',
+            ValueError,
         ]
 
-.. describe:: max_list_length
+    Each item can be either a string or a class.
+    String declaration is strict (ie. does not works for child exceptions)
+    whereas class declaration handle inheritance (ie. child exceptions are also ignored).
+
+.. describe:: sample_rate
+
+    The sampling factor to apply to events. A value of 0.00 will deny sending
+    any events, and a value of 1.00 will send 100% of events.
+
+    .. code-block:: python
+
+        # send 50% of events
+        sample_rate = 0.5
+
+.. describe:: list_max_length
 
     The maximum number of items a list-like container should store.
 
@@ -220,6 +266,35 @@ deduplicate by taking into account the URL:
 .. sentry:edition:: hosted, on-premise
 
     For more information, see :ref:`custom-grouping`.
+
+Sampling Messages
+-----------------
+
+There are two ways to sample messages:
+
+- Add sample_rate to the Client object - This sends a percentage of messages the reaching the Client to Sentry
+
+.. code-block:: python
+
+    client = Client('___DSN___', sample_rate=0.5) # send 50% of events
+
+- Sample individual messages
+
+.. code-block:: python
+
+    client = Client('___DSN___') # No sample_rate provided
+
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        client.captureException(sample_rate=0.5) # Send 50% of this event
+
+Alternatively, if you have SentryHandler configured in your logging stack,
+you can send ``sample_rate`` in the ``extra`` kwarg in each log like this
+
+.. code-block:: python
+
+    some_logger.warning('foo', extra={'sample_rate': 0.5}) # Send 50% of this event
 
 A Note on uWSGI
 ---------------

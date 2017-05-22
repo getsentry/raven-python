@@ -19,5 +19,7 @@
     <key name="processors" required="no" datatype="string-list"/>
     <key name="project" required="no"/>
     <key name="dsn" required="no"/>
+    <key name="release" required="no"/>
+    <key name="environment" required="no"/>
   </sectiontype>
 </component>

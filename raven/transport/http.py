@@ -7,22 +7,18 @@ raven.transport.http
 """
 from __future__ import absolute_import
 
-from raven._compat import string_types
+from raven.utils.compat import string_types, urllib2
 from raven.conf import defaults
 from raven.exceptions import APIError, RateLimited
 from raven.transport.base import Transport
 from raven.utils.http import urlopen
-from raven.utils.compat import urllib2
 
 
 class HTTPTransport(Transport):
     scheme = ['sync+http', 'sync+https']
 
-    def __init__(self, parsed_url, timeout=defaults.TIMEOUT, verify_ssl=True,
+    def __init__(self, timeout=defaults.TIMEOUT, verify_ssl=True,
                  ca_certs=defaults.CA_BUNDLE):
-        self._parsed_url = parsed_url
-        self._url = parsed_url.geturl().rsplit('+', 1)[-1]
-
         if isinstance(timeout, string_types):
             timeout = int(timeout)
         if isinstance(verify_ssl, string_types):
@@ -32,11 +28,11 @@ class HTTPTransport(Transport):
         self.verify_ssl = verify_ssl
         self.ca_certs = ca_certs
 
-    def send(self, data, headers):
+    def send(self, url, data, headers):
         """
         Sends a request to a remote webserver using HTTP POST.
         """
-        req = urllib2.Request(self._url, headers=headers)
+        req = urllib2.Request(url, headers=headers)
 
         try:
             response = urlopen(

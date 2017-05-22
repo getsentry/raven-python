@@ -25,7 +25,7 @@ from raven.conf import setup_logging
 from raven.base import Client
 from raven.middleware import Sentry as SentryMiddleware
 from raven.handlers.logging import SentryHandler
-from raven.utils.compat import _urlparse
+from raven.utils.compat import urlparse
 from raven.utils.encoding import to_unicode
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils.conf import convert_options
@@ -42,10 +42,7 @@ def make_client(client_cls, app, dsn=None):
                     | set([app.import_name])
                 ),
                 # support legacy RAVEN_IGNORE_EXCEPTIONS
-                'ignore_exceptions': [
-                    '{0}.{1}'.format(x.__module__, x.__name__)
-                    for x in app.config.get('RAVEN_IGNORE_EXCEPTIONS', [])
-                ],
+                'ignore_exceptions': app.config.get('RAVEN_IGNORE_EXCEPTIONS', []),
                 'extra': {
                     'app': app,
                 },
@@ -99,7 +96,7 @@ class Sentry(object):
                  logging=False, logging_exclusions=None, level=logging.NOTSET,
                  wrap_wsgi=None, register_signal=True):
         if client and not isinstance(client, Client):
-            raise TypeError('client should an instance of Client')
+            raise TypeError('client should be an instance of Client')
 
         self.dsn = dsn
         self.logging = logging
@@ -198,7 +195,7 @@ class Sentry(object):
         if retriever is None:
             retriever = self.get_form_data
 
-        urlparts = _urlparse.urlsplit(request.url)
+        urlparts = urlparse.urlsplit(request.url)
 
         try:
             data = retriever(request)
@@ -216,6 +213,10 @@ class Sentry(object):
 
     def before_request(self, *args, **kwargs):
         self.last_event_id = None
+
+        if request.url_rule:
+            self.client.transaction.push(request.url_rule.rule)
+
         try:
             self.client.http_context(self.get_http_info(request))
         except Exception as e:
@@ -229,6 +230,8 @@ class Sentry(object):
         if self.last_event_id:
             response.headers['X-Sentry-ID'] = self.last_event_id
         self.client.context.clear()
+        if request.url_rule:
+            self.client.transaction.pop(request.url_rule.rule)
         return response
 
     def init_app(self, app, dsn=None, logging=None, level=None,

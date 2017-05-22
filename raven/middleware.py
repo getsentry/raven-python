@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 from contextlib import contextmanager
 
-from raven._compat import Iterator, next
+from raven.utils.compat import Iterator, next
 from raven.utils.wsgi import (
     get_current_url, get_headers, get_environ)
 
@@ -43,6 +43,7 @@ class ClosingIterator(Iterator):
     def __init__(self, sentry, iterable, environ):
         self.sentry = sentry
         self.environ = environ
+        self._close = getattr(iterable, 'close', None)
         self.iterable = iter(iterable)
         self.closed = False
 
@@ -65,11 +66,12 @@ class ClosingIterator(Iterator):
         if self.closed:
             return
         try:
-            if hasattr(self.iterable, 'close'):
+            if self._close is not None:
                 with common_exception_handling(self.environ, self.sentry):
-                    self.iterable.close()
+                    self._close()
         finally:
             self.sentry.client.context.clear()
+            self.sentry.client.transaction.clear()
             self.closed = True
 
 
@@ -106,9 +108,6 @@ class Sentry(object):
             'headers': dict(get_headers(environ)),
             'env': dict(get_environ(environ)),
         }
-
-    def process_response(self, request, response):
-        self.client.context.clear()
 
     def handle_exception(self, environ=None):
         return self.client.captureException()

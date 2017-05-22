@@ -7,7 +7,7 @@ raven.utils
 """
 from __future__ import absolute_import
 
-from raven._compat import iteritems, string_types
+from raven.utils.compat import iteritems, string_types
 import logging
 import threading
 from functools import update_wrapper
@@ -52,6 +52,7 @@ def varmap(func, var, context=None, name=None):
         ret = func(name, var)
     del context[objid]
     return ret
+
 
 # We store a cache of module_name->version string to avoid
 # continuous imports and lookups of modules

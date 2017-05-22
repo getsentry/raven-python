@@ -4,7 +4,7 @@ import logging
 import os
 import warnings
 
-from raven._compat import PY2, text_type
+from raven.utils.compat import PY2, text_type
 from raven.exceptions import InvalidDsn
 from raven.utils.encoding import to_string
 from raven.utils.urlparse import parse_qsl, urlparse
@@ -60,14 +60,12 @@ class RemoteConfig(object):
     def is_active(self):
         return all([self.base_url, self.project, self.public_key, self.secret_key])
 
-    # TODO(dcramer): we dont want transports bound to a URL
     def get_transport(self):
         if not self.store_endpoint:
             return
 
         if not hasattr(self, '_transport'):
-            parsed = urlparse(self.store_endpoint)
-            self._transport = self._transport_cls(parsed, **self.options)
+            self._transport = self._transport_cls(**self.options)
         return self._transport
 
     def get_public_dsn(self):
@@ -84,7 +82,7 @@ class RemoteConfig(object):
         if PY2:
             value = to_string(value)
 
-        url = urlparse(value)
+        url = urlparse(value.strip())
 
         if url.scheme not in ('http', 'https'):
             warnings.warn('Transport selection via DSN is deprecated. You should explicitly pass the transport class to Client() instead.')

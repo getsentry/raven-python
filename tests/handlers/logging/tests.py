@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 import logging
 import sys
 import mock
-import six
 
+from raven.utils.compat import iteritems, PY2
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
 from raven.utils.stacks import iter_stack_frames
@@ -31,7 +31,7 @@ class LoggingIntegrationTest(TestCase):
     def make_record(self, msg, args=(), level=logging.INFO, extra=None, exc_info=None, name='root', pathname=__file__):
         record = logging.LogRecord(name, level, pathname, 27, msg, args, exc_info, 'make_record')
         if extra:
-            for key, value in six.iteritems(extra):
+            for key, value in iteritems(extra):
                 record.__dict__[key] = value
         return record
 
@@ -49,6 +49,23 @@ class LoggingIntegrationTest(TestCase):
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test error')
         self.assertEqual(msg['params'], ())
+
+    def test_logger_ignore_exception(self):
+        class Foo(Exception):
+            pass
+        old = self.client.ignore_exceptions
+        self.client.ignore_exceptions = set(['Foo'])
+        try:
+            try:
+                raise Foo()
+            except Exception:
+                exc_info = sys.exc_info()
+            record = self.make_record('This is a test error',
+                                      exc_info=exc_info)
+            self.handler.emit(record)
+            self.assertEqual(len(self.client.events), 0)
+        finally:
+            self.client.ignore_exceptions = old
 
     def test_can_record(self):
         tests = [
@@ -96,7 +113,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        if six.PY3:
+        if not PY2:
             expected = "'http://example.com'"
         else:
             expected = "u'http://example.com'"
@@ -117,7 +134,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(event['message'], 'This is a test info with an exception')
         assert 'exception' in event
-        exc = event['exception']['values'][0]
+        exc = event['exception']['values'][-1]
         self.assertEqual(exc['type'], 'ValueError')
         self.assertEqual(exc['value'], 'This is a test ValueError')
         self.assertTrue('sentry.interfaces.Message' in event)
@@ -134,7 +151,7 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(event['message'], 'This is a test of args')
         msg = event['sentry.interfaces.Message']
         self.assertEqual(msg['message'], 'This is a test of %s')
-        expected = ("'args'",) if six.PY3 else ("u'args'",)
+        expected = ("'args'",) if not PY2 else ("u'args'",)
         self.assertEqual(msg['params'], expected)
 
     def test_record_stack(self):
@@ -150,7 +167,6 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(frame['module'], 'raven.handlers.logging')
         assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
-        self.assertEqual(event['culprit'], 'root in make_record')
         self.assertEqual(event['message'], 'This is a test of stacks')
 
     def test_no_record_stack(self):
@@ -169,8 +185,6 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
         assert 'stacktrace' in event
-        assert 'culprit' in event
-        assert event['culprit'] == 'root in make_record'
         self.assertTrue('message' in event, event)
         self.assertEqual(event['message'], 'This is a test of stacks')
         assert 'exception' not in event
@@ -193,7 +207,7 @@ class LoggingIntegrationTest(TestCase):
 
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
-        expected = "'foo'" if six.PY3 else "u'foo'"
+        expected = "'foo'" if not PY2 else "u'foo'"
         self.assertEqual(event['extra']['data'], expected)
 
     def test_tags(self):
@@ -214,6 +228,15 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
         assert event['tags'] == {'foo': 'bar'}
+
+    def test_tags_merge(self):
+        handler = SentryHandler(self.client, tags={'foo': 'bar', 'biz': 'baz'})
+        record = self.make_record('Message', extra={'tags': {'foo': 'faz'}})
+        handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+        assert event['tags'] == {'foo': 'faz', 'biz': 'baz'}
 
     def test_fingerprint_on_event(self):
         record = self.make_record('Message', extra={'fingerprint': ['foo']})
@@ -238,6 +261,17 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(len(self.client.events), 1)
         event = self.client.events.pop(0)
         assert event['server_name'] == 'foo'
+
+    def test_sample_rate(self):
+        record = self.make_record('Message', extra={'sample_rate': 0.0})
+        self.handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 0)
+
+        record = self.make_record('Message', extra={'sample_rate': 1.0})
+        self.handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
 
 
 class LoggingHandlerTest(TestCase):

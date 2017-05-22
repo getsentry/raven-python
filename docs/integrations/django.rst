@@ -3,10 +3,7 @@ Django
 
 .. default-domain:: py
 
-`Django <http://djangoproject.com/>`_ is arguably Python's most popular web
-framework.  Support is built into Raven but needs some configuration.  While
-older versions of Django will likely work, officially only version 1.4 and
-newer are supported.
+`Django <http://djangoproject.com/>`_ version 1.4 and newer are supported.
 
 Setup
 -----
@@ -24,13 +21,14 @@ Using the Django integration is as simple as adding
 Additional settings for the client are configured using the
 ``RAVEN_CONFIG`` dictionary::
 
+    import os
     import raven
 
     RAVEN_CONFIG = {
         'dsn': '___DSN___',
         # If you are using git, you can also automatically configure the
         # release based on the git info.
-        'release': raven.fetch_git_sha(os.path.dirname(__file__)),
+        'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
     }
 
 Once you've configured the client, you can test it using the standard Django
@@ -84,6 +82,10 @@ ERROR and above messages to sentry, the following config can be used::
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': True,
+        'root': {
+            'level': 'WARNING',
+            'handlers': ['sentry'],
+        },
         'formatters': {
             'verbose': {
                 'format': '%(levelname)s %(asctime)s %(module)s '
@@ -103,10 +105,6 @@ ERROR and above messages to sentry, the following config can be used::
             }
         },
         'loggers': {
-            'root': {
-                'level': 'WARNING',
-                'handlers': ['sentry'],
-            },
             'django.db.backends': {
                 'level': 'ERROR',
                 'handlers': ['console'],
@@ -145,10 +143,11 @@ do this, you simply need to enable a Django middleware:
 
 .. sourcecode:: python
 
-    MIDDLEWARE_CLASSES = (
+    # Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
+    MIDDLEWARE = (
         'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
         ...,
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
 
 It is recommended to put the middleware at the top, so that any only 404s
 that bubbled all the way up get logged. Certain middlewares (e.g. flatpages)
@@ -174,9 +173,12 @@ Message References
 Sentry supports sending a message ID to your clients so that they can be
 tracked easily by your development team. There are two ways to access this
 information, the first is via the ``X-Sentry-ID`` HTTP response header.
-Adding this is as simple as appending a middleware to your stack::
+Adding this is as simple as appending a middleware to your stack:
 
-    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+.. sourcecode:: python
+
+    # Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
+    MIDDLEWARE = MIDDLEWARE + (
       # We recommend putting this as high in the chain as possible
       'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
       ...,
@@ -187,7 +189,9 @@ Sentry will attach :attr:`request.sentry` when it catches a Django
 exception.  In our example, we will use this information to modify the
 default :file:`500.html` which is rendered, and show the user a case
 reference ID. The first step in doing this is creating a custom
-:func:`handler500` in your :file:`urls.py` file::
+:func:`handler500` in your :file:`urls.py` file:
+
+.. sourcecode:: python
 
     from django.conf.urls.defaults import *
 
@@ -306,14 +310,18 @@ If you already have middleware in place that handles :func:`process_exception`
 you will need to take extra care when using Sentry.
 
 For example, the following middleware would suppress Sentry logging due to it
-returning a response::
+returning a response:
+
+.. sourcecode:: python
 
     class MyMiddleware(object):
         def process_exception(self, request, exception):
             return HttpResponse('foo')
 
 To work around this, you can either disable your error handling middleware, or
-add something like the following::
+add something like the following:
+
+.. sourcecode:: python
 
     from django.core.signals import got_request_exception
 
@@ -329,7 +337,9 @@ Note that this technique may break unit tests using the Django test client
 because the exceptions won't be translated into the expected 404 or 403
 response codes.
 
-Or, alternatively, you can just enable Sentry responses::
+Or, alternatively, you can just enable Sentry responses:
+
+.. sourcecode:: python
 
     from raven.contrib.django.raven_compat.models import sentry_exception_handler
 
@@ -344,7 +354,9 @@ Circus
 
 If you are running Django with `circus <http://circus.rtfd.org/>`_ and
 `chaussette <https://chaussette.readthedocs.io/>`_ you will also need
-to add a hook to circus to activate Raven::
+to add a hook to circus to activate Raven:
+
+.. sourcecode:: python
 
     from django.conf import settings
     from django.core.management import call_command

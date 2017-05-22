@@ -13,12 +13,12 @@ class DummyThreadedScheme(ThreadedRequestsHTTPTransport):
         self.events = []
         self.send_delay = 0
 
-    def send_sync(self, data, headers, success_cb, failure_cb):
+    def send_sync(self, url, data, headers, success_cb, failure_cb):
         # delay sending the message, to allow us to test that the shutdown
         # hook waits correctly
         time.sleep(self.send_delay)
 
-        self.events.append((data, headers, success_cb, failure_cb))
+        self.events.append((url, data, headers, success_cb, failure_cb))
 
 
 class ThreadedTransportTest(TestCase):
@@ -39,11 +39,11 @@ class ThreadedTransportTest(TestCase):
 
     def test_shutdown_waits_for_send(self):
         url = urlparse(self.url)
-        transport = DummyThreadedScheme(url)
+        transport = DummyThreadedScheme()
         transport.send_delay = 0.5
 
         data = self.client.build_msg('raven.events.Message', message='foo')
-        transport.async_send(data, None, None, None)
+        transport.async_send(url, data, None, None, None)
 
         time.sleep(0.1)
 

@@ -16,7 +16,7 @@ try:
     from tornado import ioloop
     from tornado.httpclient import AsyncHTTPClient, HTTPClient
     has_tornado = True
-except:
+except ImportError:
     has_tornado = False
 
 
@@ -24,13 +24,13 @@ class TornadoHTTPTransport(AsyncTransport, HTTPTransport):
 
     scheme = ['tornado+http', 'tornado+https']
 
-    def __init__(self, parsed_url, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         if not has_tornado:
             raise ImportError('TornadoHTTPTransport requires tornado.')
 
-        super(TornadoHTTPTransport, self).__init__(parsed_url, *args, **kwargs)
+        super(TornadoHTTPTransport, self).__init__(*args, **kwargs)
 
-    def async_send(self, data, headers, success_cb, failure_cb):
+    def async_send(self, url, data, headers, success_cb, failure_cb):
         kwargs = dict(method='POST', headers=headers, body=data)
         kwargs["validate_cert"] = self.verify_ssl
         kwargs["connect_timeout"] = self.timeout
@@ -41,12 +41,12 @@ class TornadoHTTPTransport(AsyncTransport, HTTPTransport):
             client = AsyncHTTPClient()
             kwargs['callback'] = None
 
-            future = client.fetch(self._url, **kwargs)
+            future = client.fetch(url, **kwargs)
             ioloop.IOLoop.current().add_future(future, partial(self.handler, success_cb, failure_cb))
         else:
             client = HTTPClient()
             try:
-                client.fetch(self._url, **kwargs)
+                client.fetch(url, **kwargs)
                 success_cb()
             except Exception as e:
                 failure_cb(e)
