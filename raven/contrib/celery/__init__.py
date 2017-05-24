@@ -73,7 +73,7 @@ class SentryCeleryHandler(object):
 
         # This signal is fired inside the stack so let raven do its magic
         if isinstance(einfo.exception, SoftTimeLimitExceeded):
-            fingerprint = ['celery', 'SoftTimeLimitExceeded', sender]
+            fingerprint = ['celery', 'SoftTimeLimitExceeded', getattr(sender, 'name', sender)]
         else:
             fingerprint = None
 
