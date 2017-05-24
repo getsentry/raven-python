@@ -19,7 +19,6 @@ import logging
 
 from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
-from werkzeug.exceptions import ClientDisconnected
 
 from raven.conf import setup_logging
 from raven.base import Client
@@ -173,40 +172,12 @@ class Sentry(object):
         """
         Determine how to retrieve actual data by using request.mimetype.
         """
-        if self.is_json_type(request.mimetype):
-            retriever = self.get_json_data
-        else:
-            retriever = self.get_form_data
-        return self.get_http_info_with_retriever(request, retriever)
-
-    def is_json_type(self, content_type):
-        return content_type == 'application/json'
-
-    def get_form_data(self, request):
-        return request.form
-
-    def get_json_data(self, request):
-        return request.data
-
-    def get_http_info_with_retriever(self, request, retriever=None):
-        """
-        Exact method for getting http_info but with form data work around.
-        """
-        if retriever is None:
-            retriever = self.get_form_data
-
         urlparts = urlparse.urlsplit(request.url)
-
-        try:
-            data = retriever(request)
-        except ClientDisconnected:
-            data = {}
 
         return {
             'url': '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path),
             'query_string': urlparts.query,
             'method': request.method,
-            'data': data,
             'headers': dict(get_headers(request.environ)),
             'env': dict(get_environ(request.environ)),
         }

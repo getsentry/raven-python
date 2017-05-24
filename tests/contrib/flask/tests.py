@@ -130,7 +130,6 @@ class FlaskTest(BaseTest):
         self.assertEquals(http['url'], 'http://localhost/an-error/')
         self.assertEquals(http['query_string'], 'foo=bar')
         self.assertEquals(http['method'], 'GET')
-        self.assertEquals(http['data'], {})
         self.assertTrue('headers' in http)
         headers = http['headers']
         self.assertTrue('Content-Length' in headers, headers.keys())
@@ -157,7 +156,6 @@ class FlaskTest(BaseTest):
         self.assertEquals(http['url'], 'http://localhost/an-error/')
         self.assertEquals(http['query_string'], 'biz=baz')
         self.assertEquals(http['method'], 'POST')
-        self.assertEquals(http['data'], {'foo': 'bar'})
         self.assertTrue('headers' in http)
         headers = http['headers']
         self.assertTrue('Content-Length' in headers, headers.keys())
@@ -205,7 +203,6 @@ class FlaskTest(BaseTest):
 
         assert 'request' in event
         http = event['request']
-        self.assertEqual({}, http.get('data'))
 
     def test_wrap_wsgi_status(self):
         _, _, app_debug = self.make_client_and_raven(debug=True)
