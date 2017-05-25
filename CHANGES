@@ -1,3 +1,12 @@
+Version 6.1.0
+-------------
+
+* Support both string and class values for ``ignore_exceptions`` parameters.
+  Class values also support child exceptions.
+* Ensure consistent fingerprint for SoftTimeLimitExceeded exceptions
+* Add sample_rate configuration
+* fix registration of hooks for Django
+
 Version 6.0.0
 -------------
 
@@ -13,8 +22,6 @@ Version 6.0.0
   affected things like django-tastyepie.
 * Corrected an issue where Django's HTTP request was not always available
   within events.
-* Support both string and class values for ``ignore_exceptions`` parameters.
-  Class values also support child exceptions.
 
 Version 5.32.0
 --------------
