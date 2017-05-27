@@ -26,7 +26,7 @@ logger = logging.getLogger('sentry.errors')
 class AsyncWorker(object):
     _terminator = object()
 
-    def __init__(self, shutdown_timeout=DEFAULT_TIMEOUT):
+    def __init__(self, shutdown_timeout=DEFAULT_TIMEOUT, interactive=True):
         check_threads()
         self._queue = Queue(-1)
         self._lock = threading.Lock()
@@ -34,6 +34,7 @@ class AsyncWorker(object):
         self._thread_for_pid = None
         self.options = {
             'shutdown_timeout': shutdown_timeout,
+            'interactive': interactive,
         }
         self.start()
 
@@ -64,18 +65,23 @@ class AsyncWorker(object):
 
             if not self._timed_queue_join(initial_timeout):
                 # if that didn't work, wait a bit longer
-                # NB that size is an approximation, because other threads may
-                # add or remove items
-                size = self._queue.qsize()
 
-                print("Sentry is attempting to send %i pending error messages"
-                      % size)
-                print("Waiting up to %s seconds" % timeout)
+                if self.options['interactive']:
+                    # we can only ask questions on interactive terminals...
+                    # otherwise, simply wait until the timeout is reached
 
-                if os.name == 'nt':
-                    print("Press Ctrl-Break to quit")
-                else:
-                    print("Press Ctrl-C to quit")
+                    # NB that size is an approximation, because other threads
+                    # may add or remove items
+                    size = self._queue.qsize()
+                    print("Sentry is attempting to send "
+                          "%i pending error messages"
+                          % size)
+                    print("Waiting up to %s seconds" % timeout)
+
+                    if os.name == 'nt':
+                        print("Press Ctrl-Break to quit")
+                    else:
+                        print("Press Ctrl-C to quit")
 
                 self._timed_queue_join(timeout - initial_timeout)
 
@@ -178,3 +184,11 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
     def async_send(self, url, data, headers, success_cb, failure_cb):
         self.get_worker().queue(
             self.send_sync, url, data, headers, success_cb, failure_cb)
+
+
+class ThreadedBackgroundHTTPTransport(ThreadedHTTPTransport):
+
+    def get_worker(self):
+        if not hasattr(self, '_worker') or not self._worker.is_alive():
+            self._worker = AsyncWorker(interactive=False)
+        return self._worker
