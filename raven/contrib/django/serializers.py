@@ -58,17 +58,16 @@ class HttpRequestSerializer(Serializer):
 
 register(HttpRequestSerializer)
 
+#Always register
+from django.db.models.query import QuerySet
 
-if getattr(settings, 'DATABASES', None):
-    from django.db.models.query import QuerySet
+class QuerySetSerializer(Serializer):
+    types = (QuerySet,)
 
-    class QuerySetSerializer(Serializer):
-        types = (QuerySet,)
+    def serialize(self, value, **kwargs):
+        qs_name = type(value).__name__
+        if value.model:
+            return '<%s: model=%s>' % (qs_name, value.model.__name__)
+        return '<%s: (Unbound)>' % (qs_name,)
 
-        def serialize(self, value, **kwargs):
-            qs_name = type(value).__name__
-            if value.model:
-                return '<%s: model=%s>' % (qs_name, value.model.__name__)
-            return '<%s: (Unbound)>' % (qs_name,)
-
-    register(QuerySetSerializer)
+register(QuerySetSerializer)
