@@ -46,7 +46,7 @@ def make_client(client_cls, app, dsn=None):
                 'extra': {
                     'app': app,
                 },
-                'sdk_name': 'raven-python:flask'
+                'integration_name': 'flask'
             },
         )
     )

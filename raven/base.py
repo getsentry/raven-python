@@ -152,7 +152,7 @@ class Client(object):
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
                  hook_libraries=None, enable_breadcrumbs=True,
-                 _random_seed=None, sdk_name=None, **options):
+                 _random_seed=None, integration_name=None, **options):
         global Raven
 
         o = options
@@ -204,9 +204,7 @@ class Client(object):
         )
         self.transaction = TransactionStack()
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
-
-        if sdk_name:
-            SDK_VALUE['name'] = sdk_name
+        self.integration_name = integration_name
 
         self.module_cache = ModuleProxyCache()
 
@@ -488,13 +486,17 @@ class Client(object):
         for k, v in iteritems(data['extra']):
             data['extra'][k] = self.transform(v)
 
+        sdk_value = SDK_VALUE.copy()
+        if self.integration_name:
+            sdk_value['name'] += ':' + self.integration_name
+
         # It's important date is added **after** we serialize
         data.setdefault('project', self.remote.project)
         data.setdefault('timestamp', date or datetime.utcnow())
         data.setdefault('time_spent', time_spent)
         data.setdefault('event_id', event_id)
         data.setdefault('platform', PLATFORM_NAME)
-        data.setdefault('sdk', SDK_VALUE)
+        data.setdefault('sdk', sdk_value)
         data.setdefault('repos', self.repos)
 
         # insert breadcrumbs
