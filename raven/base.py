@@ -152,7 +152,7 @@ class Client(object):
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
                  hook_libraries=None, enable_breadcrumbs=True,
-                 _random_seed=None, **options):
+                 _random_seed=None, sdk_name=None, **options):
         global Raven
 
         o = options
@@ -204,6 +204,9 @@ class Client(object):
         )
         self.transaction = TransactionStack()
         self.ignore_exceptions = set(o.get('ignore_exceptions') or ())
+
+        if sdk_name:
+            SDK_VALUE['name'] = sdk_name
 
         self.module_cache = ModuleProxyCache()
 

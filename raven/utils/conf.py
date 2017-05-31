@@ -54,6 +54,7 @@ def convert_options(settings, defaults=None):
     options.setdefault('environment', getopt('environment'))
     options.setdefault('ignore_exceptions', getopt('ignore_exceptions'))
     options.setdefault('sample_rate', getopt('sample_rate'))
+    options.setdefault('sdk_name', getopt('sdk_name'))
 
     transport = getopt('transport') or options.get('transport')
     if isinstance(transport, string_types):
