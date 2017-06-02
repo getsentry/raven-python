@@ -26,5 +26,6 @@ class Sentry(Middleware):
             site=config.get('sentry.site'),
             include_paths=list_from_setting(config, 'sentry.include_paths'),
             exclude_paths=list_from_setting(config, 'sentry.exclude_paths'),
+            integration_name='pylons',
         )
         super(Sentry, self).__init__(app, client)

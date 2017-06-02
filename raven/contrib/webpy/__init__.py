@@ -39,6 +39,7 @@ class SentryApplication(web.application):
     """
     def __init__(self, client, logging=False, **kwargs):
         self.client = client
+        self.client.integration_name = 'webpy'
         self.logging = logging
         if self.logging:
             setup_logging(SentryHandler(self.client))

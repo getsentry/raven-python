@@ -44,6 +44,7 @@ class Sentry(object):
         if self.logging:
             setup_logging(SentryHandler(self.client))
         self.app.sentry = self
+        self.client.integration_name = 'bottle'
 
     def handle_exception(self, *args, **kwargs):
         self.client.captureException(
