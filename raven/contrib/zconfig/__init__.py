@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-raven.contrib.zope
-~~~~~~~~~~~~~~~~~~
+raven.contrib.zconfig
+~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import ZConfig.components.logger.factory
 import raven.handlers.logging
+
 
 class Factory(ZConfig.components.logger.factory.Factory):
 
