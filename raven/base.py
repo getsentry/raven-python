@@ -15,6 +15,7 @@ import sys
 import time
 import uuid
 import warnings
+import socket
 
 from datetime import datetime
 from inspect import isclass
@@ -445,7 +446,10 @@ class Client(object):
             data['level'] = kwargs.get('level') or logging.ERROR
 
         if not data.get('server_name'):
-            data['server_name'] = self.name
+            if hasattr(socket, 'gethostname'):
+                data['server_name'] = socket.gethostname()
+            else:
+                self.name
 
         if not data.get('modules'):
             data['modules'] = self.get_module_versions()
