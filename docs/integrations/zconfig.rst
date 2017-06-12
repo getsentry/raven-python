@@ -3,8 +3,9 @@ ZConfig logging configuration
 
 `ZConfig
 <http://zconfig.readthedocs.io/en/latest/using-logging.html>`_
-provides one of the most powerful clean configuration mechanism for
-the Python logging module.  To learn more, see:
+provides a configuration mechanism for the Python logging module.
+
+To learn more, see:
 
   http://zconfig.readthedocs.io/en/latest/using-logging.html
 
