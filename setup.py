@@ -80,6 +80,7 @@ tests_require = [
     'webob',
     'webtest',
     'anyjson',
+    'ZConfig',
 ] + (
     flask_requires + flask_tests_requires +
     unittest2_requires + webpy_tests_requires

@@ -24,5 +24,6 @@ client.
    rq
    tornado
    wsgi
+   zconfig
    zerorpc
    zope
