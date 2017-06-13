@@ -9,6 +9,7 @@ raven.utils.json
 from __future__ import absolute_import
 
 import codecs
+import collections
 import datetime
 import uuid
 import json
@@ -27,6 +28,30 @@ class BetterJSONEncoder(json.JSONEncoder):
         frozenset: list,
         bytes: lambda o: o.decode('utf-8', errors='replace')
     }
+
+    def encode(self, obj):
+        super_encode = super(BetterJSONEncoder, self).encode
+        try:
+            return super_encode(obj)
+        except TypeError:
+            # json.encode keeps crashing somewhere in the C code called by
+            # `iterencode` before `default` can actually be called.
+            # We need to massage the data a bit and try again.
+            return super_encode(self.encode_keys(obj))
+
+    def encode_keys(self, value):
+        # Need to do this recursively, though this is the last resort anyways.
+        # Alternative would be to crash, but this is not really an alternative.
+        if isinstance(value, collections.Mapping):
+            return {self.encode_keys(key): val
+                    for key, val in value.items()}
+        elif isinstance(value, frozenset):
+            return repr(value)
+        else:
+            try:
+                return self.default(value)
+            except TypeError:
+                return repr(value)
 
     def default(self, obj):
         try:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import collections
 import datetime
 import uuid
 from decimal import Decimal
@@ -37,3 +38,42 @@ class JSONTest(TestCase):
     def test_decimal(self):
         d = {'decimal': Decimal('123.45')}
         assert json.dumps(d) == '{"decimal": "Decimal(\'123.45\')"}'
+
+    def test_defaultdict(self):
+        orig_d = {'foo': 'bar'}
+        d = collections.defaultdict(list)
+        d.update(orig_d)
+        assert json.dumps(d) == '{"foo": "bar"}'
+
+    def test_tuple_keys(self):
+        d = {(1, 2): "tuple_key"}
+        assert json.dumps(d) == '{"(1, 2)": "tuple_key"}'
+
+    def test_func_keys(self):
+        d = {dir: "func_key"}
+        assert json.dumps(d) == '{"<built-in function dir>": "func_key"}'
+
+    def test_frozenset_keys(self):
+        key = frozenset([1])
+        d = {key: "set_key"}
+        # Python 2/3 use different repr formats.
+        assert json.dumps(d) == '{"%s": "set_key"}' % repr(key)
+
+    def test_complex_value(self):
+        d = {"complex_value": 2+1j}
+        assert json.dumps(d) == '{"complex_value": "(2+1j)"}'
+
+    def test_all_together(self):
+        fs_key = frozenset([dir])
+        d = {
+            (dir,): frozenset([2+1j]),
+            dir: collections.defaultdict(set),
+            fs_key: [2 + 1j],
+        }
+        # Python 2/3 use different repr formats.
+        assert json.dumps(d, sort_keys=True) == \
+            '{' \
+            '"(<built-in function dir>,)": ["(2+1j)"], ' \
+            '"<built-in function dir>": {}, ' \
+            '"%s": ["(2+1j)"]' \
+            '}' % repr(fs_key)
