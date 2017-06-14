@@ -94,13 +94,14 @@ class Sentry(object):
     # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
                  logging=False, logging_exclusions=None, level=logging.NOTSET,
-                 wrap_wsgi=None, register_signal=True):
+                 wrap_wsgi=None, register_signal=True, logging_filters=None):
         if client and not isinstance(client, Client):
             raise TypeError('client should be an instance of Client')
 
         self.dsn = dsn
         self.logging = logging
         self.logging_exclusions = logging_exclusions
+        self.logging_filters = logging_filters
         self.client_cls = client_cls
         self.client = client
         self.level = level
@@ -236,7 +237,7 @@ class Sentry(object):
 
     def init_app(self, app, dsn=None, logging=None, level=None,
                  logging_exclusions=None, wrap_wsgi=None,
-                 register_signal=None):
+                 register_signal=None, logging_filters=None):
         if dsn is not None:
             self.dsn = dsn
 
@@ -262,6 +263,12 @@ class Sentry(object):
         if logging_exclusions is not None:
             self.logging_exclusions = logging_exclusions
 
+        if logging_filters is not None:
+            if not isinstance(logging_filters, list):
+                logging_filters = [logging_filters]
+
+            self.logging_filters = logging_filters
+
         if not self.client:
             self.client = make_client(self.client_cls, app, self.dsn)
 
@@ -270,7 +277,11 @@ class Sentry(object):
             if self.logging_exclusions is not None:
                 kwargs['exclude'] = self.logging_exclusions
 
-            setup_logging(SentryHandler(self.client, level=self.level), **kwargs)
+            handler = SentryHandler(self.client, level=self.level)
+            setup_logging(handler, **kwargs)
+            if logging_filters is not None:
+                for _filter in logging_filters:
+                    handler.addFilter(_filter)
 
         if self.wrap_wsgi:
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)
