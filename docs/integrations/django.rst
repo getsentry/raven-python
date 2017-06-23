@@ -57,15 +57,13 @@ Inside your template, you can now use:
 
 .. sourcecode:: html+django
 
-    <script>Raven.config('{% sentry_public_dsn %}').install()</script>
+    <body data-sentry="{% sentry_public_dsn %}">
 
-By default, the DSN is generated in a protocol relative fashion, e.g.
-``//public@example.com/1``. If you need a specific protocol, you can
-override:
+Inside your javascript:
 
-.. sourcecode:: html+django
+.. sourcecode:: js
 
-    {% sentry_public_dsn 'https' %}
+    Raven.config(document.body.dataset.sentry).install();
 
 .. sentry:edition:: hosted, on-premise
 
