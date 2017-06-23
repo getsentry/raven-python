@@ -322,22 +322,15 @@ class Client(object):
     def get_handler(self, name):
         return self.module_cache[name](self)
 
-    def get_public_dsn(self, scheme=None):
+    def get_public_dsn(self):
         """
         Returns a public DSN which is consumable by raven-js
 
-        >>> # Return scheme-less DSN
         >>> print client.get_public_dsn()
-
-        >>> # Specify a scheme to use (http or https)
-        >>> print client.get_public_dsn('https')
         """
         if not self.is_enabled():
             return
-        url = self.remote.get_public_dsn()
-        if not scheme:
-            return url
-        return '%s:%s' % (scheme, url)
+        return 'https:%s' % self.remote.get_public_dsn()
 
     def _get_exception_key(self, exc_info):
         # On certain celery versions the tb_frame attribute might

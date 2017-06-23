@@ -14,6 +14,6 @@ register = template.Library()
 
 
 @register.simple_tag
-def sentry_public_dsn(scheme=None):
+def sentry_public_dsn():
     from raven.contrib.django.models import client
-    return client.get_public_dsn(scheme) or ''
+    return client.get_public_dsn('https') or ''

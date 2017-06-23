@@ -250,9 +250,9 @@ class ClientTest(TestCase):
         self.assertEquals(data, self.client.decode(encoded))
 
     def test_get_public_dsn(self):
-        client = Client('http://public:secret@example.com/1')
+        client = Client('https://public:secret@example.com/1')
         public_dsn = client.get_public_dsn()
-        self.assertEquals(public_dsn, '//public@example.com/1')
+        self.assertEquals(public_dsn, 'https://public@example.com/1')
 
     def test_explicit_message_on_message_event(self):
         self.client.captureMessage(message='test', data={

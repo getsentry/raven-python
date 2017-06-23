@@ -161,7 +161,7 @@ crash dialog:
     def internal_server_error(error):
         return render_template('500.html',
             event_id=g.sentry_event_id,
-            public_dsn=sentry.client.get_public_dsn('https')
+            public_dsn=sentry.client.get_public_dsn()
         )
 
 And in the error template (``500.html``) you can then do this:
