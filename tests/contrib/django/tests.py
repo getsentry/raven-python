@@ -561,12 +561,7 @@ class DjangoTemplateTagTest(TestCase):
     @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
     def test_sentry_public_dsn_no_args(self, get_public_dsn):
         sentry_public_dsn()
-        get_public_dsn.assert_called_once_with(None)
-
-    @mock.patch('raven.contrib.django.DjangoClient.get_public_dsn')
-    def test_sentry_public_dsn_with_https(self, get_public_dsn):
-        sentry_public_dsn('https')
-        get_public_dsn.assert_called_once_with('https')
+        get_public_dsn.assert_called_once()
 
 
 class DjangoLoggingTest(TestCase):
