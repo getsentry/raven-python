@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import django
+
 try:
     from django.conf.urls import url, include
 except ImportError:
@@ -8,9 +10,14 @@ except ImportError:
 
 from raven.contrib.django.resolver import RouteResolver
 
-included_url_conf = (
-    url(r'^foo/bar/(?P<param>[\w]+)', lambda x: ''),
-), '', ''
+if django.VERSION < (1, 9):
+    included_url_conf = (
+        url(r'^foo/bar/(?P<param>[\w]+)', lambda x: ''),
+    ), '', ''
+else:
+    included_url_conf = ((
+        url(r'^foo/bar/(?P<param>[\w]+)', lambda x: ''),
+    ), '')
 
 example_url_conf = (
     url(r'^api/(?P<project_id>[\w_-]+)/store/$', lambda x: ''),

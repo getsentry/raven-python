@@ -13,7 +13,6 @@ import sys
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
-from django.core.urlresolvers import reverse
 from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
@@ -22,6 +21,12 @@ from django.test import TestCase
 from django.test.client import Client as DjangoTestClient, ClientHandler as DjangoTestClientHandler
 from django.utils.translation import gettext_lazy
 from exam import fixture
+
+try:
+    from django.urls import reverse
+except ImportError:
+    # For Django version less than 1.10.
+    from django.core.urlresolvers import reverse
 
 from raven.base import Client
 from raven.utils.compat import StringIO, iteritems, PY2, string_types, text_type
