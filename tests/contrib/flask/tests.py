@@ -1,14 +1,14 @@
 import logging
 
 from exam import before, fixture
-from mock import patch
-
 from flask import Flask, current_app, g
 from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
+from mock import patch, Mock
 
 from raven.contrib.flask import Sentry
-from raven.utils.testutils import InMemoryClient, TestCase
 from raven.handlers.logging import SentryHandler
+from raven.utils.signals import logging_configured
+from raven.utils.testutils import InMemoryClient, TestCase
 
 
 class User(AnonymousUserMixin):
@@ -247,6 +247,24 @@ class FlaskTest(BaseTest):
 
         some_other_logger = logging.getLogger("some_other_logger")
         self.assertTrue(some_other_logger.propagate)
+
+    def test_logging_setup_singal(self):
+        app = Flask(__name__)
+
+        mock_handler = Mock()
+
+        def receiver(sender, *args, **kwargs):
+            self.assertIn("exclude", kwargs)
+            mock_handler(*args, **kwargs)
+
+        logging_configured.connect(receiver)
+        raven = InMemoryClient()
+
+        Sentry(
+            app, client=raven, logging=True,
+            logging_exclusions=("excluded_logger",))
+
+        mock_handler.assert_called()
 
     def test_check_client_type(self):
         self.assertRaises(TypeError, lambda _: Sentry(self.app, "oops, I'm putting my DSN instead"))
