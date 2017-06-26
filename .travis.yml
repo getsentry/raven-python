@@ -42,8 +42,12 @@ matrix:
       env: DJANGO=1.9 TEST_SUITE=django
     - python: 2.7
       env: DJANGO=1.10 TEST_SUITE=django
+    - python: 2.7
+      env: DJANGO=1.11 TEST_SUITE=django
     - python: 3.5
       env: DJANGO=1.10 TEST_SUITE=django
+    - python: 3.5
+      env: DJANGO=1.11 TEST_SUITE=django
     - python: 3.5
       env: DJANGO=dev TEST_SUITE=django
     - python: 2.7
