@@ -29,6 +29,7 @@ from raven.utils.compat import urlparse
 from raven.utils.encoding import to_unicode
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils.conf import convert_options
+from raven.utils.signals import logging_configured
 
 
 def make_client(client_cls, app, dsn=None):
@@ -270,7 +271,11 @@ class Sentry(object):
             if self.logging_exclusions is not None:
                 kwargs['exclude'] = self.logging_exclusions
 
-            setup_logging(SentryHandler(self.client, level=self.level), **kwargs)
+            handler = SentryHandler(self.client, level=self.level)
+            setup_logging(handler, **kwargs)
+
+            logging_configured.send(
+                self, sentry_handler=SentryHandler, **kwargs)
 
         if self.wrap_wsgi:
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)
