@@ -12,11 +12,11 @@ from django.http import HttpResponse
 from tests.contrib.django import views
 
 
-def handler404(request):
+def handler404(request, exception=None):
     return HttpResponse('', status=404)
 
 
-def handler500(request):
+def handler500(request, exception=None):
     if getattr(settings, 'BREAK_THAT_500', False):
         raise ValueError('handler500')
     return HttpResponse('', status=500)
