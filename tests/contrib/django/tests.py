@@ -48,6 +48,8 @@ DJANGO_15 = django.VERSION >= (1, 5, 0)
 DJANGO_18 = django.VERSION >= (1, 8, 0)
 DJANGO_110 = django.VERSION >= (1, 10, 0)
 
+MIDDLEWARE_ATTR = 'MIDDLEWARE' if DJANGO_110 else 'MIDDLEWARE_CLASSES'
+
 
 def make_request():
     return WSGIRequest(environ={
@@ -192,9 +194,9 @@ class DjangoClientTest(TestCase):
         assert event['request']['url'] == 'http://testserver{}'.format(path)
 
     def test_user_info(self):
-        with Settings(MIDDLEWARE_CLASSES=[
+        with Settings(**{MIDDLEWARE_ATTR: [
                 'django.contrib.sessions.middleware.SessionMiddleware',
-                'django.contrib.auth.middleware.AuthenticationMiddleware']):
+                'django.contrib.auth.middleware.AuthenticationMiddleware']}):
             user = User(username='admin', email='admin@example.com')
             user.set_password('admin')
             user.save()
@@ -269,7 +271,7 @@ class DjangoClientTest(TestCase):
         }
 
     def test_request_middleware_exception(self):
-        with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenRequestMiddleware']):
+        with Settings(**{MIDDLEWARE_ATTR: ['tests.contrib.django.middleware.BrokenRequestMiddleware']}):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-raise-exc'))
 
             assert len(self.raven.events) == 1
@@ -285,7 +287,7 @@ class DjangoClientTest(TestCase):
     def test_response_middlware_exception(self):
         if django.VERSION[:2] < (1, 3):
             return
-        with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenResponseMiddleware']):
+        with Settings(**{MIDDLEWARE_ATTR: ['tests.contrib.django.middleware.BrokenResponseMiddleware']}):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-no-error'))
 
             assert len(self.raven.events) == 1
@@ -325,7 +327,7 @@ class DjangoClientTest(TestCase):
             assert event['message'] == 'ValueError: handler500'
 
     def test_view_middleware_exception(self):
-        with Settings(MIDDLEWARE_CLASSES=['tests.contrib.django.middleware.BrokenViewMiddleware']):
+        with Settings(**{MIDDLEWARE_ATTR: ['tests.contrib.django.middleware.BrokenViewMiddleware']}):
             self.assertRaises(ImportError, self.client.get, reverse('sentry-raise-exc'))
 
             assert len(self.raven.events) == 1
@@ -380,7 +382,7 @@ class DjangoClientTest(TestCase):
         assert event['message'] == 'test'
 
     def test_404_middleware(self):
-        with Settings(MIDDLEWARE_CLASSES=['raven.contrib.django.middleware.Sentry404CatchMiddleware']):
+        with Settings(**{MIDDLEWARE_ATTR: ['raven.contrib.django.middleware.Sentry404CatchMiddleware']}):
             resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
 
@@ -399,7 +401,7 @@ class DjangoClientTest(TestCase):
 
     def test_404_middleware_when_disabled(self):
         extra_settings = {
-            'MIDDLEWARE_CLASSES': ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
+            MIDDLEWARE_ATTR: ['raven.contrib.django.middleware.Sentry404CatchMiddleware'],
             'SENTRY_CLIENT': 'tests.contrib.django.tests.DisabledMockClient',
         }
         with Settings(**extra_settings):
@@ -431,9 +433,9 @@ class DjangoClientTest(TestCase):
 
     def test_response_error_id_middleware(self):
         # TODO: test with 500s
-        with Settings(MIDDLEWARE_CLASSES=[
+        with Settings(**{MIDDLEWARE_ATTR: [
                 'raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
-                'raven.contrib.django.middleware.Sentry404CatchMiddleware']):
+                'raven.contrib.django.middleware.Sentry404CatchMiddleware']}):
             resp = self.client.get('/non-existent-page')
             assert resp.status_code == 404
             headers = dict(resp.items())
