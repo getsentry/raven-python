@@ -17,6 +17,7 @@ else:
 
 import logging
 
+import blinker
 from flask import request, current_app, g
 from flask.signals import got_request_exception, request_finished
 from werkzeug.exceptions import ClientDisconnected
@@ -29,7 +30,10 @@ from raven.utils.compat import urlparse
 from raven.utils.encoding import to_unicode
 from raven.utils.wsgi import get_headers, get_environ
 from raven.utils.conf import convert_options
-from raven.utils.signals import logging_configured
+
+
+raven_signals = blinker.Namespace()
+logging_configured = raven_signals.signal('logging_configured')
 
 
 def make_client(client_cls, app, dsn=None):

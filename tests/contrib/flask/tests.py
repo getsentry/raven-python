@@ -5,9 +5,8 @@ from flask import Flask, current_app, g
 from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
 from mock import patch, Mock
 
-from raven.contrib.flask import Sentry
+from raven.contrib.flask import Sentry, logging_configured
 from raven.handlers.logging import SentryHandler
-from raven.utils.signals import logging_configured
 from raven.utils.testutils import InMemoryClient, TestCase
 
 
