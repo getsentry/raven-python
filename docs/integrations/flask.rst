@@ -202,3 +202,27 @@ This may also require `changes
 <http://flask.pocoo.org/docs/0.10/deploying/wsgi-standalone/#proxy-setups>`_
 to the proxy configuration to pass the right headers if it isn't doing so
 already.
+
+
+Signals
+-------
+
+Raven uses `blinker <https://github.com/jek/blinker>`_ to emit a signal
+(called ``logging_configured``) after logging has been configured for the
+client. You may `bind to that signal <https://pythonhosted.org/blinker/#subscribing-to-signals>`_
+in your application to do any additional configuration to the logging
+handler ``SentryHandler``.
+
+.. sourcecode:: python
+
+    from raven.contrib.flask import Sentry, logging_configured
+    from flask import Flask, g, render_template
+    from raven.contrib.flask import Sentry
+
+    app = Flask(__name__)
+    sentry = Sentry(app, dsn='___DSN___', logging=True)
+
+    @logging_configured.connect
+    def internal_server_error(sender, sentry_handler=None, **kwargs):
+        # configure sentry_handler here
+        sentry_handler.addFilter(some_filter)
