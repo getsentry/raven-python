@@ -245,15 +245,19 @@ def initialize():
         if _initialized:
             return
 
-        register_serializers()
-        install_middleware()
-
-        # XXX(dcramer): maybe this setting should disable ALL of this?
-        if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
-            handler = SentryDjangoHandler()
-            handler.install()
-
-        # instantiate client so hooks get registered
-        get_client()  # NOQA
-
+        # mark this as initialized immediatley to avoid recursive import issues
         _initialized = True
+
+        try:
+            register_serializers()
+            install_middleware()
+
+            # XXX(dcramer): maybe this setting should disable ALL of this?
+            if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
+                handler = SentryDjangoHandler()
+                handler.install()
+
+            # instantiate client so hooks get registered
+            get_client()  # NOQA
+        except Exception:
+            _initialized = False
