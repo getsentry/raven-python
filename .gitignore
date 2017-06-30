@@ -24,3 +24,4 @@ lib/
 .idea
 .eggs
 venv
+.vscode/tags
