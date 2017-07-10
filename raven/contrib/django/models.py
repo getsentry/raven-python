@@ -15,6 +15,7 @@ import logging
 import sys
 import warnings
 
+import django
 from django.conf import settings
 from django.core.signals import got_request_exception, request_started
 from threading import Lock
@@ -270,3 +271,7 @@ def initialize():
             get_client()  # NOQA
         except Exception:
             _initialized = False
+
+# Django 1.8 uses ``raven.contrib.apps.RavenConfig``
+if django.VERSION < (1, 7, 0):
+    initialize()
