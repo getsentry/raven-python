@@ -55,6 +55,7 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
 class SentryCeleryHandler(object):
     def __init__(self, client, ignore_expected=False):
         self.client = client
+        self.client.integration_name = 'celery'
         self.ignore_expected = ignore_expected
 
     def install(self):

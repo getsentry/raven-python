@@ -23,6 +23,7 @@ class AsyncSentryClient(Client):
     """
     def __init__(self, *args, **kwargs):
         self.validate_cert = kwargs.pop('validate_cert', True)
+        kwargs['integration_name'] = 'tornado'
         super(AsyncSentryClient, self).__init__(*args, **kwargs)
 
     def capture(self, *args, **kwargs):

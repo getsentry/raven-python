@@ -135,6 +135,7 @@ class DjangoClient(Client):
 
     def __init__(self, *args, **kwargs):
         install_sql_hook = kwargs.pop('install_sql_hook', True)
+        kwargs['integration_name'] = 'django'
         Client.__init__(self, *args, **kwargs)
         if install_sql_hook:
             self.install_sql_hook()
