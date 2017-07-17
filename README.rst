@@ -1,5 +1,5 @@
-.. image:: https://sentry.io/_static/getsentry/images/branding/png/sentry-horizontal-black.png
-    :target: https://sentry.io"
+.. image:: docs/_static/logo.png
+    :target: https://sentry.io
     :align: center
     :alt: Sentry website
 
@@ -27,7 +27,7 @@ Raven - Sentry for Python
    :alt: Code Climate
 
 
-Raven is the official Python client for `Sentry <http://getsentry.com/>`_, officially supports
+Raven is the official Python client for `Sentry`_, officially supports
 Python 2.6–2.7 & 3.3–3.7, and runs on PyPy and Google App Engine.
 
 It tracks errors and exceptions that happen during the
@@ -41,7 +41,7 @@ web application.
 Your application doesn't live on the web? No problem! Raven is easy to use in
 any Python application.
 
-For more information, see our `python documentation <https://docs.getsentry.com/hosted/clients/python/>`_.
+For more information, see our `Python Documentation`_ for framework integrations and other goodies.
 
 
 Features
@@ -63,7 +63,7 @@ Install the latest package with *pip* and configure the client::
 
     pip install raven --upgrade
 
-Create a client and capture an exception:
+Create a client and capture an example exception:
 
 .. sourcecode:: python
 
@@ -77,7 +77,7 @@ Create a client and capture an exception:
         client.captureException()
 
 
-Raven Python is more than that however. Checkout our `python documentation <https://docs.getsentry.com/hosted/clients/python/>`_.
+Raven Python is more than that however. Checkout our `Python Documentation`_.
 
 
 Contributing
@@ -86,27 +86,35 @@ Contributing
 Raven is under active development and contributions are more than welcome!
 There are many ways to contribute:
 
-* Report bugs on our `issue tracker <http://github.com/getsentry/raven-python/issues>`. Don't forget
-to read how you can make `awesome bug reports` to make it easier for us to fix them.
-* Fix bugs on our issue tracker. Take a look at our `contribution guidelines`.
+* Join in on discussions on our `Mailing List`_ or in our `IRC Channel`_.
 
-TBD..
+* Report bugs on our `Issue Tracker`_.
 
-Running tests
--------------
-
-TBD...
+* Submit a pull request!
 
 
 Resources
 ---------
 
-* `Documentation <https://docs.getsentry.com/hosted/clients/python/>`_
-* `Bug Tracker <http://github.com/getsentry/raven-python/issues>`_
-* `Code <http://github.com/getsentry/raven-python>`_
-* `Mailing List <https://groups.google.com/group/getsentry>`_
-* `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)
-* `Travis CI <http://travis-ci.org/getsentry/raven-python>`_
+* `Sentry`_
+* `Python Documentation`_
+* `Issue Tracker`_
+* `Code`_ on Github
+* `Mailing List`_
+* `IRC Channel`_ (irc.freenode.net, #sentry)
+* `Travis CI`_
+
+.. _Sentry: https://getsentry.com/
+.. _Python Documentation: https://docs.getsentry.com/hosted/clients/python/
+.. _SDKs for other platforms: https://docs.sentry.io/#platforms
+.. _Issue Tracker: https://github.com/getsentry/raven-python/issues
+.. _Code: https://github.com/getsentry/raven-python
+.. _Mailing List: https://groups.google.com/group/getsentry
+.. _IRC Channel: irc://irc.freenode.net/sentry
+.. _Travis CI: http://travis-ci.org/getsentry/raven-python
 
 
-Not using Python? Check out our `SDKs for other platforms <https://docs.sentry.io/#platforms/>`_.
+
+
+
+Not using Python? Check out our `SDKs for other platforms`_.
