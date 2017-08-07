@@ -3,8 +3,9 @@ from __future__ import absolute_import
 import django
 import pytest
 
+from django.test import TestCase
 from django.core.urlresolvers import get_resolver
-from tastypie.test import ResourceTestCase
+from tastypie.test import ResourceTestCaseMixin
 
 from raven.contrib.django.models import client
 from raven.contrib.django.resolver import RouteResolver
@@ -12,7 +13,7 @@ from raven.contrib.django.resolver import RouteResolver
 DJANGO_19 = django.VERSION >= (1, 9, 0) and django.VERSION <= (1, 10, 0)
 
 
-class TastypieTest(ResourceTestCase):
+class TastypieTest(ResourceTestCaseMixin, TestCase):
     def setUp(self):
         super(TastypieTest, self).setUp()
         self.path = '/api/v1/example/'

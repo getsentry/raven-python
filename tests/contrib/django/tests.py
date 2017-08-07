@@ -11,7 +11,6 @@ import re
 import sys
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.core.signals import got_request_exception
 from django.core.handlers.wsgi import WSGIRequest
@@ -42,7 +41,7 @@ from raven.contrib.django.views import is_valid_origin
 from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
 
-from .models import MyTestModel
+#from .models import MyTestModel
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
 DJANGO_18 = django.VERSION >= (1, 8, 0)
@@ -128,6 +127,7 @@ class ClientProxyTest(TestCase):
         captureMessage.assert_called_once_with(message='foo')
 
 
+@pytest.mark.usefixtures("user_instance")
 class DjangoClientTest(TestCase):
     # Fixture setup/teardown
     urls = 'tests.contrib.django.urls'
@@ -197,9 +197,6 @@ class DjangoClientTest(TestCase):
         with Settings(**{MIDDLEWARE_ATTR: [
                 'django.contrib.sessions.middleware.SessionMiddleware',
                 'django.contrib.auth.middleware.AuthenticationMiddleware']}):
-            user = User(username='admin', email='admin@example.com')
-            user.set_password('admin')
-            user.save()
 
             self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
@@ -207,7 +204,7 @@ class DjangoClientTest(TestCase):
             event = self.raven.events.pop(0)
             assert 'user' not in event
 
-            assert self.client.login(username='admin', password='admin')
+            assert self.client.login(username='admin', password='password')
 
             self.assertRaises(Exception, self.client.get, reverse('sentry-raise-exc'))
 
@@ -216,9 +213,9 @@ class DjangoClientTest(TestCase):
             assert 'user' in event
             user_info = event['user']
             assert user_info == {
-                'username': user.username,
-                'id': user.id,
-                'email': user.email,
+                'username': self.user.username,
+                'id': self.user.id,
+                'email': self.user.email,
             }
 
     @pytest.mark.skipif(not DJANGO_15, reason='< Django 1.5')
@@ -768,19 +765,19 @@ class PromiseSerializerTestCase(TestCase):
         assert transform(d) == {key: value}
 
 
-class ModelInstanceSerializerTestCase(TestCase):
-    def test_basic(self):
-        instance = MyTestModel()
+class ModelInstanceSerializerTestCase(object):
+    def test_basic(self, mytest_model):
+        instance = mytest_model()
 
         result = transform(instance)
         assert isinstance(result, string_types)
         assert result == '<MyTestModel: MyTestModel object>'
 
 
-class QuerySetSerializerTestCase(TestCase):
-    def test_basic(self):
+class QuerySetSerializerTestCase(object):
+    def test_basic(self, mytest_model):
         from django.db.models.query import QuerySet
-        obj = QuerySet(model=MyTestModel)
+        obj = QuerySet(model=mytest_model)
 
         result = transform(obj)
         assert isinstance(result, string_types)
