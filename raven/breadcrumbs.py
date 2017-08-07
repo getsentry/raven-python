@@ -200,6 +200,13 @@ def _wrap_logging_method(meth, level=None):
 
 
 def _patch_logger():
+    if logging._srcfile is None:
+        logger.warning(
+            'Frame introspection not available. '
+            'Cannot instrument logging for breadcrumbs.'
+        )
+        return
+
     cls = logging.Logger
 
     methods = {
