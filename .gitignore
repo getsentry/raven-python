@@ -22,6 +22,5 @@ include/
 lib/
 .cache
 .idea
-.eggs
 venv
 .vscode/tags
