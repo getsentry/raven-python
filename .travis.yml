@@ -10,6 +10,11 @@ cache:
 
 
 jobs:
+  fast_finish: true
+#  allow_failures:
+#    - python: 3.5
+#      env: TOXENV=py35-django-dev-fix
+
   include:
     - stage: core
       python: 2.7
@@ -47,6 +52,7 @@ jobs:
       python: 2.7
       env: TOXENV=py27-django-110
 
+
     - stage: contrib
       python: 3.3
       env: TOXENV=py33-django-17
@@ -76,6 +82,12 @@ jobs:
     - stage: contrib
       python: 3.5
       env: TOXENV=py35-django-110
+    - stage: contrib
+      python: 3.5
+      env: TOXENV=py35-django-111-fix
+#    - stage: contrib
+#      python: 3.5
+#      env: TOXENV=py35-django-dev-fix
 
     - stage: contrib
       python: 2.7
