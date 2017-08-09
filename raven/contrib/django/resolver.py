@@ -19,7 +19,7 @@ class RouteResolver(object):
     _cache = {}
 
     def _simplify(self, pattern):
-        """
+        r"""
         Clean up urlpattern regexes into something readable by humans:
 
         From:

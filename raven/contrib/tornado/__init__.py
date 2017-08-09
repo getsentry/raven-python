@@ -17,10 +17,12 @@ from raven.base import Client
 
 
 class AsyncSentryClient(Client):
-    """A mixin class that could be used along with request handlers to
+    """
+    A mixin class that could be used along with request handlers to
     asynchronously send errors to sentry. The client also captures the
     information from the request handlers
     """
+
     def __init__(self, *args, **kwargs):
         self.validate_cert = kwargs.pop('validate_cert', True)
         super(AsyncSentryClient, self).__init__(*args, **kwargs)

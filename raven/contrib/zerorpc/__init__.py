@@ -22,26 +22,25 @@ class SentryMiddleware(object):
 
     Exceptions detected server-side in ZeroRPC will be submitted to Sentry (and
     propagated to the client as well).
-
     """
 
     def __init__(self, hide_zerorpc_frames=True, client=None, **kwargs):
-        """Create a middleware object that can be injected in a ZeroRPC server.
+        """
+        Create a middleware object that can be injected in a ZeroRPC server.
 
         - hide_zerorpc_frames: modify the exception stacktrace to remove the
                                internal zerorpc frames (True by default to make
                                the stacktrace as readable as possible);
         - client: use an existing raven.Client object, otherwise one will be
                   instantiated from the keyword arguments.
-
         """
-
         self._sentry_client = client or Client(**kwargs)
         self._hide_zerorpc_frames = hide_zerorpc_frames
 
     def server_inspect_exception(self, req_event, rep_event, task_ctx, exc_info):
-        """Called when an exception has been raised in the code run by ZeroRPC"""
-
+        """
+        Called when an exception has been raised in the code run by ZeroRPC
+        """
         # Hide the zerorpc internal frames for readability, for a REQ/REP or
         # REQ/STREAM server the frames to hide are:
         # - core.ServerBase._async_task

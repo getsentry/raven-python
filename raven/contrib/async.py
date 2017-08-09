@@ -17,6 +17,7 @@ class AsyncClient(Client):
     """
     This client uses a single background thread to dispatch errors.
     """
+
     def __init__(self, worker=None, *args, **kwargs):
         warnings.warn('AsyncClient is deprecated. Use the threaded+http transport instead.', DeprecationWarning)
         self.worker = worker or AsyncWorker()
