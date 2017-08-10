@@ -69,6 +69,7 @@ class SentryResponseErrorIdMiddleware(MiddlewareMixin):
     Appends the X-Sentry-ID response header for referencing a message within
     the Sentry datastore.
     """
+
     def process_response(self, request, response):
         if not getattr(request, 'sentry', None):
             return response

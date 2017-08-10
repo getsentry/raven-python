@@ -19,6 +19,7 @@ class Sentry(Sentry):
     >>> from raven.contrib.django.middleware.wsgi import Sentry
     >>> application = Sentry(application)
     """
+
     def __init__(self, application):
         self.application = application
 

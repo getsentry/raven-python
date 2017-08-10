@@ -32,12 +32,12 @@ class ZopeSentryHandlerFactory(Factory):
 
 
 class ZopeSentryHandler(SentryHandler):
-    '''
+    """
     Zope unfortunately eats the stack trace information.
     To get the stack trace information and other useful information
     from the request object, this class looks into the different stack
     frames when the emit method is invoked.
-    '''
+    """
 
     def __init__(self, *args, **kw):
         super(ZopeSentryHandler, self).__init__(*args, **kw)

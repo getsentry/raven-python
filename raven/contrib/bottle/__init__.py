@@ -37,6 +37,7 @@ class Sentry(object):
 
     >>> sentry.captureMessage('hello, world!')
     """
+
     def __init__(self, app, client, logging=False):
         self.app = app
         self.client = client

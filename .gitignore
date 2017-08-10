@@ -3,6 +3,7 @@
 *.egg
 *.db
 *.pid
+.python-version
 .coverage
 .DS_Store
 .tox

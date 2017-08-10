@@ -95,6 +95,7 @@ class Sentry(object):
       `wrap_wsgi=False`.
     - Capture information from Flask-Login (if available).
     """
+
     # TODO(dcramer): the client isn't using local context and therefore
     # gets shared by every app that does init on it
     def __init__(self, app=None, client=None, client_cls=Client, dsn=None,
@@ -140,8 +141,7 @@ class Sentry(object):
     def get_user_info(self, request):
         """
         Requires Flask-Login (https://pypi.python.org/pypi/Flask-Login/)
-        to be installed
-        and setup
+        to be installed and setup.
         """
         if not has_flask_login:
             return
