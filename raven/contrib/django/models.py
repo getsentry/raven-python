@@ -212,15 +212,15 @@ def register_serializers():
     import raven.contrib.django.serializers  # NOQA
 
 
-def install_middleware():
+def install_middleware(middleware_name, lookup_names=None):
     """
     Force installation of SentryMiddlware if it's not explicitly present.
 
     This ensures things like request context and transaction names are made
     available.
     """
-    name = 'raven.contrib.django.middleware.SentryMiddleware'
-    all_names = (name, 'raven.contrib.django.middleware.SentryLogMiddleware')
+    if lookup_names is None:
+        lookup_names = (middleware_name,)
     # default settings.MIDDLEWARE is None
     middleware_attr = 'MIDDLEWARE' if getattr(settings,
                                               'MIDDLEWARE',
@@ -228,10 +228,10 @@ def install_middleware():
         else 'MIDDLEWARE_CLASSES'
     # make sure to get an empty tuple when attr is None
     middleware = getattr(settings, middleware_attr, ()) or ()
-    if set(all_names).isdisjoint(set(middleware)):
+    if set(lookup_names).isdisjoint(set(middleware)):
         setattr(settings,
                 middleware_attr,
-                type(middleware)((name,)) + middleware)
+                type(middleware)((middleware_name,)) + middleware)
 
 
 _setup_lock = Lock()
@@ -250,7 +250,13 @@ def initialize():
 
         try:
             register_serializers()
-            install_middleware()
+            install_middleware(
+                'raven.contrib.django.middleware.SentryMiddleware',
+                (
+                    'raven.contrib.django.middleware.SentryMiddleware',
+                    'raven.contrib.django.middleware.SentryLogMiddleware'))
+            install_middleware(
+                'raven.contrib.django.middleware.DjangoRestFrameworkCompatMiddleware')
 
             # XXX(dcramer): maybe this setting should disable ALL of this?
             if not getattr(settings, 'DISABLE_SENTRY_INSTRUMENTATION', False):
