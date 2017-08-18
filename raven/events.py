@@ -109,12 +109,36 @@ class Exception(BaseEvent):
             'stacktrace': stack_info,
         }
 
+    @staticmethod
+    def full_stacktrace(t, v, tb):
+        class FauxTb(object):
+            def __init__(self, tb_frame, tb_lineno, tb_next):
+                self.tb_frame = tb_frame
+                self.tb_lineno = tb_lineno
+                self.tb_next = tb_next
+
+        def extend_tb(tb):
+            f = tb.tb_frame
+            lst = []
+            while f is not None:
+                lst.append((f, f.f_lineno))
+                f = f.f_back
+            head = tb
+            for tb_frame, tb_lineno in lst[1:]:
+                head = FauxTb(tb_frame, tb_lineno, head)
+            return head
+
+    full_tb = extend_tb(tb)
+    return t, v, full_tb
+
     def capture(self, exc_info=None, **kwargs):
         if not exc_info or exc_info is True:
             exc_info = sys.exc_info()
 
         if not exc_info:
             raise ValueError('No exception found')
+
+        exc_info = full_stacktrace(*exc_info)
 
         values = []
         for exc_info in _chained_exceptions(exc_info):
