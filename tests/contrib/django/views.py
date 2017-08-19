@@ -7,6 +7,10 @@ from raven.contrib.django.models import client
 import logging
 
 
+class AppError(Exception):
+    pass
+
+
 def no_error(request):
     return HttpResponse('')
 
@@ -21,6 +25,11 @@ def django_exc(request):
 
 def raise_exc(request):
     raise Exception(request.GET.get('message', 'view exception'))
+
+
+def read_request_and_raise_exc(request):
+    request.read()
+    raise AppError()
 
 
 def raise_ioerror(request):

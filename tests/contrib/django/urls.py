@@ -26,6 +26,7 @@ urlpatterns = (
     url(r'^no-error$', views.no_error, name='sentry-no-error'),
     url(r'^fake-login$', views.fake_login, name='sentry-fake-login'),
     url(r'^trigger-500$', views.raise_exc, name='sentry-raise-exc'),
+    url(r'^trigger-500-readrequest$', views.read_request_and_raise_exc, name='sentry-readrequest-raise-exc'),
     url(r'^trigger-500-ioerror$', views.raise_ioerror, name='sentry-raise-ioerror'),
     url(r'^trigger-500-decorated$', views.decorated_raise_exc, name='sentry-raise-exc-decor'),
     url(r'^trigger-500-django$', views.django_exc, name='sentry-django-exc'),

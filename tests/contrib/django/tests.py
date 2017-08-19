@@ -41,6 +41,8 @@ from raven.contrib.django.views import is_valid_origin
 from raven.transport import HTTPTransport
 from raven.utils.serializer import transform
 
+from .views import AppError
+
 #from .models import MyTestModel
 
 DJANGO_15 = django.VERSION >= (1, 5, 0)
@@ -181,6 +183,32 @@ class DjangoClientTest(TestCase):
         assert event['message'] == 'Exception: view exception'
         assert 'request' in event
         assert event['request']['url'] == 'http://testserver{}'.format(path)
+
+    def test_request_data_unavailable_if_request_is_read(self):
+        path = reverse('sentry-readrequest-raise-exc')
+        self.assertRaises(
+            AppError,
+            self.client.post,
+            path,
+            '{"a":"b"}',
+            content_type='application/json')
+        assert len(self.raven.events) == 1
+        event = self.raven.events.pop(0)
+        assert event['request']['data'] == '<unavailable>'
+
+    def test_djangorestframeworkcompatmiddleware_fills_request_data(self):
+        with Settings(**{MIDDLEWARE_ATTR: [
+            'raven.contrib.django.middleware.DjangoRestFrameworkCompatMiddleware']}):
+            path = reverse('sentry-readrequest-raise-exc')
+            self.assertRaises(
+                AppError,
+                self.client.post,
+                path,
+                '{"a":"b"}',
+                content_type='application/json')
+        assert len(self.raven.events) == 1
+        event = self.raven.events.pop(0)
+        assert event['request']['data'] == b'{"a":"b"}'
 
     def test_capture_event_with_request_middleware(self):
         path = reverse('sentry-trigger-event')
