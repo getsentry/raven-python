@@ -120,21 +120,16 @@ class SentryMiddleware(MiddlewareMixin):
 SentryLogMiddleware = SentryMiddleware
 
 
-class DjangoRestFrameworkCompatMiddleware():
-    def __init__(self, get_response=None):
-        self.get_response = get_response
-
-    def __call__(self, request):
+class DjangoRestFrameworkCompatMiddleware(MiddlewareMixin):
+    def process_request(self, request):
         """
-        Access request.body before request.
-        We need it for request.body to still be accessible after request
-        for example while handling exceptions
+        Access request.body, otherwise it might not be accessible later
+        after request has been read/streamed
         """
-        if 'application/x-www-form-urlencoded' in request.content_type:
+        content_type = request.META.get('CONTENT_TYPE', '')
+        if 'application/x-www-form-urlencoded' in content_type:
             pass
-        elif 'multipart/form-data' in request.content_type:
+        elif 'multipart/form-data' in content_type:
             pass
         else:
             request.body  # forces stream to be read into memory
-        response = self.get_response(request)
-        return response
