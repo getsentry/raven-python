@@ -214,10 +214,7 @@ def register_serializers():
 
 def install_middleware(middleware_name, lookup_names=None):
     """
-    Force installation of SentryMiddlware if it's not explicitly present.
-
-    This ensures things like request context and transaction names are made
-    available.
+    Install specified middleware
     """
     if lookup_names is None:
         lookup_names = (middleware_name,)
