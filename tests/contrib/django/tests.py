@@ -185,13 +185,14 @@ class DjangoClientTest(TestCase):
         assert event['request']['url'] == 'http://testserver{}'.format(path)
 
     def test_request_data_unavailable_if_request_is_read(self):
-        path = reverse('sentry-readrequest-raise-exc')
-        self.assertRaises(
-            AppError,
-            self.client.post,
-            path,
-            '{"a":"b"}',
-            content_type='application/json')
+        with Settings(**{MIDDLEWARE_ATTR: []}):
+            path = reverse('sentry-readrequest-raise-exc')
+            self.assertRaises(
+                AppError,
+                self.client.post,
+                path,
+                '{"a":"b"}',
+                content_type='application/json')
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
         assert event['request']['data'] == '<unavailable>'
