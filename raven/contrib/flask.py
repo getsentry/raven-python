@@ -285,10 +285,10 @@ class Sentry(object):
             app.wsgi_app = SentryMiddleware(app.wsgi_app, self.client)
 
         app.before_request(self.before_request)
+        request_finished.connect(self.after_request, sender=app)
 
         if self.register_signal:
             got_request_exception.connect(self.handle_exception, sender=app)
-            request_finished.connect(self.after_request, sender=app)
 
         if not hasattr(app, 'extensions'):
             app.extensions = {}
