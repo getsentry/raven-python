@@ -88,7 +88,9 @@ class SentryCeleryHandler(object):
         )
 
     def handle_task_prerun(self, sender, task_id, task, **kw):
+        self.client.context.activate()
         self.client.transaction.push(task.name)
 
     def handle_task_postrun(self, sender, task_id, task, **kw):
         self.client.transaction.pop(task.name)
+        self.client.context.clear()
