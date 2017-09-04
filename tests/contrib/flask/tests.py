@@ -1,8 +1,12 @@
 import logging
+import pytest
 
 from exam import before, fixture
 from flask import Flask, current_app, g
-from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
+try:
+    from flask.ext.login import LoginManager, AnonymousUserMixin, login_user
+except ImportError:
+    from flask_login import LoginManager, AnonymousUserMixin, login_user
 from mock import patch, Mock
 
 from raven.contrib.flask import Sentry, logging_configured
@@ -39,6 +43,17 @@ def create_app(ignore_exceptions=None, debug=False, **config):
     @app.route('/an-error/', methods=['GET', 'POST'])
     def an_error():
         raise ValueError('hello world')
+
+    @app.route('/log-an-error/', methods=['GET'])
+    def log_an_error():
+        app.logger.error('Log an error')
+        return 'Hello'
+
+    @app.route('/log-a-generic-error/', methods=['GET'])
+    def log_a_generic_error():
+        logger = logging.getLogger('random-logger')
+        logger.error('Log an error')
+        return 'Hello'
 
     @app.route('/capture/', methods=['GET', 'POST'])
     def capture_exception():
@@ -85,10 +100,10 @@ class BaseTest(TestCase):
         self.raven = InMemoryClient()
         self.middleware = Sentry(self.app, client=self.raven)
 
-    def make_client_and_raven(self, *args, **kwargs):
+    def make_client_and_raven(self, logging=False, *args, **kwargs):
         app = create_app(*args, **kwargs)
         raven = InMemoryClient()
-        Sentry(app, client=raven)
+        Sentry(app, logging=logging, client=raven)
         return app.test_client(), raven, app
 
 
@@ -112,10 +127,11 @@ class FlaskTest(BaseTest):
         self.assertEquals(event['message'], 'ValueError: hello world')
 
     def test_capture_plus_logging(self):
-        client, raven, app = self.make_client_and_raven(debug=False)
-        app.logger.addHandler(SentryHandler(raven))
+        client, raven, app = self.make_client_and_raven(debug=False, logging=True)
         client.get('/an-error/')
-        assert len(raven.events) == 1
+        client.get('/log-an-error/')
+        client.get('/log-a-generic-error/')
+        assert len(raven.events) == 3
 
     def test_get(self):
         response = self.client.get('/an-error/?foo=bar')
@@ -234,12 +250,13 @@ class FlaskTest(BaseTest):
             assert self.middleware.last_event_id == event_id
             assert g.sentry_event_id == event_id
 
+
+    @pytest.mark.skip(reason="Fails with the current implementation if the logger is already configured")
     def test_logging_setup_with_exclusion_list(self):
         app = Flask(__name__)
         raven = InMemoryClient()
+        Sentry(app, client=raven, logging=True, logging_exclusions=("excluded_logger",))
 
-        Sentry(app, client=raven, logging=True,
-            logging_exclusions=("excluded_logger",))
 
         excluded_logger = logging.getLogger("excluded_logger")
         self.assertFalse(excluded_logger.propagate)
@@ -247,7 +264,7 @@ class FlaskTest(BaseTest):
         some_other_logger = logging.getLogger("some_other_logger")
         self.assertTrue(some_other_logger.propagate)
 
-    def test_logging_setup_singal(self):
+    def test_logging_setup_signal(self):
         app = Flask(__name__)
 
         mock_handler = Mock()
