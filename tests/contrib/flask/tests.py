@@ -1,5 +1,6 @@
 import logging
 import pytest
+import json
 
 from exam import before, fixture
 from flask import Flask, current_app, g
@@ -186,6 +187,26 @@ class FlaskTest(BaseTest):
         self.assertEquals(env['SERVER_NAME'], 'localhost')
         self.assertTrue('SERVER_PORT' in env, env.keys())
         self.assertEquals(env['SERVER_PORT'], '80')
+
+    def test_post_json(self):
+        response = self.client.post(
+            '/an-error/?biz=baz',
+            data=json.dumps({'foo': 'bar'}),
+            content_type='application/json'
+        )
+
+        self.assertEquals(response.status_code, 500)
+        self.assertEquals(len(self.raven.events), 1)
+
+        event = self.raven.events.pop(0)
+        assert 'request' in event
+        http = event['request']
+
+        self.assertEquals(http['data'], {'foo': 'bar'})
+
+        headers = http['headers']
+        self.assertEquals(headers['Content-Type'], 'application/json')
+
 
     def test_captureException_captures_http(self):
         response = self.client.get('/capture/?foo=bar')
