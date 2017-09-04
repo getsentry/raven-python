@@ -274,9 +274,11 @@ class Sentry(object):
             kwargs = {}
             if self.logging_exclusions is not None:
                 kwargs['exclude'] = self.logging_exclusions
-
             handler = SentryHandler(self.client, level=self.level)
             setup_logging(handler, **kwargs)
+
+            if app.logger.propagate is False:
+                app.logger.addHandler(handler)
 
             logging_configured.send(
                 self, sentry_handler=SentryHandler, **kwargs)
