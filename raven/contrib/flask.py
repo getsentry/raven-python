@@ -278,7 +278,7 @@ class Sentry(object):
             setup_logging(handler, **kwargs)
 
             if app.logger.propagate is False:
-                 app.logger.addHandler(handler)
+                app.logger.addHandler(handler)
 
             logging_configured.send(
                 self, sentry_handler=SentryHandler, **kwargs)
