@@ -165,7 +165,13 @@ class SentryDjangoHandler(object):
             SentryCeleryHandler, register_logger_signal
         )
 
-        self.celery_handler = SentryCeleryHandler(client).install()
+        ignore_expected = getattr(settings,
+                                  'SENTRY_CELERY_IGNORE_EXPECTED',
+                                  False)
+
+        self.celery_handler = SentryCeleryHandler(client,
+                                                  ignore_expected=ignore_expected)\
+                                                  .install()
 
         # try:
         #     ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)

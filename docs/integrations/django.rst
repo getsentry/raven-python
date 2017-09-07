@@ -296,6 +296,12 @@ Additional Settings
             'CELERY_LOGLEVEL': logging.INFO
         }
 
+.. describe:: SENTRY_CELERY_IGNORE_EXPECTED
+
+    If you are also using Celery, then you can ignore expected exceptions by
+    setting this to ``True``. This will cause exception classes in
+    ``Task.throws`` to be ignored.
+
 Caveats
 -------
 
