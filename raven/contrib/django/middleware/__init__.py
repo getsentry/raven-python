@@ -118,3 +118,18 @@ class SentryMiddleware(MiddlewareMixin):
 
 
 SentryLogMiddleware = SentryMiddleware
+
+
+class DjangoRestFrameworkCompatMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        """
+        Access request.body, otherwise it might not be accessible later
+        after request has been read/streamed
+        """
+        content_type = request.META.get('CONTENT_TYPE', '')
+        if 'application/x-www-form-urlencoded' in content_type:
+            pass
+        elif 'multipart/form-data' in content_type:
+            pass
+        else:
+            request.body  # forces stream to be read into memory
