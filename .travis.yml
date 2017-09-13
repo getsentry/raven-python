@@ -117,7 +117,7 @@ jobs:
       deploy:
         provider: pypi
         user: sentry
-        distributions: "sdist bdist_wheel"
+        distributions: "sdist--formats=gztar,zip bdist_wheel"
         on:
           tags: true
           repo: sentry/python-raven
