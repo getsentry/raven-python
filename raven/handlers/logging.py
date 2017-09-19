@@ -25,6 +25,8 @@ RESERVED = frozenset((
     'relativeCreated', 'tags', 'message',
 ))
 
+CONTEXTUAL = frozenset(('user','culprit', 'server_name', 'fingerprint'))
+
 
 def extract_extra(record, reserved=RESERVED):
     data = {}
@@ -41,7 +43,7 @@ def extract_extra(record, reserved=RESERVED):
             continue
         if k.startswith('_'):
             continue
-        if '.' not in k and k not in ('culprit', 'server_name', 'fingerprint'):
+        if '.' not in k and k not in CONTEXTUAL:
             extra[k] = v
         else:
             data[k] = v
