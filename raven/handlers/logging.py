@@ -27,7 +27,7 @@ RESERVED = frozenset((
 
 
 CONTEXTUAL = frozenset((
-    'user','culprit', 'server_name', 'fingerprint'
+    'user', 'culprit', 'server_name', 'fingerprint'
 ))
 
 
