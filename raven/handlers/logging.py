@@ -25,6 +25,7 @@ RESERVED = frozenset((
     'relativeCreated', 'tags', 'message',
 ))
 
+
 CONTEXTUAL = frozenset((
     'user','culprit', 'server_name', 'fingerprint'
 ))
