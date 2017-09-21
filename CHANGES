@@ -1,3 +1,17 @@
+Version 6.2.0
+-------------
+
+* [Core] `get_frame_locals` properly using `max_var_size`
+* [Core] Fixed raven initialization when `logging._srcfile` is None
+* [Core] Fixed import locking to avoid recursion
+* [Django] Fixed several issues for Django 1.11 and Django 2.0
+* [Django/DRF] Fixed issue with unavailable request data
+* [Flask] Added app.logger instrumentation
+* [Flask] Added signal on setup_logging
+* [ZConfig] Added standalone ZConfig support
+* [Celery] Fixed several issues related to Celery
+
+
 Version 6.1.0
 -------------
 
