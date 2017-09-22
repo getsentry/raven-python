@@ -34,10 +34,10 @@ with open('raven/__init__.py', 'rb') as f:
         f.read().decode('utf-8')).group(1)))
 
 
-install_requires = [
-    'contextlib2',
-]
-
+#install_requires = [
+#    'contextlib2',
+#]
+install_requires = []
 unittest2_requires = ['unittest2']
 
 flask_requires = [
@@ -60,8 +60,8 @@ if sys.version_info[0] == 3:
     webpy_tests_requires = []
 
     # If it's python3.2 or greater, don't use contextlib backport
-    if sys.version_info[1] >= 2:
-        install_requires.remove('contextlib2')
+    # if sys.version_info[1] >= 2:
+    #    install_requires.remove('contextlib2')
 
 tests_require = [
     'bottle',
@@ -124,6 +124,7 @@ setup(
     extras_require={
         'flask': flask_requires,
         'tests': tests_require,
+        ':python_version<"3.2"': ['contextlib2'],
     },
     license='BSD',
     tests_require=tests_require,
