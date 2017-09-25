@@ -13,6 +13,7 @@ from raven.scripts.runner import store_json, send_test_message
 
 import argparse
 import django
+import json
 import sys
 import time
 
@@ -21,7 +22,13 @@ DJANGO_18 = django.VERSION >= (1, 8, 0)
 
 class StoreJsonAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, store_json(values[0]))
+        try:
+            value = json.loads(values[0])
+        except ValueError:
+            print("Invalid JSON was used for option %s.  Received: %s" % (self.dest, values[0]))
+            sys.exit(1)
+
+        setattr(namespace, self.dest, value)
 
 
 class Command(BaseCommand):
