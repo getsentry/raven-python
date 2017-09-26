@@ -143,6 +143,7 @@ class DjangoClient(Client):
         install_sql_hook()
 
     def get_user_info(self, request):
+
         user_info = {
             'ip_address': get_client_ip(request.META),
         }
@@ -159,8 +160,6 @@ class DjangoClient(Client):
                     authenticated = user.is_authenticated
                 if not authenticated:
                     return user_info
-
-            user_info = {}
 
             user_info['id'] = user.pk
 

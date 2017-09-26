@@ -231,7 +231,12 @@ class DjangoClientTest(TestCase):
 
             assert len(self.raven.events) == 1
             event = self.raven.events.pop(0)
-            assert 'user' not in event
+            assert 'user' in event
+
+            user_info = event['user']
+            assert user_info == {
+                {'ip_address': '127.0.0.1'}
+            }
 
             assert self.client.login(username='admin', password='password')
 
@@ -249,6 +254,7 @@ class DjangoClientTest(TestCase):
 
     @pytest.mark.skipif(not DJANGO_15, reason='< Django 1.5')
     def test_get_user_info_abstract_user(self):
+
         from django.db import models
         from django.http import HttpRequest
         from django.contrib.auth.models import AbstractBaseUser
