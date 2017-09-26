@@ -143,12 +143,15 @@ class Sentry(object):
         Requires Flask-Login (https://pypi.python.org/pypi/Flask-Login/)
         to be installed and setup.
         """
+        user_info = {}
+
         try:
-            user_info = {
-                'ip_address': request.access_route[0],
-            }
+            ip_address = request.access_route[0]
         except IndexError:
-            user_info = {}
+            ip_address = request.remote_addr
+
+        if ip_address:
+            user_info['ip_address'] = ip_address
 
         if not has_flask_login:
             return user_info

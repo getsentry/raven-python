@@ -234,9 +234,7 @@ class DjangoClientTest(TestCase):
             assert 'user' in event
 
             user_info = event['user']
-            assert user_info == {
-                {'ip_address': '127.0.0.1'}
-            }
+            assert user_info == {'ip_address': '127.0.0.1'}
 
             assert self.client.login(username='admin', password='password')
 
@@ -247,6 +245,7 @@ class DjangoClientTest(TestCase):
             assert 'user' in event
             user_info = event['user']
             assert user_info == {
+                'ip_address': '127.0.0.1',
                 'username': self.user.username,
                 'id': self.user.id,
                 'email': self.user.email,

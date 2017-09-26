@@ -313,7 +313,7 @@ class FlaskLoginTest(BaseTest):
 
     def test_user(self):
         self.client.get('/login/')
-        self.client.get('/an-error/')
+        self.client.get('/an-error/', environ_overrides={'REMOTE_ADDR': '127.0.0.1'})
         event = self.raven.events.pop(0)
         assert event['message'] == 'ValueError: hello world'
         assert 'request' in event
