@@ -7,7 +7,10 @@ addons:
 cache:
   directories:
     - "$HOME/.cache/pip"
-
+branches:
+  only:
+    - master
+    - /^(?i:feature)-.*$/
 
 jobs:
   fast_finish: true
@@ -112,17 +115,17 @@ jobs:
       python: 2.7
       env: TOXENV=py27-celery-4
 
-    - stage: deploy
-      script: skip
-      deploy:
-        provider: pypi
-        user: sentry
-        distributions: "sdist--formats=gztar,zip bdist_wheel"
-        on:
-          tags: true
-          repo: sentry/python-raven
-        password:
-          secure: cG4yO9C+42ljfMlCfIJEgmySUPDCmGht358UaaCum4qchpVaFrjPAvm2sUpr3cFhUmMH+ueUr7LBW2c+lriJyT7wwJlU7vwtECzr5aayUuSwwPpFu98lz8kwQny3KF2caMD15rbjXkDRjh1QXw4ztiuBZq9dLb5WDx3pIKVLLbQ=
+#    - stage: deploy
+#      script: skip
+#      deploy:
+#        provider: pypi
+#        user: sentry
+#        distributions: "sdist--formats=gztar bdist_wheel"
+#        on:
+#          tags: true
+#          repo: getsentry/python-raven
+#        password:
+#          secure: cG4yO9C+42ljfMlCfIJEgmySUPDCmGht358UaaCum4qchpVaFrjPAvm2sUpr3cFhUmMH+ueUr7LBW2c+lriJyT7wwJlU7vwtECzr5aayUuSwwPpFu98lz8kwQny3KF2caMD15rbjXkDRjh1QXw4ztiuBZq9dLb5WDx3pIKVLLbQ=
 
 script: tox
 install:
