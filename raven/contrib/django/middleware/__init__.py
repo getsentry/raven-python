@@ -137,4 +137,7 @@ class DjangoRestFrameworkCompatMiddleware(MiddlewareMixin):
         for non_cacheable_type in self.non_cacheable_types:
             if non_cacheable_type in content_type:
                 return
-        request.body  # forces stream to be read into memory
+        try:  # TODO: ASH create a setting for this hack
+            request.body  # forces stream to be read into memory
+        except Exception:  # some versions of django choke
+            return
