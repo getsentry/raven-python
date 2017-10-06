@@ -100,15 +100,12 @@ def record(message=None, timestamp=None, level=None, category=None,
 
 def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
     for handler in special_logging_handlers:
-        rv = handler(logger, level, msg, args, kwargs)
-        if rv:
+        if handler(logger, level, msg, args, kwargs):
             return
 
     handler = special_logger_handlers.get(logger.name)
-    if handler is not None:
-        rv = handler(logger, level, msg, args, kwargs)
-        if rv:
-            return
+    if handler is not None and handler(logger, level, msg, args, kwargs):
+        return
 
     def processor(data):
         formatted_msg = msg

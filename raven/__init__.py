@@ -17,13 +17,9 @@ VERSION = '6.3.0.dev0'
 
 def _get_git_revision(path):
     revision_file = os.path.join(path, 'refs', 'heads', 'master')
-    if not os.path.exists(revision_file):
-        return None
-    fh = open(revision_file, 'r')
-    try:
-        return fh.read().strip()[:7]
-    finally:
-        fh.close()
+    if os.path.exists(revision_file):
+        with open(revision_file) as fh:
+            return fh.read().strip()[:7]
 
 
 def get_revision():
@@ -36,7 +32,6 @@ def get_revision():
     path = os.path.join(checkout_dir, '.git')
     if os.path.exists(path):
         return _get_git_revision(path)
-    return None
 
 
 def get_version():
