@@ -22,6 +22,17 @@ from raven.transport.http import HTTPTransport
 logger = logging.getLogger('sentry.errors.client')
 
 
+def get_default_tags():
+    return {
+        'lambda': 'AWS_LAMBDA_FUNCTION_NAME',
+        'version': 'AWS_LAMBDA_FUNCTION_VERSION',
+        'memory_size': 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
+        'log_group': 'AWS_LAMBDA_LOG_GROUP_NAME',
+        'log_stream': 'AWS_LAMBDA_LOG_STREAM_NAME',
+        'region': 'AWS_REGION'
+    }
+
+
 class LambdaClient(Client):
     """
     Raven decorator for AWS Lambda.
@@ -43,7 +54,8 @@ class LambdaClient(Client):
     """
 
     def __init__(self, *args, **kwargs):
-        super(LambdaClient, self).__init__(transport=HTTPTransport, *args, **kwargs)
+        transport = kwargs.get('transport', HTTPTransport)
+        super(LambdaClient, self).__init__(*args, transport=transport, **kwargs)
 
     def capture(self, *args, **kwargs):
         if 'data' not in kwargs:
@@ -65,12 +77,8 @@ class LambdaClient(Client):
     def build_msg(self, *args, **kwargs):
 
         data = super(LambdaClient, self).build_msg(*args, **kwargs)
-        data['tags'].setdefault('lambda', os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
-        data['tags'].setdefault('version', os.environ.get('AWS_LAMBDA_FUNCTION_VERSION'))
-        data['tags'].setdefault('memory_size', os.environ.get('AWS_LAMBDA_FUNCTION_MEMORY_SIZE'))
-        data['tags'].setdefault('log_group', os.environ.get('AWS_LAMBDA_LOG_GROUP_NAME'))
-        data['tags'].setdefault('log_stream', os.environ.get('AWS_LAMBDA_LOG_STREAM_NAME'))
-        data['tags'].setdefault('region', os.environ.get('AWS_REGION'))
+        for option, default in get_default_tags().items():
+            data['tags'].setdefault(option, os.environ.get(default))
         data.setdefault('release', os.environ.get('SENTRY_RELEASE'))
         data.setdefault('environment', os.environ.get('SENTRY_ENVIRONMENT'))
         return data
@@ -128,7 +136,7 @@ class LambdaClient(Client):
                     'cognito_authentication_type': identity.get('cognitoAuthenticationType', None),
                     'user_agent': identity.get('userAgent')
                 }
-            return {'user': user}
+                return {'user': user}
 
     @staticmethod
     def _get_http_interface(event):
