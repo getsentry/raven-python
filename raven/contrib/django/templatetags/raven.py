@@ -17,3 +17,13 @@ register = template.Library()
 def sentry_public_dsn(scheme=None):
     from raven.contrib.django.models import client
     return client.get_public_dsn(scheme) or ''
+
+@register.simple_tag
+def sentry_site():
+    from raven.contrib.django.models import client
+    return client.site or ''
+
+@register.simple_tag
+def sentry_release():
+    from raven.contrib.django.models import client
+    return client.release or ''
