@@ -38,7 +38,7 @@ from raven.contrib.django.models import (
 from raven.contrib.django.middleware.wsgi import Sentry
 from raven.contrib.django.templatetags.raven import sentry_public_dsn
 from raven.contrib.django.views import is_valid_origin
-from raven.transport import HTTPTransport
+from raven.transport.http import HTTPTransport
 from raven.utils.serializer import transform
 
 from .views import AppError

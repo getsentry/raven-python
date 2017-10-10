@@ -4,6 +4,15 @@ import os.path
 import pytest
 import sys
 
+from raven.transport.eventlet import EventletHTTPTransport
+from raven.transport.gevent import GeventedHTTPTransport
+from raven.transport.requests import RequestsHTTPTransport
+from raven.transport.twisted import TwistedHTTPTransport
+from raven.transport.tornado import TornadoHTTPTransport
+from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
+from raven.base import Client
+
+
 collect_ignore = []
 if sys.version_info[0] > 2:
     if sys.version_info[1] < 3:

@@ -22,7 +22,8 @@ class GeventTransportTest(TestCase):
         gevent.monkey.patch_time()
         self.addCleanup(reload, time)
         self.client = Client(
-            dsn="gevent+http://some_username:some_password@localhost:8143/1",
+            dsn="http://some_username:some_password@localhost:8143/1",
+            transport=GeventedHTTPTransport,
         )
 
     @mock.patch.object(GeventedHTTPTransport, '_done')

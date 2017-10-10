@@ -4,6 +4,7 @@ import mock
 
 from raven.base import Client
 from tornado import gen, testing, httpclient
+from raven.transport.tornado import TornadoHTTPTransport
 
 
 class TornadoTransportTests(testing.AsyncTestCase):
@@ -23,7 +24,8 @@ class TornadoTransportTests(testing.AsyncTestCase):
         fake = fake_client.return_value
         raven_client = Client(
             dsn="tornado+{0}?timeout={1}&verify_ssl={2}&ca_certs={3}".
-            format(url, timeout, verify_ssl, ca_certs))
+            format(url, timeout, verify_ssl, ca_certs),
+            transport=TornadoHTTPTransport)
 
         raven_client.captureMessage(message="test")
 
@@ -43,7 +45,8 @@ class TornadoTransportTests(testing.AsyncTestCase):
 
     @testing.gen_test
     def test__sending_with_error_calls_error_callback(self):
-        c = Client(dsn='tornado+http://uver:pass@localhost:46754/1')
+        c = Client(dsn='http://uver:pass@localhost:46754/1',
+                   transport=TornadoHTTPTransport)
 
         with mock.patch.object(Client, '_failed_send') as mock_failed:
             c.captureMessage(message='test')
@@ -53,7 +56,8 @@ class TornadoTransportTests(testing.AsyncTestCase):
 
     @testing.gen_test
     def test__sending_successfully_calls_success_callback(self):
-        c = Client(dsn='tornado+http://uver:pass@localhost:46754/1')
+        c = Client(dsn='tornado+http://uver:pass@localhost:46754/1',
+                   transport=TornadoHTTPTransport)
         with mock.patch.object(Client, '_successful_send') as mock_successful:
             with mock.patch.object(httpclient.AsyncHTTPClient, 'fetch') as mock_fetch:
                 mock_fetch.return_value = gen.maybe_future(True)

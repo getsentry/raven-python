@@ -8,7 +8,7 @@ raven.transport.threaded_requests
 from __future__ import absolute_import
 
 from raven.transport.base import AsyncTransport
-from raven.transport import RequestsHTTPTransport
+from raven.transport.requests import RequestsHTTPTransport
 from raven.transport.threaded import AsyncWorker
 
 

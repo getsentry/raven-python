@@ -11,7 +11,7 @@ import sys
 from raven.utils.compat import PY2
 from raven.base import Client, ClientState
 from raven.exceptions import RateLimited
-from raven.transport import AsyncTransport
+from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils.testutils import TestCase

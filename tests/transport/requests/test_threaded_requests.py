@@ -9,7 +9,7 @@ from raven.utils.urlparse import urlparse
 
 class DummyThreadedScheme(ThreadedRequestsHTTPTransport):
     def __init__(self, *args, **kwargs):
-        super(ThreadedRequestsHTTPTransport, self).__init__(*args, **kwargs)
+        super(DummyThreadedScheme, self).__init__(*args, **kwargs)
         self.events = []
         self.send_delay = 0
 
@@ -24,9 +24,10 @@ class DummyThreadedScheme(ThreadedRequestsHTTPTransport):
 class ThreadedTransportTest(TestCase):
     def setUp(self):
         self.url = "threaded+requests+http://some_username:some_password@localhost:8143/1"
-        self.client = Client(dsn=self.url)
+        self.client = Client(dsn=self.url,
+                             transport=ThreadedRequestsHTTPTransport)
 
-    @mock.patch('raven.transport.requests.post')
+    @mock.patch('requests.post')
     def test_does_send(self, send):
         self.client.captureMessage(message='foo')
 
