@@ -4,7 +4,10 @@ import os.path
 import pytest
 import sys
 
-collect_ignore = []
+collect_ignore = [
+    'tests/contrib/awslambda'
+]
+
 if sys.version_info[0] > 2:
     if sys.version_info[1] < 3:
         collect_ignore.append('tests/contrib/flask')
