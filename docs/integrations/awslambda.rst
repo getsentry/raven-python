@@ -44,13 +44,11 @@ Additional settings for the client are configured using environment variables or
 subclassing `LambdaClient`.
 
 
-
-Advanced Usage
---------------
+The integration was inspired by `raven python lambda`_, another implementation that
+also integrates with Serverless Framework and has SQS transport support. 
 
 
 .. _Sentry: https://getsentry.com/
 .. _AWS Lambda: https://aws.amazon.com/lambda
 .. _Deployment package: https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html
-
-
+.. _raven python lambda: https://github.com/Netflix-Skunkworks/raven-python-lambda
