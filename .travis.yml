@@ -115,6 +115,14 @@ jobs:
       python: 2.7
       env: TOXENV=py27-celery-4
 
+    - stage: contrib
+      python: 2.7
+      env: TOXENV=py27-lambda
+
+    - stage: contrib
+      python: 3.6
+      env: TOXENV=py36-lambda
+
 #    - stage: deploy
 #      script: skip
 #      deploy:
