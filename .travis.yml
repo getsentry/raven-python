@@ -123,17 +123,22 @@ jobs:
       python: 3.6
       env: TOXENV=py36-lambda
 
-#    - stage: deploy
-#      script: skip
-#      deploy:
-#        provider: pypi
-#        user: sentry
-#        distributions: "sdist--formats=gztar bdist_wheel"
-#        on:
-#          tags: true
-#          repo: getsentry/raven-python
-#        password:
-#          secure: cG4yO9C+42ljfMlCfIJEgmySUPDCmGht358UaaCum4qchpVaFrjPAvm2sUpr3cFhUmMH+ueUr7LBW2c+lriJyT7wwJlU7vwtECzr5aayUuSwwPpFu98lz8kwQny3KF2caMD15rbjXkDRjh1QXw4ztiuBZq9dLb5WDx3pIKVLLbQ=
+    - stage: deploy
+      script: ./setup.py sdist --formats=gztar bdist_wheel
+      if: tag IS present
+      python: 2.7
+      deploy:
+        provider: s3
+        access_key_id: AKIAJKYWAF3QS7SFL75Q
+        secret_access_key:
+          secure: HFlh3wzzYIbkIYRt+Qu60ak0U1+RFagr3nI+EqX/9KJH0zwLg/Xv1Gfx4vZZ+0VZkeJIbZZC5l4HxUzFwkROepxPh0Foifqm7hRKL4HUBdvIONcW+h3Ilanvyj/0tIyRdFPK5pZ22qc+1nsARy0eYEtz/YQeEhiEohvNxbhOuUQ=
+        skip_cleanup: true
+        acl: public_read
+        bucket: getsentry-builds
+        upload-dir: $TRAVIS_REPO_SLUG/$TRAVIS_COMMIT
+        local_dir: build
+        on:
+          tags: true
 
 script: tox
 install:
