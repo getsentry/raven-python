@@ -126,6 +126,7 @@ jobs:
     - stage: deploy
       script: ./setup.py sdist --formats=gztar bdist_wheel
       if: tag IS present
+      python: 2.7
       deploy:
         provider: s3
         access_key_id: AKIAJKYWAF3QS7SFL75Q
