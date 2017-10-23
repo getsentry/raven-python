@@ -17,6 +17,7 @@ client.
    celery
    django
    flask
+   lambda
    logbook
    logging
    pylons
