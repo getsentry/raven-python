@@ -12,6 +12,7 @@ from __future__ import absolute_import
 import time
 import logging
 
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpRequest
@@ -35,6 +36,14 @@ from raven.utils import once
 from raven import breadcrumbs
 
 __all__ = ('DjangoClient',)
+
+
+if DJANGO_VERSION < (1, 10):
+    def is_authenticated(request_user):
+        return request_user.is_authenticated()
+else:
+    def is_authenticated(request_user):
+        return request_user.is_authenticated
 
 
 class _FormatConverter(object):
@@ -152,15 +161,9 @@ class DjangoClient(Client):
             return user_info
 
         try:
-            if hasattr(user, 'is_authenticated'):
-                # is_authenticated was a method in Django < 1.10
-                if callable(user.is_authenticated):
-                    authenticated = user.is_authenticated()
-                else:
-                    authenticated = user.is_authenticated
-                if not authenticated:
-                    return user_info
-
+            authenticated = is_authenticated(user)
+            if not authenticated:
+                return user_info
             user_info['id'] = user.pk
 
             if hasattr(user, 'email'):
