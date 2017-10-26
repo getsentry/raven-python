@@ -14,6 +14,7 @@ __all__ = ('VERSION', 'Client', 'get_version')
 
 VERSION = '6.3.0.dev0'
 
+
 def _get_git_revision(path):
     revision_file = os.path.join(path, 'refs', 'heads', 'master')
     if not os.path.exists(revision_file):
