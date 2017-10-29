@@ -136,7 +136,7 @@ jobs:
         acl: public_read
         bucket: getsentry-builds
         upload-dir: $TRAVIS_REPO_SLUG/$TRAVIS_COMMIT
-        local_dir: build
+        local_dir: dist
 
 script: tox
 install:
