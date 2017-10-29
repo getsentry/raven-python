@@ -125,7 +125,7 @@ jobs:
 
     - stage: deploy
       script: ./setup.py sdist --formats=gztar bdist_wheel
-      if: tag IS present
+      if: branch = master
       python: 2.7
       deploy:
         provider: s3
@@ -137,8 +137,6 @@ jobs:
         bucket: getsentry-builds
         upload-dir: $TRAVIS_REPO_SLUG/$TRAVIS_COMMIT
         local_dir: build
-        on:
-          tags: true
 
 script: tox
 install:
