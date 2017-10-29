@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-6.3.0-dev (Unreleased)
-----------------------
+6.3.0 (2017-10-29)
+------------------
 * [Core] Changed default timeout on http calls to 5 seconds
+* [Core] Fixed relative paths for traces generated on Windows
 * [Django] Fixed import issues for Django projects < 1.7
 * [Django] Fixed django management command data option
 * [Django/DRF] Added `application/octet-stream` to non-cacheable types in middleware
