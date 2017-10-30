@@ -3,6 +3,16 @@ Logging
 
 .. default-domain:: py
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
+Setup
+-----
 Sentry supports the ability to directly tie into the :mod:`logging`
 module.  To use it simply add :class:`SentryHandler` to your logger.
 

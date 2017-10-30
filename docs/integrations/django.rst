@@ -5,6 +5,14 @@ Django
 
 `Django <http://djangoproject.com/>`_ version 1.4 and newer are supported.
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
 Setup
 -----
 
