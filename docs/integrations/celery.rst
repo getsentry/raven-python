@@ -5,6 +5,16 @@ Celery
 system for Python built on AMQP principles.  For Celery built-in support
 by Raven is provided but it requires some manual configuration.
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
+Setup
+-----
 To capture errors, you need to register a couple of signals to hijack
 Celery error handling::
 

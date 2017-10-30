@@ -3,6 +3,14 @@ Pylons
 
 Pylons is a framework for Python.
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
 WSGI Middleware
 ---------------
 

@@ -4,6 +4,14 @@ Bottle
 `Bottle <http://bottlepy.org/>`_ is a microframework for Python.  Raven
 supports this framework through the WSGI integration.
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
 Setup
 -----
 

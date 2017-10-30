@@ -1,6 +1,14 @@
 Zope/Plone
 ==========
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
 zope.conf
 ---------
 

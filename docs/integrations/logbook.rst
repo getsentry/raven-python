@@ -1,6 +1,16 @@
 Logbook
 =======
 
+Installation
+------------
+
+If you haven't already, start by downloading Raven. The easiest way is
+with *pip*::
+
+	pip install raven --upgrade
+
+Setup
+-----
 Raven provides a `logbook <http://logbook.pocoo.org>`_ handler which will pipe
 messages to Sentry.
 
