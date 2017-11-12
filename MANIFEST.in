@@ -1,5 +1,6 @@
 include setup.py conftest.py README.rst MANIFEST.in LICENSE *.txt
 recursive-include raven/contrib/zope *.xml
+recursive-include raven/contrib/zconfig *.xml
 recursive-include raven/data *
 graft tests
 global-exclude *~
