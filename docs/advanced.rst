@@ -302,3 +302,19 @@ A Note on uWSGI
 If you're using uWSGI you will need to add ``enable-threads`` to the
 default invocation, or you will need to switch off of the threaded default
 transport.
+
+Integration with asyncio
+---------------
+
+asyncio introduces additional level of exception handling: exceptions emitted by tasks and futures
+must be explicitly handled and are not automatically propagated into ``sys.excepthook``.
+Unhandled exceptions (exceptions that were not retrieved before object's destruction) are passed into
+loop's own exception handler.
+
+To handle them the per-loop exception handler can be installed:
+
+.. code-block:: python
+
+    client.install_asyncio_hook()
+
+The function accepts one optional argument: ``loop``. It defaults to ``asyncio.get_event_loop()``.

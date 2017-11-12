@@ -656,3 +656,25 @@ class ClientTest(TestCase):
                 'name': 'getsentry/raven-python',
             },
         }
+
+    def test_install_asyncio_hook(self):
+        try:
+            import asyncio
+
+            loop = asyncio.new_event_loop()
+            client = TempStoreClient()
+            client.install_asyncio_hook(loop=loop)
+
+            f = asyncio.Future(loop=loop)
+            f.set_exception(RuntimeError('foobar'))
+            del f
+
+            assert len(client.events) == 1
+            event = client.events[0]
+            assert event['level'] == 'exception'
+            exception = event['exception']['values'][-1]
+            assert exception['type'] == 'RuntimeError'
+            assert exception['value'] == 'foobar'
+        except ImportError:
+            pass
+
