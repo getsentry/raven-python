@@ -71,7 +71,6 @@ tests_require = [
     'pytest-xdist==1.18.2',
     'pytest-pythonpath==0.7.1',
     'pytest-sugar==0.8',
-    'pytest-assume',
     'pytest-cov',
     'pytest-flake8==0.9',
     'requests',
