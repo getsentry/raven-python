@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import uuid
-import warnings
+import warnings  # noqa
 
 from datetime import datetime
 from inspect import isclass
@@ -882,12 +882,6 @@ class Client(object):
         return self.capture(
             'raven.events.Query', query=query, params=params, engine=engine,
             **kwargs)
-
-    def captureExceptions(self, **kwargs):
-        warnings.warn(
-            'captureExceptions is deprecated, used context() instead.',
-            DeprecationWarning)
-        return self.context(**kwargs)
 
     def captureBreadcrumb(self, *args, **kwargs):
         """
