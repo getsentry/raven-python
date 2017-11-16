@@ -69,14 +69,6 @@ def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
     return s
 
 
-def transform(value):
-    from raven.utils.serializer import transform
-    warnings.warn('You should switch to raven.utils.serializer.'
-                  'transform', DeprecationWarning)
-
-    return transform(value)
-
-
 def to_unicode(value):
     try:
         value = text_type(force_text(value))
