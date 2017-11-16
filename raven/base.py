@@ -308,18 +308,6 @@ class Client(object):
 
         return modules
 
-    def get_ident(self, result):
-        """
-        Returns a searchable string representing a message.
-
-        >>> result = client.capture(**kwargs)
-        >>> ident = client.get_ident(result)
-        """
-        warnings.warn('Client.get_ident is deprecated. The event ID is now '
-                      'returned as the result of capture.',
-                      DeprecationWarning)
-        return result
-
     def get_handler(self, name):
         return self.module_cache[name](self)
 
