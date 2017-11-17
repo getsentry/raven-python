@@ -7,6 +7,7 @@ import mock
 from raven.utils.compat import iteritems, PY2
 from raven.base import Client
 from raven.handlers.logging import SentryHandler
+from raven.transport import HTTPTransport
 from raven.utils.stacks import iter_stack_frames
 from raven.utils.testutils import TestCase
 
@@ -86,7 +87,8 @@ class LoggingIntegrationTest(TestCase):
         should_try.return_value = True
         # Test for the default behaviour in which an exception is handled by the client or handler
         client = Client(
-            dsn='sync+http://public:secret@example.com/1',
+            dsn='http://public:secret@example.com/1',
+            transport=HTTPTransport,
         )
         handler = SentryHandler(client)
         _send_remote.side_effect = Exception()
@@ -96,7 +98,8 @@ class LoggingIntegrationTest(TestCase):
 
         # Test for the case in which a send error is raised to the calling frame.
         client = Client(
-            dsn='sync+http://public:secret@example.com/1',
+            dsn='http://public:secret@example.com/1',
+            transport=HTTPTransport,
             raise_send_errors=True,
         )
         handler = SentryHandler(client)
