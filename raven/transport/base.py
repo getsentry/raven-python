@@ -21,7 +21,6 @@ class Transport(object):
     """
 
     is_async = False
-    scheme = []
 
     def send(self, url, data, headers):
         """
