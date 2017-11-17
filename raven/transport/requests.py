@@ -18,8 +18,6 @@ except ImportError:
 
 class RequestsHTTPTransport(HTTPTransport):
 
-    scheme = ['requests+http', 'requests+https']
-
     def __init__(self, *args, **kwargs):
         if not has_requests:
             raise ImportError('RequestsHTTPTransport requires requests.')

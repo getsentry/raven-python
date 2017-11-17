@@ -14,8 +14,6 @@ from raven.transport.threaded import AsyncWorker
 
 class ThreadedRequestsHTTPTransport(AsyncTransport, RequestsHTTPTransport):
 
-    scheme = ['threaded+requests+http', 'threaded+requests+https']
-
     def get_worker(self):
         if not hasattr(self, '_worker'):
             self._worker = AsyncWorker()

@@ -7,8 +7,6 @@ raven.utils.encoding
 """
 from __future__ import absolute_import, unicode_literals
 
-import warnings
-
 from raven.utils.compat import integer_types, text_type, binary_type, \
     string_types, PY2
 
@@ -67,14 +65,6 @@ def force_text(s, encoding='utf-8', strings_only=False, errors='strict'):
             s = ' '.join([force_text(arg, encoding, strings_only,
                     errors) for arg in s])
     return s
-
-
-def transform(value):
-    from raven.utils.serializer import transform
-    warnings.warn('You should switch to raven.utils.serializer.'
-                  'transform', DeprecationWarning)
-
-    return transform(value)
 
 
 def to_unicode(value):

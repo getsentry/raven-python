@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import uuid
-import warnings
+import warnings  # noqa
 
 from datetime import datetime
 from inspect import isclass
@@ -42,7 +42,6 @@ from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames
 from raven.utils.transaction import TransactionStack
-from raven.transport.registry import TransportRegistry, default_transports
 
 # enforce imports to avoid obscure stacktraces with MemoryError
 import raven.events  # NOQA
@@ -147,8 +146,6 @@ class Client(object):
 
     logger = logging.getLogger('raven')
     protocol_version = '6'
-
-    _registry = TransportRegistry(transports=default_transports)
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
@@ -258,7 +255,6 @@ class Client(object):
                 result = RemoteConfig.from_string(
                     dsn,
                     transport=transport,
-                    transport_registry=self._registry,
                 )
             self._transport_cache[dsn] = result
             self.remote = result
@@ -287,10 +283,6 @@ class Client(object):
         from raven.breadcrumbs import hook_libraries
         hook_libraries(libraries)
 
-    @classmethod
-    def register_scheme(cls, scheme, transport_class):
-        cls._registry.register_scheme(scheme, transport_class)
-
     def get_processors(self):
         for processor in self.processors:
             yield self.module_cache[processor](self)
@@ -307,18 +299,6 @@ class Client(object):
         )
 
         return modules
-
-    def get_ident(self, result):
-        """
-        Returns a searchable string representing a message.
-
-        >>> result = client.capture(**kwargs)
-        >>> ident = client.get_ident(result)
-        """
-        warnings.warn('Client.get_ident is deprecated. The event ID is now '
-                      'returned as the result of capture.',
-                      DeprecationWarning)
-        return result
 
     def get_handler(self, name):
         return self.module_cache[name](self)
@@ -894,12 +874,6 @@ class Client(object):
         return self.capture(
             'raven.events.Query', query=query, params=params, engine=engine,
             **kwargs)
-
-    def captureExceptions(self, **kwargs):
-        warnings.warn(
-            'captureExceptions is deprecated, used context() instead.',
-            DeprecationWarning)
-        return self.context(**kwargs)
 
     def captureBreadcrumb(self, *args, **kwargs):
         """

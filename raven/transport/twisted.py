@@ -24,7 +24,6 @@ except ImportError:
 
 
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
-    scheme = ['twisted+http', 'twisted+https']
 
     def __init__(self, *args, **kwargs):
         if not has_twisted:

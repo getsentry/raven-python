@@ -24,8 +24,6 @@ except ImportError:
 
 class GeventedHTTPTransport(AsyncTransport, HTTPTransport):
 
-    scheme = ['gevent+http', 'gevent+https']
-
     def __init__(self, maximum_outstanding_requests=100, *args, **kwargs):
         if not has_gevent:
             raise ImportError('GeventedHTTPTransport requires gevent.')
