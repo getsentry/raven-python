@@ -22,8 +22,6 @@ except ImportError:
 
 class TornadoHTTPTransport(AsyncTransport, HTTPTransport):
 
-    scheme = ['tornado+http', 'tornado+https']
-
     def __init__(self, *args, **kwargs):
         if not has_tornado:
             raise ImportError('TornadoHTTPTransport requires tornado.')

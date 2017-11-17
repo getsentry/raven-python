@@ -36,8 +36,11 @@ class LoggingThreadedScheme(ThreadedHTTPTransport):
 
 class ThreadedTransportTest(TestCase):
     def setUp(self):
-        self.url = "threaded+http://some_username:some_password@localhost:8143/1"
-        self.client = Client(dsn=self.url)
+        self.url = "http://some_username:some_password@localhost:8143/1"
+        self.client = Client(
+            dsn=self.url,
+            transport=ThreadedHTTPTransport
+        )
 
     @mock.patch('raven.transport.http.HTTPTransport.send')
     def test_does_send(self, send):

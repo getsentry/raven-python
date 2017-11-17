@@ -97,7 +97,7 @@ class ClientTest(TestCase):
         assert client is not client2
 
     def test_client_picks_up_env_dsn(self):
-        DSN = 'sync+http://public:secret@example.com/1'
+        DSN = 'http://public:secret@example.com/1'
         PUBLIC_DSN = '//public@example.com/1'
         with mock.patch.dict(os.environ, {'SENTRY_DSN': DSN}):
             client = Client()
@@ -111,17 +111,18 @@ class ClientTest(TestCase):
         should_try.return_value = True
 
         client = Client(
-            dsn='sync+http://public:secret@example.com/1'
+            dsn='http://public:secret@example.com/1',
+            transport=HTTPTransport
         )
 
         # test error
         send.side_effect = Exception()
-        client.send_remote('sync+http://example.com/api/store', client.encode({}))
+        client.send_remote('http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
 
         # test recovery
         send.side_effect = None
-        client.send_remote('sync+http://example.com/api/store', client.encode({}))
+        client.send_remote('http://example.com/api/store', client.encode({}))
         self.assertEquals(client.state.status, client.state.ONLINE)
 
     @mock.patch('raven.transport.http.HTTPTransport.send')
@@ -130,18 +131,19 @@ class ClientTest(TestCase):
         should_try.return_value = True
 
         client = Client(
-            dsn='sync+http://public:secret@example.com/1'
+            dsn='http://public:secret@example.com/1',
+            transport=HTTPTransport
         )
 
         # test error
         send.side_effect = RateLimited('foo', 5)
-        client.send_remote('sync+http://example.com/api/1/store/', client.encode({}))
+        client.send_remote('http://example.com/api/1/store/', client.encode({}))
         self.assertEquals(client.state.status, client.state.ERROR)
         self.assertEqual(client.state.retry_after, 5)
 
         # test recovery
         send.side_effect = None
-        client.send_remote('sync+http://example.com/api/1/store/', client.encode({}))
+        client.send_remote('http://example.com/api/1/store/', client.encode({}))
         self.assertEquals(client.state.status, client.state.ONLINE)
         self.assertEqual(client.state.retry_after, 0)
 
@@ -225,7 +227,8 @@ class ClientTest(TestCase):
     def test_raise_exception_on_send_error(self, should_try, _send_remote):
         should_try.return_value = True
         client = Client(
-            dsn='sync+http://public:secret@example.com/1',
+            dsn='http://public:secret@example.com/1',
+            transport=HTTPTransport
         )
 
         # Test for the default behaviour in which a send error is handled by the client
@@ -236,7 +239,8 @@ class ClientTest(TestCase):
 
         # Test for the case in which a send error is raised to the calling frame.
         client = Client(
-            dsn='sync+http://public:secret@example.com/1',
+            dsn='http://public:secret@example.com/1',
+            transport=HTTPTransport,
             raise_send_errors=True,
         )
         with self.assertRaises(Exception):
@@ -568,9 +572,6 @@ class ClientTest(TestCase):
     def test_transport_registration(self):
         client = Client('http://public:secret@example.com/1',
                         transport=HTTPTransport)
-        assert type(client.remote.get_transport()) is HTTPTransport
-
-        client = Client('sync+http://public:secret@example.com/1')
         assert type(client.remote.get_transport()) is HTTPTransport
 
     def test_marks_in_app_frames_for_stacktrace(self):

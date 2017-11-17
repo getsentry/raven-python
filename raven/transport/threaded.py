@@ -160,8 +160,6 @@ class AsyncWorker(object):
 
 class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
 
-    scheme = ['http', 'https', 'threaded+http', 'threaded+https']
-
     def get_worker(self):
         if not hasattr(self, '_worker') or not self._worker.is_alive():
             self._worker = AsyncWorker()

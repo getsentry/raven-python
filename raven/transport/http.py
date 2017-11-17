@@ -15,7 +15,6 @@ from raven.utils.http import urlopen
 
 
 class HTTPTransport(Transport):
-    scheme = ['sync+http', 'sync+https']
 
     def __init__(self, timeout=defaults.TIMEOUT, verify_ssl=True,
                  ca_certs=defaults.CA_BUNDLE):
