@@ -4,6 +4,13 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+7.0.0 (Unreleased)
+------------------
+
+* [Core] Removed deprecated methods `transform` and `capture_exceptions`
+* [Core] Removed configuring the transport 
+
+
 
 6.3.0 (2017-10-29)
 ------------------
