@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import logging
 import os
-import warnings
 
 from raven.utils.compat import PY2, text_type
 from raven.exceptions import InvalidDsn
@@ -76,7 +75,7 @@ class RemoteConfig(object):
         return '//%s@%s%s/%s' % (self.public_key, netloc, url.path, self.project)
 
     @classmethod
-    def from_string(cls, value, transport=None, transport_registry=None):
+    def from_string(cls, value, transport=None):
         # in Python 2.x sending the DSN as a unicode value will eventually
         # cause issues in httplib
         if PY2:
@@ -85,17 +84,7 @@ class RemoteConfig(object):
         url = urlparse(value.strip())
 
         if url.scheme not in ('http', 'https'):
-            warnings.warn('Transport selection via DSN is deprecated. You should explicitly pass the transport class to Client() instead.')
-
-        if transport is None:
-            if not transport_registry:
-                from raven.transport import TransportRegistry, default_transports
-                transport_registry = TransportRegistry(default_transports)
-
-            if not transport_registry.supported_scheme(url.scheme):
-                raise InvalidDsn(ERR_UNKNOWN_SCHEME.format(url.scheme, value))
-
-            transport = transport_registry.get_transport_cls(url.scheme)
+            raise InvalidDsn('Invalid Sentry DSN: %r' % url.geturl())
 
         netloc = url.hostname
         if url.port:

@@ -24,8 +24,6 @@ except ImportError:
 
 class EventletHTTPTransport(HTTPTransport):
 
-    scheme = ['eventlet+http', 'eventlet+https']
-
     def __init__(self, pool_size=100, **kwargs):
         if not has_eventlet:
             raise ImportError('EventletHTTPTransport requires eventlet.')

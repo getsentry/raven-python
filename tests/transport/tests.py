@@ -6,7 +6,6 @@ from raven.base import Client
 
 # Some internal stuff to extend the transport layer
 from raven.transport import Transport
-from raven.transport.exceptions import DuplicateScheme
 
 # Simplify comparing dicts with primitive values:
 from raven.utils import json
@@ -17,9 +16,7 @@ import pytz
 import zlib
 
 
-class DummyScheme(Transport):
-
-    scheme = ['mock']
+class DummyTransport(Transport):
 
     def __init__(self, timeout=5):
         self.timeout = timeout
@@ -34,28 +31,26 @@ class DummyScheme(Transport):
 
 
 class TransportTest(TestCase):
-    def setUp(self):
-        try:
-            Client.register_scheme('mock', DummyScheme)
-        except DuplicateScheme:
-            pass
-
     def test_basic_config(self):
         c = Client(
-            dsn="mock://some_username:some_password@localhost:8143/1?timeout=1",
-            name="test_server"
+            dsn="http://some_username:some_password@localhost:8143/1?timeout=1",
+            name="test_server",
+            transport=DummyTransport
         )
         assert c.remote.options == {
             'timeout': '1',
         }
 
     def test_custom_transport(self):
-        c = Client(dsn="mock://some_username:some_password@localhost:8143/1")
+        c = Client(
+            dsn="http://some_username:some_password@localhost:8143/1",
+            transport=DummyTransport
+        )
 
         data = dict(a=42, b=55, c=list(range(50)))
         c.send(**data)
 
-        mock_cls = c._transport_cache['mock://some_username:some_password@localhost:8143/1'].get_transport()
+        mock_cls = c._transport_cache['http://some_username:some_password@localhost:8143/1'].get_transport()
         print(mock_cls.__dict__)
 
         expected_message = zlib.decompress(c.encode(data))
@@ -70,8 +65,10 @@ class TransportTest(TestCase):
 
     def test_build_then_send(self):
         c = Client(
-            dsn="mock://some_username:some_password@localhost:8143/1",
-            name="test_server")
+            dsn="http://some_username:some_password@localhost:8143/1",
+            name="test_server",
+            transport=DummyTransport
+        )
 
         mydate = datetime.datetime(2012, 5, 4, tzinfo=pytz.utc)
         d = calendar.timegm(mydate.timetuple())

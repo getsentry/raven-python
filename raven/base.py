@@ -42,7 +42,6 @@ from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames
 from raven.utils.transaction import TransactionStack
-from raven.transport.registry import TransportRegistry, default_transports
 
 # enforce imports to avoid obscure stacktraces with MemoryError
 import raven.events  # NOQA
@@ -147,8 +146,6 @@ class Client(object):
 
     logger = logging.getLogger('raven')
     protocol_version = '6'
-
-    _registry = TransportRegistry(transports=default_transports)
 
     def __init__(self, dsn=None, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
@@ -258,7 +255,6 @@ class Client(object):
                 result = RemoteConfig.from_string(
                     dsn,
                     transport=transport,
-                    transport_registry=self._registry,
                 )
             self._transport_cache[dsn] = result
             self.remote = result
@@ -286,10 +282,6 @@ class Client(object):
     def hook_libraries(self, libraries):
         from raven.breadcrumbs import hook_libraries
         hook_libraries(libraries)
-
-    @classmethod
-    def register_scheme(cls, scheme, transport_class):
-        cls._registry.register_scheme(scheme, transport_class)
 
     def get_processors(self):
         for processor in self.processors:
