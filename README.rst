@@ -31,7 +31,7 @@ Raven - Sentry for Python
     :alt: PyPi page link -- Python versions
 
 .. image:: https://codeclimate.com/github/getsentry/raven-python/badges/gpa.svg
-   :target: https://codeclimate.com/github/codeclimate/codeclimate
+   :target: https://codeclimate.com/github/getsentry/raven-python
    :alt: Code Climate
 
 
