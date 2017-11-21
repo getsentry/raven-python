@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import uuid
-import warnings
+import warnings  # noqa
 
 from datetime import datetime
 from inspect import isclass
@@ -35,14 +35,13 @@ except ImportError:
 import raven
 from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
-from raven.exceptions import APIError, RateLimited
+from raven.exceptions import APIError, RateLimited, ConfigurationError
 from raven.utils import json, get_versions, get_auth_header, merge_dicts
 from raven.utils.compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
 from raven.utils.serializer import transform
 from raven.utils.stacks import get_stack_info, iter_stack_frames
 from raven.utils.transaction import TransactionStack
-from raven.transport.registry import TransportRegistry, default_transports
 
 # enforce imports to avoid obscure stacktraces with MemoryError
 import raven.events  # NOQA
@@ -148,9 +147,7 @@ class Client(object):
     logger = logging.getLogger('raven')
     protocol_version = '6'
 
-    _registry = TransportRegistry(transports=default_transports)
-
-    def __init__(self, dsn=None, raise_send_errors=False, transport=None,
+    def __init__(self, dsn=Ellipsis, raise_send_errors=False, transport=None,
                  install_sys_hook=True, install_logging_hook=True,
                  hook_libraries=None, enable_breadcrumbs=True,
                  _random_seed=None, **options):
@@ -245,27 +242,37 @@ class Client(object):
             result[path] = config
         return result
 
-    def set_dsn(self, dsn=None, transport=None):
-        if not dsn and os.environ.get('SENTRY_DSN'):
-            msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
-            self.logger.debug(msg)
-            dsn = os.environ['SENTRY_DSN']
+    def set_dsn(self, dsn=Ellipsis, transport=None):
+        """
+        Configures the client remote given a dsn and transport
+        If dsn is explicitly set to None or given an empty string
+        as an environment variable it will disable reporting.
+        """
 
-        if dsn not in self._transport_cache:
-            if not dsn:
-                result = RemoteConfig(transport=transport)
+        if dsn is Ellipsis:
+            if 'SENTRY_DSN' in os.environ.keys():
+                msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
+                self.logger.debug(msg)
+                dsn = os.environ['SENTRY_DSN']
+            else:
+                dsn = None
+
+        if dsn:
+            if dsn in self._transport_cache:
+                self.remote = self._transport_cache[dsn]
+
             else:
                 result = RemoteConfig.from_string(
                     dsn,
                     transport=transport,
-                    transport_registry=self._registry,
                 )
-            self._transport_cache[dsn] = result
-            self.remote = result
-        else:
-            self.remote = self._transport_cache[dsn]
+                self._transport_cache[dsn] = result
+                self.remote = result
 
-        self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+            self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
+        else:
+            self.remote = RemoteConfig(transport=transport)
+            self.logger.debug('Disabling raven because DSN set to None')
 
     def install_sys_hook(self):
         global __excepthook__
@@ -287,10 +294,6 @@ class Client(object):
         from raven.breadcrumbs import hook_libraries
         hook_libraries(libraries)
 
-    @classmethod
-    def register_scheme(cls, scheme, transport_class):
-        cls._registry.register_scheme(scheme, transport_class)
-
     def get_processors(self):
         for processor in self.processors:
             yield self.module_cache[processor](self)
@@ -307,18 +310,6 @@ class Client(object):
         )
 
         return modules
-
-    def get_ident(self, result):
-        """
-        Returns a searchable string representing a message.
-
-        >>> result = client.capture(**kwargs)
-        >>> ident = client.get_ident(result)
-        """
-        warnings.warn('Client.get_ident is deprecated. The event ID is now '
-                      'returned as the result of capture.',
-                      DeprecationWarning)
-        return result
 
     def get_handler(self, name):
         return self.module_cache[name](self)
@@ -894,12 +885,6 @@ class Client(object):
         return self.capture(
             'raven.events.Query', query=query, params=params, engine=engine,
             **kwargs)
-
-    def captureExceptions(self, **kwargs):
-        warnings.warn(
-            'captureExceptions is deprecated, used context() instead.',
-            DeprecationWarning)
-        return self.context(**kwargs)
 
     def captureBreadcrumb(self, *args, **kwargs):
         """
