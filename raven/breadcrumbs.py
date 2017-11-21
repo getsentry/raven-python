@@ -271,7 +271,6 @@ def register_logging_handler(callback):
     returns true value the default handling is disabled. Registering
     multiple handlers is allowed.
     """
-
     special_logging_handlers.append(callback)
 
 
