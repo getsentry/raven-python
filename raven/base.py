@@ -248,30 +248,30 @@ class Client(object):
         If dsn is explicitly set to None or given an empty string
         as an environment variable it will disable reporting.
         """
+
         if dsn is Ellipsis:
             if 'SENTRY_DSN' in os.environ.keys():
                 msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
                 self.logger.debug(msg)
                 dsn = os.environ['SENTRY_DSN']
             else:
-                raise ConfigurationError("Must pass valid DSN or set SENTRY_DSN Environment Variable")
+                dsn = None
 
-        if dsn not in self._transport_cache:
-            if not dsn:
-                result = RemoteConfig(transport=transport)
+        if dsn:
+            if dsn in self._transport_cache:
+                self.remote = self._transport_cache[dsn]
+
             else:
                 result = RemoteConfig.from_string(
                     dsn,
                     transport=transport,
                 )
-            self._transport_cache[dsn] = result
-            self.remote = result
-        else:
-            self.remote = self._transport_cache[dsn]
+                self._transport_cache[dsn] = result
+                self.remote = result
 
-        if dsn is not None:
             self.logger.debug("Configuring Raven for host: {0}".format(self.remote))
         else:
+            self.remote = RemoteConfig(transport=transport)
             self.logger.debug('Disabling raven because DSN set to None')
 
     def install_sys_hook(self):
