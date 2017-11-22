@@ -35,7 +35,7 @@ except ImportError:
 import raven
 from raven.conf import defaults
 from raven.conf.remote import RemoteConfig
-from raven.exceptions import APIError, RateLimited, ConfigurationError
+from raven.exceptions import APIError, RateLimited
 from raven.utils import json, get_versions, get_auth_header, merge_dicts
 from raven.utils.compat import text_type, iteritems
 from raven.utils.encoding import to_unicode
@@ -248,7 +248,6 @@ class Client(object):
         If dsn is explicitly set to None or given an empty string
         as an environment variable it will disable reporting.
         """
-
         if dsn is Ellipsis:
             if 'SENTRY_DSN' in os.environ.keys():
                 msg = "Configuring Raven from environment variable 'SENTRY_DSN'"
