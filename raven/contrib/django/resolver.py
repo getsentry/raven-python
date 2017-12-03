@@ -50,6 +50,10 @@ class RouteResolver(object):
         return result
 
     def _resolve(self, resolver, path, parents=None):
+        if not hasattr(resolver, "regex"):
+            # Happens in Django 2.0. TODO #1127.
+            return
+
         match = resolver.regex.search(path)
         if not match:
             return
