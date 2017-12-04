@@ -8,6 +8,15 @@ except ImportError:
     from django.core.urlresolvers import get_resolver
 
 
+def get_regex(resolver_or_pattern):
+    """Utility method for django's deprecated resolver.regex"""
+    try:
+        regex = resolver_or_pattern.regex
+    except AttributeError:
+        regex = resolver_or_pattern.pattern.regex
+    return regex
+
+
 class RouteResolver(object):
     _optional_group_matcher = re.compile(r'\(\?\:([^\)]+)\)')
     _named_group_matcher = re.compile(r'\(\?P<(\w+)>[^\)]+\)')
@@ -50,7 +59,9 @@ class RouteResolver(object):
         return result
 
     def _resolve(self, resolver, path, parents=None):
-        match = resolver.regex.search(path)
+
+        match = get_regex(resolver).search(path)  # Django < 2.0
+
         if not match:
             return
 
@@ -67,8 +78,7 @@ class RouteResolver(object):
                 if match:
                     return match
                 continue
-
-            elif not pattern.regex.search(new_path):
+            elif not get_regex(pattern).search(new_path):
                 continue
 
             try:
@@ -76,8 +86,8 @@ class RouteResolver(object):
             except KeyError:
                 pass
 
-            prefix = ''.join(self._simplify(p.regex.pattern) for p in parents)
-            result = prefix + self._simplify(pattern.regex.pattern)
+            prefix = ''.join(self._simplify(get_regex(p).pattern) for p in parents)
+            result = prefix + self._simplify(get_regex(pattern).pattern)
             if not result.startswith('/'):
                 result = '/' + result
             self._cache[pattern] = result
