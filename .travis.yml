@@ -75,9 +75,6 @@ jobs:
     - stage: contrib
       python: 3.4
       env: TOXENV=py34-django-110
-    - stage: contrib
-      python: 3.4
-      env: TOXENV=py35-django-200-fix
 
     - stage: contrib
       python: 3.5
