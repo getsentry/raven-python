@@ -184,6 +184,7 @@ class Client(object):
         self.site = o.get('site')
         self.include_versions = o.get('include_versions', True)
         self.processors = o.get('processors')
+        self.sanitize_keys = o.get('sanitize_keys')
         if self.processors is None:
             self.processors = defaults.PROCESSORS
 
