@@ -272,6 +272,6 @@ def initialize():
         except Exception:
             _initialized = False
 
-# Django 1.8 uses ``raven.contrib.apps.RavenConfig``
+# Django 1.7 uses ``raven.contrib.apps.RavenConfig``
 if django.VERSION < (1, 7, 0):
     initialize()
