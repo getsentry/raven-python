@@ -4,6 +4,11 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+6.4.0 (2017-12-11)
+------------------
+* [Core] Support for defining `sanitized_keys` on the client (pr/990)
+* [Django] Support for Django 2.0 Urlresolver
+* [Docs] Several fixes and improvements
 
 6.3.0 (2017-10-29)
 ------------------
