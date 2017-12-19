@@ -51,10 +51,18 @@ webpy_tests_requires = [
     'web.py',
 ]
 
+asyncio_tests_requires = [
+    'pytest-asyncio',
+]
+
 # If it's python3, remove unittest2 & web.py
 if sys.version_info[0] == 3:
     unittest2_requires = []
     webpy_tests_requires = []
+    webpy_tests_requires = []
+# asycnio support is only compatible with python3.6+
+if sys.version_info < (3, 6):
+    asyncio_tests_requires = []
 
 tests_require = [
     'bottle',
@@ -81,7 +89,8 @@ tests_require = [
     'ZConfig',
 ] + (
     flask_requires + flask_tests_requires +
-    unittest2_requires + webpy_tests_requires
+    unittest2_requires + webpy_tests_requires +
+    asyncio_tests_requires
 )
 
 
@@ -117,6 +126,7 @@ setup(
         'flask': flask_requires,
         'tests': tests_require,
         ':python_version<"3.2"': ['contextlib2'],
+        'aiohttp': ['aiohttp'],
     },
     license='BSD',
     tests_require=tests_require,
