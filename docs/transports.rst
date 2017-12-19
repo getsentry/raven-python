@@ -122,3 +122,15 @@ Should only be used within a Twisted event loop.
     from raven.transport.twisted import TwistedHTTPTransport
 
     Client('...', transport=TwistedHTTPTransport)
+
+Aiohttp
+-------
+
+Should only be used within an asyncio event loop.
+
+.. code-block:: python
+
+   from raven.contrib.aiohttp.client import AIOHTTPClient
+   from raven.transport.aiohttp import AIOHTTPHTTPTransport
+
+   AIOHTTPClient('...', transport=AIOHTTPHTTPTransport)

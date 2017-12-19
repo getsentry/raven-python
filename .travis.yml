@@ -126,6 +126,10 @@ jobs:
       python: 3.6
       env: TOXENV=py36-lambda
 
+    - stage: contrib
+      python: 3.6
+      env: TOXENV=py36-aiohttp
+
     - stage: deploy
       script: ./setup.py sdist --formats=gztar bdist_wheel
       if: branch = master
