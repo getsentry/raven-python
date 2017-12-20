@@ -18,6 +18,7 @@ coverage:
 
 setup-git:
 	git config branch.autosetuprebase always
+	mkdir -p .git/hooks
 	cd .git/hooks && ln -sf ../../hooks/* ./
 
 publish:
