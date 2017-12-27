@@ -357,6 +357,12 @@ class SanitizePasswordsProcessorTest(TestCase):
         result = proc.sanitize('__repr__: жили-были', '42')
         self.assertEquals(result, '42')
 
+    def test_sanitize_bytes(self):
+        proc = SanitizePasswordsProcessor(Mock())
+        data = {'data': b'password=1234'}
+        result = proc.filter_http(data)
+        self.assertIn(data['data'], 'password=%s' % proc.MASK)
+
 
 class RemovePostDataProcessorTest(TestCase):
     def test_does_remove_data(self):

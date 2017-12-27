@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import re
 
-from raven.utils.compat import string_types, text_type
+from raven.utils.compat import string_types, text_type, PY3
 from raven.utils import varmap
 
 
@@ -109,6 +109,10 @@ class SanitizeKeysProcessor(Processor):
         for n in ('data', 'cookies', 'headers', 'env', 'query_string'):
             if n not in data:
                 continue
+
+            # data could be provided as bytes
+            if PY3 and isinstance(data[n], bytes):
+                data[n] = data[n].decode('utf-8', 'replace')
 
             if isinstance(data[n], string_types) and '=' in data[n]:
                 # at this point we've assumed it's a standard HTTP query

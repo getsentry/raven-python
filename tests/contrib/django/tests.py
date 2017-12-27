@@ -209,7 +209,7 @@ class DjangoClientTest(TestCase):
                 content_type='application/json')
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        assert event['request']['data'] == b'{"a":"b"}'
+        assert event['request']['data'] == '{"a":"b"}'
 
     def test_capture_event_with_request_middleware(self):
         path = reverse('sentry-trigger-event')
