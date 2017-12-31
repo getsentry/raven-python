@@ -4,7 +4,7 @@
 *.db
 *.pid
 .python-version
-.coverage
+.coverage*
 .DS_Store
 .tox
 pip-log.txt
