@@ -64,14 +64,18 @@ class LambdaClient(Client):
             data = kwargs['data']
         event = kwargs.get('event', None)
         context = kwargs.get('context', None)
-        user_info = self._get_user_interface(event)
-        if user_info:
-            data.update(user_info)
+
         if event:
             http_info = self._get_http_interface(event)
+            user_info = self._get_user_interface(event)
             if http_info:
                 data.update(http_info)
+            if user_info:
+                data.update(user_info)
+
+        if event and context:
             data['extra'] = self._get_extra_data(event, context)
+
         return super(LambdaClient, self).capture(*args, **kwargs)
 
     def build_msg(self, *args, **kwargs):
