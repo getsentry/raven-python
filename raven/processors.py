@@ -8,6 +8,7 @@ raven.core.processors
 from __future__ import absolute_import
 
 import re
+import warnings
 
 from raven.utils.compat import string_types, text_type, PY3
 from raven.utils import varmap
@@ -165,6 +166,16 @@ class SanitizePasswordsProcessor(SanitizeKeysProcessor):
 
     @property
     def sanitize_keys(self):
+        return self.KEYS
+
+    @property
+    def FIELDS(self):
+        warnings.warn(
+            "`SanitizePasswordsProcessor.Fields` has been deprecated. Use "
+            "`SanitizePasswordsProcessor.KEYS` or `SanitizePasswordsProcessor.sanitize_keys` "
+            "instead",
+            DeprecationWarning,
+        )
         return self.KEYS
 
     def sanitize(self, item, value):
