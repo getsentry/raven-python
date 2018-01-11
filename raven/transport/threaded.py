@@ -21,6 +21,7 @@ from raven.utils.compat import Queue, check_threads
 DEFAULT_TIMEOUT = 10
 
 logger = logging.getLogger('sentry.errors')
+raven_logger = logging.getLogger('raven')
 
 
 class AsyncWorker(object):
@@ -67,14 +68,15 @@ class AsyncWorker(object):
                 # add or remove items
                 size = self._queue.qsize()
 
-                print("Sentry is attempting to send %i pending error messages"
-                      % size)
-                print("Waiting up to %s seconds" % timeout)
+                raven_logger.info(
+                    "Sentry is attempting to send %i pending error messages" % size
+                )
+                raven_logger.info("Waiting up to %s seconds" % timeout)
 
                 if os.name == 'nt':
-                    print("Press Ctrl-Break to quit")
+                    raven_logger.info("Press Ctrl-Break to quit")
                 else:
-                    print("Press Ctrl-C to quit")
+                    raven_logger.info("Press Ctrl-C to quit")
 
                 self._timed_queue_join(timeout - initial_timeout)
 
