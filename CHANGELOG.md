@@ -6,7 +6,7 @@ Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 6.5.0 (2018-01-15)
 ------------------
-* [Core] Fixed missing deprecation on `SantizePasswordProcessor`
+* [Core] Fixed missing deprecation on `processors.SanitizePasswordsProcessor`
 * [Core] Improve exception handling in `Serializer.transform`
 * [Core] Fixed `celery.register_logger_signal` ignoring subclasses
 * [Core] Fixed sanitizer skipping `byte` instances
