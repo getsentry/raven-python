@@ -4,6 +4,14 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+6.5.0 (2018-01-15)
+------------------
+* [Core] Fixed missing deprecation on `SantizePasswordProcessor`
+* [Core] Improve exception handling in `Serializer.transform`
+* [Core] Fixed `celery.register_logger_signal` ignoring subclasses
+* [Core] Fixed sanitizer skipping `byte` instances
+* [Lambda] Fixed `AttributeError` when `requestContext` not present
+
 6.4.0 (2017-12-11)
 ------------------
 * [Core] Support for defining `sanitized_keys` on the client (pr/990)
