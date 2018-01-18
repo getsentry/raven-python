@@ -8,6 +8,7 @@ raven.contrib.celery
 from __future__ import absolute_import
 
 import logging
+import inspect
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.signals import (
@@ -27,7 +28,7 @@ class CeleryFilter(logging.Filter):
 
 
 def register_signal(client, ignore_expected=False):
-    SentryCeleryHandler(client, ignore_expected=ignore_expected).install()
+    SentryCeleryHandler(client, ignore_expected=ignore_expected, context_args=[]).install()
 
 
 def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
@@ -53,9 +54,10 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
 
 
 class SentryCeleryHandler(object):
-    def __init__(self, client, ignore_expected=False):
+    def __init__(self, client, ignore_expected=False, context_args=None):
         self.client = client
         self.ignore_expected = ignore_expected
+        self.context_args = context_args
 
     def install(self):
         task_prerun.connect(self.handle_task_prerun, weak=False)
@@ -89,6 +91,16 @@ class SentryCeleryHandler(object):
 
     def handle_task_prerun(self, sender, task_id, task, **kw):
         self.client.context.activate()
+        if self.context_args:
+            args = inspect.getargspec(task.run)
+            # first arg is going to be self
+            args.pop(0)
+            tags = {}
+            for i, arg in enumerate(args):
+                if arg in self.context_args:
+                    tags.update({arg, kw['args'][i]})
+            context = {'tags': tags}
+            self.client.context.merge(context)
         self.client.transaction.push(task.name)
 
     def handle_task_postrun(self, sender, task_id, task, **kw):
