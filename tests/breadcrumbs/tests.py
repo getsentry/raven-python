@@ -1,6 +1,5 @@
 import sys
 import logging
-import requests
 
 from raven.utils.testutils import TestCase
 
