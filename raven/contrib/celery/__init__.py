@@ -12,7 +12,7 @@ import inspect
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.signals import (
-    after_setup_logger, task_failure, task_prerun, task_postrun, after_setup_task_logger
+    after_setup_logger, task_failure, task_prerun, task_postrun
 )
 from raven.handlers.logging import SentryHandler
 
@@ -46,7 +46,6 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
             if isinstance(h, SentryHandler):
                 h.addFilter(filter_)
                 return False
-        handler.client.tags_context({'woah': 'nelly'})
         logger.addHandler(handler)
 
     after_setup_logger.connect(process_logger_event, weak=False)
@@ -101,8 +100,8 @@ class SentryCeleryHandler(object):
 
     def infer_context(self, task, **kw):
         args = inspect.getargspec(task.run).args
-        # first arg is going to be self
-        args.pop(0)
+        if task._app:
+            args.pop(0)
         tags = {}
         for i, arg in enumerate(args):
             if arg in self.context_args:
