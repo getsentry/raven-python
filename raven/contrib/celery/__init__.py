@@ -99,6 +99,9 @@ class SentryCeleryHandler(object):
             for i, arg in enumerate(args):
                 if arg in self.context_args:
                     tags.update({arg, kw['args'][i]})
+            for k, v in kw['kwargs'].iteritems():
+                if k in self.context_args:
+                    tags.update({k, v})
             context = {'tags': tags}
             self.client.context.merge(context)
         self.client.transaction.push(task.name)
