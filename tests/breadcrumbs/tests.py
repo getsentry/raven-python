@@ -1,5 +1,6 @@
 import sys
 import logging
+import requests
 
 from raven.utils.testutils import TestCase
 
@@ -7,6 +8,11 @@ from raven.base import Client
 from raven import breadcrumbs
 
 from io import StringIO
+
+
+class DummyClass(object):
+    def dummy_method(self):
+        pass
 
 
 class BreadcrumbTestCase(TestCase):
@@ -153,3 +159,28 @@ class BreadcrumbTestCase(TestCase):
             logger.debug('aha!')
             crumbs = client.context.breadcrumbs.get_buffer()
             assert len(crumbs) == 0
+
+    def test_hook_libraries(self):
+
+        @breadcrumbs.libraryhook('dummy')
+        def _install_func():
+            old_func = DummyClass.dummy_method
+
+            def new_func(self):
+                breadcrumbs.record(type='dummy', category='dummy', message="Dummy message")
+                old_func(self)
+
+            DummyClass.dummy_method = new_func
+
+        client = Client('http://foo:bar@example.com/0', hook_libraries=['requests'])
+        with client.context:
+            DummyClass().dummy_method()
+            crumbs = client.context.breadcrumbs.get_buffer()
+            assert 'dummy' not in set([i['type'] for i in crumbs])
+
+        client = Client('http://foo:bar@example.com/0', hook_libraries=['requests', 'dummy'])
+        with client.context:
+            DummyClass().dummy_method()
+            crumbs = client.context.breadcrumbs.get_buffer()
+            assert 'dummy' in set([i['type'] for i in crumbs])
+
