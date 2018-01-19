@@ -12,7 +12,7 @@ import inspect
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.signals import (
-    after_setup_logger, task_failure, task_prerun, task_postrun
+    after_setup_logger, task_failure, task_prerun, task_postrun, after_setup_task_logger
 )
 from raven.handlers.logging import SentryHandler
 
@@ -28,12 +28,11 @@ class CeleryFilter(logging.Filter):
 
 
 def register_signal(client, ignore_expected=False, context_args=None):
-    SentryCeleryHandler(client, ignore_expected=ignore_expected, context_args=[]).install()
+    SentryCeleryHandler(client, ignore_expected=ignore_expected, context_args=context_args).install()
 
 
 def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
     filter_ = CeleryFilter()
-
     handler = SentryHandler(client)
     handler.setLevel(loglevel)
     handler.addFilter(filter_)
@@ -47,7 +46,7 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
             if isinstance(h, SentryHandler):
                 h.addFilter(filter_)
                 return False
-
+        handler.client.tags_context({'woah': 'nelly'})
         logger.addHandler(handler)
 
     after_setup_logger.connect(process_logger_event, weak=False)
@@ -92,20 +91,30 @@ class SentryCeleryHandler(object):
     def handle_task_prerun(self, sender, task_id, task, **kw):
         self.client.context.activate()
         if self.context_args:
-            args = inspect.getargspec(task.run)
-            # first arg is going to be self
-            args.pop(0)
-            tags = {}
-            for i, arg in enumerate(args):
-                if arg in self.context_args:
-                    tags.update({arg, kw['args'][i]})
-            for k, v in kw['kwargs'].iteritems():
-                if k in self.context_args:
-                    tags.update({k, v})
-            context = {'tags': tags}
-            self.client.context.merge(context)
+            context = self.infer_context(task, **kw)
+            self.set_logger_context(context)
         self.client.transaction.push(task.name)
 
     def handle_task_postrun(self, sender, task_id, task, **kw):
         self.client.transaction.pop(task.name)
         self.client.context.clear()
+
+    def infer_context(self, task, **kw):
+        args = inspect.getargspec(task.run).args
+        # first arg is going to be self
+        args.pop(0)
+        tags = {}
+        for i, arg in enumerate(args):
+            if arg in self.context_args:
+                value = kw['args'][i]
+                tags.update({arg: value})
+        for k, v in kw['kwargs'].iteritems():
+            if k in self.context_args:
+                tags.update({k, v})
+        return {'tags': tags}
+
+    def set_logger_context(self, context):
+        logger = logging.getLogger()
+        for h in logger.handlers:
+            if isinstance(h, SentryHandler):
+                h.client.context.merge(context)
