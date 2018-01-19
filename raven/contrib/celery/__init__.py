@@ -27,7 +27,7 @@ class CeleryFilter(logging.Filter):
         return extra_data.get('internal', record.funcName != '_log_error')
 
 
-def register_signal(client, ignore_expected=False):
+def register_signal(client, ignore_expected=False, context_args=None):
     SentryCeleryHandler(client, ignore_expected=ignore_expected, context_args=[]).install()
 
 
