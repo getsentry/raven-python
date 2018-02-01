@@ -18,19 +18,26 @@ def discover_default_transport():
     from raven.transport.threaded import ThreadedHTTPTransport
     from raven.transport.http import HTTPTransport
 
+    default_transport = ThreadedHTTPTransport
+
     # Google App Engine
     # https://cloud.google.com/appengine/docs/python/how-requests-are-handled#Python_The_environment
     if 'CURRENT_VERSION_ID' in os.environ and 'INSTANCE_ID' in os.environ:
         logger.info('Detected environment to be Google App Engine. Using synchronous HTTP transport.')
-        return HTTPTransport
+        default_transport = HTTPTransport
 
     # AWS Lambda
     # https://alestic.com/2014/11/aws-lambda-environment/
     if 'LAMBDA_TASK_ROOT' in os.environ:
         logger.info('Detected environment to be AWS Lambda. Using synchronous HTTP transport.')
-        return HTTPTransport
+        default_transport = HTTPTransport
 
-    return ThreadedHTTPTransport
+    if default_transport == HTTPTransport:
+        # make HTTPTransport the default transport for http
+        HTTPTransport.scheme = ['http', 'https', 'sync+http', 'sync+https']
+        ThreadedHTTPTransport.scheme = ['threaded+http', 'threaded+https']
+
+    return default_transport
 
 
 DEFAULT_TRANSPORT = discover_default_transport()
