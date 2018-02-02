@@ -59,6 +59,7 @@ if sys.version_info[0] == 3:
 tests_require = [
     'bottle',
     'celery>=2.5',
+    'coverage<4',
     'exam>=0.5.2',
     'flake8==3.5.0',
     'logbook',
@@ -75,8 +76,10 @@ tests_require = [
     'pytest-flake8==0.9.1',
     'requests',
     'tornado>=4.1',
+    'tox',
     'webob',
     'webtest',
+    'wheel',
     'anyjson',
     'ZConfig',
 ] + (

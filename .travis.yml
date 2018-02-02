@@ -143,7 +143,8 @@ jobs:
 
 script: tox
 install:
-  - pip install tox wheel codecov "coverage<4"
+  - make
+  - pip install codecov
 before_script:
   - pip freeze
 after_success:
