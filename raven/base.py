@@ -498,7 +498,9 @@ class Client(object):
                 # raven client internally in sentry and the alternative
                 # submission option of a list here is not supported by the
                 # internal sender.
-                data.setdefault('breadcrumbs', {'values': crumbs})
+                data.setdefault('breadcrumbs', {
+                    'values': crumbs
+                })
 
         return data
 

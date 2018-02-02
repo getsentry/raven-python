@@ -34,6 +34,16 @@ class BreadcrumbTestCase(TestCase):
         assert crumbs[0]['data'] == {'blah': 'baz'}
         assert crumbs[0]['message'] == 'This is a message with foo!'
 
+    def test_log_crumb_reporting_with_large_message(self):
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            log = logging.getLogger('whatever.foo')
+            log.info('a' * 4096)
+            crumbs = client.context.breadcrumbs.get_buffer()
+
+        assert len(crumbs) == 1
+        assert crumbs[0]['message'] == 'a' * 1024
+
     def test_log_location(self):
         out = StringIO()
         logger = logging.getLogger(__name__)

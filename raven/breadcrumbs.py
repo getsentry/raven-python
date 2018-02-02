@@ -1,17 +1,21 @@
 from __future__ import absolute_import
 
 import os
-import time
 import logging
+
+from time import time
 from types import FunctionType
 
-from raven.utils.compat import iteritems, get_code, text_type, string_types
 from raven.utils import once
+from raven.utils.encoding import to_unicode
+from raven.utils.compat import iteritems, get_code, text_type, string_types
 
+CATEGORY_MAX_LENGTH = 128
+
+LEVEL_MAX_LENGTH = 16
 
 special_logging_handlers = []
 special_logger_handlers = {}
-
 
 logger = logging.getLogger('raven')
 
@@ -28,9 +32,10 @@ def event_payload_considered_equal(a, b):
 
 class BreadcrumbBuffer(object):
 
-    def __init__(self, limit=100):
+    def __init__(self, limit=100, message_max_length=1024):
         self.buffer = []
         self.limit = limit
+        self.message_max_length = message_max_length
 
     def record(self, timestamp=None, level=None, message=None,
                category=None, data=None, type=None, processor=None):
@@ -38,19 +43,30 @@ class BreadcrumbBuffer(object):
             raise ValueError('You must pass either `message`, `data`, '
                              'or `processor`')
         if timestamp is None:
-            timestamp = time.time()
-        self.buffer.append(({
+            timestamp = time()
+
+        # we format here to ensure we dont bloat memory due to message size
+        result = (self.format({
             'type': type or 'default',
-            'timestamp': timestamp,
+            'timestamp': float(timestamp),
             'level': level,
+            # hardcode message length to prevent huge crumbs
             'message': message,
             'category': category,
+            # TODO(dcramer): we should trim data
             'data': data,
-        }, processor))
+        }), processor)
+        self.buffer.append(result)
         del self.buffer[:-self.limit]
 
     def clear(self):
         del self.buffer[:]
+
+    def format(self, result):
+        result['message'] = to_unicode(result['message'])[:self.message_max_length] if result['message'] else None
+        result['category'] = to_unicode(result['category'])[:CATEGORY_MAX_LENGTH] if result['category'] else None
+        result['level'] = to_unicode(result['level'])[:LEVEL_MAX_LENGTH].lower() if result['level'] else None
+        return result
 
     def get_buffer(self):
         rv = []
@@ -59,9 +75,16 @@ class BreadcrumbBuffer(object):
                 try:
                     processor(payload)
                 except Exception:
+                    raise
                     logger.exception('Failed to process breadcrumbs. Ignored')
                     payload = None
+                else:
+                    # we format here to ensure we dont bloat memory due to message size
+                    payload = self.format(payload) if payload else None
                 self.buffer[idx] = (payload, None)
+            elif payload is not None:
+                payload = self.format(payload)
+
             if payload is not None and \
                (not rv or not event_payload_considered_equal(rv[-1], payload)):
                 rv.append(payload)
@@ -92,7 +115,7 @@ def record(message=None, timestamp=None, level=None, category=None,
     on a specific client.
     """
     if timestamp is None:
-        timestamp = time.time()
+        timestamp = time()
     for ctx in raven.context.get_active_contexts():
         ctx.breadcrumbs.record(timestamp, level, message, category,
                                data, type, processor)
