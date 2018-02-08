@@ -81,7 +81,7 @@ class AsyncSentryClient(Client):
 
     def _send_remote(self, url, data, headers=None, callback=None):
         """
-        Initialise a Tornado AsyncClient and send the reuqest to the sentry
+        Initialise a Tornado AsyncClient and send the request to the sentry
         server. If the callback is a callable, it will be called with the
         response.
         """
