@@ -4,6 +4,13 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+6.6.0 (2018-02-12)
+------------------
+* [Core] Add trimming to breadcrumbs.
+* [Core] Improve host message at startup.
+* [Core] Update pytest to work on other environments
+
 6.5.0 (2018-01-15)
 ------------------
 * [Core] Fixed missing deprecation on `processors.SanitizePasswordsProcessor`
