@@ -43,15 +43,13 @@ def varmap(func, var, context=None, name=None):
     if objid in context:
         return func(name, '<...>')
     context[objid] = 1
-    if isinstance(var, dict):
-        ret = varmap(func, var)
-        if isinstance(ret, dict):
-            ret = dict((k, varmap(func, v, context, k))
-                       for k, v in iteritems(var))
-    elif isinstance(var, (list, tuple)):
+    if isinstance(var, (list, tuple)):
         ret = [varmap(func, f, context, name) for f in var]
     else:
         ret = func(name, var)
+        if isinstance(ret, dict):
+            ret = dict((k, varmap(func, v, context, k))
+                       for k, v in iteritems(var))
     del context[objid]
     return ret
 
