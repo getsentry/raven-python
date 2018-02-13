@@ -60,9 +60,7 @@ the :py:func:`~raven.breadcrumbs.ignore_logger` and
     with given arguments: `logger`, `level`, `msg`, `args` and `kwargs`
     which are the values passed to the logging system. If the callback
     returns true value the default handling is disabled. Only one callback
-    can be registered per one logger name. Logger tree is not traversed
-    so calling this method with `spammy_module` argument will not silence
-    messages from `spammy_module.child`.
+    can be registered per one logger name.
 
     Typically it makes sense to invoke
     :py:func:`~raven.breadcrumbs.record` from it unless you want to silence

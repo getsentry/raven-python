@@ -257,6 +257,17 @@ def install_logging_hook():
     _patch_logger()
 
 
+def resolve_child_loggers(name):
+    """Resolves children logger. Resolution will only work for loggers
+    that are registered before this function is called.
+    """
+    children = []
+    for n in logging.Logger.manager.loggerDict.keys():
+        if n.startswith(name):
+            children.append(n)
+    return children
+
+
 def ignore_logger(name_or_logger, allow_level=None):
     """Ignores a logger during breadcrumb recording.
     """
@@ -273,14 +284,17 @@ def register_special_log_handler(name_or_logger, callback):
     with given arguments: `logger`, `level`, `msg`, `args` and `kwargs`
     which are the values passed to the logging system. If the callback
     returns true value the default handling is disabled. Only one callback
-    can be registered per one logger name. Logger tree is not traversed
-    so calling this method with `spammy_module` argument will not silence
-    messages from `spammy_module.child`.
+    can be registered per one logger name.
     """
     if isinstance(name_or_logger, string_types):
         name = name_or_logger
     else:
         name = name_or_logger.name
+
+    for c in resolve_child_loggers(name):
+        special_logger_handlers[c] = callback
+
+    # always add parent logger
     special_logger_handlers[name] = callback
 
 

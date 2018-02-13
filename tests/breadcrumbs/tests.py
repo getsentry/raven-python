@@ -152,6 +152,39 @@ class BreadcrumbTestCase(TestCase):
             crumbs = client.context.breadcrumbs.get_buffer()
             assert len(crumbs) == 0
 
+        # test child resolution
+        name = __name__
+        logger = logging.getLogger(name)
+
+        def handler(logger, level, msg, args, kwargs):
+            assert logger.name == name
+            assert msg == 'aha!'
+            return True
+
+        breadcrumbs.register_special_log_handler(name, handler)
+
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            logger.debug('aha!')
+            crumbs = client.context.breadcrumbs.get_buffer()
+            assert len(crumbs) == 0
+
+        logger = logging.getLogger('superspecial')
+
+        # test positive case
+        def handler(logger, level, msg, args, kwargs):
+            assert logger.name == name
+            assert msg == 'aha!'
+            return True
+
+        breadcrumbs.register_special_log_handler(name, handler)
+
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            logger.debug('aha!')
+            crumbs = client.context.breadcrumbs.get_buffer()
+            assert len(crumbs) == 1
+
     def test_logging_handlers(self):
         name = __name__ + '.superspecial2'
         logger = logging.getLogger(name)
