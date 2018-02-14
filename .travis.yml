@@ -127,18 +127,11 @@ jobs:
 
     - stage: deploy
       script: ./setup.py sdist --formats=gztar bdist_wheel
-      if: tag IS present
+      if: branch = master
       python: 2.7
-      deploy:
-        provider: s3
-        access_key_id: AKIAJKYWAF3QS7SFL75Q
-        secret_access_key:
-          secure: HFlh3wzzYIbkIYRt+Qu60ak0U1+RFagr3nI+EqX/9KJH0zwLg/Xv1Gfx4vZZ+0VZkeJIbZZC5l4HxUzFwkROepxPh0Foifqm7hRKL4HUBdvIONcW+h3Ilanvyj/0tIyRdFPK5pZ22qc+1nsARy0eYEtz/YQeEhiEohvNxbhOuUQ=
-        skip_cleanup: true
-        acl: public_read
-        bucket: getsentry-builds
-        upload-dir: $TRAVIS_REPO_SLUG/$TRAVIS_COMMIT
-        local_dir: dist
+      after_success:
+        - npm install -g @zeus-ci/cli
+        - zeus upload -t "application/zip+wheel" dist/*
 
 script: tox
 install:
@@ -149,4 +142,12 @@ before_script:
 after_success:
   - codecov -e DJANGO
 
-
+notifications:
+  webhooks:
+    urls:
+      - https://zeus.ci/hooks/0b589ca4-1165-11e8-b03b-0a580a28023f/public/provider/travis/webhook
+    on_success: always
+    on_failure: always
+    on_start: always
+    on_cancel: always
+    on_error: always
