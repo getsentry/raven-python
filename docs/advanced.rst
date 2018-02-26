@@ -172,7 +172,7 @@ The following are valid arguments which may be passed to the Raven client:
         ]
 
     Each item can be either a string or a class.
-    String declaration is strict (ie. does not works for child exceptions)
+    String declaration is strict (ie. does not work for child exceptions)
     whereas class declaration handle inheritance (ie. child exceptions are also ignored).
 
 .. describe:: sample_rate
