@@ -34,6 +34,17 @@ class JSONTest(TestCase):
         obj = Unknown()
         assert json.dumps(obj) == '"Unknown object"'
 
+    def test_unknown_type_with_repr_error(self):
+
+        class Unknown(object):
+            def __repr__(self):
+                raise Exception
+
+        obj = Unknown()
+        s = json.dumps(obj)
+        assert isinstance(s, str)
+        assert 'Unknown object at 0x' in s
+
     def test_decimal(self):
         d = {'decimal': Decimal('123.45')}
         assert json.dumps(d) == '{"decimal": "Decimal(\'123.45\')"}'
