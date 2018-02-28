@@ -34,7 +34,7 @@ class BetterJSONEncoder(json.JSONEncoder):
         except KeyError:
             try:
                 return super(BetterJSONEncoder, self).default(obj)
-            except TypeError:
+            except Exception:
                 try:
                     return repr(obj)
                 except Exception:
