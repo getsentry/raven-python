@@ -46,15 +46,23 @@ flask_tests_requires = [
     'Flask-Login>=0.2.0',
 ]
 
+sanic_requires = []
+sanic_tests_requires = []
+
 webpy_tests_requires = [
     'paste',
     'web.py',
 ]
 
-# If it's python3, remove unittest2 & web.py
+# If it's python3, remove unittest2 & web.py.
 if sys.version_info[0] == 3:
     unittest2_requires = []
     webpy_tests_requires = []
+
+# If it's Python 3.5+, add Sanic packages.
+if sys.version_info >= (3, 5):
+    sanic_requires = ['sanic>=0.7.0', ]
+    sanic_tests_requires = ['aiohttp', ]
 
 tests_require = [
     'bottle',
@@ -84,6 +92,7 @@ tests_require = [
     'ZConfig',
 ] + (
     flask_requires + flask_tests_requires +
+    sanic_requires + sanic_tests_requires +
     unittest2_requires + webpy_tests_requires
 )
 
