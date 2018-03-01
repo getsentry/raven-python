@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+6.7.0 (Unreleased)
+------------------
+
+
 6.6.0 (2018-02-12)
 ------------------
 * [Core] Add trimming to breadcrumbs.
