@@ -31,6 +31,9 @@ jobs:
       python: 3.5
       env: TOXENV=py35
     - stage: core
+      python: 3.6
+      env: TOXENV=py36
+    - stage: core
       python: pypy
       env: TOXENV=pypy
     - stage: core
@@ -124,6 +127,14 @@ jobs:
     - stage: contrib
       python: 3.6
       env: TOXENV=py36-lambda
+
+    - stage: contrib
+      python: 3.5
+      env: TOXENV=py35-sanic-07
+
+    - stage: contrib
+      python: 3.6
+      env: TOXENV=py36-sanic-07
 
     - stage: deploy
       script: ./setup.py sdist --formats=gztar bdist_wheel
