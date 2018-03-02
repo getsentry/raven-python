@@ -22,9 +22,11 @@ from random import Random
 from types import FunctionType
 from threading import local
 
-if sys.version_info >= (3, 2):
+try:
+    # Usually for Python >= 3.2, but some exceptions on 2.7
     import contextlib
-else:
+except ImportError:
+    # Usually for Python < 3.2
     import contextlib2 as contextlib
 
 try:
