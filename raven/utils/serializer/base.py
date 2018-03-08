@@ -8,6 +8,7 @@ raven.utils.serializer.base
 """
 from __future__ import absolute_import
 
+import collections
 import itertools
 import types
 
@@ -15,6 +16,8 @@ from raven.utils.compat import text_type, binary_type, string_types, iteritems, 
     class_types, PY2, PY3
 from raven.utils.encoding import to_unicode
 from .manager import manager as serialization_manager
+from raven.utils import is_namedtuple
+
 
 __all__ = ('Serializer',)
 
@@ -63,6 +66,28 @@ class Serializer(object):
                 return text_type(type(value))
         return self.manager.transform(value, max_depth=max_depth,
                                       _depth=_depth, **kwargs)
+
+
+class NamedtupleSerializer(Serializer):
+    types = (collections.namedtuple,)
+
+    def can(self, value):
+        """
+        Given ``value``, return a boolean describing whether this
+        serializer can operate on the given type
+        """
+        return is_namedtuple(value)
+
+    def serialize(self, value, **kwargs):
+        list_max_length = kwargs.get('list_max_length') or float('inf')
+        less_than = lambda x: x[0] < list_max_length
+        items = value._asdict().items()
+        takewhile = itertools.takewhile
+        x = dict([
+            (k, self.recurse(v, **kwargs))
+            for n, (k, v) in takewhile(less_than, enumerate(items))
+        ])
+        return x
 
 
 class IterableSerializer(Serializer):
@@ -176,6 +201,7 @@ if PY2:
 
 
 # register all serializers, order matters
+serialization_manager.register(NamedtupleSerializer)
 serialization_manager.register(IterableSerializer)
 serialization_manager.register(DictSerializer)
 serialization_manager.register(UnicodeSerializer)
