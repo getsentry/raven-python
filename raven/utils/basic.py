@@ -83,3 +83,14 @@ def once(func):
     new_func = update_wrapper(new_func, func)
     new_func.called = False
     return new_func
+
+
+def is_namedtuple(value):
+    # https://stackoverflow.com/a/2166841/1843746
+    # But modified to handle subclasses of namedtuples.
+    if not isinstance(value, tuple):
+        return False
+    f = getattr(type(value), '_fields', None)
+    if not isinstance(f, tuple):
+        return False
+    return all(type(n) == str for n in f)
