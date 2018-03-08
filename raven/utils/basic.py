@@ -1,5 +1,11 @@
 from __future__ import absolute_import
 
+try:
+    from collections.abc import Mapping
+except ImportError:
+    # Python < 3.3
+    from collections import Mapping
+
 from functools import update_wrapper
 import threading
 
@@ -30,11 +36,11 @@ def varmap(func, var, context=None, name=None):
         return func(name, '<...>')
     context[objid] = 1
 
-    if isinstance(var, (list, tuple)):
+    if isinstance(var, (list, tuple)) and not is_namedtuple(var):
         ret = [varmap(func, f, context, name) for f in var]
     else:
         ret = func(name, var)
-        if isinstance(ret, dict):
+        if isinstance(ret, Mapping):
             ret = dict((k, varmap(func, v, context, k))
                        for k, v in iteritems(var))
     del context[objid]
