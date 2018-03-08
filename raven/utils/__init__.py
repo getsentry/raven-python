@@ -15,7 +15,9 @@ except ImportError:
 import sys
 
 from raven.utils.compat import iteritems, string_types
-from raven.utils.basic import merge_dicts, varmap, memoize, once
+from raven.utils.basic import (
+    merge_dicts, varmap, memoize, once, is_namedtuple
+)
 
 
 logger = logging.getLogger('raven.errors')
