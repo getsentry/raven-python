@@ -193,7 +193,7 @@ class Sentry(object):
         return self.get_http_info_with_retriever(request, retriever)
 
     def is_json_type(self, content_type):
-        return content_type == 'application/json'
+        return content_type == 'application/json' or content_type.endswith('+json')
 
     def get_form_data(self, request):
         return request.form
