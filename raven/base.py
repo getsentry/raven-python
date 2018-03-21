@@ -172,7 +172,9 @@ class Client(object):
 
         self.include_paths = set(o.get('include_paths') or [])
         self.exclude_paths = set(o.get('exclude_paths') or [])
-        self.name = text_type(o.get('name') or o.get('machine') or defaults.NAME)
+        self.name = text_type(
+            o.get('name') or os.environ.get('SENTRY_NAME') or
+            o.get('machine') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
         self.capture_locals = bool(
@@ -193,8 +195,11 @@ class Client(object):
             context = {'sys.argv': getattr(sys, 'argv', [])[:]}
         self.extra = context
         self.tags = o.get('tags') or {}
-        self.environment = o.get('environment') or None
-        self.release = o.get('release') or os.environ.get('HEROKU_SLUG_COMMIT')
+        self.environment = (
+            o.get('environment') or os.environ.get('SENTRY_ENVIRONMENT', None))
+        self.release = (
+            o.get('release') or os.environ.get('SENTRY_RELEASE') or
+            os.environ.get('HEROKU_SLUG_COMMIT'))
         self.repos = self._format_repos(o.get('repos'))
         self.sample_rate = (
             o.get('sample_rate')
