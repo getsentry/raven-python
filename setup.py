@@ -75,7 +75,7 @@ tests_require = [
     'pytest-cov',
     'pytest-flake8==0.9.1',
     'requests',
-    'tornado>=4.1',
+    'tornado>=4.1,<5.0',
     'tox',
     'webob',
     'webtest',
