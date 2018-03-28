@@ -119,6 +119,14 @@ class LoggingIntegrationTest(TestCase):
             expected = "u'http://example.com'"
         self.assertEqual(event['extra']['url'], expected)
 
+    def test_extra_data_dict_is_not_mutated(self):
+        # The code used to modify the dictionary included in extra arguments under the 'data' key.
+        # This is unexpected behavior, let's make sure it doesn't happen anymore.
+        data = {'data_key': 'data_value'}
+        record = self.make_record('irrelevant', extra={'data': data})
+        self.handler.emit(record)
+        self.assertEqual(data, {'data_key': 'data_value'})
+
     def test_logger_exc_info(self):
         try:
             raise ValueError('This is a test ValueError')
