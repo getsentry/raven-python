@@ -40,6 +40,9 @@ def extract_extra(record, reserved=RESERVED, contextual=CONTEXTUAL):
             extra = {'data': extra}
         else:
             extra = {}
+    else:
+        # record.data may be something we don't want to mutate to not cause unexpected side effects
+        extra = dict(extra)
 
     for k, v in iteritems(vars(record)):
         if k in reserved:
