@@ -31,6 +31,11 @@ except ImportError:
     collect_ignore.append('tests/contrib/django')
 
 try:
+    import Sanic  # NOQA
+except ImportError:
+    collect_ignore.append('tests/contrib/sanic')
+
+try:
     import tastypie  # NOQA
 except ImportError:
     collect_ignore.append('tests/contrib/django/test_tastypie.py')
