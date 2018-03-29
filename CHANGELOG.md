@@ -7,7 +7,7 @@ Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 6.7.0 (Unreleased)
 ------------------
-
+* [Sanic] Added support for sanic.
 
 6.6.0 (2018-02-12)
 ------------------
