@@ -17,6 +17,9 @@ EXCLUDE_LOGGER_DEFAULTS = (
     'south',
     'sentry.errors',
     'django.request',
+    # dill produces a lot of garbage debug logs that are just a stream of what
+    # another developer would use print/pdb for
+    'dill',
 )
 
 
