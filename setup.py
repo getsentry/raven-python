@@ -73,7 +73,7 @@ tests_require = [
     'pytest-pythonpath==0.7.1',
     'pytest-sugar==0.9.0',
     'pytest-cov',
-    'pytest-flake8==0.9.1',
+    'pytest-flake8==1.0.0',
     'requests',
     'tornado>=4.1,<5.0',
     'tox',
