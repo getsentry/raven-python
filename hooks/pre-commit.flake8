@@ -17,7 +17,6 @@ if 'VIRTUAL_ENV' in os.environ:
 
 
 def main():
-    from flake8.main import USER_CONFIG
     from flake8.engine import get_style_guide
     from flake8.hooks import run
 
@@ -37,10 +36,10 @@ def main():
         lambda x: x.endswith('.py') and os.path.exists(x),
         files_modified)
 
-    flake8_style = get_style_guide(parse_argv=True, config_file=USER_CONFIG)
+    flake8_style = get_style_guide(parse_argv=True)
     report = flake8_style.check_files(files_modified)
 
-    return report.total_errors
+    return report.total_errors != 0
 
 if __name__ == '__main__':
     sys.exit(main())
