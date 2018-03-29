@@ -31,7 +31,7 @@ except ImportError:
     collect_ignore.append('tests/contrib/django')
 
 try:
-    import Sanic
+    import Sanic  # NOQA
 except ImportError:
     collect_ignore.append('tests/contrib/sanic')
 
