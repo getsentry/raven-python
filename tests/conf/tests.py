@@ -6,6 +6,7 @@ import mock
 from raven.conf import setup_logging
 from raven.conf.remote import RemoteConfig
 from raven.exceptions import InvalidDsn
+from raven.utils import get_auth_header
 from raven.utils.testutils import TestCase
 
 
@@ -80,6 +81,22 @@ class RemoteConfigTest(TestCase):
         assert res.secret_key == 'bar'
         assert res.options == {'timeout': '1'}
 
+    def test_no_secret_key(self):
+        dsn = 'https://foo@sentry.local/1'
+        res = RemoteConfig.from_string(dsn)
+        assert res.project == '1'
+        assert res.base_url == 'https://sentry.local'
+        assert res.store_endpoint == 'https://sentry.local/api/1/store/'
+        assert res.public_key == 'foo'
+        assert res.secret_key is None
+        assert res.options == {}
+
+        assert get_auth_header(protocol=7, timestamp=42,
+                               client='raven-python/1.0',
+                               api_key=res.public_key) == (
+            'Sentry sentry_timestamp=42, sentry_client=raven-python/1.0, '
+            'sentry_version=7, sentry_key=foo')
+
     def test_missing_netloc(self):
         dsn = 'https://foo:bar@/1'
         self.assertRaises(InvalidDsn, RemoteConfig.from_string, dsn)
@@ -90,10 +107,6 @@ class RemoteConfigTest(TestCase):
 
     def test_missing_public_key(self):
         dsn = 'https://:bar@example.com'
-        self.assertRaises(InvalidDsn, RemoteConfig.from_string, dsn)
-
-    def test_missing_secret_key(self):
-        dsn = 'https://bar@example.com'
         self.assertRaises(InvalidDsn, RemoteConfig.from_string, dsn)
 
     def test_invalid_scheme(self):
