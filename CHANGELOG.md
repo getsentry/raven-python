@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-6.7.0 (Unreleased)
+6.7.0 (2018-04-18)
 ------------------
 * [Sanic] Added support for sanic.
+* [Core] Disabled dill logger by default
+* [Core] Added `SENTRY_NAME`, `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE` 
+         environment variables
+* [Core] DSN secret is now optional
+* [Core] Added fix for cases with exceptions in repr
+* [core] Fixed bug with mutating `record.data`
 
 6.6.0 (2018-02-12)
 ------------------
