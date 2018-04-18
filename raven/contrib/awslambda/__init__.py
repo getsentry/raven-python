@@ -54,7 +54,7 @@ class LambdaClient(Client):
     """
 
     def __init__(self, *args, **kwargs):
-        transport = kwargs.get('transport', HTTPTransport)
+        transport = kwargs.pop('transport', HTTPTransport)
         super(LambdaClient, self).__init__(*args, transport=transport, **kwargs)
 
     def capture(self, *args, **kwargs):
