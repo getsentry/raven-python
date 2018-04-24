@@ -120,7 +120,7 @@ capturing for all messages::
 Passing tags and user context is also available through extra::
 
     logger.error('There was an error, with user context and tags'), extra={
-        'user': {'email': 'test@test.com},
+        'user': {'email': 'test@test.com'},
         'tags': {'database': '1.0'},
     })
 
