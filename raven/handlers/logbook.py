@@ -75,6 +75,8 @@ class SentryHandler(logbook.Handler):
 
         if 'tags' in record.kwargs:
             handler_kwargs['tags'] = record.kwargs['tags']
+        if 'stack' in record.extra:
+            handler_kwargs['stack'] = record.extra['stack']
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info

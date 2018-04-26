@@ -36,3 +36,14 @@ Finally, bind your handler to your context::
     with sentry_handler.applicationbound():
         # everything logged here will go to sentry.
         ...
+
+You can also use the ``extra={'stack': True}`` arguments on
+your ``log`` methods. This will store the appropriate information and allow
+Sentry to render it based on that information::
+
+    # If you don't have an exception, but still want to capture a
+    # stacktrace, use the `stack` arg
+    logger.error('There was an error, with a stacktrace!', extra={
+        'stack': True,
+    })
+
