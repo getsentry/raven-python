@@ -14,8 +14,9 @@ except ImportError:
     pkg_resources = None  # NOQA
 import sys
 
-from raven.utils.compat import iteritems, string_types
-from raven.utils.basic import (
+# Using "NOQA" to preserve export compatibility
+from raven.utils.compat import iteritems, string_types  # NOQA
+from raven.utils.basic import (  # NOQA
     merge_dicts, varmap, memoize, once, is_namedtuple
 )
 
