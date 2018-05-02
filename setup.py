@@ -61,7 +61,10 @@ if sys.version_info[0] == 3:
 
 # If it's Python 3.5+, add Sanic packages.
 if sys.version_info >= (3, 5):
-    sanic_requires = ['sanic>=0.7.0', ]
+    sanic_requires = [
+        'blinker>=1.1',
+        'sanic>=0.7.0', 
+    ]
     sanic_tests_requires = ['aiohttp', ]
 
 tests_require = [
