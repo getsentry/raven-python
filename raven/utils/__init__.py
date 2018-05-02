@@ -8,10 +8,6 @@ raven.utils
 from __future__ import absolute_import
 
 import logging
-try:
-    import pkg_resources
-except ImportError:
-    pkg_resources = None  # NOQA
 import sys
 
 # Using "NOQA" to preserve export compatibility
@@ -32,9 +28,16 @@ _VERSION_CACHE = {}
 def get_version_from_app(module_name, app):
     version = None
 
-    # Try to pull version from pkg_resource first
+    # Try to pull version from pkg_resources first
     # as it is able to detect version tagged with egg_info -b
-    if pkg_resources is not None:
+    try:
+        # Importing pkg_resources can be slow, so only import it
+        # if we need it.
+        import pkg_resources
+    except ImportError:
+        # pkg_resource is not available on Google App Engine
+        pass
+    else:
         # pull version from pkg_resources if distro exists
         try:
             return pkg_resources.get_distribution(module_name).version
