@@ -63,7 +63,7 @@ if sys.version_info[0] == 3:
 if sys.version_info >= (3, 5):
     sanic_requires = [
         'blinker>=1.1',
-        'sanic>=0.7.0', 
+        'sanic>=0.7.0',
     ]
     sanic_tests_requires = ['aiohttp', ]
 
