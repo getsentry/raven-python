@@ -83,6 +83,23 @@ def format_sql(sql, params):
     return sql, rv
 
 
+def record_sql(vendor, alias, start, duration, sql, params):
+    def processor(data):
+        real_sql, real_params = format_sql(sql, params)
+        if real_params:
+            try:
+                real_sql = real_sql % tuple(real_params)
+            except TypeError:
+                pass
+        # maybe category to 'django.%s.%s' % (vendor, alias or
+        #   'default') ?
+        data.update({
+            'message': real_sql,
+            'category': 'query',
+        })
+    breadcrumbs.record(processor=processor)
+
+
 @once
 def install_sql_hook():
     """If installed this causes Django's queries to be captured."""
@@ -98,19 +115,6 @@ def install_sql_hook():
         # XXX(mitsuhiko): On some very old django versions (<1.6) this
         # trickery would have to look different but I can't be bothered.
         return
-
-    def record_sql(vendor, alias, start, duration, sql, params):
-        def processor(data):
-            real_sql, real_params = format_sql(sql, params)
-            if real_params:
-                real_sql = real_sql % tuple(real_params)
-            # maybe category to 'django.%s.%s' % (vendor, alias or
-            #   'default') ?
-            data.update({
-                'message': real_sql,
-                'category': 'query',
-            })
-        breadcrumbs.record(processor=processor)
 
     def record_many_sql(vendor, alias, start, sql, param_list):
         duration = time.time() - start
