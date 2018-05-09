@@ -29,7 +29,7 @@ except ImportError:
 
 from raven.base import Client
 from raven.utils.compat import StringIO, iteritems, PY2, string_types, text_type
-from raven.contrib.django.client import DjangoClient
+from raven.contrib.django.client import DjangoClient, record_sql
 from raven.contrib.django.celery import CeleryClient
 from raven.contrib.django.handlers import SentryHandler
 from raven.contrib.django.models import (
@@ -919,3 +919,12 @@ class SentryExceptionHandlerTest(TestCase):
             self.client.ignore_exceptions.clear()
 
         assert not mock_send.called
+
+
+class SQLHookTestCase(TestCase):
+    def test_wrong_params(self):
+        query = 'SELECT COUNT(*) FROM mytestmodel WHERE id = %s'
+        args = ['foobar', 42]
+        record_sql(None, None, None, None, query, args)
+        crumbs = get_client().context.breadcrumbs.get_buffer()
+        self.assertEqual(crumbs[-1]['message'], query)
