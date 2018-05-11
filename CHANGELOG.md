@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+6.8.0 (2018-05-11)
+------------------
+* [Core] Fixed DSNs without secrets not sending events.
+
 6.7.0 (2018-04-18)
 ------------------
 * [Sanic] Added support for sanic.
