@@ -90,6 +90,7 @@ class RemoteConfigTest(TestCase):
         assert res.public_key == 'foo'
         assert res.secret_key is None
         assert res.options == {}
+        assert res.is_active()
 
         assert get_auth_header(protocol=7, timestamp=42,
                                client='raven-python/1.0',

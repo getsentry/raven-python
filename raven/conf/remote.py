@@ -61,7 +61,7 @@ class RemoteConfig(object):
         return text_type(self.base_url)
 
     def is_active(self):
-        return all([self.base_url, self.project, self.public_key, self.secret_key])
+        return all([self.base_url, self.project, self.public_key])
 
     def get_transport(self):
         if not self.store_endpoint:
