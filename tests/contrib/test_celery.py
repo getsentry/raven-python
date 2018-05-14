@@ -33,7 +33,7 @@ class CeleryTestCase(TestCase):
         assert len(self.client.events) == 1
         event = self.client.events[0]
         exception = event['exception']['values'][-1]
-        assert event['culprit'] == 'dummy_task'
+        assert event['transaction'] == 'dummy_task'
         assert exception['type'] == 'ZeroDivisionError'
 
     def test_ignore_expected(self):
