@@ -439,8 +439,9 @@ class Client(object):
                         not any(path.startswith(x) for x in self.exclude_paths)
                     )
 
+        transaction = None
         if not culprit:
-            culprit = self.transaction.peek()
+            transaction = self.transaction.peek()
 
         if not data.get('level'):
             data['level'] = kwargs.get('level') or logging.ERROR
@@ -465,7 +466,9 @@ class Client(object):
         if site:
             data['tags'].setdefault('site', site)
 
-        if culprit:
+        if transaction:
+            data['transaction'] = transaction
+        elif culprit:
             data['culprit'] = culprit
 
         if fingerprint:
