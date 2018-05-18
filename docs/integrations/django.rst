@@ -157,7 +157,7 @@ do this, you simply need to enable a Django middleware:
         ...,
     ) + MIDDLEWARE
 
-It is recommended to put the middleware at the top, so that any only 404s
+It is recommended to put the middleware at the top, so that only 404s
 that bubbled all the way up get logged. Certain middlewares (e.g. flatpages)
 capture 404s and replace the response.
 
