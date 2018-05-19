@@ -125,13 +125,13 @@ jobs:
       python: 3.6
       env: TOXENV=py36-sanic-07
 
-    - stage: deploy
-      script: ./setup.py sdist --formats=gztar bdist_wheel
-      if: branch = master
-      python: 2.7
-      after_success:
-        - npm install -g @zeus-ci/cli
-        - zeus upload -t "application/zip+wheel" dist/*
+      #- stage: deploy
+      # script: ./setup.py sdist --formats=gztar bdist_wheel
+      #if: branch = master
+      #python: 2.7
+      #after_success:
+      #  - npm install -g @zeus-ci/cli
+      #  - zeus upload -t "application/zip+wheel" dist/*
 
 script: tox
 install:
