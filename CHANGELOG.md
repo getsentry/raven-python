@@ -4,9 +4,11 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-6.9.0 (2018-05-15)
+6.9.0 (Unrleased)
 ------------------
 * [Core] Switched from culprit to transaction for automatic transaction reporting.
+* [CI] Removed py3.3 from build
+
 ------------------
 6.8.0 (2018-05-12)
 ------------------

@@ -22,9 +22,6 @@ jobs:
       python: 2.7
       env: TOXENV=py27
     - stage: core
-      python: 3.3
-      env: TOXENV=py33
-    - stage: core
       python: 3.4
       env: TOXENV=py34
     - stage: core
@@ -56,14 +53,6 @@ jobs:
     - stage: contrib
       python: 2.7
       env: TOXENV=py27-django-110
-
-
-    - stage: contrib
-      python: 3.3
-      env: TOXENV=py33-django-17
-    - stage: contrib
-      python: 3.3
-      env: TOXENV=py33-django-18
 
     - stage: contrib
       python: 3.4
