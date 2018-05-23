@@ -42,8 +42,9 @@ def get_uid():
         return None
     try:
         return pwd.getpwuid(os.geteuid())[0]
-    except KeyError: # Sometimes fails in containers
+    except KeyError:  # Sometimes fails in containers
         return None
+
 
 def send_test_message(client, options):
     sys.stdout.write("Client configuration:\n")
