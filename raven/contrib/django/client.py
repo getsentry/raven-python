@@ -186,9 +186,13 @@ class DjangoClient(Client):
         return user_info
 
     def get_data_from_request(self, request):
-        result = {}
+        rv = {}
+        self.update_data_from_request(request, rv)
+        return rv
 
-        result['user'] = self.get_user_info(request)
+    def update_data_from_request(self, request, result):
+        if result.get('user') is None:
+            result['user'] = self.get_user_info(request)
 
         try:
             uri = request.build_absolute_uri()
@@ -236,8 +240,6 @@ class DjangoClient(Client):
             }
         })
 
-        return result
-
     def build_msg(self, *args, **kwargs):
         data = super(DjangoClient, self).build_msg(*args, **kwargs)
 
@@ -266,7 +268,7 @@ class DjangoClient(Client):
         return data
 
     def capture(self, event_type, request=None, **kwargs):
-        if 'data' not in kwargs:
+        if kwargs.get('data') is None:
             kwargs['data'] = data = {}
         else:
             data = kwargs['data']
@@ -276,7 +278,7 @@ class DjangoClient(Client):
 
         is_http_request = isinstance(request, HttpRequest)
         if is_http_request:
-            data.update(self.get_data_from_request(request))
+            self.update_data_from_request(request, data)
 
         if kwargs.get('exc_info'):
             exc_value = kwargs['exc_info'][1]
