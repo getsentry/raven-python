@@ -40,8 +40,10 @@ def get_uid():
         import pwd
     except ImportError:
         return None
-    return pwd.getpwuid(os.geteuid())[0]
-
+    try:
+        return pwd.getpwuid(os.geteuid())[0]
+    except KeyError: # Sometimes fails in containers
+        return None
 
 def send_test_message(client, options):
     sys.stdout.write("Client configuration:\n")
