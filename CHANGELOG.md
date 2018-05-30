@@ -4,12 +4,12 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-6.9.0 (Unrleased)
+6.9.0 (2018-05-30)
 ------------------
 * [Core] Switched from culprit to transaction for automatic transaction reporting.
 * [CI] Removed py3.3 from build
+* [Django] resolved an issue where the log integration would override the user.
 
-------------------
 6.8.0 (2018-05-12)
 ------------------
 * [Core] Fixed DSNs without secrets not sending events.
