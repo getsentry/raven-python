@@ -39,6 +39,20 @@ class BreadcrumbTestCase(TestCase):
         assert crumbs[0]['data'] == {'blah': 'baz'}
         assert crumbs[0]['message'] == 'This is a message with foo!'
 
+    def test_log_crumb_reporting_with_dict(self):
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            log = logging.getLogger('whatever.foo')
+            log.info('This is a message with %(foo)s!', {'foo': 'bar'},
+                     extra={'blah': 'baz'})
+            crumbs = client.context.breadcrumbs.get_buffer()
+
+        assert len(crumbs) == 1
+        assert crumbs[0]['type'] == 'default'
+        assert crumbs[0]['category'] == 'whatever.foo'
+        assert crumbs[0]['data'] == {'foo': 'bar', 'blah': 'baz'}
+        assert crumbs[0]['message'] == 'This is a message with bar!'
+
     def test_log_crumb_reporting_with_large_message(self):
         client = Client('http://foo:bar@example.com/0')
         with client.context:

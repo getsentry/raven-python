@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import collections
 import os
 import logging
 
@@ -132,13 +133,23 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
 
     def processor(data):
         formatted_msg = msg
+        format_args = args
+
+        # Extract 'extra' key from kwargs and merge into data
+        extra = kwargs.pop('extra', {})
+        data_value = kwargs
+        data_value.update(extra)
+
+        if args and len(args) == 1 and isinstance(args[0], collections.Mapping) and args[0]:
+            format_args = args[0]
+            data_value.update(format_args)
 
         # If people log bad things, this can happen.  Then just don't do
         # anything.
         try:
             formatted_msg = text_type(msg)
-            if args:
-                formatted_msg = msg % args
+            if format_args:
+                formatted_msg = msg % format_args
         except Exception:
             pass
 
@@ -151,7 +162,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
             'message': formatted_msg,
             'category': logger.name,
             'level': logging.getLevelName(level).lower(),
-            'data': kwargs,
+            'data': data_value,
         })
     record(processor=processor)
 
