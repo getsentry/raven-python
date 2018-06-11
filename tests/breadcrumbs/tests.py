@@ -187,6 +187,8 @@ class BreadcrumbTestCase(TestCase):
             crumbs = client.context.breadcrumbs.get_buffer()
             assert 'dummy' not in set([i['type'] for i in crumbs])
 
+        # pretend 'dummy' is a module, and is already loaded
+        sys.modules['dummy'] = None
         client = Client('http://foo:bar@example.com/0', hook_libraries=['requests', 'dummy'])
         with client.context:
             DummyClass().dummy_method()

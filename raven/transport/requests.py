@@ -33,4 +33,4 @@ class RequestsHTTPTransport(HTTPTransport):
             # perform the verification.
             self.verify_ssl = self.ca_certs
         requests.post(url, data=data, headers=headers,
-                      verify=self.verify_ssl, timeout=self.timeout)
+                verify=self.verify_ssl, timeout=self.timeout)
