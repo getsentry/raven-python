@@ -9,24 +9,25 @@ from __future__ import absolute_import
 
 from raven.transport.http import HTTPTransport
 
-try:
-    import requests
-    has_requests = True
-except ImportError:
-    has_requests = False
-
 
 class RequestsHTTPTransport(HTTPTransport):
 
     scheme = ['requests+http', 'requests+https']
 
     def __init__(self, *args, **kwargs):
+        try:
+            import requests # NOQA
+            has_requests = True
+        except ImportError:
+            has_requests = False
+
         if not has_requests:
             raise ImportError('RequestsHTTPTransport requires requests.')
 
         super(RequestsHTTPTransport, self).__init__(*args, **kwargs)
 
     def send(self, url, data, headers):
+        import requests
         if self.verify_ssl:
             # If SSL verification is enabled use the provided CA bundle to
             # perform the verification.
