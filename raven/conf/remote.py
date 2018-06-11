@@ -33,9 +33,6 @@ def discover_default_transport():
     return ThreadedHTTPTransport
 
 
-DEFAULT_TRANSPORT = discover_default_transport()
-
-
 class RemoteConfig(object):
     def __init__(self, base_url=None, project=None, public_key=None,
                  secret_key=None, transport=None, options=None):
@@ -52,7 +49,7 @@ class RemoteConfig(object):
         self.options = options or {}
         self.store_endpoint = store_endpoint
 
-        self._transport_cls = transport or DEFAULT_TRANSPORT
+        self._transport_cls = transport or discover_default_transport()
 
     def __unicode__(self):
         return text_type(self.base_url)
