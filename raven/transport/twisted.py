@@ -7,26 +7,22 @@ raven.transport.twisted
 """
 from __future__ import absolute_import
 
-
 from raven.utils.compat import BytesIO
 from raven.transport.base import AsyncTransport
 from raven.transport.http import HTTPTransport
-
-try:
-    from twisted.web.client import (
-        Agent, FileBodyProducer, HTTPConnectionPool, ResponseNeverReceived,
-        readBody,
-    )
-    from twisted.web.http_headers import Headers
-    has_twisted = True
-except ImportError:
-    has_twisted = False
 
 
 class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
     scheme = ['twisted+http', 'twisted+https']
 
     def __init__(self, *args, **kwargs):
+        try:
+            from twisted.web.client import Agent, HTTPConnectionPool
+            import twisted.web.http_headers # NOQA
+            has_twisted = True
+        except ImportError:
+            has_twisted = False
+
         if not has_twisted:
             raise ImportError('TwistedHTTPTransport requires twisted.web.')
 
@@ -39,6 +35,9 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
         self._agent = Agent(reactor, pool=HTTPConnectionPool(reactor))
 
     def async_send(self, url, data, headers, success_cb, failure_cb):
+        from twisted.web.client import FileBodyProducer, ResponseNeverReceived
+        from twisted.web.http_headers import Headers
+
         d = self._agent.request(
             b"POST", url,
             bodyProducer=FileBodyProducer(BytesIO(data)),
@@ -58,6 +57,8 @@ class TwistedHTTPTransport(AsyncTransport, HTTPTransport):
             Success only means that the request succeeded, *not* that the
             actual submission was successful.
             """
+            from twisted.web.client import readBody
+
             if response.code == 200:
                 success_cb()
             else:
