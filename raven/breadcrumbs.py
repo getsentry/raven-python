@@ -306,7 +306,11 @@ _orig_import = __import__
 
 
 def delayed_hook_libraries(name, globals={}, locals={}, fromlist=[], level=-1):
-    result = _orig_import(name, globals, locals, fromlist, level)
+    if level == -1:
+        result = _orig_import(name, globals, locals, fromlist)  # python 3.x workaround
+    else:
+        result = _orig_import(name, globals, locals, fromlist, level)
+
     if name in delayed_hooks:
         func = delayed_hooks[name]
         func()
