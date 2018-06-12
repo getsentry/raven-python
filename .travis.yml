@@ -78,10 +78,10 @@ jobs:
       env: TOXENV=py35-django-110
     - stage: contrib
       python: 3.5
-      env: TOXENV=py35-django-111-fix
+      env: TOXENV=py35-django-111
     - stage: contrib
       python: 3.5
-      env: TOXENV=py35-django-200-fix
+      env: TOXENV=py35-django-200
 #    - stage: contrib
 #      python: 3.5
 #      env: TOXENV=py35-django-dev-fix
