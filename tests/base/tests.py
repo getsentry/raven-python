@@ -491,7 +491,7 @@ class ClientTest(TestCase):
         self.assertEquals(event['message'], 'test')
         assert 'stacktrace' in event
         self.assertEquals(len(frames), len(event['stacktrace']['frames']))
-        for frame, frame_i in zip(frames, event['stacktrace']['frames']):
+        for frame, frame_i in zip(frames[::-1], event['stacktrace']['frames']):
             self.assertEquals(frame[0].f_code.co_filename, frame_i['abs_path'])
             self.assertEquals(frame[0].f_code.co_name, frame_i['function'])
 
