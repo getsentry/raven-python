@@ -4,6 +4,11 @@ Changelog
 All notable changes to this project will be documented in this file.
 Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+6.10.0
+------
+
+* [Core] Fixed stackframes in some situations being in inverse order.
+
 6.9.0 (2018-05-30)
 ------------------
 * [Core] Switched from culprit to transaction for automatic transaction reporting.

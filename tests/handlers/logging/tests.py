@@ -171,7 +171,7 @@ class LoggingIntegrationTest(TestCase):
         self.assertTrue('stacktrace' in event)
         frames = event['stacktrace']['frames']
         self.assertNotEquals(len(frames), 1)
-        frame = frames[0]
+        frame = frames[-1]
         self.assertEqual(frame['module'], 'raven.handlers.logging')
         assert 'exception' not in event
         self.assertTrue('sentry.interfaces.Message' in event)
