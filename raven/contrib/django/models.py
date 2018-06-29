@@ -174,15 +174,12 @@ class SentryDjangoHandler(object):
                                                   ignore_expected=ignore_expected)\
                                                   .install()
 
-        # try:
-        #     ga = lambda x, d=None: getattr(settings, 'SENTRY_%s' % x, d)
-        #     options = getattr(settings, 'RAVEN_CONFIG', {})
-        #     loglevel = options.get('celery_loglevel',
-        #                            ga('CELERY_LOGLEVEL', logging.ERROR))
-
-        #     register_logger_signal(client, loglevel=loglevel)
-        # except Exception:
-        #     logger.exception('Failed to install Celery error handler')
+        loglevel = (
+            getattr(settings, 'RAVEN_CONFIG', {}).get('CELERY_LOGLEVEL')
+            or getattr(settings, 'SENTRY_CELERY_LOGLEVEL', None)
+        )
+        if loglevel is not None:
+            register_logger_signal(client, loglevel=loglevel)
 
     def install(self):
         request_started.connect(self.before_request, weak=False)
