@@ -11,8 +11,8 @@ import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.signals import (
-    after_setup_logger, task_failure, task_prerun, task_postrun
-)
+    after_setup_logger, after_setup_task_logger,
+    task_failure, task_prerun, task_postrun)
 from raven.handlers.logging import SentryHandler
 
 
@@ -46,10 +46,34 @@ def register_logger_signal(client, logger=None, loglevel=logging.ERROR):
             if isinstance(h, SentryHandler):
                 h.addFilter(filter_)
                 return False
-
         logger.addHandler(handler)
 
-    after_setup_logger.connect(process_logger_event, weak=False)
+    def fix_task_logger(sender, logger=None, **kwargs):
+        # If the task logger is set up to not propagate (as Celery is bound
+        # to do), give it a SentryHandler from a parent logger. However, if
+        # no parent is using Sentry, the task logger should not, either.
+        if not logger or logger.propagate:
+            return
+        if any(isinstance(h, SentryHandler) for h in logger.handlers):
+            return
+        parent = logger.parent
+        while parent:
+            for handler in parent.handlers:
+                if isinstance(handler, SentryHandler):
+                    logger.addHandler(handler)
+                    return
+            parent = parent.parent
+
+    after_setup_logger.connect(
+        process_logger_event,
+        weak=False,
+        dispatch_uid='raven.contrib.celery.process_logger_event',
+    )
+    after_setup_task_logger.connect(
+        fix_task_logger,
+        weak=False,
+        dispatch_uid='raven.contrib.celery.fix_task_logger',
+    )
 
 
 class SentryCeleryHandler(object):
