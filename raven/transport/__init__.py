@@ -2,7 +2,7 @@
 raven.transport
 ~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2018 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 # TODO: deprecate this namespace and force non-default (sync + threaded) to
