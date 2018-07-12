@@ -7,28 +7,9 @@ raven.transport.threaded_requests
 """
 from __future__ import absolute_import
 
-from raven.transport.base import AsyncTransport
 from raven.transport import RequestsHTTPTransport
-from raven.transport.threaded import AsyncWorker
+from raven.transport.threaded import ThreadedTransport
 
 
-class ThreadedRequestsHTTPTransport(AsyncTransport, RequestsHTTPTransport):
-
+class ThreadedRequestsHTTPTransport(RequestsHTTPTransport, ThreadedTransport):
     scheme = ['threaded+requests+http', 'threaded+requests+https']
-
-    def get_worker(self):
-        if not hasattr(self, '_worker'):
-            self._worker = AsyncWorker()
-        return self._worker
-
-    def send_sync(self, url, data, headers, success_cb, failure_cb):
-        try:
-            self.send(url, data, headers)
-        except Exception as e:
-            failure_cb(e)
-        else:
-            success_cb()
-
-    def async_send(self, url, data, headers, success_cb, failure_cb):
-        self.get_worker().queue(
-            self.send_sync, url, data, headers, success_cb, failure_cb)

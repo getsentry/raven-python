@@ -151,10 +151,7 @@ class AsyncWorker(object):
             sleep(0)
 
 
-class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
-
-    scheme = ['http', 'https', 'threaded+http', 'threaded+https']
-
+class ThreadedTransport(AsyncTransport):
     def get_worker(self):
         if not hasattr(self, '_worker') or not self._worker.is_alive():
             self._worker = AsyncWorker()
@@ -171,3 +168,7 @@ class ThreadedHTTPTransport(AsyncTransport, HTTPTransport):
     def async_send(self, url, data, headers, success_cb, failure_cb):
         self.get_worker().queue(
             self.send_sync, url, data, headers, success_cb, failure_cb)
+
+
+class ThreadedHTTPTransport(HTTPTransport, ThreadedTransport):
+    scheme = ['http', 'https', 'threaded+http', 'threaded+https']
