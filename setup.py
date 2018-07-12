@@ -91,6 +91,7 @@ tests_require = [
     'wheel',
     'anyjson',
     'ZConfig',
+    'moto'
 ] + (
     flask_requires + flask_tests_requires +
     sanic_requires + sanic_tests_requires +
@@ -130,6 +131,7 @@ setup(
         'flask': flask_requires,
         'tests': tests_require,
         ':python_version<"3.2"': ['contextlib2'],
+        'aws': ['boto3'],
     },
     license='BSD',
     tests_require=tests_require,
