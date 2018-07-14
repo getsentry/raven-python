@@ -14,8 +14,7 @@ import os
 import sys
 
 from raven.utils.serializer import transform
-from raven.utils.compat import iteritems
-
+from raven.utils.compat import iteritems, string_types
 
 _coding_re = re.compile(r'coding[:=]\s*([-\w.]+)')
 
@@ -156,6 +155,9 @@ def get_frame_locals(frame, transformer=transform, max_var_size=4096):
     f_vars = {}
     f_size = 0
     for k, v in iteritems(f_locals):
+        # Trio (and maybe others) insert non string keys into f_locals
+        if not isinstance(k, string_types):
+            k = repr(k)
         v = transformer(v)
         v_size = len(repr(v))
         if v_size + f_size < max_var_size:
