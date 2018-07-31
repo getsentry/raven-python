@@ -162,7 +162,7 @@ class SanitizePasswordsProcessor(SanitizeKeysProcessor):
         'sentry_dsn',
         'access_token',
     ])
-    VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,16}$')
+    VALUES_RE = re.compile(r'^(?:\d[ -]*?){13,19}$')
 
     @property
     def sanitize_keys(self):

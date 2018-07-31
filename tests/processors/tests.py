@@ -367,6 +367,12 @@ class SanitizePasswordsProcessorTest(TestCase):
         result = proc.sanitize('foo', '424242424242424')
         self.assertEquals(result, proc.MASK)
 
+    def test_sanitize_credit_card_long(self):
+        # Credit card numbers can be 19 digits long
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('foo', '1234567890123456789')
+        self.assertEquals(result, proc.MASK)
+
     def test_sanitize_non_ascii(self):
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.sanitize('__repr__: жили-были', '42')
