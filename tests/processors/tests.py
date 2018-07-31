@@ -373,6 +373,24 @@ class SanitizePasswordsProcessorTest(TestCase):
         result = proc.sanitize('foo', '1234567890123456789')
         self.assertEquals(result, proc.MASK)
 
+    def test_sanitize_credit_card_with_spaces_and_dashes(self):
+        # Credit card numbers may contain spaces and dashes
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('foo', '1234 5678 9012-3456-789')
+        self.assertEquals(result, proc.MASK)
+
+    def test_sanitize_ignores_too_long_number(self):
+        # Not a credit card number because it is longer than 19 digits
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('foo', '12345678901234567890')
+        self.assertEquals(result, '12345678901234567890')
+
+    def test_sanitize_ignores_too_short_number(self):
+        # Not a credit card number because it is shorter than 13 digits
+        proc = SanitizePasswordsProcessor(Mock())
+        result = proc.sanitize('foo', '123456789012')
+        self.assertEquals(result, '123456789012')
+
     def test_sanitize_non_ascii(self):
         proc = SanitizePasswordsProcessor(Mock())
         result = proc.sanitize('__repr__: жили-были', '42')
