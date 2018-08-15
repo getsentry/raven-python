@@ -70,6 +70,16 @@ def get_excepthook_client():
     return getattr(sys.excepthook, 'raven_client', None)
 
 
+def get_loop_excepthook_client(loop=None):
+    import asyncio
+
+    loop = loop or asyncio.get_event_loop()
+    hook = loop.get_exception_handler()
+    client = getattr(hook, 'raven_client', None)
+    if client is not None:
+        return client
+
+
 class ModuleProxyCache(dict):
     def __missing__(self, key):
         module, class_name = key.rsplit('.', 1)
@@ -284,6 +294,57 @@ class Client(object):
     def install_logging_hook(self):
         from raven.breadcrumbs import install_logging_hook
         install_logging_hook()
+
+    def install_asyncio_hook(self, loop=None):
+        import asyncio
+
+        loop = loop or asyncio.get_event_loop()
+
+        try:
+            loop_except_handler = loop.get_exception_handler()
+        except AttributeError:
+            # No get_exception_handler before Python 3.5.2
+            loop_except_handler = getattr(loop, '_exception_handler', None)
+
+        if not loop_except_handler:
+            loop_except_handler = type(loop).default_exception_handler
+
+        def handle_exception(loop, context):
+            if 'exception' in context:
+                exception = context['exception']
+                exc_info = type(exception), exception, exception.__traceback__
+                self.captureException(exc_info=exc_info, level='exception')  # asyncio exceptions are non-fatal
+            else:
+                data = {}
+
+                if 'source_traceback' in context:
+                    tb = context['source_traceback']
+                elif 'handle' in context and getattr(context['handle'], '_source_traceback', None):
+                    tb = context['handle']._source_traceback
+                elif 'future' in context and getattr(context['future'], '_source_traceback', None):
+                    tb = context['future']._source_traceback
+                else:
+                    tb = None
+
+                if tb:
+                    frames = []
+
+                    for file_name, lineno, function_name, text in tb:
+                        frames.append({
+                            'filename': file_name,
+                            'lineno': lineno,
+                            'function': function_name,
+                        })
+
+                    data['stacktrace'] = {'frames': frames}
+
+                message = context.get('message', 'Unhandled exception in event loop')
+                self.captureMessage(message, data=data, level='exception')
+
+            loop_except_handler(loop, context)
+
+        handle_exception.raven_client = self
+        loop.set_exception_handler(handle_exception)
 
     def hook_libraries(self, libraries):
         from raven.breadcrumbs import hook_libraries
