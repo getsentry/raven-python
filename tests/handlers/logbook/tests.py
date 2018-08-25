@@ -71,6 +71,22 @@ class LogbookHandlerTest(TestCase):
             self.assertEquals(msg['message'], 'This is a test info with a url')
             self.assertEquals(msg['params'], ())
 
+            logger.error('This is a test of stacks', extra=dict(
+                stack=True
+            ))
+            self.assertEquals(len(client.events), 1)
+            event = client.events.pop(0)
+            self.assertTrue(event['extra']['stack'])
+            self.assertFalse('exception' in event)
+            self.assertTrue('sentry.interfaces.Message' in event)
+            msg = event['sentry.interfaces.Message']
+            self.assertTrue('stacktrace' in event)
+            frames = event['stacktrace']['frames']
+            self.assertNotEquals(len(frames), 1)
+            frame = frames[0]
+            self.assertEquals(msg['message'], 'This is a test of stacks')
+            self.assertEquals(msg['params'], ())
+
             try:
                 raise ValueError('This is a test ValueError')
             except ValueError:
