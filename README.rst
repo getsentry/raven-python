@@ -1,15 +1,10 @@
 .. raw:: html
 
     <p align="center">
-
-.. image:: docs/_static/logo.png
-    :target: https://sentry.io
-    :align: center
-    :width: 116
-    :alt: Sentry website
-
-.. raw:: html
-
+      <a href="https://sentry.io" target="_blank" align="center">
+        <img src="https://sentry-brand.storage.googleapis.com/sentry-logo-black.png" width="280">
+      </a>
+      <br>
     </p>
 
 Raven - Sentry for Python

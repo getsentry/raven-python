@@ -9,6 +9,5 @@ coverage:
   ignore:
   - hooks/.*
   - ci/.*
-  - docs/.*
 
 comment: false
