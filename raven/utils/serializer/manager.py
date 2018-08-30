@@ -75,12 +75,12 @@ class Serializer(object):
             try:
                 return repr(value)
             except Exception as e:
-                logger.exception(e)
+                logger.exception('Failed to serialize obj (%s): %s', objid, e)
                 # It's common case that a model's __unicode__ definition
                 # may try to query the database which if it was not
                 # cleaned up correctly, would hit a transaction aborted
-                # exception
-                return text_type(type(value))
+                # exception.
+                return '%s (%s)' % (text_type(type(value)), objid)
         finally:
             self.context.remove(objid)
 

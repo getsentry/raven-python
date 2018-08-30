@@ -152,16 +152,19 @@ class TransformTest(TestCase):
             expected = "u'example'"
         self.assertEqual(result, expected)
 
-    def test_broken_repr(self):
+    def test_broken_repr(self, caplog):
         class Foo(object):
             def __repr__(self):
                 raise ValueError
 
-        result = transform(Foo())
-        expected = "<class 'tests.utils.encoding.tests.Foo'>"
+        obj = Foo()
+        result = transform(obj)
         import sys
         if sys.version_info[0] == 3 and sys.version_info[1] >= 3:
             expected = "<class 'tests.utils.encoding.tests.TransformTest.test_broken_repr.<locals>.Foo'>"
+        else:
+            expected = "<class 'tests.utils.encoding.tests.Foo'>"
+        expected += ' (%s)' % (id(obj),)
         assert result == expected
 
     def test_recursion_max_depth(self):
