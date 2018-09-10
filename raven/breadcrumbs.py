@@ -1,9 +1,13 @@
 from __future__ import absolute_import
 
-import collections
 import os
 import logging
 
+try:
+    from collections.abc import Mapping
+except ImportError:
+    # Python < 3.3
+    from collections import Mapping
 from time import time
 from types import FunctionType
 
@@ -140,7 +144,7 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
         data_value = kwargs
         data_value.update(extra)
 
-        if args and len(args) == 1 and isinstance(args[0], collections.Mapping) and args[0]:
+        if args and len(args) == 1 and isinstance(args[0], Mapping) and args[0]:
             format_args = args[0]
             data_value.update(format_args)
 
