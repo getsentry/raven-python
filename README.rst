@@ -30,8 +30,10 @@ Raven - Sentry for Python
    :alt: Code Climate
 
 
-Raven is the official Python client for `Sentry`_, officially supports
+Raven is the official legacy Python client for `Sentry`_, officially supports
 Python 2.6–2.7 & 3.3–3.7, and runs on PyPy and Google App Engine.
+
+**This SDK is being phased out for `Sentry-Python <https://github.com/getsentry/sentry-python>`__**
 
 It tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
@@ -86,7 +88,8 @@ Raven Python is more than that however. Checkout our `Python Documentation`_.
 Contributing
 ------------
 
-Raven is under active development and contributions are more than welcome!
+Raven will continue to be maintained for bugfixes and contributions are more than welcome!  New features should only go into the new sentry-python SDK.
+
 There are many ways to contribute:
 
 * Join in on discussions on our `Mailing List`_ or in our `IRC Channel`_.
