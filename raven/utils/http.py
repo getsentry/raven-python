@@ -28,23 +28,23 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
         def connect(self):
             # https://docs.python.org/3/library/ssl.html#socket-creation
             if sys.version_info > (2, 7, 9) or sys.version_info > (3, 2):
-                context = ssl.create_default_context()
-                context.verify_mode = ssl.CERT_REQUIRED
-
                 sock = socket.create_connection(
                     address=(self.host, self.port),
-                    timeout=self.timeout)
+                    timeout=self.timeout,
+                )
 
                 if self._tunnel_host:
                     self.sock = sock
                     self._tunnel()
 
+                context = ssl.create_default_context(cafile=ca_certs)
                 self.sock = context.wrap_socket(sock, server_hostname=self.host)
             else:
                 sock = socket.create_connection(
                     address=(self.host, self.port),
                     timeout=self.timeout,
                 )
+
                 if self._tunnel_host:
                     self.sock = sock
                     self._tunnel()
@@ -52,10 +52,7 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
                 self.sock = ssl.wrap_socket(
                     sock, ca_certs=ca_certs, cert_reqs=ssl.CERT_REQUIRED)
 
-            if assert_hostname is not None:
-                match_hostname(self.sock.getpeercert(),
-                               self.assert_hostname or self.host)
-                    
+
     class ValidHTTPSHandler(urllib2.HTTPSHandler):
         def https_open(self, req):
             return self.do_open(ValidHTTPSConnection, req)
