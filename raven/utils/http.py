@@ -52,6 +52,10 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
                 self.sock = ssl.wrap_socket(
                     sock, ca_certs=ca_certs, cert_reqs=ssl.CERT_REQUIRED)
 
+            if assert_hostname is not None:
+                match_hostname(self.sock.getpeercert(),
+                               self.assert_hostname or self.host)
+
 
     class ValidHTTPSHandler(urllib2.HTTPSHandler):
         def https_open(self, req):
