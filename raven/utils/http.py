@@ -56,7 +56,6 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
                 match_hostname(self.sock.getpeercert(),
                                self.assert_hostname or self.host)
 
-
     class ValidHTTPSHandler(urllib2.HTTPSHandler):
         def https_open(self, req):
             return self.do_open(ValidHTTPSConnection, req)
