@@ -136,7 +136,16 @@ class Sentry(object):
         if not self.client:
             return
 
-        self.captureException(exc_info=kwargs.get('exc_info'))
+        # got_request_exception signal passes the exception as 'exception'
+        exception = kwargs.get('exception')
+        if exception is not None and hasattr(exception, '__traceback__'):
+            # On Python 3 we can contruct the exc_info via __traceback__
+            exc_info = (type(exception), exception, exception.__traceback__)
+        else:
+            # The user may call the method with 'exc_info' manually
+            exc_info = kwargs.get('exc_info')
+
+        self.captureException(exc_info=exc_info)
 
     def get_user_info(self, request):
         """
