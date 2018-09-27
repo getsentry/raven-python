@@ -12,11 +12,11 @@ matrix:
       dist: xenial
       sudo: true
 
-    - name: Linting
+    - name: Flake8
       python: "3.6"
       install:
         - pip install tox
-      script: tox -e linters
+      script: tox -e flake8
 
 sudo: false
 addons:
