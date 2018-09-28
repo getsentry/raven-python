@@ -1,4 +1,23 @@
 language: python
+python:
+  - "2.7"
+  - "pypy"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+matrix:
+  include:
+    - python: "3.7"
+      dist: xenial
+      sudo: true
+
+    - name: Flake8
+      python: "3.6"
+      install:
+        - pip install tox
+      script: tox -e flake8
+
 sudo: false
 addons:
   apt:
@@ -17,123 +36,7 @@ jobs:
 #    - python: 3.5
 #      env: TOXENV=py35-django-dev-fix
 
-  include:
-    - stage: core
-      python: 2.7
-      env: TOXENV=py27
-    - stage: core
-      python: 3.4
-      env: TOXENV=py34
-    - stage: core
-      python: 3.5
-      env: TOXENV=py35
-    - stage: core
-      python: 3.6
-      env: TOXENV=py36
-    - stage: core
-      python: pypy
-      env: TOXENV=pypy
-    - stage: core
-      python: 3.5
-      env: TOXENV=flake8
-
-
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-django-16
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-django-17
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-django-18
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-django-19
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-django-110
-
-    - stage: contrib
-      python: 3.4
-      env: TOXENV=py34-django-17
-    - stage: contrib
-      python: 3.4
-      env: TOXENV=py34-django-18
-    - stage: contrib
-      python: 3.4
-      env: TOXENV=py34-django-19
-    - stage: contrib
-      python: 3.4
-      env: TOXENV=py34-django-110
-
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-django-18
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-django-19
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-django-110
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-django-111
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-django-200
-#    - stage: contrib
-#      python: 3.5
-#      env: TOXENV=py35-django-dev-fix
-
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-flask-10
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-flask-11
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-flask-10
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-flask-11
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-flask-12
-
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-celery-3
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-celery-4
-
-    - stage: contrib
-      python: 2.7
-      env: TOXENV=py27-lambda
-
-    - stage: contrib
-      python: 3.6
-      env: TOXENV=py36-lambda
-
-    - stage: contrib
-      python: 3.5
-      env: TOXENV=py35-sanic-07
-
-    - stage: contrib
-      python: 3.6
-      env: TOXENV=py36-sanic-07
-
-      #- stage: deploy
-      # script: ./setup.py sdist --formats=gztar bdist_wheel
-      #if: branch = master
-      #python: 2.7
-      #after_success:
-      #  - npm install -g @zeus-ci/cli
-      #  - zeus upload -t "application/zip+wheel" dist/*
-
-script: tox
+script: sh ci/runtox.sh
 install:
   - make
   - pip install codecov
