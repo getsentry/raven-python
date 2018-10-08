@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, with_statement
 
 import datetime
 import django
+import json
 import logging
 import mock
 import pytest
@@ -209,7 +210,8 @@ class DjangoClientTest(TestCase):
                 content_type='application/json')
         assert len(self.raven.events) == 1
         event = self.raven.events.pop(0)
-        assert event['request']['data'] == '{"a":"b"}'
+        data = json.loads(event['request']['data'])
+        assert data == {'a': 'b'}
 
     def test_capture_event_with_request_middleware(self):
         path = reverse('sentry-trigger-event')
