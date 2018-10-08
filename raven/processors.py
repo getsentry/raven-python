@@ -7,6 +7,7 @@ raven.core.processors
 """
 from __future__ import absolute_import
 
+import json
 import re
 import warnings
 
@@ -107,6 +108,11 @@ class SanitizeKeysProcessor(Processor):
             frame['vars'] = varmap(self.sanitize, frame['vars'])
 
     def filter_http(self, data):
+        processors = (
+            self._process_json,
+            self._process_http_query,
+            self._process_dict,
+        )
         for n in ('data', 'cookies', 'headers', 'env', 'query_string'):
             if n not in data:
                 continue
@@ -115,21 +121,39 @@ class SanitizeKeysProcessor(Processor):
             if PY3 and isinstance(data[n], bytes):
                 data[n] = data[n].decode('utf-8', 'replace')
 
-            if isinstance(data[n], string_types) and '=' in data[n]:
-                # at this point we've assumed it's a standard HTTP query
-                # or cookie
-                if n == 'cookies':
-                    delimiter = ';'
-                else:
-                    delimiter = '&'
+            for processor in processors:
+                processed = processor(key=n, data=data[n])
+                if processed is not None:
+                    data[n] = processed
+                    break
 
-                data[n] = self._sanitize_keyvals(data[n], delimiter)
-            else:
-                data[n] = varmap(self.sanitize, data[n])
-                if n == 'headers' and 'Cookie' in data[n]:
-                    data[n]['Cookie'] = self._sanitize_keyvals(
-                        data[n]['Cookie'], ';'
-                    )
+    def _process_json(self, key, data):
+        """Sanitize data from json string"""
+        if not isinstance(data, string_types):
+            return
+        try:
+            data = json.loads(data)
+        except ValueError:
+            return
+        return json.dumps(varmap(self.sanitize, data))
+
+    def _process_http_query(self, key, data):
+        """Sanitize data from http query or cookie string"""
+        if not isinstance(data, string_types):
+            return
+        if '=' not in data:
+            return
+
+        # at this point we've assumed it's a standard HTTP query or cookie
+        delimiter = ';' if key == 'cookies' else '&'
+        return self._sanitize_keyvals(data, delimiter)
+
+    def _process_dict(self, key, data):
+        """Sanitize data from mapping"""
+        data = varmap(self.sanitize, data)
+        if key == 'headers' and 'Cookie' in data:
+            data['Cookie'] = self._sanitize_keyvals(data['Cookie'], ';')
+        return data
 
     def filter_extra(self, data):
         return varmap(self.sanitize, data)
