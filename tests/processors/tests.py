@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from mock import Mock
 
 import raven
@@ -377,6 +378,14 @@ class SanitizePasswordsProcessorTest(TestCase):
         data = {'data': b'password=1234'}
         result = proc.filter_http(data)
         self.assertIn(data['data'], 'password=%s' % proc.MASK)
+
+    def test_sanitize_json(self):
+        proc = SanitizePasswordsProcessor(Mock())
+        # https://github.com/getsentry/raven-python/issues/1263
+        data = dict(data='{"password":"bla=blablabla"}')
+        result = proc.filter_http(data)
+        processed = json.loads(data['data'])
+        self.assertEqual(processed, dict(password=proc.MASK))
 
 
 class RemovePostDataProcessorTest(TestCase):
