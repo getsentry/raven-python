@@ -141,6 +141,8 @@ def _record_log_breadcrumb(logger, level, msg, *args, **kwargs):
 
         # Extract 'extra' key from kwargs and merge into data
         extra = kwargs.pop('extra', {})
+        if extra is None:
+            extra = {}
         data_value = kwargs
         data_value.update(extra)
 

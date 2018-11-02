@@ -53,6 +53,17 @@ class BreadcrumbTestCase(TestCase):
         assert crumbs[0]['data'] == {'foo': 'bar', 'blah': 'baz'}
         assert crumbs[0]['message'] == 'This is a message with bar!'
 
+    def test_log_crumb_reporting_with_dict_extra_none(self):
+        """Don't raise an exception if extra is None"""
+        client = Client('http://foo:bar@example.com/0')
+        with client.context:
+            log = logging.getLogger('whatever.foo')
+            log.info('This is a message with %(foo)s!', {'foo': 'bar'},
+                     extra=None)
+            crumbs = client.context.breadcrumbs.get_buffer()
+
+        assert len(crumbs) == 1
+
     def test_log_crumb_reporting_with_large_message(self):
         client = Client('http://foo:bar@example.com/0')
         with client.context:
