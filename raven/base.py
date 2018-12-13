@@ -177,6 +177,8 @@ class Client(object):
             o.get('machine') or defaults.NAME)
         self.auto_log_stacks = bool(
             o.get('auto_log_stacks') or defaults.AUTO_LOG_STACKS)
+        self.auto_log_exc_info = bool(
+            o.get('auto_log_exc_info') or defaults.AUTO_LOG_EXC_INFO)
         self.capture_locals = bool(
             o.get('capture_locals', defaults.CAPTURE_LOCALS))
         self.string_max_length = int(
@@ -387,6 +389,13 @@ class Client(object):
         if '.' not in event_type:
             # Assume it's a builtin
             event_type = 'raven.events.%s' % event_type
+
+        if (stack is None and event_type == 'raven.events.Message'
+                and self.auto_log_exc_info):
+            exc_info = sys.exc_info()
+            if exc_info and exc_info[0] is not None:
+                kwargs['exc_info'] = exc_info
+                event_type = 'raven.events.Exception'
 
         handler = self.get_handler(event_type)
         result = handler.capture(**kwargs)

@@ -34,6 +34,9 @@ MAX_LENGTH_STRING = 400
 # Automatically log frame stacks from all ``logging`` messages.
 AUTO_LOG_STACKS = False
 
+# Automatically log exc info from all ``logging`` messages.
+AUTO_LOG_EXC_INFO = False
+
 # Collect locals variables
 CAPTURE_LOCALS = True
 
