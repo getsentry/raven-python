@@ -174,7 +174,17 @@ class FloatSerializer(Serializer):
     types = (float,)
 
     def serialize(self, value, **kwargs):
-        return float(value)
+        value = float(value)
+
+        if value == float('inf'):
+            return '<inf>'
+        if value == float('-inf'):
+            return '<-inf>'
+        # lol checking for float('nan')
+        if value != value:
+            return '<nan>'
+
+        return value
 
 
 class IntegerSerializer(Serializer):
