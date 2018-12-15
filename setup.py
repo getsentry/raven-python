@@ -92,9 +92,9 @@ tests_require = [
     'anyjson',
     'ZConfig',
 ] + (
-    flask_requires + flask_tests_requires +
-    sanic_requires + sanic_tests_requires +
-    unittest2_requires + webpy_tests_requires
+    flask_requires + flask_tests_requires
+    + sanic_requires + sanic_tests_requires
+    + unittest2_requires + webpy_tests_requires
 )
 
 

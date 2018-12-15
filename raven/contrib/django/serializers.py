@@ -25,9 +25,9 @@ class PromiseSerializer(Serializer):
             return False
 
         pre = value.__class__.__name__[1:]
-        if not (hasattr(value, '%s__func' % pre) or
-                hasattr(value, '%s__unicode_cast' % pre) or
-                hasattr(value, '%s__text_cast' % pre)):
+        if not (hasattr(value, '%s__func' % pre)
+                or hasattr(value, '%s__unicode_cast' % pre)
+                or hasattr(value, '%s__text_cast' % pre)):
             return False
 
         return True
