@@ -44,7 +44,7 @@ except ImportError:
 use_djcelery = True
 try:
     import djcelery  # NOQA
-    #INSTALLED_APPS.append('djcelery')
+    # INSTALLED_APPS.append('djcelery')
 except ImportError:
     use_djcelery = False
 
