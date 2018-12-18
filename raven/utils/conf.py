@@ -42,6 +42,7 @@ def convert_options(settings, defaults=None):
     options.setdefault('timeout', getopt('timeout'))
     options.setdefault('name', getopt('name'))
     options.setdefault('auto_log_stacks', getopt('auto_log_stacks'))
+    options.setdefault('auto_log_exc_info', getopt('auto_log_exc_info'))
     options.setdefault('string_max_length', getopt('string_max_length'))
     options.setdefault('list_max_length', getopt('list_max_length'))
     options.setdefault('site', getopt('site'))
