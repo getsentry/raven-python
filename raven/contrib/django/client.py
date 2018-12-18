@@ -288,10 +288,10 @@ class DjangoClient(Client):
             # template information.  As of Django 1.9 or so the new
             # template debug thing showed up.
             if hasattr(exc_value, 'django_template_source') or \
-               ((isinstance(exc_value, TemplateSyntaxError) and
-                isinstance(getattr(exc_value, 'source', None),
-                           (tuple, list)) and
-                isinstance(exc_value.source[0], Origin))) or \
+               ((isinstance(exc_value, TemplateSyntaxError)
+                 and isinstance(getattr(exc_value, 'source', None),
+                           (tuple, list))
+                 and isinstance(exc_value.source[0], Origin))) or \
                hasattr(exc_value, 'template_debug'):
                 source = getattr(exc_value, 'django_template_source',
                                  getattr(exc_value, 'source', None))

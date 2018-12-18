@@ -27,11 +27,11 @@ logger = logging.getLogger('raven')
 
 def event_payload_considered_equal(a, b):
     return (
-        a['type'] == b['type'] and
-        a['level'] == b['level'] and
-        a['message'] == b['message'] and
-        a['category'] == b['category'] and
-        a['data'] == b['data']
+        a['type'] == b['type']
+        and a['level'] == b['level']
+        and a['message'] == b['message']
+        and a['category'] == b['category']
+        and a['data'] == b['data']
     )
 
 

@@ -46,8 +46,8 @@ class ZopeSentryHandler(SentryHandler):
 
     def can_record(self, record):
         return not (
-            record.name == 'raven' or
-            record.name.startswith(('sentry.errors', 'raven.'))
+            record.name == 'raven'
+            or record.name.startswith(('sentry.errors', 'raven.'))
         )
 
     def emit(self, record):
