@@ -317,7 +317,7 @@ class ClientTest(TestCase):
         event, = self.client.events
         exc, = event['exception']['values']
         frame, = exc['stacktrace']['frames']
-        assert frame['vars']['foo'] == "<nan>"
+        assert frame['vars']['foo'] == "nan"
 
     def test_exception_event_true_exc_info(self):
         try:
