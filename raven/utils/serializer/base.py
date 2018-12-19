@@ -167,21 +167,22 @@ class BooleanSerializer(Serializer):
     types = (bool,)
 
     def serialize(self, value, **kwargs):
-        return bool(value)
+        return repr(bool(value))
 
 
 class FloatSerializer(Serializer):
     types = (float,)
 
     def serialize(self, value, **kwargs):
-        return float(value)
+        # Wrap with repr to convert inf/nan to string
+        return repr(float(value))
 
 
 class IntegerSerializer(Serializer):
     types = (int,)
 
     def serialize(self, value, **kwargs):
-        return int(value)
+        return repr(int(value))
 
 
 class FunctionSerializer(Serializer):
@@ -197,7 +198,7 @@ if PY2:
         types = (long,)  # noqa
 
         def serialize(self, value, **kwargs):
-            return long(value)  # noqa
+            return repr(long(value))  # noqa
 
 
 # register all serializers, order matters

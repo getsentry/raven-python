@@ -307,6 +307,18 @@ class ClientTest(TestCase):
         self.assertEquals(frame['function'], 'test_exception_event')
         self.assertTrue('timestamp' in event)
 
+    def test_exception_nan_in_vars(self):
+        try:
+            foo = float("nan")  # noqa
+            raise ValueError("foo")
+        except ValueError:
+            self.client.captureException()
+
+        event, = self.client.events
+        exc, = event['exception']['values']
+        frame, = exc['stacktrace']['frames']
+        assert frame['vars']['foo'] == "nan"
+
     def test_exception_event_true_exc_info(self):
         try:
             raise ValueError('foo')

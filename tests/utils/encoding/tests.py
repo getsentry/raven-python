@@ -65,21 +65,18 @@ class TransformTest(TestCase):
 
     def test_float(self):
         result = transform(13.0)
-        self.assertEqual(type(result), float)
-        self.assertEqual(result, 13.0)
+        self.assertEqual(result, "13.0")
 
     def test_bool(self):
         result = transform(True)
-        self.assertEqual(type(result), bool)
-        self.assertEqual(result, True)
+        self.assertEqual(result, 'True')
 
     def test_int_subclass(self):
         class X(int):
             pass
 
         result = transform(X())
-        self.assertEqual(type(result), int)
-        self.assertEqual(result, 0)
+        self.assertEqual(result, '0')
 
     def test_dict_keys(self):
         x = {'foo': 'bar'}
@@ -176,7 +173,7 @@ class TransformTest(TestCase):
     def test_list_max_length(self):
         x = list(range(10))
         result = transform(x, list_max_length=3)
-        self.assertEqual(result, (0, 1, 2))
+        self.assertEqual(result, ('0', '1', '2'))
 
     def test_dict_max_length(self):
         x = dict((x, x) for x in range(10))
