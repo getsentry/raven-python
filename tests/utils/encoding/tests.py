@@ -65,8 +65,7 @@ class TransformTest(TestCase):
 
     def test_float(self):
         result = transform(13.0)
-        self.assertEqual(type(result), float)
-        self.assertEqual(result, 13.0)
+        self.assertEqual(result, "13.0")
 
     def test_bool(self):
         result = transform(True)
