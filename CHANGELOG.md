@@ -9,6 +9,7 @@ Project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 * [Core] Fixed stackframes in some situations being in inverse order.
 * [Flask] Fix wrong exception handling logic (accidentally relied on Flask internals).
+* [Core] No longer send NaN local vars as non-standard JSON.
 
 6.9.0 (2018-05-30)
 ------------------
