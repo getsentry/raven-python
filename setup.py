@@ -128,6 +128,7 @@ setup(
     zip_safe=False,
     extras_require={
         'flask': flask_requires,
+        'sanic': sanic_requires,
         'tests': tests_require,
         ':python_version<"3.2"': ['contextlib2'],
     },
