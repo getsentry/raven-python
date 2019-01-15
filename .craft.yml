@@ -1,0 +1,10 @@
+---
+minVersion: '0.7.0'
+changelog: CHANGES.md
+changelogPolicy: simple
+github:
+  owner: getsentry
+  repo: raven-python
+targets:
+  - name: pypi
+  - name: github
