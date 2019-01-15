@@ -1,6 +1,5 @@
 ---
 minVersion: '0.7.0'
-changelog: CHANGES.md
 changelogPolicy: simple
 github:
   owner: getsentry
