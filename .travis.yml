@@ -18,6 +18,11 @@ matrix:
         - pip install tox
       script: tox -e flake8
 
+    - name: Distribution packages
+      python: "3.6"
+      install: false
+      script: make travis-upload-dist
+
 sudo: false
 addons:
   apt:
