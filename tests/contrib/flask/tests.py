@@ -148,10 +148,6 @@ class FlaskTest(BaseTest):
         self.assertEquals(http['data'], {})
         self.assertTrue('headers' in http)
         headers = http['headers']
-        self.assertTrue('Content-Length' in headers, headers.keys())
-        self.assertEquals(headers['Content-Length'], '0')
-        self.assertTrue('Content-Type' in headers, headers.keys())
-        self.assertEquals(headers['Content-Type'], '')
         self.assertTrue('Host' in headers, headers.keys())
         self.assertEquals(headers['Host'], 'localhost')
         env = http['env']
