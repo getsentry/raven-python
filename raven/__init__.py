@@ -10,7 +10,7 @@ from __future__ import absolute_import
 import os
 import os.path
 
-__all__ = ('VERSION', 'Client', 'get_version')
+__all__ = ('VERSION', 'Client', 'get_version')  # noqa
 
 VERSION = '6.10.0'
 
