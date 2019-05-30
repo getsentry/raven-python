@@ -15,6 +15,7 @@ import uuid
 import json
 
 from .basic import is_namedtuple
+from .compat import PY2
 
 
 try:
@@ -56,11 +57,10 @@ def better_decoder(data):
 
 
 def dumps(value, **kwargs):
-    try:
-        return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
-    except Exception:
+    if PY2:
         kwargs['encoding'] = 'safe-utf-8'
-        return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
+
+    return json.dumps(value, cls=BetterJSONEncoder, **kwargs)
 
 
 def loads(value, **kwargs):
