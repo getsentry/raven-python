@@ -113,7 +113,7 @@ class Exception(BaseEvent):
         if not exc_info or exc_info is True:
             exc_info = sys.exc_info()
 
-        if not exc_info:
+        if not exc_info or exc_info[0] is None:
             raise ValueError('No exception found')
 
         values = []

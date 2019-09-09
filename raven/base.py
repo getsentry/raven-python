@@ -631,7 +631,7 @@ class Client(object):
             return
 
         exc_info = kwargs.get('exc_info')
-        if exc_info is not None:
+        if exc_info is not None and exc_info[0] is not None:
             if self.skip_error_for_logging(exc_info):
                 return
             elif not self.should_capture(exc_info):
