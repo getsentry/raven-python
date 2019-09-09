@@ -337,6 +337,16 @@ class ClientTest(TestCase):
         self.assertEquals(frame['filename'], 'tests/base/tests.py')
         self.assertEquals(frame['module'], __name__)
 
+    def test_exception_event_no_exc_info(self):
+        with self.assertRaisesRegex(ValueError, 'No exception found'):
+            self.client.captureException()
+
+    def test_exception_event_empty_exc_info(self):
+        exc_info = sys.exc_info()
+        self.assertEquals(exc_info, (None, None, None))
+        with self.assertRaisesRegex(ValueError, 'No exception found'):
+            self.client.captureException(exc_info=exc_info)
+
     def test_exception_event_ignore_string(self):
         class Foo(Exception):
             pass
