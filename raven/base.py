@@ -424,7 +424,7 @@ class Client(object):
                 'stacktrace': stack_info,
             })
 
-        if self.include_paths:
+        if self.include_paths or self.exclude_paths:
             for frame in self._iter_frames(data):
                 if frame.get('in_app') is not None:
                     continue
