@@ -167,7 +167,7 @@ class SentryMixin(object):
         Data for sentry.interfaces.User
 
         Default implementation only sends `is_authenticated` by checking if
-        `tornado.web.RequestHandler.get_current_user` tests postitively for on
+        `tornado.web.RequestHandler.get_current_user` tests positively for on
         Truth calue testing
         """
         try:
