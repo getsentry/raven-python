@@ -197,7 +197,7 @@ class Client(object):
         if install_sys_hook:
             self.install_sys_hook()
 
-        if os.getenv('SEATGEEK_RAVEN_USE_HOOKS', 'false') == 'true';
+        if os.getenv('SEATGEEK_RAVEN_USE_HOOKS', 'false') == 'true':
             if install_logging_hook:
                 self.install_logging_hook()
 
