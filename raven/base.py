@@ -197,10 +197,11 @@ class Client(object):
         if install_sys_hook:
             self.install_sys_hook()
 
-        if install_logging_hook:
-            self.install_logging_hook()
+        if os.getenv('SEATGEEK_RAVEN_USE_HOOKS', 'false') == 'true';
+            if install_logging_hook:
+                self.install_logging_hook()
 
-        self.hook_libraries(hook_libraries)
+            self.hook_libraries(hook_libraries)
 
     def set_dsn(self, dsn=None, transport=None):
         if not dsn and os.environ.get('SENTRY_DSN'):
