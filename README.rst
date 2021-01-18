@@ -6,6 +6,15 @@
       </a>
       <br>
     </p>
+    
+Deprecated for sentry-sdk package
+=================================
+
+**Raven is deprecated in favor of `Sentry-Python <https://github.com/getsentry/sentry-python>`_.**
+
+Feature development and most bugfixes happen exclusively there, as Raven is in maintenance mode.
+
+----
 
 Raven - Sentry for Python
 =========================
@@ -32,8 +41,6 @@ Raven - Sentry for Python
 
 Raven is the official legacy Python client for `Sentry`_, officially supports
 Python 2.6–2.7 & 3.3–3.7, and runs on PyPy and Google App Engine.
-
-**This SDK is being phased out for** `Sentry-Python <https://github.com/getsentry/sentry-python>`_.
 
 It tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
