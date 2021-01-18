@@ -26,16 +26,31 @@ def urlopen(url, data=None, timeout=defaults.TIMEOUT, ca_certs=None,
             httplib.HTTPConnection.__init__(self, *args, **kwargs)
 
         def connect(self):
-            sock = socket.create_connection(
-                address=(self.host, self.port),
-                timeout=self.timeout,
-            )
-            if self._tunnel_host:
-                self.sock = sock
-                self._tunnel()
+            # https://docs.python.org/3/library/ssl.html#socket-creation
+            if sys.version_info > (2, 7, 9) or sys.version_info > (3, 2):
+                sock = socket.create_connection(
+                    address=(self.host, self.port),
+                    timeout=self.timeout,
+                )
 
-            self.sock = ssl.wrap_socket(
-                sock, ca_certs=ca_certs, cert_reqs=ssl.CERT_REQUIRED)
+                if self._tunnel_host:
+                    self.sock = sock
+                    self._tunnel()
+
+                context = ssl.create_default_context(cafile=ca_certs)
+                self.sock = context.wrap_socket(sock, server_hostname=self.host)
+            else:
+                sock = socket.create_connection(
+                    address=(self.host, self.port),
+                    timeout=self.timeout,
+                )
+
+                if self._tunnel_host:
+                    self.sock = sock
+                    self._tunnel()
+
+                self.sock = ssl.wrap_socket(
+                    sock, ca_certs=ca_certs, cert_reqs=ssl.CERT_REQUIRED)
 
             if assert_hostname is not None:
                 match_hostname(self.sock.getpeercert(),
