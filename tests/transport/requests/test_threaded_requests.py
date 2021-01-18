@@ -1,5 +1,8 @@
 import mock
 import time
+
+import requests
+
 from raven.utils.testutils import TestCase
 
 from raven.base import Client
@@ -26,7 +29,7 @@ class ThreadedTransportTest(TestCase):
         self.url = "threaded+requests+http://some_username:some_password@localhost:8143/1"
         self.client = Client(dsn=self.url)
 
-    @mock.patch('raven.transport.requests.post')
+    @mock.patch('requests.post')
     def test_does_send(self, send):
         self.client.captureMessage(message='foo')
 

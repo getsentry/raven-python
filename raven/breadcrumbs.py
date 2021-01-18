@@ -1,7 +1,13 @@
 from __future__ import absolute_import
 
+try:
+    import __builtin__ as builtins
+except ImportError:
+    import builtins
+
 import os
 import logging
+import sys
 
 try:
     from collections.abc import Mapping
@@ -310,6 +316,20 @@ def register_logging_handler(callback):
 
 
 hooked_libraries = {}
+delayed_hooks = {}
+_orig_import = __import__
+
+
+def delayed_hook_libraries(name, globals={}, locals={}, fromlist=[], level=-1):
+    if level == -1:
+        result = _orig_import(name, globals, locals, fromlist)  # python 3.x workaround
+    else:
+        result = _orig_import(name, globals, locals, fromlist, level)
+
+    if name in delayed_hooks:
+        func = delayed_hooks[name]
+        func()
+    return result
 
 
 def libraryhook(name):
@@ -405,7 +425,12 @@ def hook_libraries(libraries):
         func = hooked_libraries.get(lib)
         if func is None:
             raise RuntimeError('Unknown library %r for hooking' % lib)
-        func()
+        if lib in sys.modules:
+            func()  # lib is already loaded
+        else:
+            delayed_hooks[lib] = func
+    if delayed_hooks:
+        builtins.__import__ = delayed_hook_libraries
 
 
 import raven.context

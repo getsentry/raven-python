@@ -4,6 +4,7 @@ import mock
 
 from raven.utils.testutils import TestCase
 from raven.base import Client
+import requests
 
 
 class RequestsTransportTest(TestCase):
@@ -12,7 +13,7 @@ class RequestsTransportTest(TestCase):
             dsn="requests+http://some_username:some_password@localhost:8143/1",
         )
 
-    @mock.patch('raven.transport.requests.post')
+    @mock.patch('requests.post')
     def test_does_send(self, post):
         self.client.captureMessage(message='foo')
         self.assertEqual(post.call_count, 1)
