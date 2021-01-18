@@ -33,6 +33,18 @@ def is_ignorable_404(uri):
     )
 
 
+def get_grouping_fingerprint(uri):
+    """
+    Returns the corresponding fingerprint if the given URL matches a pattern
+    of URLs that who should be grouped
+
+    """
+    for pattern, fingerprint in getattr(settings, 'GROUPING_404_URLS', ()):
+        if pattern.search(uri):
+            return fingerprint
+    return None
+
+
 class Sentry404CatchMiddleware(MiddlewareMixin):
     def process_response(self, request, response):
         if response.status_code != 404:
@@ -46,14 +58,26 @@ class Sentry404CatchMiddleware(MiddlewareMixin):
         if not client.is_enabled():
             return response
 
+        kwargs = {}
+
         data = client.get_data_from_request(request)
         data.update({
             'level': logging.INFO,
             'logger': 'http404',
         })
-        result = client.captureMessage(message='Page Not Found: %s' % request.build_absolute_uri(), data=data)
-        if not result:
-            return
+        kwargs.update({
+            'data': data
+        })
+
+        fingerprint = get_grouping_fingerprint(request.get_full_path())
+        if fingerprint:
+            kwargs.update({
+                'fingerprint': fingerprint
+            })
+
+        message = 'Page Not Found: %s' % request.build_absolute_uri()
+
+        result = client.captureMessage(message=message, **kwargs)
 
         request.sentry = {
             'project_id': data.get('project', client.remote.project),
