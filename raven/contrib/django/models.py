@@ -159,6 +159,7 @@ class SentryDjangoHandler(object):
         else:
             self.has_celery = celery.VERSION >= (2, 5)
 
+        self.instrument_celery = getattr(settings, 'SENTRY_INSTRUMENT_CELERY', True)
         self.celery_handler = None
 
     def install_celery(self):
@@ -188,7 +189,7 @@ class SentryDjangoHandler(object):
         request_started.connect(self.before_request, weak=False)
         got_request_exception.connect(self.exception_handler, weak=False)
 
-        if self.has_celery:
+        if self.has_celery and self.instrument_celery:
             try:
                 self.install_celery()
             except Exception:
