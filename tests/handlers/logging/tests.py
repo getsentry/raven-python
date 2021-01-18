@@ -150,6 +150,31 @@ class LoggingIntegrationTest(TestCase):
         self.assertEqual(msg['message'], 'This is a test info with an exception')
         self.assertEqual(msg['params'], ())
 
+    def test_logger_partial_exc_info(self):
+        try:
+            raise ValueError('This is a test ValueError')
+        except ValueError:
+            exc_info = sys.exc_info()
+            exc_info = (exc_info[0], exc_info[1], None)
+            record = self.make_record('This is a test info with an exception', exc_info=exc_info)
+        else:
+            self.fail('Should have raised an exception')
+
+        self.handler.emit(record)
+
+        self.assertEqual(len(self.client.events), 1)
+        event = self.client.events.pop(0)
+
+        self.assertEqual(event['message'], 'This is a test info with an exception')
+        assert 'exception' in event
+        exc = event['exception']['values'][-1]
+        self.assertEqual(exc['type'], 'ValueError')
+        self.assertEqual(exc['value'], 'This is a test ValueError')
+        self.assertTrue('sentry.interfaces.Message' in event)
+        msg = event['sentry.interfaces.Message']
+        self.assertEqual(msg['message'], 'This is a test info with an exception')
+        self.assertEqual(msg['params'], ())
+
     def test_message_params(self):
         record = self.make_record('This is a test of %s', args=('args',))
         self.handler.emit(record)

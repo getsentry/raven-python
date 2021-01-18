@@ -165,7 +165,7 @@ class SentryHandler(logging.Handler, object):
 
         # If there's no exception being processed, exc_info may be a 3-tuple of None
         # http://docs.python.org/library/sys.html#sys.exc_info
-        if record.exc_info and all(record.exc_info):
+        if record.exc_info and not all(x is None for x in record.exc_info):
             # capture the standard message first so that we ensure
             # the event is recorded as an exception, in addition to having our
             # message interface attached
