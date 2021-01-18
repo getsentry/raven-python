@@ -208,7 +208,7 @@ class Sentry(object):
         return request.form
 
     def get_json_data(self, request):
-        return request.data
+        return request.get_json()
 
     def get_http_info_with_retriever(self, request, retriever=None):
         """
