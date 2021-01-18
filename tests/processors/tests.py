@@ -83,6 +83,13 @@ def get_extra_data():
     return data
 
 
+def get_user_data():
+    data = get_extra_data()
+
+    data['user'] = VARS
+    return data
+
+
 class SanitizeKeysProcessorTest(TestCase):
 
     def setUp(self):
@@ -134,6 +141,14 @@ class SanitizeKeysProcessorTest(TestCase):
         self.assertTrue('extra' in result)
         extra = result['extra']
         self._check_vars_sanitized(extra, self.proc.MASK)
+
+    def test_user(self):
+        data = get_user_data()
+        result = self.proc.process(data)
+
+        self.assertTrue('user' in result)
+        user = result['user']
+        self._check_vars_sanitized(user, self.proc.MASK)
 
     def test_querystring_as_string(self):
         data = get_http_data()

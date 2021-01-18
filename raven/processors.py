@@ -38,6 +38,9 @@ class Processor(object):
         if 'extra' in data:
             data['extra'] = self.filter_extra(data['extra'])
 
+        if 'user' in data:
+            data['user'] = self.filter_user(data['user'])
+
         return data
 
     def filter_stacktrace(self, data):
@@ -47,6 +50,9 @@ class Processor(object):
         pass
 
     def filter_extra(self, data):
+        return data
+
+    def filter_user(self, data):
         return data
 
 
@@ -132,6 +138,9 @@ class SanitizeKeysProcessor(Processor):
                     )
 
     def filter_extra(self, data):
+        return varmap(self.sanitize, data)
+
+    def filter_user(self, data):
         return varmap(self.sanitize, data)
 
     def _sanitize_keyvals(self, keyvals, delimiter):
