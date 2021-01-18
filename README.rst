@@ -38,6 +38,9 @@ Raven - Sentry for Python
    :target: https://codeclimate.com/github/getsentry/raven-python
    :alt: Code Climate
 
+.. image:: https://api.dependabot.com/badges/compatibility_score?dependency-name=raven&package-manager=pip&version-scheme=semver
+    :target: https://dependabot.com/compatibility-score.html?dependency-name=raven&package-manager=pip&version-scheme=semver
+
 
 Raven is the official legacy Python client for `Sentry`_, officially supports
 Python 2.6–2.7 & 3.3–3.7, and runs on PyPy and Google App Engine.
