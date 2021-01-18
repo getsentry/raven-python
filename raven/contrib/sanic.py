@@ -75,7 +75,7 @@ class Sentry(object):
     """
 
     def __init__(self, app, client=None, client_cls=Client, dsn=None,
-                 logging=False, logging_exclusions=None, level=logging.NOTSET):
+                 logging=False, logging_exclusions=None, level=logging.NOTSET, add_error_handler=True):
         if client and not isinstance(client, Client):
             raise TypeError('client should be an instance of Client')
 
@@ -85,6 +85,7 @@ class Sentry(object):
         self.logging = logging
         self.logging_exclusions = logging_exclusions
         self.level = level
+        self._add_error_handler = add_error_handler
         self.init_app(app)
 
     def handle_exception(self, request, exception):
@@ -177,7 +178,8 @@ class Sentry(object):
             app.extensions = {}
         app.extensions['sentry'] = self
 
-        app.error_handler.add(Exception, self.handle_exception)
+        if self._add_error_handler:
+            app.error_handler.add(Exception, self.handle_exception)
         app.register_middleware(self.before_request, attach_to='request')
         app.register_middleware(self.after_request, attach_to='response')
 
