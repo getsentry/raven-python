@@ -19,7 +19,7 @@ class CeleryTestCase(TestCase):
         self.celery.conf.CELERY_ALWAYS_EAGER = True
 
         self.client = InMemoryClient()
-        self.handler = SentryCeleryHandler(self.client, ignore_expected=True)
+        self.handler = SentryCeleryHandler(self.client, ignore_expected=True, context_args=['foo', 'kw_bar'])
         self.handler.install()
         self.addCleanup(self.handler.uninstall)
 
@@ -44,6 +44,20 @@ class CeleryTestCase(TestCase):
         dummy_task.delay(1, 2)
         dummy_task.delay(1, 0)
         assert len(self.client.events) == 0
+
+    def test_context_args(self):
+        @self.celery.task(name='dummy_task')
+        def dummy_task(foo, bar):
+            return foo / bar
+        dummy_task.delay(1, 2)
+        assert self.client.context
+
+    def test_context_kwargs(self):
+        @self.celery.task(name='dummy_task')
+        def dummy_task(foo, kw_bar=2):
+            return foo / kw_bar
+        dummy_task.delay(1, kw_bar=2)
+        assert self.client.context
 
 
 class CeleryLoggingHandlerTestCase(TestCase):
