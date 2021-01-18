@@ -89,7 +89,6 @@ tests_require = [
     'webob',
     'webtest',
     'wheel',
-    'anyjson',
     'ZConfig',
 ] + (
     flask_requires + flask_tests_requires
