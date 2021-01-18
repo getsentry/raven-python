@@ -10,7 +10,7 @@
 Deprecated for sentry-sdk package
 =================================
 
-**Raven is deprecated in favor of `Sentry-Python <https://github.com/getsentry/sentry-python>`_.**
+**Raven is deprecated** in favor of `Sentry-Python <https://github.com/getsentry/sentry-python>`_.
 
 Feature development and most bugfixes happen exclusively there, as Raven is in maintenance mode.
 
